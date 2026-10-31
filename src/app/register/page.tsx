@@ -4,7 +4,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Users, CalendarDays, ChartNoAxesCombined } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { createClient } from "@/src/lib/supabase/client";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -43,8 +45,26 @@ function GoogleLogo({ size = 36 }: { size?: number }) {
   );
 }
 
-export default function RegisterPage() {
+function getErrorMessage(errorParam: string | null): string | null {
+  if (!errorParam) return null;
+  switch (errorParam) {
+    case "cancelled":
+      return "Sign-in was cancelled. You can try again.";
+    case "google_error":
+      return "We couldn't reach Google. Please try again.";
+    case "school_blocked":
+      return "Your school account may not allow this app. Try a personal Google account, or ask your school's IT admin.";
+    default:
+      return "Sign-in was cancelled. You can try again.";
+  }
+}
+
+function RegisterContent() {
   const [loading, setLoading] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
+  const activeError = manualError || getErrorMessage(urlError);
 
   // Enforce zero-scrollbar policy and lock html/body on desktop viewports
   useEffect(() => {
@@ -81,11 +101,30 @@ export default function RegisterPage() {
     };
   }, []);
 
-  // TODO: Replace with the real Google sign-in handler from the auth system (A1 ticket)
-  function handleGoogleSignUp() {
+  async function handleGoogleSignUp() {
     setLoading(true);
-    // TODO: Implement Google OAuth sign-up flow
-    setTimeout(() => setLoading(false), 2000);
+    setManualError(null);
+    try {
+      const supabase = createClient();
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${origin}/auth/callback`,
+          scopes: "openid email profile",
+        },
+      });
+
+      if (error) {
+        console.error("Sign-in error:", error);
+        setLoading(false);
+        setManualError("We couldn't reach Google. Please try again.");
+      }
+    } catch (err) {
+      console.error("Sign-in unexpected error:", err);
+      setLoading(false);
+      setManualError("We couldn't reach Google. Please try again.");
+    }
   }
 
   return (
@@ -796,11 +835,34 @@ export default function RegisterPage() {
               <span>student community.</span>
             </p>
 
+            {/* Error Message banner from Ticket A1 */}
+            {activeError && (
+              <div
+                role="alert"
+                style={{
+                  width: "100%",
+                  marginTop: "clamp(12px, 2vh, 20px)",
+                  padding: "10px 16px",
+                  borderRadius: 14,
+                  backgroundColor: "#FEF2F2",
+                  border: "1px solid #FCA5A5",
+                  color: "#991B1B",
+                  fontSize: "clamp(12.5px, 0.92vw, 14.5px)",
+                  lineHeight: 1.45,
+                  textAlign: "center",
+                  fontWeight: 500,
+                  boxSizing: "border-box",
+                }}
+              >
+                {activeError}
+              </div>
+            )}
+
             {/* 4. Google Sign-up Button (40px below subtitle, height 72px) */}
             <div
               style={{
                 width: "100%",
-                marginTop: "clamp(20px, 4.25vh, 40px)",
+                marginTop: activeError ? "clamp(12px, 2.5vh, 22px)" : "clamp(20px, 4.25vh, 40px)",
               }}
             >
               <button
@@ -847,7 +909,7 @@ export default function RegisterPage() {
                     color: "#18181B",
                   }}
                 >
-                  {loading ? "Signing up with Google..." : "Sign up with Google"}
+                  {loading ? "Signing in..." : "Sign up with Google"}
                 </span>
               </button>
               <div className="sr-only" aria-live="polite">
@@ -1012,7 +1074,30 @@ export default function RegisterPage() {
             Join OrgKit and be part of a more connected student community.
           </p>
 
-          <div style={{ width: "100%", marginTop: 24 }}>
+          {/* Mobile Error Message banner from Ticket A1 */}
+          {activeError && (
+            <div
+              role="alert"
+              style={{
+                width: "100%",
+                marginTop: 14,
+                padding: "10px 14px",
+                borderRadius: 12,
+                backgroundColor: "#FEF2F2",
+                border: "1px solid #FCA5A5",
+                color: "#991B1B",
+                fontSize: 13,
+                lineHeight: 1.4,
+                textAlign: "center",
+                fontWeight: 500,
+                boxSizing: "border-box",
+              }}
+            >
+              {activeError}
+            </div>
+          )}
+
+          <div style={{ width: "100%", marginTop: activeError ? 14 : 24 }}>
             <button
               type="button"
               disabled={loading}
@@ -1059,7 +1144,7 @@ export default function RegisterPage() {
                   color: "#18181B",
                 }}
               >
-                {loading ? "Signing up..." : "Sign up with Google"}
+                {loading ? "Signing in..." : "Sign up with Google"}
               </span>
             </button>
           </div>
@@ -1123,5 +1208,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: "100vh", backgroundColor: "#F4F4F5" }} />}>
+      <RegisterContent />
+    </Suspense>
   );
 }
