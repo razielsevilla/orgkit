@@ -816,9 +816,10 @@ export default function RegisterPage() {
         <div
           style={{
             width: "100%",
+            maxWidth: 400,
             backgroundColor: "#FFFFFF",
             borderRadius: 24,
-            padding: "32px 20px",
+            padding: "32px 16px",
             boxShadow: "0 20px 50px rgba(24, 24, 27, 0.08)",
             border: "1px solid rgba(228, 228, 231, 0.6)",
             display: "flex",
@@ -834,13 +835,13 @@ export default function RegisterPage() {
             width={72}
             height={46}
             className="object-contain"
-            style={{ width: 72, height: "auto" }}
+            style={{ width: 68, height: "auto" }}
           />
 
           <h2
             style={{
               marginTop: 18,
-              fontSize: "clamp(22px, 6.5vw, 28px)",
+              fontSize: "clamp(20px, 6vw, 26px)",
               fontWeight: 700,
               color: "#18181B",
               lineHeight: 1.2,
@@ -854,27 +855,27 @@ export default function RegisterPage() {
           <p
             style={{
               marginTop: 12,
-              fontSize: "clamp(13.5px, 3.8vw, 15px)",
+              fontSize: "clamp(13px, 3.6vw, 15px)",
               lineHeight: "22px",
               color: "#71717A",
-              maxWidth: 340,
+              maxWidth: 290,
               marginBottom: 0,
             }}
           >
             Join OrgKit and be part of a more connected student community.
           </p>
 
-          <div style={{ width: "100%", marginTop: 28 }}>
+          <div style={{ width: "100%", marginTop: 24 }}>
             <button
               type="button"
               disabled={loading}
               onClick={handleGoogleSignUp}
               className="orgkit-google-btn"
               style={{
-                height: 56,
-                paddingLeft: 16,
-                paddingRight: 16,
-                gap: 12,
+                height: 54,
+                paddingLeft: 12,
+                paddingRight: 12,
+                gap: 10,
               }}
             >
               {!loading && (
@@ -882,7 +883,7 @@ export default function RegisterPage() {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true"
-                  style={{ width: 26, height: 26, flexShrink: 0 }}
+                  style={{ width: 24, height: 24, flexShrink: 0 }}
                 >
                   <path
                     fill="#4285F4"
@@ -904,7 +905,7 @@ export default function RegisterPage() {
               )}
               <span
                 style={{
-                  fontSize: "clamp(15px, 4.2vw, 18px)",
+                  fontSize: "clamp(14px, 4vw, 17px)",
                   fontWeight: 500,
                   color: "#18181B",
                 }}
