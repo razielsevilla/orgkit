@@ -203,7 +203,11 @@ export default function RegisterPage() {
           }
         }
 
-        /* ── Interactive Button & Links Styling ── */
+        /* ── Interactive Button & Links UX Styling ── */
+        .orgkit-card {
+          transition: box-shadow 0.25s ease, border-color 0.25s ease;
+        }
+
         .orgkit-google-btn {
           width: 100%;
           border-radius: 9999px;
@@ -213,12 +217,23 @@ export default function RegisterPage() {
           align-items: center;
           justify-content: center;
           cursor: pointer;
-          transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+          transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
           outline: none;
           box-sizing: border-box;
+          user-select: none;
+          box-shadow: 0 1px 3px rgba(24, 24, 27, 0.04);
         }
 
-        .orgkit-google-btn:hover {
+        .orgkit-google-btn:hover:not(:disabled) {
+          background-color: #FAFAFA;
+          border-color: #D4D4D8;
+          box-shadow: 0 6px 18px rgba(24, 24, 27, 0.08);
+          transform: translateY(-1px);
+        }
+
+        .orgkit-google-btn:active:not(:disabled) {
+          transform: translateY(0.5px) scale(0.995);
+          box-shadow: 0 1px 2px rgba(24, 24, 27, 0.05);
           background-color: #F4F4F5;
         }
 
@@ -227,17 +242,58 @@ export default function RegisterPage() {
         }
 
         .orgkit-google-btn:disabled {
-          opacity: 0.65;
+          opacity: 0.75;
           cursor: not-allowed;
+          transform: none !important;
         }
 
+        /* ── Feature Items Micro-interactions ── */
+        .orgkit-feature-item {
+          display: flex;
+          align-items: center;
+          cursor: default;
+          transition: transform 0.2s ease;
+          user-select: none;
+        }
+
+        .orgkit-feature-item:hover {
+          transform: translateY(-1px);
+        }
+
+        .orgkit-feature-item:hover .orgkit-feature-icon {
+          color: #059669 !important;
+          transform: scale(1.08);
+        }
+
+        .orgkit-feature-item:hover .orgkit-feature-label {
+          color: #18181B !important;
+        }
+
+        .orgkit-feature-icon {
+          transition: color 0.2s ease, transform 0.2s ease;
+        }
+
+        .orgkit-feature-label {
+          transition: color 0.2s ease;
+        }
+
+        /* ── Keyboard & Link Focus Accessibility ── */
         .orgkit-terms-link {
           color: #059669;
           text-decoration: none;
           font-weight: 600;
+          border-radius: 2px;
+          transition: color 0.15s ease, text-decoration 0.15s ease;
         }
 
-        .orgkit-terms-link:hover, .orgkit-terms-link:focus-visible {
+        .orgkit-terms-link:hover {
+          text-decoration: underline;
+          color: #047857;
+        }
+
+        .orgkit-terms-link:focus-visible {
+          outline: 2px solid #059669;
+          outline-offset: 2px;
           text-decoration: underline;
         }
 
@@ -245,10 +301,44 @@ export default function RegisterPage() {
           color: #059669;
           text-decoration: none;
           font-weight: 700;
+          border-radius: 2px;
+          transition: color 0.15s ease, text-decoration 0.15s ease;
         }
 
-        .orgkit-signin-link:hover, .orgkit-signin-link:focus-visible {
+        .orgkit-signin-link:hover {
           text-decoration: underline;
+          color: #047857;
+        }
+
+        .orgkit-signin-link:focus-visible {
+          outline: 2px solid #059669;
+          outline-offset: 2px;
+          text-decoration: underline;
+        }
+
+        /* ── Smooth Loading Spinner ── */
+        @keyframes orgkitSpin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
+        .orgkit-spinner {
+          animation: orgkitSpin 0.75s linear infinite;
+        }
+
+        /* ── Respect User Preferences: Reduced Motion ── */
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+            scroll-behavior: auto !important;
+          }
+          .orgkit-google-btn:hover,
+          .orgkit-google-btn:active,
+          .orgkit-feature-item:hover {
+            transform: none !important;
+          }
         }
       `}</style>
 
@@ -435,7 +525,8 @@ export default function RegisterPage() {
               width={82}
               height={52}
               priority
-              className="object-contain"
+              draggable={false}
+              className="object-contain select-none"
               style={{
                 width: "clamp(56px, 4.9vw, 82px)",
                 height: "auto",
@@ -501,6 +592,8 @@ export default function RegisterPage() {
 
           {/* 5. Feature Row (64px below paragraph) */}
           <div
+            role="list"
+            aria-label="Key Platform Features"
             style={{
               marginTop: "clamp(24px, 6.8vh, 64px)",
               display: "flex",
@@ -509,13 +602,15 @@ export default function RegisterPage() {
           >
             {/* Feature 1: Manage Members */}
             <div
+              role="listitem"
+              className="orgkit-feature-item"
+              title="Easily manage all organization members and rosters"
               style={{
-                display: "flex",
-                alignItems: "center",
                 gap: "clamp(8px, 0.84vw, 14px)",
               }}
             >
               <Users
+                className="orgkit-feature-icon"
                 style={{
                   width: "clamp(22px, 1.8vw, 30px)",
                   height: "clamp(22px, 1.8vw, 30px)",
@@ -525,6 +620,7 @@ export default function RegisterPage() {
                 aria-hidden="true"
               />
               <span
+                className="orgkit-feature-label"
                 style={{
                   fontSize: "clamp(13px, 0.93vw, 15.5px)",
                   fontWeight: 500,
@@ -538,6 +634,7 @@ export default function RegisterPage() {
 
             {/* 1.5px vertical divider (30px margin each side) */}
             <div
+              aria-hidden="true"
               style={{
                 width: 1.5,
                 height: "clamp(20px, 3.19vh, 30px)",
@@ -550,13 +647,15 @@ export default function RegisterPage() {
 
             {/* Feature 2: Organize Events */}
             <div
+              role="listitem"
+              className="orgkit-feature-item"
+              title="Plan, publish, and schedule student events"
               style={{
-                display: "flex",
-                alignItems: "center",
                 gap: "clamp(8px, 0.84vw, 14px)",
               }}
             >
               <CalendarDays
+                className="orgkit-feature-icon"
                 style={{
                   width: "clamp(22px, 1.8vw, 30px)",
                   height: "clamp(22px, 1.8vw, 30px)",
@@ -566,6 +665,7 @@ export default function RegisterPage() {
                 aria-hidden="true"
               />
               <span
+                className="orgkit-feature-label"
                 style={{
                   fontSize: "clamp(13px, 0.93vw, 15.5px)",
                   fontWeight: 500,
@@ -579,6 +679,7 @@ export default function RegisterPage() {
 
             {/* 1.5px vertical divider (30px margin each side) */}
             <div
+              aria-hidden="true"
               style={{
                 width: 1.5,
                 height: "clamp(20px, 3.19vh, 30px)",
@@ -591,13 +692,15 @@ export default function RegisterPage() {
 
             {/* Feature 3: Track Activities */}
             <div
+              role="listitem"
+              className="orgkit-feature-item"
+              title="Monitor organizational growth and participation"
               style={{
-                display: "flex",
-                alignItems: "center",
                 gap: "clamp(8px, 0.84vw, 14px)",
               }}
             >
               <ChartNoAxesCombined
+                className="orgkit-feature-icon"
                 style={{
                   width: "clamp(22px, 1.8vw, 30px)",
                   height: "clamp(22px, 1.8vw, 30px)",
@@ -607,6 +710,7 @@ export default function RegisterPage() {
                 aria-hidden="true"
               />
               <span
+                className="orgkit-feature-label"
                 style={{
                   fontSize: "clamp(13px, 0.93vw, 15.5px)",
                   fontWeight: 500,
@@ -623,6 +727,9 @@ export default function RegisterPage() {
         {/* ── Right Pane: Registration Card (Vertically Centered) ── */}
         <div className="orgkit-right-pane">
           <div
+            className="orgkit-card"
+            role="region"
+            aria-label="Create Your Account"
             style={{
               width: "clamp(380px, 33.85vw, 566px)",
               maxWidth: 566,
@@ -641,11 +748,12 @@ export default function RegisterPage() {
             {/* 1. OrgKit Logo (92px wide) */}
             <Image
               src="/orgkit-logo.png"
-              alt="OrgKit"
+              alt="OrgKit Logo"
               width={92}
               height={58}
               priority
-              className="object-contain"
+              draggable={false}
+              className="object-contain select-none"
               style={{
                 width: "clamp(64px, 5.5vw, 92px)",
                 height: "auto",
@@ -700,12 +808,38 @@ export default function RegisterPage() {
                 disabled={loading}
                 onClick={handleGoogleSignUp}
                 className="orgkit-google-btn"
+                aria-busy={loading}
+                title={loading ? "Connecting to Google..." : "Sign up with your Google account"}
                 style={{
                   height: "clamp(52px, 7.65vh, 72px)",
                   gap: "clamp(10px, 0.84vw, 14px)",
                 }}
               >
-                {!loading && <GoogleLogo size={36} />}
+                {loading ? (
+                  <svg
+                    className="orgkit-spinner"
+                    width={26}
+                    height={26}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="#E4E4E7"
+                      strokeWidth="3"
+                    />
+                    <path
+                      fill="#059669"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                ) : (
+                  <GoogleLogo size={36} />
+                )}
                 <span
                   style={{
                     fontSize: "clamp(17px, 1.44vw, 24px)",
@@ -713,9 +847,12 @@ export default function RegisterPage() {
                     color: "#18181B",
                   }}
                 >
-                  {loading ? "Signing up..." : "Sign up with Google"}
+                  {loading ? "Signing up with Google..." : "Sign up with Google"}
                 </span>
               </button>
+              <div className="sr-only" aria-live="polite">
+                {loading ? "Connecting to Google, please wait..." : ""}
+              </div>
             </div>
 
             {/* 5. Terms & Sign In Info */}
@@ -739,11 +876,19 @@ export default function RegisterPage() {
                 }}
               >
                 By continuing you agree to our{" "}
-                <Link href="/terms" className="orgkit-terms-link">
+                <Link
+                  href="/terms"
+                  className="orgkit-terms-link"
+                  title="View OrgKit Terms of Service"
+                >
                   Terms
                 </Link>{" "}
                 and{" "}
-                <Link href="/privacy" className="orgkit-terms-link">
+                <Link
+                  href="/privacy"
+                  className="orgkit-terms-link"
+                  title="View OrgKit Privacy Policy"
+                >
                   Privacy Policy
                 </Link>
                 .
@@ -759,7 +904,11 @@ export default function RegisterPage() {
                 }}
               >
                 Already have an account?{" "}
-                <Link href="/login" className="orgkit-signin-link">
+                <Link
+                  href="/login"
+                  className="orgkit-signin-link"
+                  title="Sign in to your existing account"
+                >
                   Sign in
                 </Link>
               </p>
@@ -785,7 +934,8 @@ export default function RegisterPage() {
             width={60}
             height={38}
             priority
-            className="object-contain"
+            draggable={false}
+            className="object-contain select-none"
             style={{ width: 60, height: "auto" }}
           />
           <div
@@ -830,7 +980,8 @@ export default function RegisterPage() {
             alt="OrgKit"
             width={68}
             height={44}
-            className="object-contain"
+            draggable={false}
+            className="object-contain select-none"
             style={{ width: 68, height: "auto" }}
           />
 
@@ -867,6 +1018,8 @@ export default function RegisterPage() {
               disabled={loading}
               onClick={handleGoogleSignUp}
               className="orgkit-google-btn"
+              aria-busy={loading}
+              title={loading ? "Connecting to Google..." : "Sign up with your Google account"}
               style={{
                 height: 54,
                 paddingLeft: 12,
@@ -874,30 +1027,30 @@ export default function RegisterPage() {
                 gap: 10,
               }}
             >
-              {!loading && (
+              {loading ? (
                 <svg
+                  className="orgkit-spinner"
+                  width={22}
+                  height={22}
                   viewBox="0 0 24 24"
+                  fill="none"
                   xmlns="http://www.w3.org/2000/svg"
                   aria-hidden="true"
-                  style={{ width: 24, height: 24, flexShrink: 0 }}
                 >
-                  <path
-                    fill="#4285F4"
-                    d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="#E4E4E7"
+                    strokeWidth="3"
                   />
                   <path
-                    fill="#34A853"
-                    d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                    fill="#059669"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
+              ) : (
+                <GoogleLogo size={28} />
               )}
               <span
                 style={{
@@ -930,11 +1083,19 @@ export default function RegisterPage() {
               }}
             >
               By continuing you agree to our{" "}
-              <Link href="/terms" className="orgkit-terms-link">
+              <Link
+                href="/terms"
+                className="orgkit-terms-link"
+                title="View OrgKit Terms of Service"
+              >
                 Terms
               </Link>{" "}
               and{" "}
-              <Link href="/privacy" className="orgkit-terms-link">
+              <Link
+                href="/privacy"
+                className="orgkit-terms-link"
+                title="View OrgKit Privacy Policy"
+              >
                 Privacy Policy
               </Link>
               .
@@ -950,7 +1111,11 @@ export default function RegisterPage() {
               }}
             >
               Already have an account?{" "}
-              <Link href="/login" className="orgkit-signin-link">
+              <Link
+                href="/login"
+                className="orgkit-signin-link"
+                title="Sign in to your existing account"
+              >
                 Sign in
               </Link>
             </p>
