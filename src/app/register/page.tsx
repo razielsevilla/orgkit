@@ -13,20 +13,15 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 /* ── Google "G" multicolor official logo (inline SVG, 24×24 viewBox) ── */
-function GoogleLogo({ className }: { className?: string }) {
+function GoogleLogo({ size = 36 }: { size?: number }) {
   return (
     <svg
+      width={size}
+      height={size}
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
-      className={className}
-      style={{
-        width: "2.39cqw",
-        height: "2.39cqw",
-        minWidth: 24,
-        minHeight: 24,
-        flexShrink: 0,
-      }}
+      style={{ flexShrink: 0 }}
     >
       <path
         fill="#4285F4"
@@ -51,30 +46,38 @@ function GoogleLogo({ className }: { className?: string }) {
 export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
 
-  // Enforce zero-scrollbar policy on desktop viewport
+  // Enforce zero-scrollbar policy and lock html/body on desktop viewports
   useEffect(() => {
-    function enforceDesktopLock() {
-      if (window.innerWidth >= 1024 || (window.innerWidth >= 900 && window.innerWidth > window.innerHeight)) {
+    function enforceDesktop() {
+      const w = window.innerWidth;
+
+      if (w >= 1024) {
         document.documentElement.style.overflow = "hidden";
         document.documentElement.style.height = "100%";
+        document.documentElement.style.backgroundColor = "#F4F4F5";
         document.body.style.overflow = "hidden";
         document.body.style.height = "100%";
+        document.body.style.backgroundColor = "#F4F4F5";
       } else {
         document.documentElement.style.overflow = "";
         document.documentElement.style.height = "";
+        document.documentElement.style.backgroundColor = "";
         document.body.style.overflow = "";
         document.body.style.height = "";
+        document.body.style.backgroundColor = "";
       }
     }
 
-    enforceDesktopLock();
-    window.addEventListener("resize", enforceDesktopLock);
+    enforceDesktop();
+    window.addEventListener("resize", enforceDesktop);
     return () => {
-      window.removeEventListener("resize", enforceDesktopLock);
+      window.removeEventListener("resize", enforceDesktop);
       document.documentElement.style.overflow = "";
       document.documentElement.style.height = "";
+      document.documentElement.style.backgroundColor = "";
       document.body.style.overflow = "";
       document.body.style.height = "";
+      document.body.style.backgroundColor = "";
     };
   }, []);
 
@@ -93,24 +96,28 @@ export default function RegisterPage() {
         color: "#18181B",
         position: "relative",
         width: "100vw",
+        minWidth: "100%",
         height: "100vh",
         maxHeight: "100vh",
         overflow: "hidden",
         boxSizing: "border-box",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
       }}
     >
       <style>{`
-        /* ── Desktop View (>= 1024px): Zero Scroll, Perfect Fit ── */
+        /* ── Full-Bleed Global Baseline ── */
+        html, body {
+          background-color: #F4F4F5 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
+        /* ── Desktop View (>= 1024px): Zero Scroll, Edge-to-Edge Full Bleed ── */
         @media (min-width: 1024px) {
           html, body {
             overflow: hidden !important;
             height: 100vh !important;
             max-height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
+            width: 100vw !important;
           }
 
           .orgkit-page-root {
@@ -120,26 +127,39 @@ export default function RegisterPage() {
             overflow: hidden !important;
             display: flex !important;
             align-items: center !important;
-            justify-content: center !important;
           }
 
           .orgkit-mobile-wrapper {
             display: none !important;
           }
-        }
 
-        /* ── Adaptive Desktop Stage Container ── */
-        .orgkit-stage {
-          aspect-ratio: 1672 / 941;
-          width: min(100vw, calc(100vh * (1672 / 941)));
-          height: min(100vh, calc(100vw * (941 / 1672)));
-          max-width: 1672px;
-          max-height: 941px;
-          container-type: size;
-          position: relative;
-          overflow: hidden;
-          box-sizing: border-box;
-          flex-shrink: 0;
+          .orgkit-desktop-body {
+            display: flex !important;
+            width: 100% !important;
+            height: 100% !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding-left: clamp(32px, 10.5vw, 175px) !important;
+            padding-right: clamp(32px, 10.1vw, 170px) !important;
+            box-sizing: border-box !important;
+            position: relative !important;
+            z-index: 10 !important;
+          }
+
+          .orgkit-left-pane {
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            max-width: clamp(480px, 46vw, 680px) !important;
+          }
+
+          .orgkit-right-pane {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            flex-shrink: 0 !important;
+          }
         }
 
         /* ── Mobile View Fallback (< 1024px) ── */
@@ -165,6 +185,10 @@ export default function RegisterPage() {
             padding: 32px 16px 48px 16px !important;
           }
 
+          .orgkit-desktop-body {
+            display: none !important;
+          }
+
           .orgkit-mobile-wrapper {
             display: flex !important;
             flex-direction: column;
@@ -172,10 +196,6 @@ export default function RegisterPage() {
             width: 100%;
             max-width: 440px;
             box-sizing: border-box;
-          }
-
-          .orgkit-stage {
-            display: none !important;
           }
         }
 
@@ -219,20 +239,29 @@ export default function RegisterPage() {
       `}</style>
 
       {/* ═══════════════════════════════════════════════════════════════
-          DESKTOP VIEW: Adaptive 1672×941 Container Stage (Zero Scroll)
+          FULL-BLEED BACKGROUND DECORATION LAYER (0 to 100vw, 0 to 100vh)
+          No white bars or side borders!
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="orgkit-stage">
-        {/* ── Background SVG Vector Art (1672×941 Reference Geometry) ── */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          width: "100%",
+          height: "100%",
+          overflow: "hidden",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+        aria-hidden="true"
+      >
         <svg
           viewBox="0 0 1672 941"
+          preserveAspectRatio="none"
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
+            inset: 0,
             width: "100%",
             height: "100%",
-            pointerEvents: "none",
-            zIndex: 0,
           }}
           aria-hidden="true"
         >
@@ -344,8 +373,8 @@ export default function RegisterPage() {
             position: "absolute",
             bottom: 0,
             left: 0,
-            width: "53.23cqw",
-            height: "30.82cqh",
+            width: "clamp(550px, 53.2vw, 890px)",
+            height: "clamp(180px, 30.8vh, 290px)",
             overflow: "hidden",
             zIndex: 1,
             pointerEvents: "none",
@@ -369,86 +398,77 @@ export default function RegisterPage() {
             }}
           />
         </div>
+      </div>
 
-        {/* ── Top-Left Header: Logo + Divider + Wordmark (x: 10.47cqw, y: 11.48cqh) ── */}
-        <header
-          style={{
-            position: "absolute",
-            left: "10.47cqw",
-            top: "11.48cqh",
-            display: "flex",
-            alignItems: "center",
-            zIndex: 10,
-          }}
-        >
-          <Image
-            src="/orgkit-logo.png"
-            alt="OrgKit"
-            width={82}
-            height={52}
-            priority
-            className="object-contain"
+      {/* ═══════════════════════════════════════════════════════════════
+          DESKTOP VIEW: Full-Bleed 2-Column Responsive Layout (Zero Scroll)
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="orgkit-desktop-body">
+        {/* ── Left Pane: Header + Marketing Stack ── */}
+        <div className="orgkit-left-pane">
+          {/* 1. Header: Logo + Divider + Wordmark */}
+          <header
             style={{
-              width: "4.90cqw",
-              height: "auto",
-              display: "block",
-            }}
-          />
-          <div
-            style={{
-              width: "max(1.5px, 0.09cqw)",
-              height: "5.31cqh",
-              backgroundColor: "#E4E4E7",
-              marginLeft: "1.44cqw",
-              marginRight: "1.44cqw",
-              flexShrink: 0,
-            }}
-          />
-          <span
-            style={{
-              fontSize: "2.27cqw",
-              fontWeight: 700,
-              color: "#18181B",
-              letterSpacing: "-0.015em",
-              lineHeight: 1,
+              display: "flex",
+              alignItems: "center",
+              marginBottom: "clamp(24px, 5.1vh, 48px)",
             }}
           >
-            OrgKit
-          </span>
-        </header>
+            <Image
+              src="/orgkit-logo.png"
+              alt="OrgKit"
+              width={82}
+              height={52}
+              priority
+              className="object-contain"
+              style={{
+                width: "clamp(56px, 4.9vw, 82px)",
+                height: "auto",
+                display: "block",
+              }}
+            />
+            <div
+              style={{
+                width: 1.5,
+                height: "clamp(34px, 5.3vh, 50px)",
+                backgroundColor: "#E4E4E7",
+                marginLeft: "clamp(14px, 1.44vw, 24px)",
+                marginRight: "clamp(14px, 1.44vw, 24px)",
+                flexShrink: 0,
+              }}
+            />
+            <span
+              style={{
+                fontSize: "clamp(26px, 2.27vw, 38px)",
+                fontWeight: 700,
+                color: "#18181B",
+                letterSpacing: "-0.015em",
+                lineHeight: 1,
+              }}
+            >
+              OrgKit
+            </span>
+          </header>
 
-        {/* ── Left Column: Marketing Stack (x: 10.47cqw, y: 24.23cqh) ── */}
-        <div
-          style={{
-            position: "absolute",
-            left: "10.47cqw",
-            top: "24.23cqh",
-            width: "45.45cqw",
-            zIndex: 10,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "flex-start",
-          }}
-        >
-          {/* 1. Pill Badge */}
+          {/* 2. Pill Badge */}
           <div
             style={{
-              height: "4.04cqh",
-              paddingLeft: "1.20cqw",
-              paddingRight: "1.20cqw",
+              height: "clamp(32px, 4vh, 38px)",
+              paddingLeft: "clamp(14px, 1.2vw, 20px)",
+              paddingRight: "clamp(14px, 1.2vw, 20px)",
               borderRadius: 9999,
               backgroundColor: "rgba(5, 150, 105, 0.08)",
               border: "1.5px solid rgba(5, 150, 105, 0.25)",
               display: "inline-flex",
               alignItems: "center",
-              gap: "0.72cqw",
+              gap: "clamp(8px, 0.72vw, 12px)",
               boxSizing: "border-box",
             }}
           >
             <span
               style={{
-                width: "0.72cqw",
-                height: "0.72cqw",
+                width: "clamp(9px, 0.72vw, 12px)",
+                height: "clamp(9px, 0.72vw, 12px)",
                 borderRadius: "50%",
                 backgroundColor: "#059669",
                 flexShrink: 0,
@@ -457,7 +477,7 @@ export default function RegisterPage() {
             />
             <span
               style={{
-                fontSize: "0.93cqw",
+                fontSize: "clamp(13px, 0.93vw, 15.5px)",
                 fontWeight: 500,
                 color: "#3F3F46",
                 whiteSpace: "nowrap",
@@ -467,11 +487,11 @@ export default function RegisterPage() {
             </span>
           </div>
 
-          {/* 2. H1 Headline (3.40cqh below badge) */}
+          {/* 3. H1 Headline (32px below badge) */}
           <h1
             style={{
-              marginTop: "3.40cqh",
-              fontSize: "3.83cqw",
+              marginTop: "clamp(18px, 3.4vh, 32px)",
+              fontSize: "clamp(38px, 3.83vw, 64px)",
               lineHeight: 1.05,
               fontWeight: 800,
               letterSpacing: "-0.025em",
@@ -485,12 +505,12 @@ export default function RegisterPage() {
             <span style={{ color: "#059669" }}>Lead.</span>
           </h1>
 
-          {/* 3. Subtitle Paragraph (2.98cqh below H1) */}
+          {/* 4. Subtitle Paragraph (28px below H1) */}
           <p
             style={{
-              marginTop: "2.98cqh",
-              fontSize: "1.44cqw",
-              lineHeight: "3.19cqh",
+              marginTop: "clamp(14px, 2.97vh, 28px)",
+              fontSize: "clamp(16px, 1.44vw, 24px)",
+              lineHeight: 1.25,
               color: "#71717A",
               fontWeight: 400,
               marginBottom: 0,
@@ -501,10 +521,10 @@ export default function RegisterPage() {
             to connect, manage, and grow together.
           </p>
 
-          {/* 4. Feature Row (6.80cqh below paragraph) */}
+          {/* 5. Feature Row (64px below paragraph) */}
           <div
             style={{
-              marginTop: "6.80cqh",
+              marginTop: "clamp(24px, 6.8vh, 64px)",
               display: "flex",
               alignItems: "center",
             }}
@@ -514,18 +534,21 @@ export default function RegisterPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "0.84cqw",
+                gap: "clamp(8px, 0.84vw, 14px)",
               }}
             >
               <Users
-                style={{ width: "1.79cqw", height: "1.79cqw" }}
+                style={{
+                  width: "clamp(22px, 1.8vw, 30px)",
+                  height: "clamp(22px, 1.8vw, 30px)",
+                }}
                 strokeWidth={1.5}
                 color="#18181B"
                 aria-hidden="true"
               />
               <span
                 style={{
-                  fontSize: "0.93cqw",
+                  fontSize: "clamp(13px, 0.93vw, 15.5px)",
                   fontWeight: 500,
                   color: "#3F3F46",
                   whiteSpace: "nowrap",
@@ -535,14 +558,14 @@ export default function RegisterPage() {
               </span>
             </div>
 
-            {/* 1.5px vertical divider (1.79cqw margin each side) */}
+            {/* 1.5px vertical divider (30px margin each side) */}
             <div
               style={{
-                width: "max(1.5px, 0.09cqw)",
-                height: "3.19cqh",
+                width: 1.5,
+                height: "clamp(20px, 3.19vh, 30px)",
                 backgroundColor: "rgba(161, 161, 170, 0.6)",
-                marginLeft: "1.79cqw",
-                marginRight: "1.79cqw",
+                marginLeft: "clamp(14px, 1.79vw, 30px)",
+                marginRight: "clamp(14px, 1.79vw, 30px)",
                 flexShrink: 0,
               }}
             />
@@ -552,18 +575,21 @@ export default function RegisterPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "0.84cqw",
+                gap: "clamp(8px, 0.84vw, 14px)",
               }}
             >
               <CalendarDays
-                style={{ width: "1.79cqw", height: "1.79cqw" }}
+                style={{
+                  width: "clamp(22px, 1.8vw, 30px)",
+                  height: "clamp(22px, 1.8vw, 30px)",
+                }}
                 strokeWidth={1.5}
                 color="#18181B"
                 aria-hidden="true"
               />
               <span
                 style={{
-                  fontSize: "0.93cqw",
+                  fontSize: "clamp(13px, 0.93vw, 15.5px)",
                   fontWeight: 500,
                   color: "#3F3F46",
                   whiteSpace: "nowrap",
@@ -573,14 +599,14 @@ export default function RegisterPage() {
               </span>
             </div>
 
-            {/* 1.5px vertical divider (1.79cqw margin each side) */}
+            {/* 1.5px vertical divider (30px margin each side) */}
             <div
               style={{
-                width: "max(1.5px, 0.09cqw)",
-                height: "3.19cqh",
+                width: 1.5,
+                height: "clamp(20px, 3.19vh, 30px)",
                 backgroundColor: "rgba(161, 161, 170, 0.6)",
-                marginLeft: "1.79cqw",
-                marginRight: "1.79cqw",
+                marginLeft: "clamp(14px, 1.79vw, 30px)",
+                marginRight: "clamp(14px, 1.79vw, 30px)",
                 flexShrink: 0,
               }}
             />
@@ -590,18 +616,21 @@ export default function RegisterPage() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "0.84cqw",
+                gap: "clamp(8px, 0.84vw, 14px)",
               }}
             >
               <ChartNoAxesCombined
-                style={{ width: "1.79cqw", height: "1.79cqw" }}
+                style={{
+                  width: "clamp(22px, 1.8vw, 30px)",
+                  height: "clamp(22px, 1.8vw, 30px)",
+                }}
                 strokeWidth={1.5}
                 color="#18181B"
                 aria-hidden="true"
               />
               <span
                 style={{
-                  fontSize: "0.93cqw",
+                  fontSize: "clamp(13px, 0.93vw, 15.5px)",
                   fontWeight: 500,
                   color: "#3F3F46",
                   whiteSpace: "nowrap",
@@ -613,162 +642,165 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* ── Right Card: Registration Card (Vertically Centered, Centered at ~73% Width) ── */}
-        <div
-          style={{
-            position: "absolute",
-            right: "10.17cqw",
-            top: "50%",
-            transform: "translateY(-50%)",
-            width: "33.85cqw",
-            backgroundColor: "#FFFFFF",
-            borderRadius: "1.67cqw",
-            padding: "4.25cqh 2.69cqw",
-            boxShadow: "0 20px 50px rgba(24, 24, 27, 0.08)",
-            border: "1px solid rgba(228, 228, 231, 0.6)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-            boxSizing: "border-box",
-            zIndex: 10,
-          }}
-        >
-          {/* 1. OrgKit Logo (5.50cqw wide) */}
-          <Image
-            src="/orgkit-logo.png"
-            alt="OrgKit"
-            width={92}
-            height={58}
-            priority
-            className="object-contain"
-            style={{
-              width: "5.50cqw",
-              height: "auto",
-              display: "block",
-            }}
-          />
-
-          {/* 2. H2 "Create Your Account" (2.34cqh below logo) */}
-          <h2
-            style={{
-              marginTop: "2.34cqh",
-              fontSize: "2.39cqw",
-              fontWeight: 700,
-              color: "#18181B",
-              lineHeight: 1.15,
-              letterSpacing: "-0.015em",
-              marginBottom: 0,
-              whiteSpace: "nowrap",
-            }}
-          >
-            Create Your Account
-          </h2>
-
-          {/* 3. Subtitle (1.70cqh below H2, max-width 26.3cqw) */}
-          <p
-            style={{
-              marginTop: "1.70cqh",
-              fontSize: "1.26cqw",
-              lineHeight: "3.08cqh",
-              color: "#71717A",
-              maxWidth: "26.3cqw",
-              marginBottom: 0,
-              fontWeight: 400,
-            }}
-          >
-            <span style={{ whiteSpace: "nowrap" }}>
-              Join OrgKit and be part of a more connected
-            </span>
-            <br />
-            <span>student community.</span>
-          </p>
-
-          {/* 4. Google Sign-up Button (4.25cqh below subtitle, height 7.65cqh) */}
-          <div style={{ width: "100%", marginTop: "4.25cqh" }}>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={handleGoogleSignUp}
-              className="orgkit-google-btn"
-              style={{
-                height: "7.65cqh",
-                gap: "0.84cqw",
-              }}
-            >
-              {!loading && <GoogleLogo />}
-              <span
-                style={{
-                  fontSize: "1.44cqw",
-                  fontWeight: 500,
-                  color: "#18181B",
-                }}
-              >
-                {loading ? "Signing up..." : "Sign up with Google"}
-              </span>
-            </button>
-          </div>
-
-          {/* 5. Divider Row (4.68cqh below button) */}
+        {/* ── Right Pane: Registration Card (Vertically Centered) ── */}
+        <div className="orgkit-right-pane">
           <div
             style={{
-              width: "100%",
+              width: "clamp(380px, 33.85vw, 566px)",
+              maxWidth: 566,
+              backgroundColor: "#FFFFFF",
+              borderRadius: "clamp(20px, 1.67vw, 28px)",
+              padding: "clamp(24px, 4.25vh, 40px) clamp(24px, 2.69vw, 45px)",
+              boxShadow: "0 20px 50px rgba(24, 24, 27, 0.08)",
+              border: "1px solid rgba(228, 228, 231, 0.6)",
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              marginTop: "4.68cqh",
+              textAlign: "center",
+              boxSizing: "border-box",
             }}
           >
-            <div
+            {/* 1. OrgKit Logo (92px wide) */}
+            <Image
+              src="/orgkit-logo.png"
+              alt="OrgKit"
+              width={92}
+              height={58}
+              priority
+              className="object-contain"
               style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: "#E4E4E7",
+                width: "clamp(64px, 5.5vw, 92px)",
+                height: "auto",
+                display: "block",
               }}
             />
-            <span
+
+            {/* 2. H2 "Create Your Account" (22px below logo) */}
+            <h2
               style={{
-                paddingLeft: "1.44cqw",
-                paddingRight: "1.44cqw",
-                fontSize: "1.20cqw",
+                marginTop: "clamp(12px, 2.34vh, 22px)",
+                fontSize: "clamp(26px, 2.39vw, 40px)",
+                fontWeight: 700,
+                color: "#18181B",
+                lineHeight: 1.15,
+                letterSpacing: "-0.015em",
+                marginBottom: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Create Your Account
+            </h2>
+
+            {/* 3. Subtitle (16px below H2, max-width 440px) */}
+            <p
+              style={{
+                marginTop: "clamp(10px, 1.7vh, 16px)",
+                fontSize: "clamp(14px, 1.26vw, 21px)",
+                lineHeight: 1.38,
                 color: "#71717A",
+                maxWidth: 440,
+                marginBottom: 0,
                 fontWeight: 400,
               }}
             >
-              or
-            </span>
+              <span style={{ whiteSpace: "nowrap" }}>
+                Join OrgKit and be part of a more connected
+              </span>
+              <br />
+              <span>student community.</span>
+            </p>
+
+            {/* 4. Google Sign-up Button (40px below subtitle, height 72px) */}
             <div
               style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: "#E4E4E7",
+                width: "100%",
+                marginTop: "clamp(20px, 4.25vh, 40px)",
               }}
-            />
-          </div>
+            >
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleGoogleSignUp}
+                className="orgkit-google-btn"
+                style={{
+                  height: "clamp(52px, 7.65vh, 72px)",
+                  gap: "clamp(10px, 0.84vw, 14px)",
+                }}
+              >
+                {!loading && <GoogleLogo size={36} />}
+                <span
+                  style={{
+                    fontSize: "clamp(17px, 1.44vw, 24px)",
+                    fontWeight: 500,
+                    color: "#18181B",
+                  }}
+                >
+                  {loading ? "Signing up..." : "Sign up with Google"}
+                </span>
+              </button>
+            </div>
 
-          {/* 6. Legal Text (4.04cqh below divider) */}
-          <p
-            style={{
-              marginTop: "4.04cqh",
-              fontSize: "1.02cqw",
-              lineHeight: "2.98cqh",
-              color: "#71717A",
-              marginBottom: 0,
-              fontWeight: 400,
-            }}
-          >
-            <span style={{ whiteSpace: "nowrap" }}>
-              By continuing, you agree to our
-            </span>
-            <br />
-            <Link href="/terms" className="orgkit-terms-link">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="orgkit-terms-link">
-              Privacy Policy
-            </Link>
-            .
-          </p>
+            {/* 5. Divider Row (44px below button) */}
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                marginTop: "clamp(20px, 4.68vh, 44px)",
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  height: 1,
+                  backgroundColor: "#E4E4E7",
+                }}
+              />
+              <span
+                style={{
+                  paddingLeft: "clamp(14px, 1.44vw, 24px)",
+                  paddingRight: "clamp(14px, 1.44vw, 24px)",
+                  fontSize: "clamp(15px, 1.2vw, 20px)",
+                  color: "#71717A",
+                  fontWeight: 400,
+                }}
+              >
+                or
+              </span>
+              <div
+                style={{
+                  flex: 1,
+                  height: 1,
+                  backgroundColor: "#E4E4E7",
+                }}
+              />
+            </div>
+
+            {/* 6. Legal Text (38px below divider) */}
+            <p
+              style={{
+                marginTop: "clamp(18px, 4.04vh, 38px)",
+                fontSize: "clamp(12px, 1.02vw, 17px)",
+                lineHeight: 1.65,
+                color: "#71717A",
+                marginBottom: 0,
+                fontWeight: 400,
+              }}
+            >
+              <span style={{ whiteSpace: "nowrap" }}>
+                By continuing, you agree to our
+              </span>
+              <br />
+              <Link href="/terms" className="orgkit-terms-link">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="orgkit-terms-link">
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          </div>
         </div>
       </div>
 
@@ -832,8 +864,8 @@ export default function RegisterPage() {
           <Image
             src="/orgkit-logo.png"
             alt="OrgKit"
-            width={72}
-            height={46}
+            width={68}
+            height={44}
             className="object-contain"
             style={{ width: 68, height: "auto" }}
           />
