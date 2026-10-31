@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@theme {
+:root {
   --color-base: #f4f4f5;
   --color-surface: #ffffff;
   --color-ink: #18181b;
@@ -8,17 +8,20 @@
   --color-line: #e4e4e7;
   --color-accent: #059669;
   --color-accent-strong: #047857;
-  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-:root {
-  --background: #f4f4f5;
-  --foreground: #18181b;
-}
+.bg-base { background-color: var(--color-base); }
+.bg-surface { background-color: var(--color-surface); }
+.text-ink { color: var(--color-ink); }
+.text-muted { color: var(--color-muted); }
+.border-line { border-color: var(--color-line); }
+.bg-accent { background-color: var(--color-accent); }
+.bg-accent-strong { background-color: var(--color-accent-strong); }
+.text-accent { color: var(--color-accent); }
+.text-accent-strong { color: var(--color-accent-strong); }
 
 body {
   background-color: var(--color-base);
   color: var(--color-ink);
-  font-family: var(--font-sans);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }

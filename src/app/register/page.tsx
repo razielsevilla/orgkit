@@ -1,9 +1,27 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import { Users, CalendarDays, ChartNoAxesCombined } from "lucide-react";
+import { useState } from "react";
 
-function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+/* ── Google "G" multicolor logo (inline SVG, 24×24 viewBox) ──────── */
+function GoogleLogo({ size = 40 }: { size?: number }) {
   return (
-    <svg className={className} viewBox="0 0 24 24">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
       <path
         fill="#4285F4"
         d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
@@ -24,229 +42,514 @@ function GoogleIcon({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-function MembersIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  );
-}
-
-function CalendarIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-      <line x1="16" x2="16" y1="2" y2="6" />
-      <line x1="8" x2="8" y1="2" y2="6" />
-      <line x1="3" x2="21" y1="10" y2="10" />
-      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01" />
-    </svg>
-  );
-}
-
-function ChartIcon({ className = "w-4 h-4" }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="18" x2="18" y1="20" y2="10" />
-      <line x1="12" x2="12" y1="20" y2="4" />
-      <line x1="6" x2="6" y1="20" y2="14" />
-      <path d="M3 13l5-5 4 4 9-9" />
-    </svg>
-  );
-}
-
 export default function RegisterPage() {
+  const [loading, setLoading] = useState(false);
+
+  // TODO: Replace with the real Google sign-in handler from the auth system (A1 ticket)
+  function handleGoogleSignUp() {
+    setLoading(true);
+    // TODO: Implement Google OAuth sign-up flow
+    setTimeout(() => setLoading(false), 2000);
+  }
+
   return (
-    <main className="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-base px-6 py-8 sm:px-10 sm:py-10 lg:px-20 lg:py-14">
-      {/* Decorative Corner Waves */}
-      <div className="pointer-events-none absolute top-0 left-0 z-0 select-none">
-        <Image
-          src="/decor-top-left.png"
-          alt=""
-          width={140}
-          height={140}
-          className="h-auto w-28 sm:w-36"
-          priority
+    <main
+      className={`${plusJakarta.className} relative flex min-h-screen w-full overflow-hidden`}
+      style={{ backgroundColor: "#F4F4F5" }}
+    >
+      {/* ═══════════ BACKGROUND DECORATION ═══════════ */}
+      <div
+        className="pointer-events-none absolute inset-0 z-0"
+        aria-hidden="true"
+      >
+        {/* ── Top-left: pale green circle + outline arc ── */}
+        <div
+          className="absolute"
+          style={{
+            width: "580px",
+            height: "580px",
+            top: "-120px",
+            left: "-70px",
+            borderRadius: "50%",
+            background: "rgba(5,150,105,0.06)",
+          }}
         />
+        <div
+          className="absolute"
+          style={{
+            width: "500px",
+            height: "500px",
+            top: "-120px",
+            left: "-70px",
+            borderRadius: "50%",
+            border: "1.5px solid rgba(5,150,105,0.35)",
+            /* center same as the filled circle, smaller radius */
+            transform: "translate(40px, 40px)",
+          }}
+        />
+        {/* Tiny emerald tick near the outline edge */}
+        <div
+          className="absolute"
+          style={{
+            width: 0,
+            height: 0,
+            top: "42px",
+            left: "222px",
+            borderLeft: "6px solid transparent",
+            borderRight: "6px solid transparent",
+            borderBottom: "10px solid #059669",
+            transform: "rotate(-30deg)",
+          }}
+        />
+
+        {/* ── Top-right: solid emerald circle + pale ring ── */}
+        <div
+          className="absolute"
+          style={{
+            width: "640px",
+            height: "640px",
+            top: "-280px",
+            right: "-260px",
+            borderRadius: "50%",
+            background: "rgba(5,150,105,0.10)",
+          }}
+        />
+        <div
+          className="absolute"
+          style={{
+            width: "570px",
+            height: "570px",
+            top: "-245px",
+            right: "-225px",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle at 40% 40%, #059669, #34d399 90%)",
+          }}
+        />
+
+        {/* ── Bottom-right: solid emerald segment + outline arc ── */}
+        <div
+          className="absolute"
+          style={{
+            width: "460px",
+            height: "460px",
+            bottom: "-280px",
+            right: "-120px",
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle at 30% 30%, #059669, #10b981 90%)",
+          }}
+        />
+        <div
+          className="absolute"
+          style={{
+            width: "560px",
+            height: "560px",
+            bottom: "-300px",
+            right: "-160px",
+            borderRadius: "50%",
+            border: "1.5px solid rgba(5,150,105,0.35)",
+          }}
+        />
+
+        {/* ── Bottom-left: two pale mint circles ── */}
+        <div
+          className="absolute"
+          style={{
+            width: "520px",
+            height: "520px",
+            bottom: "-260px",
+            left: "-180px",
+            borderRadius: "50%",
+            background: "rgba(5,150,105,0.08)",
+          }}
+        />
+        <div
+          className="absolute"
+          style={{
+            width: "500px",
+            height: "500px",
+            bottom: "-220px",
+            left: "310px",
+            borderRadius: "50%",
+            background: "rgba(5,150,105,0.08)",
+          }}
+        />
+
+        {/* ── Campus building photo (bottom-left) ── */}
+        <div
+          className="absolute bottom-0 left-0 hidden lg:block"
+          style={{
+            width: "clamp(500px, 53vw, 890px)",
+            height: "clamp(180px, 18.5vw, 290px)",
+            maskImage:
+              "linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)",
+            maskComposite: "intersect",
+            WebkitMaskImage:
+              "linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)",
+            WebkitMaskComposite: "source-in" as React.CSSProperties["WebkitMaskComposite"],
+          }}
+        >
+          <Image
+            src="/campus-building.png"
+            alt=""
+            fill
+            className="object-cover object-top"
+            style={{ filter: "grayscale(100%)" }}
+          />
+        </div>
       </div>
 
-      <div className="pointer-events-none absolute top-0 right-0 z-0 select-none">
-        <Image
-          src="/decor-top-right.png"
-          alt=""
-          width={200}
-          height={160}
-          className="h-auto w-44 sm:w-56 md:w-64"
-          priority
-        />
-      </div>
-
-      <div className="pointer-events-none absolute bottom-0 right-0 z-0 select-none">
-        <Image
-          src="/decor-bottom-right.png"
-          alt=""
-          width={220}
-          height={160}
-          className="h-auto w-48 sm:w-60 md:w-72"
-          priority
-        />
-      </div>
-
-      {/* Campus Building Graphic (Bottom Left) */}
-      <div className="pointer-events-none absolute bottom-0 left-0 z-0 select-none">
-        <Image
-          src="/campus-building.png"
-          alt="Campus Architecture"
-          width={540}
-          height={260}
-          className="h-auto w-72 sm:w-88 md:w-[460px] lg:w-[500px]"
-          priority
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-1 flex-col justify-between">
-        {/* Top Branding */}
-        <header className="flex items-center gap-3">
+      {/* ═══════════ CONTENT ═══════════ */}
+      <div className="relative z-10 flex w-full flex-col" style={{ minHeight: "100vh" }}>
+        {/* ── Header ── */}
+        <header
+          className="flex items-center"
+          style={{
+            paddingTop: "clamp(2rem, 6.5vw, 6.5rem)",
+            paddingLeft: "clamp(1.5rem, 10.5vw, 11rem)",
+          }}
+        >
           <Image
             src="/orgkit-logo.png"
-            alt="OrgKit Logo"
-            width={48}
-            height={36}
-            className="h-9 w-auto object-contain"
-            priority
+            alt="OrgKit"
+            width={82}
+            height={52}
+            preload
+            className="object-contain"
+            style={{
+              width: "clamp(52px, 4.9vw, 82px)",
+              height: "auto",
+            }}
           />
-          <div className="h-6 w-[1.5px] bg-line" />
-          <span className="text-2xl font-bold tracking-tight text-ink sm:text-[26px]">
+          <div
+            className="mx-6 self-stretch"
+            style={{
+              width: "1.5px",
+              height: "clamp(32px, 3vw, 50px)",
+              backgroundColor: "#D4D4D8",
+            }}
+          />
+          <span
+            className="font-bold"
+            style={{
+              fontSize: "clamp(24px, 2.27vw, 38px)",
+              color: "#18181B",
+              letterSpacing: "-0.01em",
+            }}
+          >
             OrgKit
           </span>
         </header>
 
-        {/* Center Section: Split Hero & Register Card */}
-        <div className="my-auto grid grid-cols-1 items-center gap-12 py-10 lg:grid-cols-12 lg:gap-8">
-          {/* Left Column: Hero Text */}
-          <div className="flex flex-col items-start lg:col-span-7 xl:col-span-7">
-            {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/90 px-3.5 py-1 text-xs font-medium text-ink shadow-2xs backdrop-blur-xs">
-              <span className="h-2 w-2 rounded-full bg-accent" />
-              <span>Student Organization Management System</span>
+        {/* ── Two-column layout ── */}
+        <div className="flex flex-1 items-center">
+          {/* Left marketing column */}
+          <div
+            className="hidden flex-col lg:flex"
+            style={{
+              paddingLeft: "clamp(1.5rem, 10.5vw, 11rem)",
+              paddingTop: "clamp(1rem, 1.5vw, 2rem)",
+              maxWidth: "55%",
+            }}
+          >
+            {/* Pill badge */}
+            <div
+              className="inline-flex w-fit items-center gap-3"
+              style={{
+                height: "38px",
+                paddingLeft: "20px",
+                paddingRight: "20px",
+                borderRadius: "9999px",
+                background: "rgba(5,150,105,0.08)",
+                border: "1.5px solid rgba(5,150,105,0.25)",
+              }}
+            >
+              <span
+                style={{
+                  width: "12px",
+                  height: "12px",
+                  borderRadius: "50%",
+                  backgroundColor: "#059669",
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: "15.5px",
+                  fontWeight: 500,
+                  color: "#3F3F46",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Student Organization Management System
+              </span>
             </div>
 
-            {/* Headline */}
-            <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-ink sm:text-5xl lg:text-[54px] lg:leading-[1.12]">
+            {/* H1 */}
+            <h1
+              style={{
+                marginTop: "clamp(20px, 1.9vw, 32px)",
+                fontSize: "clamp(36px, 3.83vw, 64px)",
+                lineHeight: 1.05,
+                fontWeight: 800,
+                letterSpacing: "-0.02em",
+                color: "#18181B",
+              }}
+            >
               Organize. Collaborate.
               <br />
-              <span className="text-accent">Lead.</span>
+              <span style={{ color: "#059669" }}>Lead.</span>
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-4 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
+            <p
+              style={{
+                marginTop: "clamp(16px, 1.67vw, 28px)",
+                fontSize: "clamp(16px, 1.44vw, 24px)",
+                lineHeight: "1.25",
+                color: "#71717A",
+                fontWeight: 400,
+              }}
+            >
               A modern platform for student organizations
-              <br className="hidden sm:inline" /> to connect, manage, and grow together.
+              <br />
+              to connect, manage, and grow together.
             </p>
 
-            {/* Features Row */}
-            <div className="mt-8 flex flex-wrap items-center gap-4 text-xs font-medium text-ink sm:gap-6 sm:text-sm lg:mt-10">
-              <div className="flex items-center gap-2">
-                <MembersIcon className="h-4 w-4 text-ink" />
-                <span>Manage Members</span>
+            {/* Feature row */}
+            <div
+              className="flex items-center"
+              style={{
+                marginTop: "clamp(32px, 3.83vw, 64px)",
+                gap: 0,
+              }}
+            >
+              {/* Manage Members */}
+              <div className="flex items-center" style={{ gap: "14px" }}>
+                <Users
+                  size={30}
+                  strokeWidth={1.5}
+                  color="#18181B"
+                  aria-hidden="true"
+                />
+                <span
+                  style={{
+                    fontSize: "15.5px",
+                    fontWeight: 500,
+                    color: "#3F3F46",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Manage Members
+                </span>
               </div>
-              <div className="h-4 w-px bg-line" />
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="h-4 w-4 text-ink" />
-                <span>Organize Events</span>
+
+              {/* Divider */}
+              <div
+                style={{
+                  width: "1.5px",
+                  height: "30px",
+                  backgroundColor: "rgba(161,161,170,0.6)",
+                  marginLeft: "30px",
+                  marginRight: "30px",
+                  flexShrink: 0,
+                }}
+              />
+
+              {/* Organize Events */}
+              <div className="flex items-center" style={{ gap: "14px" }}>
+                <CalendarDays
+                  size={30}
+                  strokeWidth={1.5}
+                  color="#18181B"
+                  aria-hidden="true"
+                />
+                <span
+                  style={{
+                    fontSize: "15.5px",
+                    fontWeight: 500,
+                    color: "#3F3F46",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Organize Events
+                </span>
               </div>
-              <div className="h-4 w-px bg-line" />
-              <div className="flex items-center gap-2">
-                <ChartIcon className="h-4 w-4 text-ink" />
-                <span>Track Activities</span>
+
+              {/* Divider */}
+              <div
+                style={{
+                  width: "1.5px",
+                  height: "30px",
+                  backgroundColor: "rgba(161,161,170,0.6)",
+                  marginLeft: "30px",
+                  marginRight: "30px",
+                  flexShrink: 0,
+                }}
+              />
+
+              {/* Track Activities */}
+              <div className="flex items-center" style={{ gap: "14px" }}>
+                <ChartNoAxesCombined
+                  size={30}
+                  strokeWidth={1.5}
+                  color="#18181B"
+                  aria-hidden="true"
+                />
+                <span
+                  style={{
+                    fontSize: "15.5px",
+                    fontWeight: 500,
+                    color: "#3F3F46",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Track Activities
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Right Column: Register Card */}
-          <div className="flex justify-center lg:col-span-5 lg:justify-end xl:col-span-5">
-            <div className="w-full max-w-[420px] rounded-3xl border border-line bg-surface p-8 shadow-[0_20px_50px_rgba(24,24,27,0.06)] sm:p-10">
-              {/* Logo Icon inside card */}
-              <div className="flex justify-center">
-                <Image
-                  src="/orgkit-logo.png"
-                  alt="OrgKit Logo"
-                  width={64}
-                  height={48}
-                  className="h-12 w-auto object-contain"
-                />
-              </div>
+          {/* Right card */}
+          <div
+            className="flex flex-1 items-center justify-center lg:justify-end"
+            style={{
+              paddingRight: "clamp(1rem, 5vw, 5.5rem)",
+              paddingLeft: "clamp(1rem, 2vw, 2rem)",
+            }}
+          >
+            <div
+              className="flex w-full flex-col items-center"
+              style={{
+                maxWidth: "min(100%, clamp(340px, 33.8vw, 566px))",
+                backgroundColor: "#FFFFFF",
+                borderRadius: "28px",
+                paddingTop: "clamp(28px, 2.4vw, 40px)",
+                paddingBottom: "clamp(28px, 2.4vw, 40px)",
+                paddingLeft: "clamp(20px, 2.7vw, 45px)",
+                paddingRight: "clamp(20px, 2.7vw, 45px)",
+                boxShadow: "0 20px 50px rgba(24,24,27,0.08)",
+                border: "1px solid rgba(228,228,231,0.6)",
+              }}
+            >
+              {/* Logo in card */}
+              <Image
+                src="/orgkit-logo.png"
+                alt="OrgKit"
+                width={92}
+                height={58}
+                className="object-contain"
+                style={{
+                  width: "clamp(64px, 5.5vw, 92px)",
+                  height: "auto",
+                }}
+              />
 
-              {/* Card Title */}
-              <h2 className="mt-5 text-center text-2xl font-bold tracking-tight text-ink">
+              {/* Card heading */}
+              <h2
+                className="text-center"
+                style={{
+                  marginTop: "clamp(14px, 1.32vw, 22px)",
+                  fontSize: "clamp(26px, 2.4vw, 40px)",
+                  fontWeight: 700,
+                  color: "#18181B",
+                  lineHeight: 1.15,
+                }}
+              >
                 Create Your Account
               </h2>
 
-              {/* Card Description */}
-              <p className="mt-2 text-center text-xs text-muted sm:text-sm">
+              {/* Card subtitle */}
+              <p
+                className="text-center"
+                style={{
+                  marginTop: "clamp(10px, 0.96vw, 16px)",
+                  fontSize: "clamp(15px, 1.26vw, 21px)",
+                  lineHeight: "1.38",
+                  color: "#71717A",
+                  maxWidth: "440px",
+                }}
+              >
                 Join OrgKit and be part of a more connected
                 <br />
                 student community.
               </p>
 
-              {/* Sign up with Google Button */}
+              {/* Google sign-up button */}
               <button
                 type="button"
-                className="group mt-7 flex w-full cursor-pointer items-center justify-center gap-3 rounded-full border border-line bg-surface px-5 py-3 text-sm font-semibold text-ink shadow-2xs transition-all duration-200 hover:border-zinc-300 hover:bg-zinc-50 active:scale-[0.99]"
+                disabled={loading}
+                onClick={handleGoogleSignUp}
+                className="group flex w-full cursor-pointer items-center justify-center transition-colors hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-[#059669] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70"
+                style={{
+                  marginTop: "clamp(24px, 2.4vw, 40px)",
+                  height: "clamp(52px, 4.3vw, 72px)",
+                  borderRadius: "9999px",
+                  backgroundColor: "#FFFFFF",
+                  border: "2px solid #E4E4E7",
+                  gap: "14px",
+                  boxShadow: "none",
+                  outline: "none",
+                }}
               >
-                <GoogleIcon className="h-5 w-5 transition-transform group-hover:scale-105" />
-                <span>Sign up with Google</span>
+                {!loading && <GoogleLogo size={40} />}
+                <span
+                  style={{
+                    fontSize: "clamp(17px, 1.44vw, 24px)",
+                    fontWeight: 500,
+                    color: "#18181B",
+                  }}
+                >
+                  {loading ? "Signing up..." : "Sign up with Google"}
+                </span>
               </button>
 
-              {/* Or Divider */}
-              <div className="relative my-6 flex items-center justify-center">
-                <div className="w-full border-t border-line" />
-                <span className="absolute bg-surface px-3 text-xs text-muted">
+              {/* Divider row */}
+              <div
+                className="flex w-full items-center"
+                style={{
+                  marginTop: "clamp(28px, 2.63vw, 44px)",
+                }}
+              >
+                <div className="flex-1" style={{ height: "1px", backgroundColor: "#E4E4E7" }} />
+                <span
+                  style={{
+                    paddingLeft: "24px",
+                    paddingRight: "24px",
+                    fontSize: "clamp(15px, 1.2vw, 20px)",
+                    color: "#71717A",
+                  }}
+                >
                   or
                 </span>
+                <div className="flex-1" style={{ height: "1px", backgroundColor: "#E4E4E7" }} />
               </div>
 
-              {/* Terms & Privacy */}
-              <p className="mx-auto max-w-[270px] text-center text-xs leading-relaxed text-muted">
-                By continuing, you agree to our{" "}
+              {/* Legal text */}
+              <p
+                className="text-center"
+                style={{
+                  marginTop: "clamp(24px, 2.27vw, 38px)",
+                  fontSize: "clamp(13px, 1.02vw, 17px)",
+                  lineHeight: "1.65",
+                  color: "#71717A",
+                }}
+              >
+                By continuing, you agree to our
+                <br />
                 <Link
                   href="/terms"
-                  className="font-medium text-accent hover:underline"
+                  className="hover:underline focus:underline"
+                  style={{ color: "#059669", textDecoration: "none" }}
                 >
                   Terms of Service
                 </Link>{" "}
                 and{" "}
                 <Link
                   href="/privacy"
-                  className="font-medium text-accent hover:underline"
+                  className="hover:underline focus:underline"
+                  style={{ color: "#059669", textDecoration: "none" }}
                 >
                   Privacy Policy
                 </Link>
@@ -255,11 +558,15 @@ export default function RegisterPage() {
             </div>
           </div>
         </div>
-
-        {/* Empty bottom space to balance spacing above building graphic */}
-        <div className="h-4 sm:h-8" />
       </div>
+
+      {/* ═══════════ MOBILE LAYOUT (< 1024px) ═══════════ */}
+      {/* On mobile the two-column layout above hides the left column.
+          We show a simplified single-column version below the header.
+          The card is already visible and centered via flex-1 + justify-center.
+          Below 640px the H1 block and features are hidden via lg:flex on the left col.
+          The corner shapes scale naturally since they use fixed px sizes that
+          overflow and clip via the parent overflow-hidden. */}
     </main>
   );
 }
-
