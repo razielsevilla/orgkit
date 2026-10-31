@@ -103,8 +103,8 @@ export default function RegisterPage() {
       }}
     >
       <style>{`
-        /* ── Zero-Scroll Global Desktop Lock ── */
-        @media (min-width: 1024px), (min-width: 900px) and (orientation: landscape) {
+        /* ── Desktop View (>= 1024px): Zero Scroll, Perfect Fit ── */
+        @media (min-width: 1024px) {
           html, body {
             overflow: hidden !important;
             height: 100vh !important;
@@ -112,6 +112,17 @@ export default function RegisterPage() {
             margin: 0 !important;
             padding: 0 !important;
           }
+
+          .orgkit-page-root {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            overflow: hidden !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
           .orgkit-mobile-wrapper {
             display: none !important;
           }
@@ -131,8 +142,8 @@ export default function RegisterPage() {
           flex-shrink: 0;
         }
 
-        /* ── Mobile View Fallback (< 1024px and portrait) ── */
-        @media (max-width: 1023px) and (orientation: portrait) {
+        /* ── Mobile View Fallback (< 1024px) ── */
+        @media (max-width: 1023px) {
           html, body {
             overflow-y: auto !important;
             overflow-x: hidden !important;
