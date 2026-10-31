@@ -118,12 +118,13 @@ function RegisterContent() {
       if (error) {
         console.error("Sign-in error:", error);
         setLoading(false);
-        setManualError("We couldn't reach Google. Please try again.");
+        setManualError(error.message || "We couldn't reach Google. Please try again.");
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Sign-in unexpected error:", err);
       setLoading(false);
-      setManualError("We couldn't reach Google. Please try again.");
+      const msg = err instanceof Error ? err.message : "We couldn't reach Google. Please try again.";
+      setManualError(msg);
     }
   }
 
