@@ -450,47 +450,10 @@ export default function RegisterPage() {
             </span>
           </header>
 
-          {/* 2. Pill Badge */}
-          <div
-            style={{
-              height: "clamp(32px, 4vh, 38px)",
-              paddingLeft: "clamp(14px, 1.2vw, 20px)",
-              paddingRight: "clamp(14px, 1.2vw, 20px)",
-              borderRadius: 9999,
-              backgroundColor: "rgba(5, 150, 105, 0.08)",
-              border: "1.5px solid rgba(5, 150, 105, 0.25)",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "clamp(8px, 0.72vw, 12px)",
-              boxSizing: "border-box",
-            }}
-          >
-            <span
-              style={{
-                width: "clamp(9px, 0.72vw, 12px)",
-                height: "clamp(9px, 0.72vw, 12px)",
-                borderRadius: "50%",
-                backgroundColor: "#059669",
-                flexShrink: 0,
-                display: "inline-block",
-              }}
-            />
-            <span
-              style={{
-                fontSize: "clamp(13px, 0.93vw, 15.5px)",
-                fontWeight: 500,
-                color: "#3F3F46",
-                whiteSpace: "nowrap",
-              }}
-            >
-              Student Organization Management System
-            </span>
-          </div>
-
-          {/* 3. H1 Headline (32px below badge) */}
+          {/* 2. H1 Headline */}
           <h1
             style={{
-              marginTop: "clamp(18px, 3.4vh, 32px)",
+              marginTop: 0,
               fontSize: "clamp(38px, 3.83vw, 64px)",
               lineHeight: 1.05,
               fontWeight: 800,
