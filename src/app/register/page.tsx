@@ -55,65 +55,61 @@ export default function RegisterPage() {
 
   return (
     <main
-      className={`${plusJakarta.className} relative min-h-screen w-full overflow-hidden bg-base text-ink`}
+      className={`${plusJakarta.className} orgkit-root relative w-full overflow-hidden bg-base text-ink`}
       style={{
         backgroundColor: "#F4F4F5",
         color: "#18181B",
-        minHeight: "100vh",
-        height: "100vh",
-        maxHeight: "100vh",
-        width: "100%",
-        position: "relative",
-        overflow: "hidden",
       }}
     >
-      {/* ── Scoped CSS styles matching the reference design ── */}
+      {/* ── Scoped CSS matching the 1672x941 reference specifications ── */}
       <style>{`
-        .orgkit-main-container {
-          position: relative;
-          z-index: 10;
-          display: flex;
-          flex-direction: column;
+        /* Base full-viewport setup */
+        .orgkit-root {
+          min-height: 100vh;
           height: 100vh;
           max-height: 100vh;
-          width: 100%;
-          overflow: hidden;
-          box-sizing: border-box;
-        }
-        .orgkit-header {
-          display: flex;
-          align-items: center;
-          padding-top: clamp(28px, 6.46vw, 108px);
-          padding-left: clamp(24px, 10.5vw, 176px);
-          flex-shrink: 0;
-        }
-        .orgkit-body {
-          display: flex;
-          flex: 1;
-          align-items: center;
           position: relative;
-          min-height: 0;
+          overflow: hidden;
+          width: 100%;
         }
-        .orgkit-left-col {
-          display: flex;
-          flex-direction: column;
-          align-items: flex-start;
-          padding-left: clamp(24px, 10.5vw, 176px);
-          width: 53%;
-          z-index: 2;
+
+        /* Desktop layout (>= 1024px) */
+        @media (min-width: 1024px) {
+          .orgkit-desktop-header {
+            position: absolute;
+            top: clamp(48px, 11.48vh, 108px);
+            left: 10.5%;
+            display: flex;
+            align-items: center;
+            z-index: 10;
+          }
+          .orgkit-desktop-left {
+            position: absolute;
+            top: clamp(160px, 27vh, 254px);
+            left: 10.5%;
+            width: clamp(540px, 48vw, 780px);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            z-index: 10;
+          }
+          .orgkit-desktop-card-wrap {
+            position: absolute;
+            top: calc(50% - 10px);
+            left: 73%;
+            transform: translate(-50%, -50%);
+            width: clamp(460px, 33.8vw, 566px);
+            max-width: 566px;
+            z-index: 10;
+          }
+          .orgkit-mobile-container {
+            display: none !important;
+          }
         }
-        .orgkit-right-col {
-          display: flex;
-          flex: 1;
-          justify-content: center;
-          align-items: center;
-          padding-right: clamp(20px, 6vw, 100px);
-          padding-left: 20px;
-          z-index: 2;
-        }
+
+        /* Card styles */
         .orgkit-card {
           width: 100%;
-          max-width: 566px;
           background-color: #FFFFFF;
           border-radius: 28px;
           padding: 40px 45px;
@@ -125,6 +121,8 @@ export default function RegisterPage() {
           text-align: center;
           box-sizing: border-box;
         }
+
+        /* Google button */
         .orgkit-google-btn {
           width: 100%;
           height: 72px;
@@ -150,6 +148,8 @@ export default function RegisterPage() {
           opacity: 0.65;
           cursor: not-allowed;
         }
+
+        /* Links */
         .orgkit-terms-link {
           color: #059669;
           text-decoration: none;
@@ -158,85 +158,73 @@ export default function RegisterPage() {
         .orgkit-terms-link:hover, .orgkit-terms-link:focus-visible {
           text-decoration: underline;
         }
-        @media (min-width: 640px) {
-          .orgkit-card-title {
-            white-space: nowrap;
-          }
-          .orgkit-subtitle-line1 {
-            white-space: nowrap;
-          }
-          .orgkit-legal-line1 {
-            white-space: nowrap;
-          }
-        }
+
+        /* Responsive Mobile (< 1024px) */
         @media (max-width: 1023px) {
-          main, .orgkit-main-container {
+          .orgkit-root {
             height: auto !important;
             max-height: none !important;
+            min-height: 100vh !important;
             overflow-y: auto !important;
           }
-          .orgkit-body {
-            flex-direction: column !important;
-            width: 100% !important;
-          }
-          .orgkit-left-col {
+          .orgkit-desktop-header,
+          .orgkit-desktop-left,
+          .orgkit-desktop-card-wrap {
             display: none !important;
           }
-          .orgkit-right-col {
-            width: 100% !important;
-            box-sizing: border-box !important;
-            padding-right: 20px !important;
-            padding-left: 20px !important;
-            padding-top: 24px !important;
-            padding-bottom: 40px !important;
+          .orgkit-mobile-container {
+            display: flex !important;
+            flex-direction: column;
+            min-height: 100vh;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            padding-bottom: 40px;
+            box-sizing: border-box;
           }
-          .orgkit-card {
+          .orgkit-mobile-header {
+            display: flex;
+            align-items: center;
+            padding: 28px 24px;
+          }
+          .orgkit-mobile-card-section {
+            display: flex;
+            justify-content: center;
+            padding: 16px 20px;
+            width: 100%;
+            box-sizing: border-box;
+          }
+          .orgkit-mobile-card {
+            width: 100%;
             max-width: 460px;
             padding: 32px 24px;
           }
-          .orgkit-google-btn {
-            height: 60px;
-            margin-top: 28px;
-          }
-          .orgkit-building {
+          .orgkit-building-layer {
             display: none !important;
           }
         }
+
         @media (max-width: 480px) {
-          .orgkit-header {
-            padding-left: 16px !important;
-            padding-top: 20px !important;
+          .orgkit-mobile-header {
+            padding: 20px 16px;
           }
-          .orgkit-body {
-            flex-direction: column !important;
-            width: 100% !important;
+          .orgkit-mobile-card-section {
+            padding: 10px 12px;
           }
-          .orgkit-right-col {
-            width: 100% !important;
-            box-sizing: border-box !important;
-            padding-left: 14px !important;
-            padding-right: 14px !important;
-            padding-top: 12px !important;
-            padding-bottom: 32px !important;
-          }
-          .orgkit-card {
+          .orgkit-mobile-card {
             padding: 24px 14px !important;
             border-radius: 18px !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
           }
-          .orgkit-card-title {
-            font-size: 22px !important;
-            white-space: normal !important;
+          .orgkit-mobile-card h2 {
+            font-size: 24px !important;
           }
-          .orgkit-card p {
+          .orgkit-mobile-card p {
             font-size: 13.5px !important;
             line-height: 20px !important;
           }
           .orgkit-google-btn {
-            height: 50px !important;
-            margin-top: 20px !important;
+            height: 52px !important;
+            margin-top: 24px !important;
             gap: 10px !important;
           }
           .orgkit-google-btn span {
@@ -246,7 +234,8 @@ export default function RegisterPage() {
       `}</style>
 
       {/* ═══════════════════════════════════════════════════════════════
-          BACKGROUND DECORATION (SVG + Building Image)
+          BACKGROUND DECORATION (SVG layer + Building Image)
+          Vector-identical to the 1672x941 design reference
           ═══════════════════════════════════════════════════════════════ */}
       <div
         className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
@@ -343,7 +332,7 @@ export default function RegisterPage() {
 
           {/* ── Bottom-Right: Thin 1.5px emerald outline arc from ~ (1340, 941) to (1672, 785) ── */}
           <path
-            d="M 1340 941 C 1450 850, 1550 800, 1672 785"
+            d="M 1340 941 C 1440 840, 1545 795, 1672 785"
             fill="none"
             stroke="#059669"
             strokeWidth="1.5"
@@ -352,7 +341,7 @@ export default function RegisterPage() {
 
           {/* ── Bottom-Right: Solid emerald circle segment visible from (1440, 941) to (1672, 848) ── */}
           <path
-            d="M 1440 941 C 1520 880, 1600 855, 1672 848 L 1672 941 Z"
+            d="M 1440 941 C 1515 880, 1595 855, 1672 848 L 1672 941 Z"
             fill="url(#bottomRightEmeraldGrad)"
           />
 
@@ -377,19 +366,19 @@ export default function RegisterPage() {
 
         {/* ── Bottom-Left: Grayscale Building Photo with linear mask fade ── */}
         <div
-          className="orgkit-building pointer-events-none absolute bottom-0 left-0"
+          className="orgkit-building-layer pointer-events-none absolute bottom-0 left-0"
           style={{
             position: "absolute",
             bottom: 0,
             left: 0,
             width: "clamp(550px, 53.2vw, 890px)",
-            height: "clamp(180px, 17.3vw, 290px)",
+            height: "clamp(200px, 17.3vw, 290px)",
             overflow: "hidden",
             maskImage:
-              "linear-gradient(to right, rgba(0,0,0,1) 45%, transparent 100%), linear-gradient(to top, rgba(0,0,0,1) 35%, transparent 100%)",
+              "linear-gradient(to right, rgba(0,0,0,1) 50%, transparent 100%), linear-gradient(to top, rgba(0,0,0,1) 40%, transparent 100%)",
             maskComposite: "intersect",
             WebkitMaskImage:
-              "linear-gradient(to right, rgba(0,0,0,1) 45%, transparent 100%), linear-gradient(to top, rgba(0,0,0,1) 35%, transparent 100%)",
+              "linear-gradient(to right, rgba(0,0,0,1) 50%, transparent 100%), linear-gradient(to top, rgba(0,0,0,1) 40%, transparent 100%)",
             WebkitMaskComposite:
               "source-in" as React.CSSProperties["WebkitMaskComposite"],
           }}
@@ -401,7 +390,7 @@ export default function RegisterPage() {
             className="object-cover"
             style={{
               objectFit: "cover",
-              objectPosition: "0 100%", // Crop out the top 30% that has the duplicate text
+              objectPosition: "0 100%", // Anchors to bottom to crop out top text residue
               filter: "grayscale(100%)",
             }}
           />
@@ -409,42 +398,403 @@ export default function RegisterPage() {
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════
-          CONTENT LAYER
+          DESKTOP CONTENT (>= 1024px)
+          Exact measurements matching the 1672x941 reference
           ═══════════════════════════════════════════════════════════════ */}
-      <div className="orgkit-main-container">
-        {/* ── Header (top-left, y about 108px) ── */}
-        <header className="orgkit-header">
-          {/* Logo icon (about 82x52px) */}
+
+      {/* ── Desktop Header (top-left, y about 108px, x about 10.5%) ── */}
+      <header className="orgkit-desktop-header">
+        <Image
+          src="/orgkit-logo.png"
+          alt="OrgKit"
+          width={82}
+          height={52}
+          preload
+          className="object-contain"
+          style={{
+            width: "82px",
+            height: "auto",
+            display: "block",
+          }}
+        />
+        <div
+          style={{
+            width: "1.5px",
+            height: "50px",
+            backgroundColor: "#E4E4E7",
+            marginLeft: "20px",
+            marginRight: "20px",
+            flexShrink: 0,
+          }}
+        />
+        <span
+          style={{
+            fontSize: "38px",
+            fontWeight: 700,
+            color: "#18181B",
+            letterSpacing: "-0.015em",
+            lineHeight: 1,
+          }}
+        >
+          OrgKit
+        </span>
+      </header>
+
+      {/* ── Desktop Left Marketing Column (starting 10.5% from left, top-aligned to header) ── */}
+      <div className="orgkit-desktop-left">
+        {/* 1. Pill Badge */}
+        <div
+          style={{
+            height: "38px",
+            paddingLeft: "20px",
+            paddingRight: "20px",
+            borderRadius: "9999px",
+            backgroundColor: "rgba(5, 150, 105, 0.08)",
+            border: "1.5px solid rgba(5, 150, 105, 0.25)",
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "12px",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* 12px solid emerald dot */}
+          <span
+            style={{
+              width: "12px",
+              height: "12px",
+              borderRadius: "50%",
+              backgroundColor: "#059669",
+              flexShrink: 0,
+              display: "inline-block",
+            }}
+          />
+          <span
+            style={{
+              fontSize: "15.5px",
+              fontWeight: 500,
+              color: "#3F3F46",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Student Organization Management System
+          </span>
+        </div>
+
+        {/* 2. H1 (32px below badge, 64px / line-height 1.05, weight 800, tight tracking) */}
+        <h1
+          style={{
+            marginTop: "32px",
+            fontSize: "64px",
+            lineHeight: 1.05,
+            fontWeight: 800,
+            letterSpacing: "-0.025em",
+            color: "#18181B",
+            marginRight: 0,
+            marginBottom: 0,
+          }}
+        >
+          <span style={{ whiteSpace: "nowrap" }}>Organize. Collaborate.</span>
+          <br />
+          <span style={{ color: "#059669" }}>Lead.</span>
+        </h1>
+
+        {/* 3. Paragraph (28px below, 24px / 30px, #71717A, weight 400) */}
+        <p
+          style={{
+            marginTop: "28px",
+            fontSize: "24px",
+            lineHeight: "30px",
+            color: "#71717A",
+            fontWeight: 400,
+            marginBottom: 0,
+          }}
+        >
+          A modern platform for student organizations
+          <br />
+          to connect, manage, and grow together.
+        </p>
+
+        {/* 4. Feature Row (about 64px below) */}
+        <div
+          style={{
+            marginTop: "64px",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          {/* Feature 1: Manage Members */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+            }}
+          >
+            <Users
+              size={30}
+              strokeWidth={1.5}
+              color="#18181B"
+              aria-hidden="true"
+              style={{ flexShrink: 0 }}
+            />
+            <span
+              style={{
+                fontSize: "15.5px",
+                fontWeight: 500,
+                color: "#3F3F46",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Manage Members
+            </span>
+          </div>
+
+          {/* 1.5px x 30px vertical divider (zinc-400 at ~60%), 30px space each side */}
+          <div
+            style={{
+              width: "1.5px",
+              height: "30px",
+              backgroundColor: "rgba(161, 161, 170, 0.6)",
+              marginLeft: "30px",
+              marginRight: "30px",
+              flexShrink: 0,
+            }}
+          />
+
+          {/* Feature 2: Organize Events */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+            }}
+          >
+            <CalendarDays
+              size={30}
+              strokeWidth={1.5}
+              color="#18181B"
+              aria-hidden="true"
+              style={{ flexShrink: 0 }}
+            />
+            <span
+              style={{
+                fontSize: "15.5px",
+                fontWeight: 500,
+                color: "#3F3F46",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Organize Events
+            </span>
+          </div>
+
+          {/* 1.5px x 30px vertical divider */}
+          <div
+            style={{
+              width: "1.5px",
+              height: "30px",
+              backgroundColor: "rgba(161, 161, 170, 0.6)",
+              marginLeft: "30px",
+              marginRight: "30px",
+              flexShrink: 0,
+            }}
+          />
+
+          {/* Feature 3: Track Activities */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "14px",
+            }}
+          >
+            <ChartNoAxesCombined
+              size={30}
+              strokeWidth={1.5}
+              color="#18181B"
+              aria-hidden="true"
+              style={{ flexShrink: 0 }}
+            />
+            <span
+              style={{
+                fontSize: "15.5px",
+                fontWeight: 500,
+                color: "#3F3F46",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Track Activities
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Desktop Right Card (vertically centered, centered at 73% width, max 566px) ── */}
+      <div className="orgkit-desktop-card-wrap">
+        <div className="orgkit-card">
+          {/* 1. Logo icon, about 92px wide */}
           <Image
             src="/orgkit-logo.png"
             alt="OrgKit"
-            width={82}
-            height={52}
-            preload
+            width={92}
+            height={58}
             className="object-contain"
             style={{
-              width: "clamp(54px, 4.9vw, 82px)",
+              width: "92px",
               height: "auto",
               display: "block",
             }}
           />
 
-          {/* 1.5px vertical divider (50px tall, zinc-300) with 24px space each side */}
+          {/* 2. H2 "Create Your Account", 40px, weight 700, #18181B (22px below logo) */}
+          <h2
+            style={{
+              marginTop: "22px",
+              fontSize: "40px",
+              fontWeight: 700,
+              color: "#18181B",
+              lineHeight: 1.15,
+              letterSpacing: "-0.015em",
+              marginBottom: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            Create Your Account
+          </h2>
+
+          {/* 3. Subtitle (16px below heading, 21px / 29px, #71717A, max-width ~440px) */}
+          <p
+            style={{
+              marginTop: "16px",
+              fontSize: "21px",
+              lineHeight: "29px",
+              color: "#71717A",
+              maxWidth: "440px",
+              marginBottom: 0,
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ whiteSpace: "nowrap" }}>
+              Join OrgKit and be part of a more connected
+            </span>
+            <br />
+            <span>student community.</span>
+          </p>
+
+          {/* 4. Google Sign-up Button (40px below, 72px tall, fully rounded) */}
+          <button
+            type="button"
+            disabled={loading}
+            onClick={handleGoogleSignUp}
+            className="orgkit-google-btn"
+          >
+            {!loading && <GoogleLogo size={40} />}
+            <span
+              style={{
+                fontSize: "24px",
+                fontWeight: 500,
+                color: "#18181B",
+              }}
+            >
+              {loading ? "Signing up..." : "Sign up with Google"}
+            </span>
+          </button>
+
+          {/* 5. Divider Row (44px below, two 1px #E4E4E7 lines with "or" between them) */}
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              marginTop: "44px",
+            }}
+          >
+            <div
+              style={{
+                flex: 1,
+                height: "1px",
+                backgroundColor: "#E4E4E7",
+              }}
+            />
+            <span
+              style={{
+                paddingLeft: "24px",
+                paddingRight: "24px",
+                fontSize: "20px",
+                color: "#71717A",
+                fontWeight: 400,
+              }}
+            >
+              or
+            </span>
+            <div
+              style={{
+                flex: 1,
+                height: "1px",
+                backgroundColor: "#E4E4E7",
+              }}
+            />
+          </div>
+
+          {/* 6. Legal Text (38px below, 17px / 28px, #71717A) */}
+          <p
+            style={{
+              marginTop: "38px",
+              fontSize: "17px",
+              lineHeight: "28px",
+              color: "#71717A",
+              marginBottom: 0,
+              fontWeight: 400,
+            }}
+          >
+            <span style={{ whiteSpace: "nowrap" }}>
+              By continuing, you agree to our
+            </span>
+            <br />
+            <Link href="/terms" className="orgkit-terms-link">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="/privacy" className="orgkit-terms-link">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
+      </div>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          MOBILE CONTENT (< 1024px)
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="orgkit-mobile-container">
+        {/* Mobile Header */}
+        <header className="orgkit-mobile-header">
+          <Image
+            src="/orgkit-logo.png"
+            alt="OrgKit"
+            width={64}
+            height={40}
+            preload
+            className="object-contain"
+            style={{
+              width: "60px",
+              height: "auto",
+              display: "block",
+            }}
+          />
           <div
             style={{
               width: "1.5px",
-              height: "clamp(34px, 3vw, 50px)",
+              height: "36px",
               backgroundColor: "#E4E4E7",
-              marginLeft: "clamp(14px, 1.44vw, 24px)",
-              marginRight: "clamp(14px, 1.44vw, 24px)",
+              marginLeft: "16px",
+              marginRight: "16px",
               flexShrink: 0,
             }}
           />
-
-          {/* Wordmark "OrgKit" (38px, weight 700, #18181B) */}
           <span
             style={{
-              fontSize: "clamp(24px, 2.27vw, 38px)",
+              fontSize: "26px",
               fontWeight: 700,
               color: "#18181B",
               letterSpacing: "-0.015em",
@@ -455,329 +805,130 @@ export default function RegisterPage() {
           </span>
         </header>
 
-        {/* ── Body: Two columns ── */}
-        <div className="orgkit-body">
-          {/* ─── Left Marketing Column ─── */}
-          <div className="orgkit-left-col">
-            {/* 1. Pill Badge */}
-            <div
+        {/* Mobile Centered Card */}
+        <div className="orgkit-mobile-card-section">
+          <div className="orgkit-card orgkit-mobile-card">
+            {/* Logo */}
+            <Image
+              src="/orgkit-logo.png"
+              alt="OrgKit"
+              width={76}
+              height={48}
+              className="object-contain"
               style={{
-                height: "38px",
-                paddingLeft: "20px",
-                paddingRight: "20px",
-                borderRadius: "9999px",
-                backgroundColor: "rgba(5, 150, 105, 0.08)",
-                border: "1.5px solid rgba(5, 150, 105, 0.25)",
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "12px",
-                boxSizing: "border-box",
+                width: "72px",
+                height: "auto",
+                display: "block",
               }}
-            >
-              {/* 12px solid emerald dot */}
-              <span
-                style={{
-                  width: "12px",
-                  height: "12px",
-                  borderRadius: "50%",
-                  backgroundColor: "#059669",
-                  flexShrink: 0,
-                  display: "inline-block",
-                }}
-              />
-              <span
-                style={{
-                  fontSize: "15.5px",
-                  fontWeight: 500,
-                  color: "#3F3F46",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                Student Organization Management System
-              </span>
-            </div>
+            />
 
-            {/* 2. H1 (32px below badge, 64px / 1.05, weight 800, tight tracking) */}
-            <h1
+            {/* H2 */}
+            <h2
               style={{
-                marginTop: "clamp(20px, 1.9vw, 32px)",
-                fontSize: "clamp(36px, 3.83vw, 64px)",
-                lineHeight: 1.05,
-                fontWeight: 800,
-                letterSpacing: "-0.025em",
+                marginTop: "16px",
+                fontSize: "26px",
+                fontWeight: 700,
                 color: "#18181B",
-                marginRight: 0,
+                lineHeight: 1.15,
+                letterSpacing: "-0.015em",
                 marginBottom: 0,
               }}
             >
-              Organize. Collaborate.
-              <br />
-              <span style={{ color: "#059669" }}>Lead.</span>
-            </h1>
+              Create Your Account
+            </h2>
 
-            {/* 3. Paragraph (28px below, 24px / 30px, #71717A, weight 400) */}
+            {/* Subtitle */}
             <p
               style={{
-                marginTop: "clamp(18px, 1.67vw, 28px)",
-                fontSize: "clamp(16px, 1.44vw, 24px)",
-                lineHeight: "30px",
+                marginTop: "12px",
+                fontSize: "14.5px",
+                lineHeight: "22px",
                 color: "#71717A",
-                fontWeight: 400,
+                maxWidth: "380px",
                 marginBottom: 0,
+                fontWeight: 400,
               }}
             >
-              A modern platform for student organizations
-              <br />
-              to connect, manage, and grow together.
+              Join OrgKit and be part of a more connected student community.
             </p>
 
-            {/* 4. Feature Row (~64px below) */}
+            {/* Google Button */}
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleGoogleSignUp}
+              className="orgkit-google-btn"
+            >
+              {!loading && <GoogleLogo size={32} />}
+              <span
+                style={{
+                  fontSize: "18px",
+                  fontWeight: 500,
+                  color: "#18181B",
+                }}
+              >
+                {loading ? "Signing up..." : "Sign up with Google"}
+              </span>
+            </button>
+
+            {/* Divider */}
             <div
               style={{
-                marginTop: "clamp(32px, 3.83vw, 64px)",
+                width: "100%",
                 display: "flex",
                 alignItems: "center",
+                marginTop: "24px",
               }}
             >
-              {/* Feature 1: Manage Members */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                }}
-              >
-                <Users
-                  size={30}
-                  strokeWidth={1.5}
-                  color="#18181B"
-                  aria-hidden="true"
-                  style={{ flexShrink: 0 }}
-                />
-                <span
-                  style={{
-                    fontSize: "15.5px",
-                    fontWeight: 500,
-                    color: "#3F3F46",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Manage Members
-                </span>
-              </div>
-
-              {/* 1.5px x 30px divider (zinc-400 at ~60%), 30px space each side */}
-              <div
-                style={{
-                  width: "1.5px",
-                  height: "30px",
-                  backgroundColor: "rgba(161, 161, 170, 0.6)",
-                  marginLeft: "clamp(16px, 1.8vw, 30px)",
-                  marginRight: "clamp(16px, 1.8vw, 30px)",
-                  flexShrink: 0,
+                  flex: 1,
+                  height: "1px",
+                  backgroundColor: "#E4E4E7",
                 }}
               />
-
-              {/* Feature 2: Organize Events */}
-              <div
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                }}
-              >
-                <CalendarDays
-                  size={30}
-                  strokeWidth={1.5}
-                  color="#18181B"
-                  aria-hidden="true"
-                  style={{ flexShrink: 0 }}
-                />
-                <span
-                  style={{
-                    fontSize: "15.5px",
-                    fontWeight: 500,
-                    color: "#3F3F46",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Organize Events
-                </span>
-              </div>
-
-              {/* 1.5px x 30px divider */}
-              <div
-                style={{
-                  width: "1.5px",
-                  height: "30px",
-                  backgroundColor: "rgba(161, 161, 170, 0.6)",
-                  marginLeft: "clamp(16px, 1.8vw, 30px)",
-                  marginRight: "clamp(16px, 1.8vw, 30px)",
-                  flexShrink: 0,
-                }}
-              />
-
-              {/* Feature 3: Track Activities */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "14px",
-                }}
-              >
-                <ChartNoAxesCombined
-                  size={30}
-                  strokeWidth={1.5}
-                  color="#18181B"
-                  aria-hidden="true"
-                  style={{ flexShrink: 0 }}
-                />
-                <span
-                  style={{
-                    fontSize: "15.5px",
-                    fontWeight: 500,
-                    color: "#3F3F46",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  Track Activities
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* ─── Right Column: Registration Card ─── */}
-          <div className="orgkit-right-col">
-            <div className="orgkit-card">
-              {/* 1. Logo icon, about 92px wide */}
-              <Image
-                src="/orgkit-logo.png"
-                alt="OrgKit"
-                width={92}
-                height={58}
-                className="object-contain"
-                style={{
-                  width: "clamp(68px, 5.5vw, 92px)",
-                  height: "auto",
-                  display: "block",
-                }}
-              />
-
-              {/* 2. H2 "Create Your Account", 40px, weight 700, #18181B (22px below logo) */}
-              <h2
-                className="orgkit-card-title"
-                style={{
-                  marginTop: "clamp(16px, 1.32vw, 22px)",
-                  fontSize: "clamp(24px, 2.4vw, 40px)",
-                  fontWeight: 700,
-                  color: "#18181B",
-                  lineHeight: 1.15,
-                  letterSpacing: "-0.015em",
-                  marginBottom: 0,
-                }}
-              >
-                Create Your Account
-              </h2>
-
-              {/* 3. Subtitle (16px below heading, 21px / 29px, #71717A, max-width ~440px) */}
-              <p
-                style={{
-                  marginTop: "clamp(12px, 0.96vw, 16px)",
-                  fontSize: "clamp(15px, 1.26vw, 21px)",
-                  lineHeight: "29px",
+                  paddingLeft: "16px",
+                  paddingRight: "16px",
+                  fontSize: "15px",
                   color: "#71717A",
-                  maxWidth: "460px",
-                  marginBottom: 0,
                   fontWeight: 400,
                 }}
               >
-                <span className="orgkit-subtitle-line1">
-                  Join OrgKit and be part of a more connected
-                </span>
-                <br />
-                <span>student community.</span>
-              </p>
-
-              {/* 4. Google Sign-up Button (40px below, 72px tall, fully rounded) */}
-              <button
-                type="button"
-                disabled={loading}
-                onClick={handleGoogleSignUp}
-                className="orgkit-google-btn"
-              >
-                {!loading && <GoogleLogo size={40} />}
-                <span
-                  style={{
-                    fontSize: "clamp(18px, 1.44vw, 24px)",
-                    fontWeight: 500,
-                    color: "#18181B",
-                  }}
-                >
-                  {loading ? "Signing up..." : "Sign up with Google"}
-                </span>
-              </button>
-
-              {/* 5. Divider Row (44px below, two 1px lines with "or" in between) */}
+                or
+              </span>
               <div
                 style={{
-                  width: "100%",
-                  display: "flex",
-                  alignItems: "center",
-                  marginTop: "clamp(28px, 2.63vw, 44px)",
+                  flex: 1,
+                  height: "1px",
+                  backgroundColor: "#E4E4E7",
                 }}
-              >
-                <div
-                  style={{
-                    flex: 1,
-                    height: "1px",
-                    backgroundColor: "#E4E4E7",
-                  }}
-                />
-                <span
-                  style={{
-                    paddingLeft: "24px",
-                    paddingRight: "24px",
-                    fontSize: "clamp(16px, 1.2vw, 20px)",
-                    color: "#71717A",
-                    fontWeight: 400,
-                  }}
-                >
-                  or
-                </span>
-                <div
-                  style={{
-                    flex: 1,
-                    height: "1px",
-                    backgroundColor: "#E4E4E7",
-                  }}
-                />
-              </div>
-
-              {/* 6. Legal Text (38px below, 17px / 28px, #71717A) */}
-              <p
-                style={{
-                  marginTop: "clamp(24px, 2.27vw, 38px)",
-                  fontSize: "clamp(13px, 1.02vw, 17px)",
-                  lineHeight: "28px",
-                  color: "#71717A",
-                  marginBottom: 0,
-                  fontWeight: 400,
-                }}
-              >
-                <span className="orgkit-legal-line1">
-                  By continuing, you agree to our
-                </span>
-                <br />
-                <Link href="/terms" className="orgkit-terms-link">
-                  Terms of Service
-                </Link>{" "}
-                and{" "}
-                <Link href="/privacy" className="orgkit-terms-link">
-                  Privacy Policy
-                </Link>
-                .
-              </p>
+              />
             </div>
+
+            {/* Legal */}
+            <p
+              style={{
+                marginTop: "24px",
+                fontSize: "13px",
+                lineHeight: "22px",
+                color: "#71717A",
+                marginBottom: 0,
+                fontWeight: 400,
+              }}
+            >
+              By continuing, you agree to our
+              <br />
+              <Link href="/terms" className="orgkit-terms-link">
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="orgkit-terms-link">
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         </div>
       </div>
