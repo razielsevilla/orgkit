@@ -12,7 +12,7 @@ const plusJakarta = Plus_Jakarta_Sans({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-/* ── Google "G" multicolor logo (inline SVG, 24×24 viewBox) ──────── */
+/* ── Google "G" multicolor official logo (inline SVG, 24×24 viewBox) ── */
 function GoogleLogo({ size = 40 }: { size?: number }) {
   return (
     <svg
@@ -21,6 +21,7 @@ function GoogleLogo({ size = 40 }: { size?: number }) {
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
+      style={{ flexShrink: 0 }}
     >
       <path
         fill="#4285F4"
@@ -54,162 +55,366 @@ export default function RegisterPage() {
 
   return (
     <main
-      className={`${plusJakarta.className} relative flex min-h-screen w-full overflow-hidden`}
-      style={{ backgroundColor: "#F4F4F5" }}
+      className={`${plusJakarta.className} relative min-h-screen w-full overflow-hidden bg-base text-ink`}
+      style={{
+        backgroundColor: "#F4F4F5",
+        color: "#18181B",
+        minHeight: "100vh",
+        height: "100vh",
+        maxHeight: "100vh",
+        width: "100%",
+        position: "relative",
+        overflow: "hidden",
+      }}
     >
-      {/* ═══════════ BACKGROUND DECORATION ═══════════ */}
+      {/* ── Scoped CSS styles matching the reference design ── */}
+      <style>{`
+        .orgkit-main-container {
+          position: relative;
+          z-index: 10;
+          display: flex;
+          flex-direction: column;
+          height: 100vh;
+          max-height: 100vh;
+          width: 100%;
+          overflow: hidden;
+          box-sizing: border-box;
+        }
+        .orgkit-header {
+          display: flex;
+          align-items: center;
+          padding-top: clamp(28px, 6.46vw, 108px);
+          padding-left: clamp(24px, 10.5vw, 176px);
+          flex-shrink: 0;
+        }
+        .orgkit-body {
+          display: flex;
+          flex: 1;
+          align-items: center;
+          position: relative;
+          min-height: 0;
+        }
+        .orgkit-left-col {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          padding-left: clamp(24px, 10.5vw, 176px);
+          width: 53%;
+          z-index: 2;
+        }
+        .orgkit-right-col {
+          display: flex;
+          flex: 1;
+          justify-content: center;
+          align-items: center;
+          padding-right: clamp(20px, 6vw, 100px);
+          padding-left: 20px;
+          z-index: 2;
+        }
+        .orgkit-card {
+          width: 100%;
+          max-width: 566px;
+          background-color: #FFFFFF;
+          border-radius: 28px;
+          padding: 40px 45px;
+          box-shadow: 0 20px 50px rgba(24, 24, 27, 0.08);
+          border: 1px solid rgba(228, 228, 231, 0.6);
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          box-sizing: border-box;
+        }
+        .orgkit-google-btn {
+          width: 100%;
+          height: 72px;
+          border-radius: 9999px;
+          background-color: #FFFFFF;
+          border: 2px solid #E4E4E7;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 14px;
+          cursor: pointer;
+          transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+          outline: none;
+          margin-top: 40px;
+        }
+        .orgkit-google-btn:hover {
+          background-color: #F4F4F5;
+        }
+        .orgkit-google-btn:focus-visible {
+          box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #059669;
+        }
+        .orgkit-google-btn:disabled {
+          opacity: 0.65;
+          cursor: not-allowed;
+        }
+        .orgkit-terms-link {
+          color: #059669;
+          text-decoration: none;
+          font-weight: 500;
+        }
+        .orgkit-terms-link:hover, .orgkit-terms-link:focus-visible {
+          text-decoration: underline;
+        }
+        @media (min-width: 640px) {
+          .orgkit-card-title {
+            white-space: nowrap;
+          }
+          .orgkit-subtitle-line1 {
+            white-space: nowrap;
+          }
+          .orgkit-legal-line1 {
+            white-space: nowrap;
+          }
+        }
+        @media (max-width: 1023px) {
+          main, .orgkit-main-container {
+            height: auto !important;
+            max-height: none !important;
+            overflow-y: auto !important;
+          }
+          .orgkit-body {
+            flex-direction: column !important;
+            width: 100% !important;
+          }
+          .orgkit-left-col {
+            display: none !important;
+          }
+          .orgkit-right-col {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding-right: 20px !important;
+            padding-left: 20px !important;
+            padding-top: 24px !important;
+            padding-bottom: 40px !important;
+          }
+          .orgkit-card {
+            max-width: 460px;
+            padding: 32px 24px;
+          }
+          .orgkit-google-btn {
+            height: 60px;
+            margin-top: 28px;
+          }
+          .orgkit-building {
+            display: none !important;
+          }
+        }
+        @media (max-width: 480px) {
+          .orgkit-header {
+            padding-left: 16px !important;
+            padding-top: 20px !important;
+          }
+          .orgkit-body {
+            flex-direction: column !important;
+            width: 100% !important;
+          }
+          .orgkit-right-col {
+            width: 100% !important;
+            box-sizing: border-box !important;
+            padding-left: 14px !important;
+            padding-right: 14px !important;
+            padding-top: 12px !important;
+            padding-bottom: 32px !important;
+          }
+          .orgkit-card {
+            padding: 24px 14px !important;
+            border-radius: 18px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+          .orgkit-card-title {
+            font-size: 22px !important;
+            white-space: normal !important;
+          }
+          .orgkit-card p {
+            font-size: 13.5px !important;
+            line-height: 20px !important;
+          }
+          .orgkit-google-btn {
+            height: 50px !important;
+            margin-top: 20px !important;
+            gap: 10px !important;
+          }
+          .orgkit-google-btn span {
+            font-size: 15px !important;
+          }
+        }
+      `}</style>
+
+      {/* ═══════════════════════════════════════════════════════════════
+          BACKGROUND DECORATION (SVG + Building Image)
+          ═══════════════════════════════════════════════════════════════ */}
       <div
-        className="pointer-events-none absolute inset-0 z-0"
+        className="pointer-events-none absolute inset-0 z-0 overflow-hidden"
         aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          pointerEvents: "none",
+          overflow: "hidden",
+        }}
       >
-        {/* ── Top-left: pale green circle + outline arc ── */}
-        <div
-          className="absolute"
+        <svg
+          viewBox="0 0 1672 941"
+          preserveAspectRatio="none"
           style={{
-            width: "580px",
-            height: "580px",
-            top: "-120px",
-            left: "-70px",
-            borderRadius: "50%",
-            background: "rgba(5,150,105,0.06)",
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
           }}
-        />
-        <div
-          className="absolute"
-          style={{
-            width: "500px",
-            height: "500px",
-            top: "-120px",
-            left: "-70px",
-            borderRadius: "50%",
-            border: "1.5px solid rgba(5,150,105,0.35)",
-            /* center same as the filled circle, smaller radius */
-            transform: "translate(40px, 40px)",
-          }}
-        />
-        {/* Tiny emerald tick near the outline edge */}
-        <div
-          className="absolute"
-          style={{
-            width: 0,
-            height: 0,
-            top: "42px",
-            left: "222px",
-            borderLeft: "6px solid transparent",
-            borderRight: "6px solid transparent",
-            borderBottom: "10px solid #059669",
-            transform: "rotate(-30deg)",
-          }}
-        />
+          aria-hidden="true"
+        >
+          <defs>
+            {/* Top-right subtle emerald gradient */}
+            <radialGradient
+              id="topRightEmeraldGrad"
+              cx="40%"
+              cy="40%"
+              r="60%"
+              fx="30%"
+              fy="30%"
+            >
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="70%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#10b981" />
+            </radialGradient>
 
-        {/* ── Top-right: solid emerald circle + pale ring ── */}
-        <div
-          className="absolute"
-          style={{
-            width: "640px",
-            height: "640px",
-            top: "-280px",
-            right: "-260px",
-            borderRadius: "50%",
-            background: "rgba(5,150,105,0.10)",
-          }}
-        />
-        <div
-          className="absolute"
-          style={{
-            width: "570px",
-            height: "570px",
-            top: "-245px",
-            right: "-225px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle at 40% 40%, #059669, #34d399 90%)",
-          }}
-        />
+            {/* Bottom-right subtle emerald gradient */}
+            <radialGradient
+              id="bottomRightEmeraldGrad"
+              cx="30%"
+              cy="30%"
+              r="70%"
+            >
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#10b981" />
+            </radialGradient>
+          </defs>
 
-        {/* ── Bottom-right: solid emerald segment + outline arc ── */}
-        <div
-          className="absolute"
-          style={{
-            width: "460px",
-            height: "460px",
-            bottom: "-280px",
-            right: "-120px",
-            borderRadius: "50%",
-            background:
-              "radial-gradient(circle at 30% 30%, #059669, #10b981 90%)",
-          }}
-        />
-        <div
-          className="absolute"
-          style={{
-            width: "560px",
-            height: "560px",
-            bottom: "-300px",
-            right: "-160px",
-            borderRadius: "50%",
-            border: "1.5px solid rgba(5,150,105,0.35)",
-          }}
-        />
+          {/* ── Top-Left: Large pale-green circle (accent/6%, r=290, center (-70, -120)) ── */}
+          <circle
+            cx="-70"
+            cy="-120"
+            r="290"
+            fill="#059669"
+            fillOpacity="0.06"
+          />
 
-        {/* ── Bottom-left: two pale mint circles ── */}
-        <div
-          className="absolute"
-          style={{
-            width: "520px",
-            height: "520px",
-            bottom: "-260px",
-            left: "-180px",
-            borderRadius: "50%",
-            background: "rgba(5,150,105,0.08)",
-          }}
-        />
-        <div
-          className="absolute"
-          style={{
-            width: "500px",
-            height: "500px",
-            bottom: "-220px",
-            left: "310px",
-            borderRadius: "50%",
-            background: "rgba(5,150,105,0.08)",
-          }}
-        />
+          {/* ── Top-Left: Concentric 1.5px outline circle (r=250, center (-70, -120)) ── */}
+          <circle
+            cx="-70"
+            cy="-120"
+            r="250"
+            fill="none"
+            stroke="#059669"
+            strokeWidth="1.5"
+            strokeOpacity="0.35"
+          />
 
-        {/* ── Campus building photo (bottom-left) ── */}
+          {/* ── Top-Left: Tiny emerald triangular tick on the pale edge near (222, 50) ── */}
+          <polygon
+            points="224,44 228,54 219,52"
+            fill="#059669"
+          />
+
+          {/* ── Top-Right: Concentric pale-green ring (r=320, center (1700, -120), accent/10%) ── */}
+          <circle
+            cx="1700"
+            cy="-120"
+            r="320"
+            fill="#059669"
+            fillOpacity="0.10"
+          />
+
+          {/* ── Top-Right: Large solid emerald circle (r=285, center (1700, -120)) with gradient ── */}
+          <circle
+            cx="1700"
+            cy="-120"
+            r="285"
+            fill="url(#topRightEmeraldGrad)"
+          />
+
+          {/* ── Bottom-Right: Thin 1.5px emerald outline arc from ~ (1340, 941) to (1672, 785) ── */}
+          <path
+            d="M 1340 941 C 1450 850, 1550 800, 1672 785"
+            fill="none"
+            stroke="#059669"
+            strokeWidth="1.5"
+            strokeOpacity="0.4"
+          />
+
+          {/* ── Bottom-Right: Solid emerald circle segment visible from (1440, 941) to (1672, 848) ── */}
+          <path
+            d="M 1440 941 C 1520 880, 1600 855, 1672 848 L 1672 941 Z"
+            fill="url(#bottomRightEmeraldGrad)"
+          />
+
+          {/* ── Bottom-Left: Large pale mint circle cut off at left edge (top of arc at y≈545, r≈395) ── */}
+          <circle
+            cx="-50"
+            cy="940"
+            r="395"
+            fill="#059669"
+            fillOpacity="0.08"
+          />
+
+          {/* ── Bottom-Left: Second pale mint circle behind building centered at (560, 900), r=250 ── */}
+          <circle
+            cx="560"
+            cy="900"
+            r="250"
+            fill="#059669"
+            fillOpacity="0.08"
+          />
+        </svg>
+
+        {/* ── Bottom-Left: Grayscale Building Photo with linear mask fade ── */}
         <div
-          className="absolute bottom-0 left-0 hidden lg:block"
+          className="orgkit-building pointer-events-none absolute bottom-0 left-0"
           style={{
-            width: "clamp(500px, 53vw, 890px)",
-            height: "clamp(180px, 18.5vw, 290px)",
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            width: "clamp(550px, 53.2vw, 890px)",
+            height: "clamp(180px, 17.3vw, 290px)",
+            overflow: "hidden",
             maskImage:
-              "linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)",
+              "linear-gradient(to right, rgba(0,0,0,1) 45%, transparent 100%), linear-gradient(to top, rgba(0,0,0,1) 35%, transparent 100%)",
             maskComposite: "intersect",
             WebkitMaskImage:
-              "linear-gradient(to right, rgba(0,0,0,1) 50%, rgba(0,0,0,0) 100%), linear-gradient(to top, rgba(0,0,0,1) 40%, rgba(0,0,0,0) 100%)",
-            WebkitMaskComposite: "source-in" as React.CSSProperties["WebkitMaskComposite"],
+              "linear-gradient(to right, rgba(0,0,0,1) 45%, transparent 100%), linear-gradient(to top, rgba(0,0,0,1) 35%, transparent 100%)",
+            WebkitMaskComposite:
+              "source-in" as React.CSSProperties["WebkitMaskComposite"],
           }}
         >
           <Image
             src="/campus-building.png"
             alt=""
             fill
-            className="object-cover object-top"
-            style={{ filter: "grayscale(100%)" }}
+            className="object-cover"
+            style={{
+              objectFit: "cover",
+              objectPosition: "0 100%", // Crop out the top 30% that has the duplicate text
+              filter: "grayscale(100%)",
+            }}
           />
         </div>
       </div>
 
-      {/* ═══════════ CONTENT ═══════════ */}
-      <div className="relative z-10 flex w-full flex-col" style={{ minHeight: "100vh" }}>
-        {/* ── Header ── */}
-        <header
-          className="flex items-center"
-          style={{
-            paddingTop: "clamp(2rem, 6.5vw, 6.5rem)",
-            paddingLeft: "clamp(1.5rem, 10.5vw, 11rem)",
-          }}
-        >
+      {/* ═══════════════════════════════════════════════════════════════
+          CONTENT LAYER
+          ═══════════════════════════════════════════════════════════════ */}
+      <div className="orgkit-main-container">
+        {/* ── Header (top-left, y about 108px) ── */}
+        <header className="orgkit-header">
+          {/* Logo icon (about 82x52px) */}
           <Image
             src="/orgkit-logo.png"
             alt="OrgKit"
@@ -218,53 +423,58 @@ export default function RegisterPage() {
             preload
             className="object-contain"
             style={{
-              width: "clamp(52px, 4.9vw, 82px)",
+              width: "clamp(54px, 4.9vw, 82px)",
               height: "auto",
+              display: "block",
             }}
           />
+
+          {/* 1.5px vertical divider (50px tall, zinc-300) with 24px space each side */}
           <div
-            className="mx-6 self-stretch"
             style={{
               width: "1.5px",
-              height: "clamp(32px, 3vw, 50px)",
-              backgroundColor: "#D4D4D8",
+              height: "clamp(34px, 3vw, 50px)",
+              backgroundColor: "#E4E4E7",
+              marginLeft: "clamp(14px, 1.44vw, 24px)",
+              marginRight: "clamp(14px, 1.44vw, 24px)",
+              flexShrink: 0,
             }}
           />
+
+          {/* Wordmark "OrgKit" (38px, weight 700, #18181B) */}
           <span
-            className="font-bold"
             style={{
               fontSize: "clamp(24px, 2.27vw, 38px)",
+              fontWeight: 700,
               color: "#18181B",
-              letterSpacing: "-0.01em",
+              letterSpacing: "-0.015em",
+              lineHeight: 1,
             }}
           >
             OrgKit
           </span>
         </header>
 
-        {/* ── Two-column layout ── */}
-        <div className="flex flex-1 items-center">
-          {/* Left marketing column */}
-          <div
-            className="hidden flex-col lg:flex"
-            style={{
-              paddingLeft: "clamp(1.5rem, 10.5vw, 11rem)",
-              paddingTop: "clamp(1rem, 1.5vw, 2rem)",
-              maxWidth: "55%",
-            }}
-          >
-            {/* Pill badge */}
+        {/* ── Body: Two columns ── */}
+        <div className="orgkit-body">
+          {/* ─── Left Marketing Column ─── */}
+          <div className="orgkit-left-col">
+            {/* 1. Pill Badge */}
             <div
-              className="inline-flex w-fit items-center gap-3"
               style={{
                 height: "38px",
                 paddingLeft: "20px",
                 paddingRight: "20px",
                 borderRadius: "9999px",
-                background: "rgba(5,150,105,0.08)",
-                border: "1.5px solid rgba(5,150,105,0.25)",
+                backgroundColor: "rgba(5, 150, 105, 0.08)",
+                border: "1.5px solid rgba(5, 150, 105, 0.25)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "12px",
+                boxSizing: "border-box",
               }}
             >
+              {/* 12px solid emerald dot */}
               <span
                 style={{
                   width: "12px",
@@ -272,6 +482,7 @@ export default function RegisterPage() {
                   borderRadius: "50%",
                   backgroundColor: "#059669",
                   flexShrink: 0,
+                  display: "inline-block",
                 }}
               />
               <span
@@ -286,15 +497,17 @@ export default function RegisterPage() {
               </span>
             </div>
 
-            {/* H1 */}
+            {/* 2. H1 (32px below badge, 64px / 1.05, weight 800, tight tracking) */}
             <h1
               style={{
                 marginTop: "clamp(20px, 1.9vw, 32px)",
                 fontSize: "clamp(36px, 3.83vw, 64px)",
                 lineHeight: 1.05,
                 fontWeight: 800,
-                letterSpacing: "-0.02em",
+                letterSpacing: "-0.025em",
                 color: "#18181B",
+                marginRight: 0,
+                marginBottom: 0,
               }}
             >
               Organize. Collaborate.
@@ -302,14 +515,15 @@ export default function RegisterPage() {
               <span style={{ color: "#059669" }}>Lead.</span>
             </h1>
 
-            {/* Subtitle */}
+            {/* 3. Paragraph (28px below, 24px / 30px, #71717A, weight 400) */}
             <p
               style={{
-                marginTop: "clamp(16px, 1.67vw, 28px)",
+                marginTop: "clamp(18px, 1.67vw, 28px)",
                 fontSize: "clamp(16px, 1.44vw, 24px)",
-                lineHeight: "1.25",
+                lineHeight: "30px",
                 color: "#71717A",
                 fontWeight: 400,
+                marginBottom: 0,
               }}
             >
               A modern platform for student organizations
@@ -317,21 +531,28 @@ export default function RegisterPage() {
               to connect, manage, and grow together.
             </p>
 
-            {/* Feature row */}
+            {/* 4. Feature Row (~64px below) */}
             <div
-              className="flex items-center"
               style={{
                 marginTop: "clamp(32px, 3.83vw, 64px)",
-                gap: 0,
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              {/* Manage Members */}
-              <div className="flex items-center" style={{ gap: "14px" }}>
+              {/* Feature 1: Manage Members */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
+                }}
+              >
                 <Users
                   size={30}
                   strokeWidth={1.5}
                   color="#18181B"
                   aria-hidden="true"
+                  style={{ flexShrink: 0 }}
                 />
                 <span
                   style={{
@@ -345,25 +566,32 @@ export default function RegisterPage() {
                 </span>
               </div>
 
-              {/* Divider */}
+              {/* 1.5px x 30px divider (zinc-400 at ~60%), 30px space each side */}
               <div
                 style={{
                   width: "1.5px",
                   height: "30px",
-                  backgroundColor: "rgba(161,161,170,0.6)",
-                  marginLeft: "30px",
-                  marginRight: "30px",
+                  backgroundColor: "rgba(161, 161, 170, 0.6)",
+                  marginLeft: "clamp(16px, 1.8vw, 30px)",
+                  marginRight: "clamp(16px, 1.8vw, 30px)",
                   flexShrink: 0,
                 }}
               />
 
-              {/* Organize Events */}
-              <div className="flex items-center" style={{ gap: "14px" }}>
+              {/* Feature 2: Organize Events */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
+                }}
+              >
                 <CalendarDays
                   size={30}
                   strokeWidth={1.5}
                   color="#18181B"
                   aria-hidden="true"
+                  style={{ flexShrink: 0 }}
                 />
                 <span
                   style={{
@@ -377,25 +605,32 @@ export default function RegisterPage() {
                 </span>
               </div>
 
-              {/* Divider */}
+              {/* 1.5px x 30px divider */}
               <div
                 style={{
                   width: "1.5px",
                   height: "30px",
-                  backgroundColor: "rgba(161,161,170,0.6)",
-                  marginLeft: "30px",
-                  marginRight: "30px",
+                  backgroundColor: "rgba(161, 161, 170, 0.6)",
+                  marginLeft: "clamp(16px, 1.8vw, 30px)",
+                  marginRight: "clamp(16px, 1.8vw, 30px)",
                   flexShrink: 0,
                 }}
               />
 
-              {/* Track Activities */}
-              <div className="flex items-center" style={{ gap: "14px" }}>
+              {/* Feature 3: Track Activities */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "14px",
+                }}
+              >
                 <ChartNoAxesCombined
                   size={30}
                   strokeWidth={1.5}
                   color="#18181B"
                   aria-hidden="true"
+                  style={{ flexShrink: 0 }}
                 />
                 <span
                   style={{
@@ -411,29 +646,10 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Right card */}
-          <div
-            className="flex flex-1 items-center justify-center lg:justify-end"
-            style={{
-              paddingRight: "clamp(1rem, 5vw, 5.5rem)",
-              paddingLeft: "clamp(1rem, 2vw, 2rem)",
-            }}
-          >
-            <div
-              className="flex w-full flex-col items-center"
-              style={{
-                maxWidth: "min(100%, clamp(340px, 33.8vw, 566px))",
-                backgroundColor: "#FFFFFF",
-                borderRadius: "28px",
-                paddingTop: "clamp(28px, 2.4vw, 40px)",
-                paddingBottom: "clamp(28px, 2.4vw, 40px)",
-                paddingLeft: "clamp(20px, 2.7vw, 45px)",
-                paddingRight: "clamp(20px, 2.7vw, 45px)",
-                boxShadow: "0 20px 50px rgba(24,24,27,0.08)",
-                border: "1px solid rgba(228,228,231,0.6)",
-              }}
-            >
-              {/* Logo in card */}
+          {/* ─── Right Column: Registration Card ─── */}
+          <div className="orgkit-right-col">
+            <div className="orgkit-card">
+              {/* 1. Logo icon, about 92px wide */}
               <Image
                 src="/orgkit-logo.png"
                 alt="OrgKit"
@@ -441,62 +657,58 @@ export default function RegisterPage() {
                 height={58}
                 className="object-contain"
                 style={{
-                  width: "clamp(64px, 5.5vw, 92px)",
+                  width: "clamp(68px, 5.5vw, 92px)",
                   height: "auto",
+                  display: "block",
                 }}
               />
 
-              {/* Card heading */}
+              {/* 2. H2 "Create Your Account", 40px, weight 700, #18181B (22px below logo) */}
               <h2
-                className="text-center"
+                className="orgkit-card-title"
                 style={{
-                  marginTop: "clamp(14px, 1.32vw, 22px)",
-                  fontSize: "clamp(26px, 2.4vw, 40px)",
+                  marginTop: "clamp(16px, 1.32vw, 22px)",
+                  fontSize: "clamp(24px, 2.4vw, 40px)",
                   fontWeight: 700,
                   color: "#18181B",
                   lineHeight: 1.15,
+                  letterSpacing: "-0.015em",
+                  marginBottom: 0,
                 }}
               >
                 Create Your Account
               </h2>
 
-              {/* Card subtitle */}
+              {/* 3. Subtitle (16px below heading, 21px / 29px, #71717A, max-width ~440px) */}
               <p
-                className="text-center"
                 style={{
-                  marginTop: "clamp(10px, 0.96vw, 16px)",
+                  marginTop: "clamp(12px, 0.96vw, 16px)",
                   fontSize: "clamp(15px, 1.26vw, 21px)",
-                  lineHeight: "1.38",
+                  lineHeight: "29px",
                   color: "#71717A",
-                  maxWidth: "440px",
+                  maxWidth: "460px",
+                  marginBottom: 0,
+                  fontWeight: 400,
                 }}
               >
-                Join OrgKit and be part of a more connected
+                <span className="orgkit-subtitle-line1">
+                  Join OrgKit and be part of a more connected
+                </span>
                 <br />
-                student community.
+                <span>student community.</span>
               </p>
 
-              {/* Google sign-up button */}
+              {/* 4. Google Sign-up Button (40px below, 72px tall, fully rounded) */}
               <button
                 type="button"
                 disabled={loading}
                 onClick={handleGoogleSignUp}
-                className="group flex w-full cursor-pointer items-center justify-center transition-colors hover:bg-zinc-50 focus-visible:ring-2 focus-visible:ring-[#059669] focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70"
-                style={{
-                  marginTop: "clamp(24px, 2.4vw, 40px)",
-                  height: "clamp(52px, 4.3vw, 72px)",
-                  borderRadius: "9999px",
-                  backgroundColor: "#FFFFFF",
-                  border: "2px solid #E4E4E7",
-                  gap: "14px",
-                  boxShadow: "none",
-                  outline: "none",
-                }}
+                className="orgkit-google-btn"
               >
                 {!loading && <GoogleLogo size={40} />}
                 <span
                   style={{
-                    fontSize: "clamp(17px, 1.44vw, 24px)",
+                    fontSize: "clamp(18px, 1.44vw, 24px)",
                     fontWeight: 500,
                     color: "#18181B",
                   }}
@@ -505,52 +717,62 @@ export default function RegisterPage() {
                 </span>
               </button>
 
-              {/* Divider row */}
+              {/* 5. Divider Row (44px below, two 1px lines with "or" in between) */}
               <div
-                className="flex w-full items-center"
                 style={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
                   marginTop: "clamp(28px, 2.63vw, 44px)",
                 }}
               >
-                <div className="flex-1" style={{ height: "1px", backgroundColor: "#E4E4E7" }} />
+                <div
+                  style={{
+                    flex: 1,
+                    height: "1px",
+                    backgroundColor: "#E4E4E7",
+                  }}
+                />
                 <span
                   style={{
                     paddingLeft: "24px",
                     paddingRight: "24px",
-                    fontSize: "clamp(15px, 1.2vw, 20px)",
+                    fontSize: "clamp(16px, 1.2vw, 20px)",
                     color: "#71717A",
+                    fontWeight: 400,
                   }}
                 >
                   or
                 </span>
-                <div className="flex-1" style={{ height: "1px", backgroundColor: "#E4E4E7" }} />
+                <div
+                  style={{
+                    flex: 1,
+                    height: "1px",
+                    backgroundColor: "#E4E4E7",
+                  }}
+                />
               </div>
 
-              {/* Legal text */}
+              {/* 6. Legal Text (38px below, 17px / 28px, #71717A) */}
               <p
-                className="text-center"
                 style={{
                   marginTop: "clamp(24px, 2.27vw, 38px)",
                   fontSize: "clamp(13px, 1.02vw, 17px)",
-                  lineHeight: "1.65",
+                  lineHeight: "28px",
                   color: "#71717A",
+                  marginBottom: 0,
+                  fontWeight: 400,
                 }}
               >
-                By continuing, you agree to our
+                <span className="orgkit-legal-line1">
+                  By continuing, you agree to our
+                </span>
                 <br />
-                <Link
-                  href="/terms"
-                  className="hover:underline focus:underline"
-                  style={{ color: "#059669", textDecoration: "none" }}
-                >
+                <Link href="/terms" className="orgkit-terms-link">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link
-                  href="/privacy"
-                  className="hover:underline focus:underline"
-                  style={{ color: "#059669", textDecoration: "none" }}
-                >
+                <Link href="/privacy" className="orgkit-terms-link">
                   Privacy Policy
                 </Link>
                 .
@@ -559,14 +781,6 @@ export default function RegisterPage() {
           </div>
         </div>
       </div>
-
-      {/* ═══════════ MOBILE LAYOUT (< 1024px) ═══════════ */}
-      {/* On mobile the two-column layout above hides the left column.
-          We show a simplified single-column version below the header.
-          The card is already visible and centered via flex-1 + justify-center.
-          Below 640px the H1 block and features are hidden via lg:flex on the left col.
-          The corner shapes scale naturally since they use fixed px sizes that
-          overflow and clip via the parent overflow-hidden. */}
     </main>
   );
 }
