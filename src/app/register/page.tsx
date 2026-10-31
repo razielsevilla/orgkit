@@ -189,6 +189,10 @@ export default function RegisterPage() {
             display: none !important;
           }
 
+          .orgkit-bg-decor {
+            display: none !important;
+          }
+
           .orgkit-mobile-wrapper {
             display: flex !important;
             flex-direction: column;
@@ -230,10 +234,20 @@ export default function RegisterPage() {
         .orgkit-terms-link {
           color: #059669;
           text-decoration: none;
-          font-weight: 500;
+          font-weight: 600;
         }
 
         .orgkit-terms-link:hover, .orgkit-terms-link:focus-visible {
+          text-decoration: underline;
+        }
+
+        .orgkit-signin-link {
+          color: #059669;
+          text-decoration: none;
+          font-weight: 700;
+        }
+
+        .orgkit-signin-link:hover, .orgkit-signin-link:focus-visible {
           text-decoration: underline;
         }
       `}</style>
@@ -243,6 +257,7 @@ export default function RegisterPage() {
           No white bars or side borders!
           ═══════════════════════════════════════════════════════════════ */}
       <div
+        className="orgkit-bg-decor"
         style={{
           position: "absolute",
           inset: 0,
@@ -703,66 +718,52 @@ export default function RegisterPage() {
               </button>
             </div>
 
-            {/* 5. Divider Row (44px below button) */}
+            {/* 5. Terms & Sign In Info */}
             <div
               style={{
-                width: "100%",
+                marginTop: "clamp(24px, 3.8vh, 36px)",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                marginTop: "clamp(20px, 4.68vh, 44px)",
+                gap: "clamp(12px, 1.8vh, 18px)",
               }}
             >
-              <div
+              <p
                 style={{
-                  flex: 1,
-                  height: 1,
-                  backgroundColor: "#E4E4E7",
+                  fontSize: "clamp(13px, 0.95vw, 15px)",
+                  lineHeight: 1.5,
+                  color: "#52525B",
+                  margin: 0,
+                  fontWeight: 400,
+                  whiteSpace: "nowrap",
                 }}
-              />
-              <span
+              >
+                By continuing you agree to our{" "}
+                <Link href="/terms" className="orgkit-terms-link">
+                  Terms
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="orgkit-terms-link">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+
+              <p
                 style={{
-                  paddingLeft: "clamp(14px, 1.44vw, 24px)",
-                  paddingRight: "clamp(14px, 1.44vw, 24px)",
-                  fontSize: "clamp(15px, 1.2vw, 20px)",
-                  color: "#71717A",
+                  fontSize: "clamp(13.5px, 1.0vw, 15.5px)",
+                  lineHeight: 1.5,
+                  color: "#52525B",
+                  margin: 0,
                   fontWeight: 400,
                 }}
               >
-                or
-              </span>
-              <div
-                style={{
-                  flex: 1,
-                  height: 1,
-                  backgroundColor: "#E4E4E7",
-                }}
-              />
+                Already have an account?{" "}
+                <Link href="/login" className="orgkit-signin-link">
+                  Sign in
+                </Link>
+              </p>
             </div>
-
-            {/* 6. Legal Text (38px below divider) */}
-            <p
-              style={{
-                marginTop: "clamp(18px, 4.04vh, 38px)",
-                fontSize: "clamp(12px, 1.02vw, 17px)",
-                lineHeight: 1.65,
-                color: "#71717A",
-                marginBottom: 0,
-                fontWeight: 400,
-              }}
-            >
-              <span style={{ whiteSpace: "nowrap" }}>
-                By continuing, you agree to our
-              </span>
-              <br />
-              <Link href="/terms" className="orgkit-terms-link">
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link href="/privacy" className="orgkit-terms-link">
-                Privacy Policy
-              </Link>
-              .
-            </p>
           </div>
         </div>
       </div>
@@ -912,45 +913,48 @@ export default function RegisterPage() {
 
           <div
             style={{
-              width: "100%",
+              marginTop: 22,
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
-              marginTop: 28,
+              gap: 12,
             }}
           >
-            <div style={{ flex: 1, height: 1, backgroundColor: "#E4E4E7" }} />
-            <span
+            <p
               style={{
-                paddingLeft: 16,
-                paddingRight: 16,
-                fontSize: 16,
-                color: "#71717A",
+                fontSize: "clamp(12px, 3.4vw, 14px)",
+                lineHeight: 1.5,
+                color: "#52525B",
+                margin: 0,
+                fontWeight: 400,
               }}
             >
-              or
-            </span>
-            <div style={{ flex: 1, height: 1, backgroundColor: "#E4E4E7" }} />
-          </div>
+              By continuing you agree to our{" "}
+              <Link href="/terms" className="orgkit-terms-link">
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link href="/privacy" className="orgkit-terms-link">
+                Privacy Policy
+              </Link>
+              .
+            </p>
 
-          <p
-            style={{
-              marginTop: 24,
-              fontSize: "clamp(12.5px, 3.5vw, 14px)",
-              lineHeight: "22px",
-              color: "#71717A",
-              marginBottom: 0,
-            }}
-          >
-            By continuing, you agree to our{" "}
-            <Link href="/terms" className="orgkit-terms-link">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="orgkit-terms-link">
-              Privacy Policy
-            </Link>
-            .
-          </p>
+            <p
+              style={{
+                fontSize: "clamp(13px, 3.6vw, 15px)",
+                lineHeight: 1.5,
+                color: "#52525B",
+                margin: 0,
+                fontWeight: 400,
+              }}
+            >
+              Already have an account?{" "}
+              <Link href="/login" className="orgkit-signin-link">
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </main>
