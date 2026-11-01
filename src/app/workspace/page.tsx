@@ -78,7 +78,7 @@ export default function WorkspacePage() {
         // Check if this officer already has an assigned workspace
         const existingWorkspace = await getOfficerDefaultWorkspace();
         if (existingWorkspace?.orgId) {
-          router.replace(`/workspace/${existingWorkspace.orgId}`);
+          window.location.assign(`/workspace/${existingWorkspace.orgId}`);
           return;
         }
       } catch (err) {
@@ -173,11 +173,11 @@ export default function WorkspacePage() {
         if (school.trim()) {
           query.set("school", school.trim());
         }
-        router.push(`/workspace/${res.orgId}?${query.toString()}`);
+        window.location.assign(`/workspace/${res.orgId}?${query.toString()}`);
         return;
       }
       if (res.existingOrgId) {
-        router.replace(`/workspace/${res.existingOrgId}`);
+        window.location.assign(`/workspace/${res.existingOrgId}`);
         return;
       }
       if (res.fieldError) {

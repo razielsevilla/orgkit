@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSessionExpired, SESSION_MAX_SECONDS } from "@/src/lib/session-config";
+import { createAdminClient } from "@/src/lib/supabase/service-role";
 
 // Pages a signed-out visitor may open. Everything else needs a session.
 const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms"];
@@ -75,7 +76,8 @@ export async function proxy(request: NextRequest) {
       return redirectTo(`/workspace/${orgId}`);
     }
 
-    const { data: membership } = await supabase
+    const admin = createAdminClient();
+    const { data: membership } = await admin
       .from("org_officers")
       .select("org_id")
       .eq("officer_id", user.id)
