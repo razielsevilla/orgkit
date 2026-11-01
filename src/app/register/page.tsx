@@ -968,7 +968,7 @@ function RegisterContent() {
               >
                 Already have an account?{" "}
                 <Link
-                  href="/login"
+                  href="/signin"
                   className="orgkit-signin-link"
                   title="Sign in to your existing account"
                 >
@@ -1198,7 +1198,7 @@ function RegisterContent() {
             >
               Already have an account?{" "}
               <Link
-                href="/login"
+                href="/signin"
                 className="orgkit-signin-link"
                 title="Sign in to your existing account"
               >
