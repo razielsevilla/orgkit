@@ -94,7 +94,7 @@ export async function GET(request: Request) {
       return toSignIn("google_error");
     }
 
-    return NextResponse.redirect(new URL("/setup", requestUrl.origin));
+    return NextResponse.redirect(new URL("/workspace", requestUrl.origin));
   }
 
   // First-time officer: no account row yet. They see the privacy notice first,

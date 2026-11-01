@@ -30,7 +30,7 @@ async function ConsentCard() {
     .select("id")
     .eq("id", user.id)
     .maybeSingle();
-  if (officer) redirect("/setup");
+  if (officer) redirect("/workspace");
 
   return (
     <div
