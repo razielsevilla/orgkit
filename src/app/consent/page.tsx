@@ -124,7 +124,7 @@ export default function ConsentPage() {
   async function handleCancel() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/register?error=cancelled");
+    router.push("/signin?error=cancelled");
   }
 
   if (initialChecking) {
@@ -154,9 +154,9 @@ export default function ConsentPage() {
 
   return (
     <main
-      className={`${plusJakarta.className} flex min-h-screen items-center justify-center bg-[#F4F4F5] p-4 text-[#18181B]`}
+      className={`${plusJakarta.className} flex min-h-screen items-center justify-center bg-[#F4F4F5] px-4 py-8 text-[#18181B]`}
     >
-      <div className="w-full max-w-lg rounded-3xl border border-[#E4E4E7]/70 bg-white p-8 sm:p-10 shadow-[0_20px_50px_rgba(24,24,27,0.08)]">
+      <div className="w-full max-w-lg rounded-3xl border border-[#E4E4E7]/70 bg-white p-6 sm:p-10 shadow-[0_20px_50px_rgba(24,24,27,0.08)]">
         <div className="flex flex-col items-center text-center">
           <Image
             src="/orgkit-logo.png"

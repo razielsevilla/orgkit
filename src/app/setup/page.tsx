@@ -41,7 +41,7 @@ export default function SetupPage() {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/register");
+    router.push("/signin");
   }
 
   if (loading) {
@@ -56,9 +56,9 @@ export default function SetupPage() {
 
   return (
     <main
-      className={`${plusJakarta.className} flex min-h-screen flex-col items-center justify-center bg-[#F4F4F5] p-6 text-[#18181B]`}
+      className={`${plusJakarta.className} flex min-h-screen flex-col items-center justify-center bg-[#F4F4F5] px-4 py-8 text-[#18181B]`}
     >
-      <div className="w-full max-w-lg rounded-3xl border border-[#E4E4E7] bg-white p-8 text-center shadow-[0_20px_50px_rgba(24,24,27,0.08)]">
+      <div className="w-full max-w-lg rounded-3xl border border-[#E4E4E7] bg-white p-6 sm:p-8 text-center shadow-[0_20px_50px_rgba(24,24,27,0.08)]">
         <Image
           src="/orgkit-logo.png"
           alt="OrgKit"

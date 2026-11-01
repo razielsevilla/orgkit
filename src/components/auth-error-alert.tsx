@@ -13,7 +13,7 @@ export function getErrorMessage(errorParam: string | null): string | null {
     case "school_blocked":
       return "Your school account may not allow this app. Try a personal Google account, or ask your school's IT admin.";
     default:
-      return "Sign-in was cancelled. You can try again.";
+      return "Something went wrong. Please try again.";
   }
 }
 
