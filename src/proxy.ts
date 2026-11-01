@@ -62,6 +62,16 @@ export async function proxy(request: NextRequest) {
     return redirectTo("/signin?error=session_expired");
   }
 
+  // Already authenticated: redirect away from entry/auth pages to workspace
+  if (
+    user &&
+    (request.nextUrl.pathname === "/" ||
+      request.nextUrl.pathname === "/signin" ||
+      request.nextUrl.pathname === "/register")
+  ) {
+    return redirectTo("/workspace");
+  }
+
   if (!user && !isPublic(request.nextUrl.pathname)) {
     return redirectTo("/signin");
   }
