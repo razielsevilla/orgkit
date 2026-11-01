@@ -16,6 +16,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
+import { createWorkspace } from "@/src/app/workspace/actions";
 import { createClient } from "@/src/lib/supabase/client";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -43,6 +44,7 @@ export default function WorkspacePage() {
   const [orgName, setOrgName] = useState("");
   const [school, setSchool] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // Load current signed-in officer session
   useEffect(() => {
@@ -128,25 +130,48 @@ export default function WorkspacePage() {
     return "AR";
   })();
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgName.trim()) return;
-    setIsSubmitting(true);
-    const slug =
-      encodeURIComponent(
-        orgName
-          .trim()
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, "")
-      ) || "default";
-
-    const query = new URLSearchParams();
-    query.set("name", orgName.trim());
-    if (school.trim()) {
-      query.set("school", school.trim());
+    const cleanName = orgName.trim();
+    if (!cleanName) {
+      setErrorMessage("Organization name is required.");
+      return;
     }
-    router.push(`/workspace/${slug}?${query.toString()}`);
+    setErrorMessage(null);
+    setIsSubmitting(true);
+
+    try {
+      const res = await createWorkspace(cleanName, school);
+      if (res.success && res.orgId) {
+        router.push(`/workspace/${res.orgId}`);
+        return;
+      }
+      if (res.error) {
+        setErrorMessage(res.error);
+        setIsSubmitting(false);
+        return;
+      }
+    } catch (err) {
+      console.error("Error creating workspace:", err);
+      // Fallback in case of database offline / preview mode
+      const slug =
+        encodeURIComponent(
+          cleanName
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "")
+        ) || "default";
+
+      const query = new URLSearchParams();
+      query.set("name", cleanName);
+      if (school.trim()) {
+        query.set("school", school.trim());
+      }
+      router.push(`/workspace/${slug}?${query.toString()}`);
+      return;
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
@@ -1064,6 +1089,25 @@ export default function WorkspacePage() {
                     Leave blank if your org isn't tied to one school.
                   </p>
                 </div>
+
+                {/* Validation / Database Error Alert */}
+                {errorMessage && (
+                  <div
+                    style={{
+                      marginBottom: 16,
+                      padding: "10px 14px",
+                      borderRadius: 12,
+                      backgroundColor: "rgba(220, 38, 38, 0.08)",
+                      border: "1px solid rgba(220, 38, 38, 0.25)",
+                      color: "#DC2626",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      textAlign: "left",
+                    }}
+                  >
+                    {errorMessage}
+                  </div>
+                )}
 
                 {/* Submit Button */}
                 <button

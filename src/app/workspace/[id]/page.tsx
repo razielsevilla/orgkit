@@ -15,6 +15,7 @@ import {
   Archive,
 } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
+import { getOrganizationById } from "@/src/app/workspace/actions";
 import { createClient } from "@/src/lib/supabase/client";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -38,7 +39,25 @@ function WorkspaceDetailContent() {
   const queryName = searchParams.get("name");
   const querySchool = searchParams.get("school");
 
+  const [orgData, setOrgData] = useState<{ name: string; school: string } | null>(null);
+
+  useEffect(() => {
+    async function loadOrg() {
+      if (!rawId || rawId === "default") return;
+      try {
+        const org = await getOrganizationById(rawId);
+        if (org) {
+          setOrgData({ name: org.name, school: org.school || "" });
+        }
+      } catch (err) {
+        console.error("Error loading org from database:", err);
+      }
+    }
+    loadOrg();
+  }, [rawId]);
+
   const orgName =
+    orgData?.name ||
     queryName?.trim() ||
     (rawId && rawId !== "default"
       ? rawId
@@ -47,7 +66,7 @@ function WorkspaceDetailContent() {
           .join(" ")
       : "Junior Marketing Association");
 
-  const schoolName = querySchool?.trim() || "Sample College";
+  const schoolName = orgData?.school ?? (querySchool?.trim() || "Sample College");
 
   // Derive organization initials (e.g. "Junior Marketing Association" -> "JM")
   const orgInitials = (() => {
