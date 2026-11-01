@@ -1,0 +1,935 @@
+"use client";
+
+import { useState, useRef, useEffect, Suspense } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useSearchParams } from "next/navigation";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import {
+  ChevronDown,
+  LogOut,
+  Home,
+  Users,
+  Calendar,
+  Wallet,
+  Archive,
+} from "lucide-react";
+import { signOut } from "@/src/app/auth/actions";
+import { createClient } from "@/src/lib/supabase/client";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+interface OfficerProps {
+  id?: string;
+  email?: string;
+  full_name?: string;
+}
+
+function WorkspaceDetailContent() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const rawId = (params?.id as string) || "";
+
+  // Query param overrides or fallback defaults from design
+  const queryName = searchParams.get("name");
+  const querySchool = searchParams.get("school");
+
+  const orgName =
+    queryName?.trim() ||
+    (rawId && rawId !== "default"
+      ? rawId
+          .split("-")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+          .join(" ")
+      : "Junior Marketing Association");
+
+  const schoolName = querySchool?.trim() || "Sample College";
+
+  // Derive organization initials (e.g. "Junior Marketing Association" -> "JM")
+  const orgInitials = (() => {
+    const parts = orgName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    if (parts.length === 1 && parts[0].length > 0) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return "JM";
+  })();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [officer, setOfficer] = useState<OfficerProps | null>(null);
+
+  // Load signed-in officer session
+  useEffect(() => {
+    async function loadOfficerSession() {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+          const { data } = await supabase
+            .from("officers")
+            .select("id, email, full_name")
+            .eq("id", user.id)
+            .maybeSingle();
+
+          if (data) {
+            setOfficer(data);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load officer session:", err);
+      }
+    }
+    loadOfficerSession();
+  }, []);
+
+  // Strict zero-scroll desktop policy
+  useEffect(() => {
+    function enforceZeroScroll() {
+      if (window.innerWidth >= 1024) {
+        document.documentElement.style.overflow = "hidden";
+        document.body.style.overflow = "hidden";
+      } else {
+        document.documentElement.style.overflow = "";
+        document.body.style.overflow = "";
+      }
+    }
+    enforceZeroScroll();
+    window.addEventListener("resize", enforceZeroScroll);
+    return () => {
+      window.removeEventListener("resize", enforceZeroScroll);
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  // Close dropdown on click outside or Escape
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  const displayName = officer?.full_name?.trim() || "Alex Reyes";
+  const officerInitials = (() => {
+    if (!officer?.full_name) return "AR";
+    const parts = officer.full_name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    if (parts.length === 1 && parts[0].length > 0) {
+      return parts[0].slice(0, 2).toUpperCase();
+    }
+    return "AR";
+  })();
+
+  return (
+    <div
+      className={plusJakarta.className}
+      style={{
+        height: "100vh",
+        maxHeight: "100vh",
+        width: "100%",
+        maxWidth: "100%",
+        overflow: "hidden",
+        position: "relative",
+        margin: 0,
+        padding: 0,
+        backgroundColor: "#F4F4F5",
+        color: "#18181B",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
+      }}
+    >
+      <style>{`
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background-color: #F4F4F5 !important;
+        }
+        .orgkit-nav-btn:hover {
+          background-color: rgba(0, 0, 0, 0.04);
+        }
+        .orgkit-cta-btn:hover {
+          background-color: #047857 !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 14px rgba(5, 150, 105, 0.28) !important;
+        }
+        .orgkit-cta-btn:active {
+          transform: translateY(0);
+        }
+        .orgkit-profile-trigger:hover {
+          background-color: rgba(0, 0, 0, 0.04);
+        }
+        @keyframes cardPopout {
+          0% {
+            opacity: 0;
+            transform: scale(0.94) translateY(12px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+      `}</style>
+
+      {/* ═════════════════════════════════════════════════════════════════
+          TOP NAVBAR
+          ═════════════════════════════════════════════════════════════════ */}
+      <header
+        style={{
+          height: 64,
+          minHeight: 64,
+          width: "100%",
+          backgroundColor: "#FFFFFF",
+          borderBottom: "1px solid #E4E4E7",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 24px 0 20px",
+          position: "relative",
+          zIndex: 30,
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Left Section: Logo + Divider + Page Title ("Home") */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {/* Logo container sized to align nicely with sidebar */}
+          <div
+            style={{
+              width: 236,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Link
+              href="/workspace"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                textDecoration: "none",
+              }}
+              aria-label="OrgKit Home"
+            >
+              <Image
+                src="/orgkit-text-logo.png"
+                alt="OrgKit"
+                width={140}
+                height={34}
+                priority
+                style={{
+                  height: 32,
+                  width: "auto",
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
+            </Link>
+          </div>
+
+          {/* Vertical subtle divider */}
+          <div
+            style={{
+              width: 1,
+              height: 22,
+              backgroundColor: "#E4E4E7",
+              margin: "0 20px 0 4px",
+            }}
+          />
+
+          {/* Page Title */}
+          <h1
+            style={{
+              fontSize: 18,
+              fontWeight: 700,
+              letterSpacing: "-0.02em",
+              color: "#18181B",
+              margin: 0,
+            }}
+          >
+            Home
+          </h1>
+        </div>
+
+        {/* Right Section: Officer Profile Dropdown */}
+        <div style={{ position: "relative" }} ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((prev) => !prev)}
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            className="orgkit-profile-trigger"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "6px 10px 6px 6px",
+              borderRadius: 9999,
+              backgroundColor: "transparent",
+              border: "none",
+              cursor: "pointer",
+              transition: "background-color 0.15s ease",
+            }}
+          >
+            {/* Officer Avatar Badge */}
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.12)",
+                color: "#059669",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {officerInitials}
+            </div>
+
+            {/* Officer Name */}
+            <span
+              style={{
+                fontSize: 13.5,
+                fontWeight: 600,
+                color: "#18181B",
+                maxWidth: 200,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {displayName}
+            </span>
+
+            {/* Dropdown Chevron */}
+            <ChevronDown
+              style={{
+                width: 15,
+                height: 15,
+                color: "#71717A",
+                transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)",
+                transition: "transform 0.18s ease",
+              }}
+            />
+          </button>
+
+          {/* Profile Dropdown Menu */}
+          {menuOpen && (
+            <div
+              role="menu"
+              style={{
+                position: "absolute",
+                right: 0,
+                top: "calc(100% + 8px)",
+                width: 210,
+                borderRadius: 14,
+                backgroundColor: "#FFFFFF",
+                border: "1px solid #E4E4E7",
+                boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+                padding: "6px",
+                zIndex: 50,
+              }}
+            >
+              <div
+                style={{
+                  borderBottom: "1px solid #E4E4E7",
+                  padding: "8px 10px",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    color: "#18181B",
+                    margin: 0,
+                  }}
+                >
+                  {displayName}
+                </p>
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: "#71717A",
+                    margin: "2px 0 0 0",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {officer?.email || "officer@example.com"}
+                </p>
+              </div>
+
+              <div style={{ padding: "4px 0 0 0" }}>
+                <form action={signOut}>
+                  <button
+                    type="submit"
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      alignItems: "center",
+                      gap: 8,
+                      borderRadius: 9,
+                      padding: "8px 10px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: "#DC2626",
+                      border: "none",
+                      backgroundColor: "transparent",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
+                  >
+                    <LogOut style={{ width: 14, height: 14 }} />
+                    Sign out
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
+      </header>
+
+      {/* ═════════════════════════════════════════════════════════════════
+          MAIN SHELL (SIDEBAR + CONTENT CANVAS)
+          ═════════════════════════════════════════════════════════════════ */}
+      <div
+        style={{
+          display: "flex",
+          flex: 1,
+          height: "calc(100vh - 64px)",
+          maxHeight: "calc(100vh - 64px)",
+          width: "100%",
+          overflow: "hidden",
+          position: "relative",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* ── LEFT SIDEBAR ── */}
+        <aside
+          style={{
+            width: 260,
+            minWidth: 260,
+            maxWidth: 260,
+            height: "100%",
+            backgroundColor: "#FFFFFF",
+            borderRight: "1px solid #E4E4E7",
+            display: "flex",
+            flexDirection: "column",
+            padding: "16px 14px",
+            boxSizing: "border-box",
+            flexShrink: 0,
+            zIndex: 20,
+          }}
+        >
+          {/* Organization Switcher Card */}
+          <div
+            style={{
+              backgroundColor: "#F4F4F5",
+              border: "1px solid rgba(228, 228, 231, 0.7)",
+              borderRadius: 14,
+              padding: "10px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: 11,
+              marginBottom: 16,
+            }}
+          >
+            {/* Org Initials Avatar */}
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                minWidth: 36,
+                borderRadius: 10,
+                backgroundColor: "rgba(5, 150, 105, 0.12)",
+                color: "#059669",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {orgInitials}
+            </div>
+
+            {/* Org Info */}
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: "-0.01em",
+                  color: "#18181B",
+                  lineHeight: 1.25,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={orgName}
+              >
+                {orgName}
+              </div>
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 400,
+                  color: "#71717A",
+                  lineHeight: 1.25,
+                  marginTop: 2,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={schoolName}
+              >
+                {schoolName}
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Links */}
+          <nav
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+              flex: 1,
+            }}
+          >
+            {/* 1. Home (Active) */}
+            <Link
+              href={`/workspace/${rawId || "default"}`}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                borderRadius: 12,
+                padding: "9px 12px",
+                backgroundColor: "rgba(5, 150, 105, 0.10)",
+                color: "#059669",
+                textDecoration: "none",
+                fontWeight: 600,
+                fontSize: 13.5,
+                transition: "all 0.15s ease",
+              }}
+            >
+              <Home size={18} strokeWidth={2.2} color="#059669" />
+              <span>Home</span>
+            </Link>
+
+            {/* 2. Members (Soon) */}
+            <div
+              className="orgkit-nav-btn"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderRadius: 12,
+                padding: "9px 12px",
+                color: "#52525B",
+                fontSize: 13.5,
+                fontWeight: 500,
+                cursor: "default",
+                userSelect: "none",
+                transition: "background-color 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Users size={18} strokeWidth={1.8} color="#71717A" />
+                <span>Members</span>
+              </div>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            </div>
+
+            {/* 3. Events (Soon) */}
+            <div
+              className="orgkit-nav-btn"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderRadius: 12,
+                padding: "9px 12px",
+                color: "#52525B",
+                fontSize: 13.5,
+                fontWeight: 500,
+                cursor: "default",
+                userSelect: "none",
+                transition: "background-color 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Calendar size={18} strokeWidth={1.8} color="#71717A" />
+                <span>Events</span>
+              </div>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            </div>
+
+            {/* 4. Dues (Soon) */}
+            <div
+              className="orgkit-nav-btn"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderRadius: 12,
+                padding: "9px 12px",
+                color: "#52525B",
+                fontSize: 13.5,
+                fontWeight: 500,
+                cursor: "default",
+                userSelect: "none",
+                transition: "background-color 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Wallet size={18} strokeWidth={1.8} color="#71717A" />
+                <span>Dues</span>
+              </div>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            </div>
+
+            {/* 5. Archive (Soon) */}
+            <div
+              className="orgkit-nav-btn"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                borderRadius: 12,
+                padding: "9px 12px",
+                color: "#52525B",
+                fontSize: 13.5,
+                fontWeight: 500,
+                cursor: "default",
+                userSelect: "none",
+                transition: "background-color 0.15s ease",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <Archive size={18} strokeWidth={1.8} color="#71717A" />
+                <span>Archive</span>
+              </div>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            </div>
+          </nav>
+        </aside>
+
+        {/* ── MAIN CONTENT CANVAS ── */}
+        <main
+          style={{
+            flex: 1,
+            height: "100%",
+            position: "relative",
+            overflow: "hidden",
+            backgroundColor: "#F4F4F5",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Background Concentric SVG Circles (design.md aesthetic) */}
+          {/* Top-Left Arc */}
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: 320,
+              height: 320,
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            <svg
+              viewBox="0 0 320 320"
+              fill="none"
+              style={{ width: "100%", height: "100%" }}
+            >
+              <circle
+                cx="0"
+                cy="0"
+                r="240"
+                fill="rgba(5, 150, 105, 0.05)"
+              />
+              <circle
+                cx="0"
+                cy="0"
+                r="180"
+                stroke="rgba(5, 150, 105, 0.12)"
+                strokeWidth="1.2"
+              />
+              <circle
+                cx="0"
+                cy="0"
+                r="300"
+                stroke="rgba(5, 150, 105, 0.08)"
+                strokeWidth="1.2"
+              />
+            </svg>
+          </div>
+
+          {/* Bottom-Right Concentric Ring Arc */}
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              right: 0,
+              width: 380,
+              height: 380,
+              pointerEvents: "none",
+              zIndex: 1,
+            }}
+          >
+            <svg
+              viewBox="0 0 380 380"
+              fill="none"
+              style={{ width: "100%", height: "100%" }}
+            >
+              <circle
+                cx="380"
+                cy="380"
+                r="320"
+                stroke="rgba(5, 150, 105, 0.12)"
+                strokeWidth="1.2"
+              />
+              <circle
+                cx="380"
+                cy="380"
+                r="240"
+                stroke="rgba(5, 150, 105, 0.10)"
+                strokeWidth="1.2"
+              />
+              <circle
+                cx="380"
+                cy="380"
+                r="160"
+                stroke="rgba(5, 150, 105, 0.08)"
+                strokeWidth="1.2"
+              />
+            </svg>
+          </div>
+
+          {/* ═════════════════════════════════════════════════════════════
+              CENTER FLOATING CARD: "Your workspace is ready."
+              ═════════════════════════════════════════════════════════════ */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 10,
+              width: "100%",
+              maxWidth: 450,
+              borderRadius: 26,
+              border: "1px solid #E4E4E7",
+              backgroundColor: "#FFFFFF",
+              padding: "44px 36px 40px 36px",
+              boxShadow: "0 20px 50px rgba(24, 24, 27, 0.06)",
+              boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+              animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
+            }}
+          >
+            {/* Circular Mint Badge with Emerald Users Icon */}
+            <div
+              style={{
+                width: 72,
+                height: 72,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.10)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 24,
+              }}
+            >
+              <Users size={32} color="#059669" strokeWidth={2} />
+            </div>
+
+            {/* Card Heading */}
+            <h2
+              style={{
+                fontSize: 27,
+                fontWeight: 800,
+                letterSpacing: "-0.025em",
+                color: "#18181B",
+                margin: "0 0 8px 0",
+                lineHeight: 1.2,
+              }}
+            >
+              Your workspace is ready.
+            </h2>
+
+            {/* Card Subtitle */}
+            <p
+              style={{
+                fontSize: 14.5,
+                fontWeight: 400,
+                color: "#71717A",
+                margin: "0 0 28px 0",
+                lineHeight: 1.4,
+              }}
+            >
+              Next: add your members.
+            </p>
+
+            {/* Primary Action Button */}
+            <button
+              type="button"
+              className="orgkit-cta-btn"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: 46,
+                borderRadius: 9999,
+                backgroundColor: "#059669",
+                padding: "0 34px",
+                fontSize: 14.5,
+                fontWeight: 600,
+                color: "#FFFFFF",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
+                transition: "all 0.15s ease",
+              }}
+            >
+              Add members
+            </button>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+function WorkspaceLoadingSkeleton() {
+  return (
+    <div
+      style={{
+        height: "100vh",
+        width: "100%",
+        backgroundColor: "#F4F4F5",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <div
+        style={{
+          width: 38,
+          height: 38,
+          borderRadius: "50%",
+          border: "3px solid rgba(5, 150, 105, 0.2)",
+          borderTopColor: "#059669",
+          animation: "spin 0.8s linear infinite",
+        }}
+      />
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+export default function WorkspaceDetailPage() {
+  return (
+    <Suspense fallback={<WorkspaceLoadingSkeleton />}>
+      <WorkspaceDetailContent />
+    </Suspense>
+  );
+}
+

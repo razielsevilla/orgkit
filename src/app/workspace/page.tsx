@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import {
   ChevronDown,
@@ -30,6 +31,7 @@ interface OfficerProps {
 }
 
 export default function WorkspacePage() {
+  const router = useRouter();
   // view: "empty" corresponds to Image 2 ("We can't find that page.")
   // view: "create" corresponds to Image 3 ("Set up your org" card)
   const [view, setView] = useState<"empty" | "create">("empty");
@@ -128,10 +130,23 @@ export default function WorkspacePage() {
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!orgName.trim()) return;
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-    }, 1000);
+    const slug =
+      encodeURIComponent(
+        orgName
+          .trim()
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")
+      ) || "default";
+
+    const query = new URLSearchParams();
+    query.set("name", orgName.trim());
+    if (school.trim()) {
+      query.set("school", school.trim());
+    }
+    router.push(`/workspace/${slug}?${query.toString()}`);
   };
 
   return (
