@@ -95,7 +95,7 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
 
   return (
     <div
-      className={`${plusJakarta.className} relative flex flex-col bg-[#F4F4F5] text-[#18181B] selection:bg-[#059669]/20`}
+      className={plusJakarta.className}
       style={{
         height: "100vh",
         maxHeight: "100vh",
@@ -103,10 +103,33 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
         maxWidth: "100%",
         overflow: "hidden",
         position: "relative",
+        backgroundColor: "#F4F4F5",
+        color: "#18181B",
+        display: "flex",
+        flexDirection: "column",
+        boxSizing: "border-box",
       }}
     >
-      {/* ── Background Curved Corner Decorations (Pinned via absolute styles) ── */}
-      {/* Top-Left Arcs */}
+      <style>{`
+        .orgkit-workspace-input:focus {
+          border-color: #059669 !important;
+          box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+        }
+        .orgkit-workspace-btn:hover:not(:disabled) {
+          background-color: #047857 !important;
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25) !important;
+        }
+        .orgkit-workspace-btn:active:not(:disabled) {
+          transform: translateY(0);
+        }
+        .orgkit-profile-trigger:hover {
+          background-color: rgba(0, 0, 0, 0.04);
+        }
+      `}</style>
+
+      {/* ── Background Curved Corner Decorations (Absolute & strictly bounded) ── */}
+      {/* Top-Left Arc */}
       <div
         style={{
           position: "absolute",
@@ -126,9 +149,7 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Pale green filled circular sector */}
           <circle cx="0" cy="0" r="140" fill="#059669" fillOpacity="0.06" />
-          {/* Concentric thin outline arc */}
           <circle
             cx="0"
             cy="0"
@@ -140,7 +161,7 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
         </svg>
       </div>
 
-      {/* Bottom-Right Arcs */}
+      {/* Bottom-Right Arc */}
       <div
         style={{
           position: "absolute",
@@ -160,9 +181,7 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Pale green filled circular sector */}
           <circle cx="260" cy="260" r="150" fill="#059669" fillOpacity="0.06" />
-          {/* Concentric thin outline arc */}
           <circle
             cx="260"
             cy="260"
@@ -174,12 +193,29 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
         </svg>
       </div>
 
-      {/* ── Top Navigation Bar (Compact Height & Padding) ── */}
-      <header className="relative z-20 flex h-14 w-full flex-shrink-0 items-center justify-between px-6 sm:px-10 lg:px-12">
+      {/* ── Top Navigation Bar ── */}
+      <header
+        style={{
+          position: "relative",
+          zIndex: 20,
+          display: "flex",
+          height: 56,
+          width: "100%",
+          flexShrink: 0,
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 32px",
+          boxSizing: "border-box",
+        }}
+      >
         {/* OrgKit Logo */}
         <Link
           href="/workspace"
-          className="inline-flex items-center transition-opacity hover:opacity-90"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            textDecoration: "none",
+          }}
         >
           <Image
             src="/orgkit-text-logo.png"
@@ -187,57 +223,150 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
             width={96}
             height={32}
             priority
-            className="h-6 w-auto select-none object-contain"
+            style={{
+              height: 24,
+              width: "auto",
+              display: "block",
+              userSelect: "none",
+            }}
           />
         </Link>
 
         {/* Officer Profile Badge & Dropdown */}
-        <div className="relative" ref={menuRef}>
+        <div style={{ position: "relative" }} ref={menuRef}>
           <button
             type="button"
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-expanded={menuOpen}
             aria-haspopup="true"
-            className="flex items-center gap-2 rounded-full p-1 pl-1.5 pr-2 transition-colors hover:bg-black/[0.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#059669]"
+            className="orgkit-profile-trigger"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              borderRadius: 9999,
+              padding: "4px 8px 4px 5px",
+              border: "none",
+              backgroundColor: "transparent",
+              cursor: "pointer",
+              outline: "none",
+              transition: "background-color 0.15s ease",
+            }}
           >
             {/* Avatar Circle with initials */}
-            <div className="flex h-7 w-7 select-none items-center justify-center rounded-full bg-[#D1FAE5] text-[11px] font-bold tracking-tight text-[#059669]">
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                backgroundColor: "#D1FAE5",
+                color: "#059669",
+                fontSize: 11,
+                fontWeight: 700,
+                letterSpacing: "-0.01em",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                userSelect: "none",
+                flexShrink: 0,
+              }}
+            >
               {initials}
             </div>
 
             {/* Officer Name */}
-            <span className="text-[13px] font-semibold tracking-tight text-[#18181B]">
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: "#18181B",
+                letterSpacing: "-0.01em",
+              }}
+            >
               {displayName}
             </span>
 
             {/* Down Chevron */}
             <ChevronDown
-              className={`h-3.5 w-3.5 text-[#71717A] transition-transform duration-200 ${
-                menuOpen ? "rotate-180" : ""
-              }`}
+              style={{
+                width: 14,
+                height: 14,
+                color: "#71717A",
+                transform: menuOpen ? "rotate(180deg)" : "none",
+                transition: "transform 0.2s ease",
+              }}
               strokeWidth={2}
             />
           </button>
 
           {/* Dropdown Menu */}
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-[#E4E4E7] bg-white p-1.5 shadow-xl ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150 z-50">
-              <div className="border-b border-[#E4E4E7] px-3 py-2">
-                <p className="text-xs font-semibold text-[#18181B]">
+            <div
+              style={{
+                position: "absolute",
+                right: 0,
+                marginTop: 8,
+                width: 220,
+                borderRadius: 16,
+                border: "1px solid #E4E4E7",
+                backgroundColor: "#FFFFFF",
+                padding: 6,
+                boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
+                zIndex: 50,
+                boxSizing: "border-box",
+              }}
+            >
+              <div
+                style={{
+                  borderBottom: "1px solid #E4E4E7",
+                  padding: "8px 12px",
+                }}
+              >
+                <p
+                  style={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "#18181B",
+                    margin: 0,
+                  }}
+                >
                   {displayName}
                 </p>
-                <p className="truncate text-[11px] text-[#71717A]">
-                  {officer?.email || "alex.reyes@example.com"}
+                <p
+                  style={{
+                    fontSize: 11,
+                    color: "#71717A",
+                    margin: "2px 0 0 0",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {officer?.email || "officer@example.com"}
                 </p>
               </div>
 
-              <div className="p-1">
+              <div style={{ padding: 4 }}>
                 <form action={signOut}>
                   <button
                     type="submit"
-                    className="flex w-full items-center gap-2 rounded-xl px-2.5 py-1.5 text-left text-xs font-medium text-[#DC2626] transition-colors hover:bg-red-50"
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      alignItems: "center",
+                      gap: 8,
+                      borderRadius: 10,
+                      padding: "8px 10px",
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: "#DC2626",
+                      border: "none",
+                      backgroundColor: "transparent",
+                      cursor: "pointer",
+                      textAlign: "left",
+                    }}
                   >
-                    <LogOut className="h-3.5 w-3.5" />
+                    <LogOut style={{ width: 14, height: 14 }} />
                     Sign out
                   </button>
                 </form>
@@ -247,20 +376,57 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
         </div>
       </header>
 
-      {/* ── Main Viewport Content (Centered vertically & horizontally, zero scroll) ── */}
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-8 -mt-6">
+      {/* ── Main Viewport Content ── */}
+      <main
+        style={{
+          position: "relative",
+          zIndex: 10,
+          display: "flex",
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "0 16px 24px 16px",
+          marginTop: -20,
+          boxSizing: "border-box",
+        }}
+      >
         {view === "empty" ? (
           /* ═════════════════════════════════════════════════════════════════
              IMAGE 2: Empty State ("We can't find that page.")
              ═════════════════════════════════════════════════════════════════ */
-          <div className="flex w-full max-w-sm flex-col items-center text-center animate-in fade-in duration-150">
+          <div
+            style={{
+              display: "flex",
+              width: "100%",
+              maxWidth: 320,
+              flexDirection: "column",
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
             {/* Circular Document Search Badge */}
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#059669]/10">
+            <div
+              style={{
+                marginBottom: 16,
+                display: "flex",
+                width: 52,
+                height: 52,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.10)",
+              }}
+            >
               <svg
-                className="h-6 w-6 text-[#059669]"
+                style={{
+                  width: 24,
+                  height: 24,
+                  display: "block",
+                  color: "#059669",
+                }}
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke="currentColor"
+                stroke="#059669"
                 strokeWidth="1.85"
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -273,12 +439,30 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
             </div>
 
             {/* Heading */}
-            <h1 className="text-2xl font-extrabold tracking-tight text-[#18181B] sm:text-[26px]">
+            <h1
+              style={{
+                fontSize: 25,
+                fontWeight: 800,
+                letterSpacing: "-0.025em",
+                color: "#18181B",
+                margin: "0 0 6px 0",
+                lineHeight: 1.15,
+              }}
+            >
               We can’t find that page.
             </h1>
 
             {/* Subtitle */}
-            <p className="mt-1.5 max-w-[280px] text-xs font-normal leading-relaxed text-[#71717A] sm:text-[13px]">
+            <p
+              style={{
+                fontSize: 13,
+                fontWeight: 400,
+                lineHeight: 1.45,
+                color: "#71717A",
+                margin: "0 0 20px 0",
+                maxWidth: 270,
+              }}
+            >
               It may not exist, or you may not have access to it.
             </p>
 
@@ -286,7 +470,24 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
             <button
               type="button"
               onClick={() => setView("create")}
-              className="mt-5 inline-flex h-10 items-center justify-center rounded-full bg-[#059669] px-6 text-[13px] font-semibold tracking-wide text-white shadow-sm transition-all hover:bg-[#047857] active:scale-[0.98]"
+              className="orgkit-workspace-btn"
+              style={{
+                display: "inline-flex",
+                height: 40,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 9999,
+                backgroundColor: "#059669",
+                padding: "0 24px",
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: "0.01em",
+                color: "#FFFFFF",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
+                transition: "all 0.15s ease",
+              }}
             >
               Go to my workspace
             </button>
@@ -295,26 +496,62 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
           /* ═════════════════════════════════════════════════════════════════
              IMAGE 3: Workspace Creation Card ("Set up your org")
              ═════════════════════════════════════════════════════════════════ */
-          <div className="w-full max-w-[380px] animate-in fade-in zoom-in-95 duration-150">
+          <div
+            style={{
+              width: "100%",
+              maxWidth: 380,
+              boxSizing: "border-box",
+            }}
+          >
             {/* Main Card */}
-            <div className="w-full rounded-2xl border border-[#E4E4E7] bg-white p-6 shadow-[0_16px_40px_rgba(24,24,27,0.06)] sm:p-7">
+            <div
+              style={{
+                width: "100%",
+                borderRadius: 22,
+                border: "1px solid #E4E4E7",
+                backgroundColor: "#FFFFFF",
+                padding: "26px 28px",
+                boxShadow: "0 16px 40px rgba(24, 24, 27, 0.06)",
+                boxSizing: "border-box",
+              }}
+            >
               {/* Card Header */}
-              <div className="text-center">
-                <h1 className="text-xl font-bold tracking-tight text-[#18181B] sm:text-[22px]">
+              <div style={{ textAlign: "center" }}>
+                <h1
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 700,
+                    letterSpacing: "-0.015em",
+                    color: "#18181B",
+                    margin: "0 0 4px 0",
+                  }}
+                >
                   Set up your org
                 </h1>
-                <p className="mt-1 text-xs text-[#71717A] sm:text-[13px]">
+                <p
+                  style={{
+                    fontSize: 12.5,
+                    color: "#71717A",
+                    margin: "0 0 22px 0",
+                  }}
+                >
                   Start by giving your organization a name.
                 </p>
               </div>
 
               {/* Form */}
-              <form onSubmit={handleCreateSubmit} className="mt-6 space-y-4">
+              <form onSubmit={handleCreateSubmit}>
                 {/* Field 1: Org name */}
-                <div>
+                <div style={{ marginBottom: 14 }}>
                   <label
                     htmlFor="org-name"
-                    className="mb-1.5 block text-xs font-semibold text-[#18181B] sm:text-[13px]"
+                    style={{
+                      display: "block",
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      color: "#18181B",
+                      marginBottom: 6,
+                    }}
                   >
                     Org name
                   </label>
@@ -325,20 +562,55 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
                     value={orgName}
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="e.g. Junior Marketing Association"
-                    className="h-10 w-full rounded-lg border border-[#E4E4E7] bg-white px-3.5 text-xs text-[#18181B] placeholder-[#A1A1AA] transition-all focus:border-[#059669] focus:outline-none focus:ring-2 focus:ring-[#059669]/15 sm:text-[13px]"
+                    className="orgkit-workspace-input"
+                    style={{
+                      height: 40,
+                      width: "100%",
+                      borderRadius: 10,
+                      border: "1px solid #E4E4E7",
+                      backgroundColor: "#FFFFFF",
+                      padding: "0 12px",
+                      fontSize: 12.5,
+                      color: "#18181B",
+                      boxSizing: "border-box",
+                      outline: "none",
+                      transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                    }}
                   />
                 </div>
 
                 {/* Field 2: School or community (Optional) */}
-                <div>
-                  <div className="mb-1.5 flex items-center gap-2">
+                <div style={{ marginBottom: 20 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 6,
+                    }}
+                  >
                     <label
                       htmlFor="school-community"
-                      className="text-xs font-semibold text-[#18181B] sm:text-[13px]"
+                      style={{
+                        fontSize: 12.5,
+                        fontWeight: 600,
+                        color: "#18181B",
+                      }}
                     >
                       School or community
                     </label>
-                    <span className="inline-flex items-center rounded-full bg-[#F4F4F5] px-2 py-0.5 text-[10px] font-medium text-[#71717A]">
+                    <span
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        borderRadius: 9999,
+                        backgroundColor: "#F4F4F5",
+                        padding: "2px 8px",
+                        fontSize: 10,
+                        fontWeight: 500,
+                        color: "#71717A",
+                      }}
+                    >
                       Optional
                     </span>
                   </div>
@@ -348,9 +620,28 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
                     value={school}
                     onChange={(e) => setSchool(e.target.value)}
                     placeholder="e.g. Your school or community"
-                    className="h-10 w-full rounded-lg border border-[#E4E4E7] bg-white px-3.5 text-xs text-[#18181B] placeholder-[#A1A1AA] transition-all focus:border-[#059669] focus:outline-none focus:ring-2 focus:ring-[#059669]/15 sm:text-[13px]"
+                    className="orgkit-workspace-input"
+                    style={{
+                      height: 40,
+                      width: "100%",
+                      borderRadius: 10,
+                      border: "1px solid #E4E4E7",
+                      backgroundColor: "#FFFFFF",
+                      padding: "0 12px",
+                      fontSize: 12.5,
+                      color: "#18181B",
+                      boxSizing: "border-box",
+                      outline: "none",
+                      transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                    }}
                   />
-                  <p className="mt-1.5 text-[11px] text-[#71717A]">
+                  <p
+                    style={{
+                      fontSize: 11,
+                      color: "#71717A",
+                      margin: "6px 0 0 0",
+                    }}
+                  >
                     Leave blank if your org isn't tied to one school.
                   </p>
                 </div>
@@ -359,7 +650,24 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="mt-6 flex h-10 w-full items-center justify-center rounded-full bg-[#059669] text-xs font-semibold text-white shadow-sm transition-all hover:bg-[#047857] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-75 sm:text-[13px]"
+                  className="orgkit-workspace-btn"
+                  style={{
+                    display: "flex",
+                    height: 40,
+                    width: "100%",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 9999,
+                    backgroundColor: "#059669",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    color: "#FFFFFF",
+                    border: "none",
+                    cursor: isSubmitting ? "not-allowed" : "pointer",
+                    opacity: isSubmitting ? 0.75 : 1,
+                    boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
+                    transition: "all 0.15s ease",
+                  }}
                 >
                   {isSubmitting ? "Creating…" : "Create workspace"}
                 </button>
