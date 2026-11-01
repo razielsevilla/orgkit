@@ -14,6 +14,8 @@ import {
   Calendar,
   Wallet,
   Archive,
+  QrCode,
+  ClipboardCheck,
   PanelLeft,
   PanelLeftClose,
 } from "lucide-react";
@@ -274,11 +276,133 @@ function WorkspaceDetailContent() {
         @keyframes cardPopout {
           0% {
             opacity: 0;
-            transform: scale(0.94) translateY(12px);
+            transform: scale(0.92) translateY(14px);
           }
           100% {
             opacity: 1;
             transform: scale(1) translateY(0);
+          }
+        }
+
+        /* ── Floating Icons Burst Outward with Natural Tilt ── */
+        @keyframes burstTL {
+          0% {
+            opacity: 0;
+            transform: translate(160px, 240px) scale(0.2) rotate(0deg);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(-5px, -6px) scale(1.08) rotate(-8.5deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(-7deg);
+          }
+        }
+        @keyframes burstFL {
+          0% {
+            opacity: 0;
+            transform: translate(220px, 30px) scale(0.2) rotate(0deg);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(-6px, 0px) scale(1.08) rotate(-6deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(-5deg);
+          }
+        }
+        @keyframes burstBL {
+          0% {
+            opacity: 0;
+            transform: translate(150px, -90px) scale(0.2) rotate(0deg);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(-5px, 4px) scale(1.08) rotate(8.5deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(7deg);
+          }
+        }
+        @keyframes burstTR {
+          0% {
+            opacity: 0;
+            transform: translate(-150px, 240px) scale(0.2) rotate(0deg);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(5px, -6px) scale(1.08) rotate(8.5deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(7deg);
+          }
+        }
+        @keyframes burstFR {
+          0% {
+            opacity: 0;
+            transform: translate(-210px, 20px) scale(0.2) rotate(0deg);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(6px, 0px) scale(1.08) rotate(6deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(5deg);
+          }
+        }
+        @keyframes burstBR {
+          0% {
+            opacity: 0;
+            transform: translate(-150px, -90px) scale(0.2) rotate(0deg);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(5px, 4px) scale(1.08) rotate(-7.5deg);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1) rotate(-6deg);
+          }
+        }
+        @keyframes burstDot {
+          0% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .orgkit-burst-tl { animation: burstTL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.04s both; }
+        .orgkit-burst-fl { animation: burstFL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.08s both; }
+        .orgkit-burst-bl { animation: burstBL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.12s both; }
+        .orgkit-burst-tr { animation: burstTR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.06s both; }
+        .orgkit-burst-fr { animation: burstFR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.1s both; }
+        .orgkit-burst-br { animation: burstBR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.14s both; }
+        .orgkit-burst-dot { animation: burstDot 0.4s ease 0.2s both; }
+
+        /* Gentle ambient floating loop */
+        @keyframes ambientFloatA {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        @keyframes ambientFloatB {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(4px); }
+        }
+        .orgkit-float-a { animation: ambientFloatA 3.4s ease-in-out infinite; }
+        .orgkit-float-b { animation: ambientFloatB 3.8s ease-in-out infinite; }
+
+        @media (max-width: 639px) {
+          .orgkit-floating-decor {
+            display: none !important;
           }
         }
       `}</style>
@@ -1164,93 +1288,319 @@ function WorkspaceDetailContent() {
           </div>
 
           {/* ═════════════════════════════════════════════════════════════
-              CENTER FLOATING CARD: "Your workspace is ready."
+              CENTER FLOATING CARD & FLOATING BADGES: "Your workspace is ready."
               ═════════════════════════════════════════════════════════════ */}
           <div
+            className="orgkit-card-wrapper"
             style={{
               position: "relative",
-              zIndex: 10,
               width: "100%",
               maxWidth: 450,
-              borderRadius: 26,
-              border: "1px solid #E4E4E7",
-              backgroundColor: "#FFFFFF",
-              padding: "44px 36px 40px 36px",
-              boxShadow: "0 20px 50px rgba(24, 24, 27, 0.06)",
               boxSizing: "border-box",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
               animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
             }}
           >
-            {/* Circular Mint Badge with Emerald Users Icon */}
+            {/* ── Floating Icons Decor (Burst outward with popout animation, natural spacing & tilt) ── */}
+            {/* 1. Top-Left: Users (White Card, -7deg tilt) */}
             <div
+              className="orgkit-floating-decor orgkit-burst-tl"
               style={{
-                width: 72,
-                height: 72,
-                borderRadius: "50%",
-                backgroundColor: "rgba(5, 150, 105, 0.10)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 24,
+                position: "absolute",
+                top: -46,
+                left: -100,
+                zIndex: 20,
               }}
             >
-              <Users size={32} color="#059669" strokeWidth={2} />
+              <div
+                className="orgkit-float-a"
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 16,
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid rgba(228, 228, 231, 0.8)",
+                  boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Users size={22} color="#059669" strokeWidth={2} />
+              </div>
             </div>
 
-            {/* Card Heading */}
-            <h2
+            {/* 2. Far-Left: Calendar (Mint Card, -5deg tilt) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-fl"
               style={{
-                fontSize: 27,
-                fontWeight: 800,
-                letterSpacing: "-0.025em",
-                color: "#18181B",
-                margin: "0 0 8px 0",
-                lineHeight: 1.2,
+                position: "absolute",
+                top: 170,
+                left: -168,
+                zIndex: 20,
               }}
             >
-              Your workspace is ready.
-            </h2>
+              <div
+                className="orgkit-float-b"
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 15,
+                  backgroundColor: "rgba(5, 150, 105, 0.12)",
+                  boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Calendar size={20} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
 
-            {/* Card Subtitle */}
-            <p
+            {/* 3. Bottom-Left: Wallet (White Card, +7deg tilt) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-bl"
               style={{
-                fontSize: 14.5,
-                fontWeight: 400,
-                color: "#71717A",
-                margin: "0 0 28px 0",
-                lineHeight: 1.4,
+                position: "absolute",
+                bottom: 42,
+                left: -100,
+                zIndex: 20,
               }}
             >
-              Next: add your members.
-            </p>
+              <div
+                className="orgkit-float-a"
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 16,
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid rgba(228, 228, 231, 0.8)",
+                  boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Wallet size={22} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
 
-            {/* Primary Action Button */}
-            <button
-              type="button"
-              className="orgkit-cta-btn"
+            {/* 4. Top-Right: QR Code (Emerald Solid Card, +7deg tilt) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-tr"
               style={{
-                display: "inline-flex",
+                position: "absolute",
+                top: -40,
+                right: -96,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-b"
+                style={{
+                  width: 50,
+                  height: 50,
+                  borderRadius: 16,
+                  backgroundColor: "#059669",
+                  boxShadow: "0 10px 22px rgba(5, 150, 105, 0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <QrCode size={22} color="#FFFFFF" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* 5. Far-Right: Archive Box (White Card, +5deg tilt) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-fr"
+              style={{
+                position: "absolute",
+                top: 175,
+                right: -158,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-a"
+                style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: 15,
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid rgba(228, 228, 231, 0.8)",
+                  boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Archive size={20} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* 6. Bottom-Right: Clipboard Check (Mint Card, -6deg tilt) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-br"
+              style={{
+                position: "absolute",
+                bottom: 38,
+                right: -96,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-b"
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 15,
+                  backgroundColor: "rgba(5, 150, 105, 0.12)",
+                  boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ClipboardCheck size={21} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* ── Floating Accent Dots ── */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                left: -54,
+                top: 110,
+                width: 5.5,
+                height: 5.5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.35)",
+              }}
+            />
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                left: -130,
+                bottom: 95,
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.25)",
+              }}
+            />
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                right: -38,
+                top: 125,
+                width: 5.5,
+                height: 5.5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.35)",
+              }}
+            />
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                right: -128,
+                top: 48,
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.25)",
+              }}
+            />
+
+            {/* Main Floating Welcome Card */}
+            <div
+              style={{
+                position: "relative",
+                zIndex: 10,
+                width: "100%",
+                borderRadius: 26,
+                border: "1px solid #E4E4E7",
+                backgroundColor: "#FFFFFF",
+                padding: "44px 36px 40px 36px",
+                boxShadow: "0 20px 50px rgba(24, 24, 27, 0.06)",
+                boxSizing: "border-box",
+                display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
-                justifyContent: "center",
-                height: 46,
-                borderRadius: 9999,
-                backgroundColor: "#059669",
-                padding: "0 34px",
-                fontSize: 14.5,
-                fontWeight: 600,
-                color: "#FFFFFF",
-                border: "none",
-                cursor: "pointer",
-                boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
-                transition: "all 0.15s ease",
+                textAlign: "center",
               }}
             >
-              Add members
-            </button>
+              {/* Circular Mint Badge with Emerald Users Icon */}
+              <div
+                style={{
+                  width: 72,
+                  height: 72,
+                  borderRadius: "50%",
+                  backgroundColor: "rgba(5, 150, 105, 0.10)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginBottom: 24,
+                }}
+              >
+                <Users size={32} color="#059669" strokeWidth={2} />
+              </div>
+
+              {/* Card Heading */}
+              <h2
+                style={{
+                  fontSize: 27,
+                  fontWeight: 800,
+                  letterSpacing: "-0.025em",
+                  color: "#18181B",
+                  margin: "0 0 8px 0",
+                  lineHeight: 1.2,
+                }}
+              >
+                Your workspace is ready.
+              </h2>
+
+              {/* Card Subtitle */}
+              <p
+                style={{
+                  fontSize: 14.5,
+                  fontWeight: 400,
+                  color: "#71717A",
+                  margin: "0 0 28px 0",
+                  lineHeight: 1.4,
+                }}
+              >
+                Next: add your members.
+              </p>
+
+              {/* Primary Action Button */}
+              <button
+                type="button"
+                className="orgkit-cta-btn"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: 46,
+                  borderRadius: 9999,
+                  backgroundColor: "#059669",
+                  padding: "0 34px",
+                  fontSize: 14.5,
+                  fontWeight: 600,
+                  color: "#FFFFFF",
+                  border: "none",
+                  cursor: "pointer",
+                  boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
+                  transition: "all 0.15s ease",
+                }}
+              >
+                Add members
+              </button>
+            </div>
           </div>
         </main>
       </div>
