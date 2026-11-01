@@ -95,26 +95,43 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
 
   return (
     <div
-      className={`${plusJakarta.className} relative flex h-screen max-h-screen w-full flex-col overflow-hidden bg-[#F4F4F5] text-[#18181B] selection:bg-[#059669]/20`}
+      className={`${plusJakarta.className} relative flex flex-col bg-[#F4F4F5] text-[#18181B] selection:bg-[#059669]/20`}
+      style={{
+        height: "100vh",
+        maxHeight: "100vh",
+        width: "100vw",
+        maxWidth: "100%",
+        overflow: "hidden",
+        position: "relative",
+      }}
     >
-      {/* ── Background Curved Corner Decorations (Exact Proportions from Mockup) ── */}
+      {/* ── Background Curved Corner Decorations (Pinned via absolute styles) ── */}
       {/* Top-Left Arcs */}
       <div
-        className="pointer-events-none absolute -top-8 -left-8 z-0 h-[260px] w-[260px] overflow-hidden"
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: 220,
+          height: 220,
+          overflow: "hidden",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
         aria-hidden="true"
       >
         <svg
-          viewBox="0 0 260 260"
-          className="h-full w-full"
+          viewBox="0 0 220 220"
+          style={{ width: "100%", height: "100%", display: "block" }}
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           {/* Pale green filled circular sector */}
-          <circle cx="32" cy="32" r="140" fill="#059669" fillOpacity="0.06" />
+          <circle cx="0" cy="0" r="140" fill="#059669" fillOpacity="0.06" />
           {/* Concentric thin outline arc */}
           <circle
-            cx="32"
-            cy="32"
+            cx="0"
+            cy="0"
             r="190"
             stroke="#059669"
             strokeWidth="1.2"
@@ -125,22 +142,31 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
 
       {/* Bottom-Right Arcs */}
       <div
-        className="pointer-events-none absolute -bottom-10 -right-10 z-0 h-[300px] w-[300px] overflow-hidden"
+        style={{
+          position: "absolute",
+          bottom: 0,
+          right: 0,
+          width: 260,
+          height: 260,
+          overflow: "hidden",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
         aria-hidden="true"
       >
         <svg
-          viewBox="0 0 300 300"
-          className="h-full w-full"
+          viewBox="0 0 260 260"
+          style={{ width: "100%", height: "100%", display: "block" }}
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
           {/* Pale green filled circular sector */}
-          <circle cx="260" cy="260" r="165" fill="#059669" fillOpacity="0.06" />
+          <circle cx="260" cy="260" r="150" fill="#059669" fillOpacity="0.06" />
           {/* Concentric thin outline arc */}
           <circle
             cx="260"
             cy="260"
-            r="225"
+            r="205"
             stroke="#059669"
             strokeWidth="1.2"
             strokeOpacity="0.32"
@@ -221,7 +247,7 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
         </div>
       </header>
 
-      {/* ── Main Viewport Content (Centered vertically & horizontally, no scroll) ── */}
+      {/* ── Main Viewport Content (Centered vertically & horizontally, zero scroll) ── */}
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-8 -mt-6">
         {view === "empty" ? (
           /* ═════════════════════════════════════════════════════════════════
