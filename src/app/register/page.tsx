@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Users, CalendarDays, ChartNoAxesCombined } from "lucide-react";
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -59,12 +59,51 @@ function getErrorMessage(errorParam: string | null): string | null {
   }
 }
 
-function RegisterContent() {
-  const [loading, setLoading] = useState(false);
-  const [manualError, setManualError] = useState<string | null>(null);
+function AuthErrorAlert({
+  manualError,
+  align = "center",
+}: {
+  manualError: string | null;
+  align?: "center" | "left";
+}) {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
   const activeError = manualError || getErrorMessage(urlError);
+
+  if (!activeError) return null;
+
+  return (
+    <div
+      role="alert"
+      style={{
+        width: "100%",
+        marginTop: "clamp(12px, 2vh, 20px)",
+        padding: "10px 16px",
+        borderRadius: 14,
+        backgroundColor: "#FEF2F2",
+        border: "1px solid #FCA5A5",
+        color: "#991B1B",
+        fontSize: "clamp(12.5px, 0.92vw, 14.5px)",
+        lineHeight: 1.45,
+        textAlign: align,
+        fontWeight: 500,
+        boxSizing: "border-box",
+      }}
+    >
+      {activeError}
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [manualError, setManualError] = useState<string | null>(null);
+
+  // Instant prefetch for /signin
+  useEffect(() => {
+    router.prefetch("/signin");
+  }, [router]);
 
   // Enforce zero-scrollbar policy and lock html/body on desktop viewports
   useEffect(() => {
@@ -244,7 +283,19 @@ function RegisterContent() {
         }
 
         /* ── Interactive Button & Links UX Styling ── */
+        @keyframes orgkitCardFadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(6px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .orgkit-card {
+          animation: orgkitCardFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
           transition: box-shadow 0.25s ease, border-color 0.25s ease;
         }
 
@@ -535,6 +586,8 @@ function RegisterContent() {
             src="/campus-building.png"
             alt=""
             fill
+            priority
+            sizes="clamp(550px, 53.2vw, 890px)"
             className="object-cover"
             style={{
               objectFit: "cover",
@@ -837,33 +890,15 @@ function RegisterContent() {
             </p>
 
             {/* Error Message banner from Ticket A1 */}
-            {activeError && (
-              <div
-                role="alert"
-                style={{
-                  width: "100%",
-                  marginTop: "clamp(12px, 2vh, 20px)",
-                  padding: "10px 16px",
-                  borderRadius: 14,
-                  backgroundColor: "#FEF2F2",
-                  border: "1px solid #FCA5A5",
-                  color: "#991B1B",
-                  fontSize: "clamp(12.5px, 0.92vw, 14.5px)",
-                  lineHeight: 1.45,
-                  textAlign: "center",
-                  fontWeight: 500,
-                  boxSizing: "border-box",
-                }}
-              >
-                {activeError}
-              </div>
-            )}
+            <Suspense fallback={null}>
+              <AuthErrorAlert manualError={manualError} />
+            </Suspense>
 
             {/* 4. Google Sign-up Button (40px below subtitle, height 72px) */}
             <div
               style={{
                 width: "100%",
-                marginTop: activeError ? "clamp(12px, 2.5vh, 22px)" : "clamp(20px, 4.25vh, 40px)",
+                marginTop: "clamp(20px, 4.25vh, 40px)",
               }}
             >
               <button
@@ -969,6 +1004,7 @@ function RegisterContent() {
                 Already have an account?{" "}
                 <Link
                   href="/signin"
+                  prefetch={true}
                   className="orgkit-signin-link"
                   title="Sign in to your existing account"
                 >
@@ -1076,29 +1112,11 @@ function RegisterContent() {
           </p>
 
           {/* Mobile Error Message banner from Ticket A1 */}
-          {activeError && (
-            <div
-              role="alert"
-              style={{
-                width: "100%",
-                marginTop: 14,
-                padding: "10px 14px",
-                borderRadius: 12,
-                backgroundColor: "#FEF2F2",
-                border: "1px solid #FCA5A5",
-                color: "#991B1B",
-                fontSize: 13,
-                lineHeight: 1.4,
-                textAlign: "center",
-                fontWeight: 500,
-                boxSizing: "border-box",
-              }}
-            >
-              {activeError}
-            </div>
-          )}
+          <Suspense fallback={null}>
+            <AuthErrorAlert manualError={manualError} />
+          </Suspense>
 
-          <div style={{ width: "100%", marginTop: activeError ? 14 : 24 }}>
+          <div style={{ width: "100%", marginTop: 24 }}>
             <button
               type="button"
               disabled={loading}
@@ -1199,6 +1217,7 @@ function RegisterContent() {
               Already have an account?{" "}
               <Link
                 href="/signin"
+                prefetch={true}
                 className="orgkit-signin-link"
                 title="Sign in to your existing account"
               >
@@ -1209,13 +1228,5 @@ function RegisterContent() {
         </div>
       </div>
     </main>
-  );
-}
-
-export default function RegisterPage() {
-  return (
-    <Suspense fallback={<div style={{ minHeight: "100vh", backgroundColor: "#F4F4F5" }} />}>
-      <RegisterContent />
-    </Suspense>
   );
 }
