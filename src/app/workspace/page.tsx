@@ -381,12 +381,12 @@ export default function WorkspacePage() {
           position: "relative",
           zIndex: 20,
           display: "flex",
-          height: 56,
+          height: 64,
           width: "100%",
           flexShrink: 0,
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 32px",
+          padding: "0 36px",
           boxSizing: "border-box",
         }}
       >
@@ -403,11 +403,11 @@ export default function WorkspacePage() {
           <Image
             src="/orgkit-text-logo.png"
             alt="OrgKit"
-            width={105}
-            height={35}
+            width={126}
+            height={42}
             priority
             style={{
-              height: 28,
+              height: 40,
               width: "auto",
               display: "block",
               userSelect: "none",
@@ -426,9 +426,9 @@ export default function WorkspacePage() {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: 8,
+              gap: 9,
               borderRadius: 9999,
-              padding: "4px 8px 4px 5px",
+              padding: "4px 10px 4px 6px",
               border: "none",
               backgroundColor: "transparent",
               cursor: "pointer",
@@ -439,12 +439,12 @@ export default function WorkspacePage() {
             {/* Avatar Circle with initials */}
             <div
               style={{
-                width: 28,
-                height: 28,
+                width: 32,
+                height: 32,
                 borderRadius: "50%",
                 backgroundColor: "#D1FAE5",
                 color: "#059669",
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: 700,
                 letterSpacing: "-0.01em",
                 display: "flex",
@@ -460,7 +460,7 @@ export default function WorkspacePage() {
             {/* Officer Name */}
             <span
               style={{
-                fontSize: 13,
+                fontSize: 13.5,
                 fontWeight: 600,
                 color: "#18181B",
                 letterSpacing: "-0.01em",
@@ -472,8 +472,8 @@ export default function WorkspacePage() {
             {/* Down Chevron */}
             <ChevronDown
               style={{
-                width: 14,
-                height: 14,
+                width: 14.5,
+                height: 14.5,
                 color: "#71717A",
                 transform: menuOpen ? "rotate(180deg)" : "none",
                 transition: "transform 0.2s ease",
