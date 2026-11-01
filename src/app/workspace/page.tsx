@@ -1018,7 +1018,7 @@ export default function WorkspacePage() {
                     margin: "0 0 5px 0",
                   }}
                 >
-                  Set up your org
+                  Set up your Organization
                 </h1>
                 <p
                   style={{
@@ -1045,7 +1045,7 @@ export default function WorkspacePage() {
                       marginBottom: 7,
                     }}
                   >
-                    Org name
+                    Organization Name
                   </label>
                   <input
                     id="org-name"
@@ -1109,7 +1109,7 @@ export default function WorkspacePage() {
                         color: "#18181B",
                       }}
                     >
-                      School or community
+                      School or Community
                     </label>
                     <span
                       style={{
