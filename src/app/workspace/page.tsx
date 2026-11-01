@@ -381,12 +381,12 @@ export default function WorkspacePage() {
           position: "relative",
           zIndex: 20,
           display: "flex",
-          height: 64,
+          height: 72,
           width: "100%",
           flexShrink: 0,
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 36px",
+          padding: "14px clamp(24px, 3.5vw, 52px) 0 clamp(24px, 3.5vw, 52px)",
           boxSizing: "border-box",
         }}
       >
@@ -568,8 +568,8 @@ export default function WorkspacePage() {
           flex: 1,
           alignItems: "center",
           justifyContent: "center",
-          padding: "0 16px 24px 16px",
-          marginTop: -20,
+          padding: "20px clamp(24px, 4.5vw, 64px) 36px clamp(24px, 4.5vw, 64px)",
+          marginTop: -12,
           boxSizing: "border-box",
         }}
       >
