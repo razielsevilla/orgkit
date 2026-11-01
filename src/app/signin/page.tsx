@@ -2,17 +2,21 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
 import { AuthLayout } from "@/src/components/auth-layout";
 import { GoogleLogo } from "@/src/components/google-logo";
-import { AuthErrorAlert, AUTH_ERROR_MESSAGE_ID, getErrorMessage } from "@/src/components/auth-error-alert";
-
-const GOOGLE_ERROR_MESSAGE = getErrorMessage("google_error") as string;
+import { AuthErrorAlert } from "@/src/components/auth-error-alert";
 
 export default function SignInPage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [manualError, setManualError] = useState<string | null>(null);
+
+  useEffect(() => {
+    router.prefetch("/register");
+  }, [router]);
 
   async function handleGoogleSignIn() {
     setLoading(true);
@@ -34,12 +38,13 @@ export default function SignInPage() {
       if (error) {
         console.error("Sign-in error:", error);
         setLoading(false);
-        setManualError(GOOGLE_ERROR_MESSAGE);
+        setManualError(error.message);
       }
     } catch (err: unknown) {
       console.error("Sign-in unexpected error:", err);
       setLoading(false);
-      setManualError(GOOGLE_ERROR_MESSAGE);
+      const msg = err instanceof Error ? err.message : "error";
+      setManualError(msg);
     }
   }
 
@@ -64,7 +69,7 @@ export default function SignInPage() {
           boxSizing: "border-box",
         }}
       >
-        {/* 1. OrgKit Logo at the center top (without text "OrgKit") */}
+        {/* 1. OrgKit Logo at the center top */}
         <Image
           src="/orgkit-logo.png"
           alt="OrgKit Logo"
@@ -80,7 +85,7 @@ export default function SignInPage() {
           }}
         />
 
-        {/* 2. H2 "Welcome back" (Centered, 22px below logo) */}
+        {/* 2. H2 "Welcome back" */}
         <h2
           style={{
             marginTop: "clamp(12px, 2.34vh, 22px)",
@@ -96,7 +101,7 @@ export default function SignInPage() {
           Welcome back
         </h2>
 
-        {/* 3. Subtitle (Centered, 16px below H2) */}
+        {/* 3. Subtitle */}
         <p
           style={{
             marginTop: "clamp(10px, 1.7vh, 16px)",
@@ -115,72 +120,72 @@ export default function SignInPage() {
           <span>events, and campus community.</span>
         </p>
 
-        {/* 4. Google Sign-in Button: "Sign in with Google" (red border on error, Ticket A1) */}
+        {/* 4. Google Sign-in Button: "Sign in with Google" (red border on error, no text) */}
         <AuthErrorAlert manualError={manualError}>
           {(hasError) => (
-        <div
-          style={{
-            width: "100%",
-            marginTop: "clamp(20px, 4.25vh, 40px)",
-          }}
-        >
-          <button
-            type="button"
-            disabled={loading}
-            onClick={handleGoogleSignIn}
-            className="orgkit-google-btn"
-            data-error={hasError}
-            aria-describedby={hasError ? AUTH_ERROR_MESSAGE_ID : undefined}
-            aria-busy={loading}
-            title={loading ? "Connecting to Google..." : "Sign in with Google"}
-            style={{
-              height: "clamp(52px, 7.65vh, 72px)",
-              gap: "clamp(10px, 0.84vw, 14px)",
-            }}
-          >
-            {loading ? (
-              <svg
-                className="orgkit-spinner"
-                width={26}
-                height={26}
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                aria-hidden="true"
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="#E4E4E7"
-                  strokeWidth="3"
-                />
-                <path
-                  fill="#059669"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-            ) : (
-              <GoogleLogo size={36} />
-            )}
-            <span
+            <div
               style={{
-                fontSize: "clamp(17px, 1.44vw, 24px)",
-                fontWeight: 500,
-                color: "#18181B",
+                width: "100%",
+                marginTop: "clamp(20px, 4.25vh, 40px)",
               }}
             >
-              {loading ? "Signing in…" : "Sign in with Google"}
-            </span>
-          </button>
-          <div className="sr-only" aria-live="polite">
-            {loading ? "Connecting to Google, please wait..." : ""}
-          </div>
-        </div>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={handleGoogleSignIn}
+                className="orgkit-google-btn"
+                data-error={hasError}
+                aria-invalid={hasError}
+                aria-busy={loading}
+                title={loading ? "Connecting to Google..." : "Sign in with Google"}
+                style={{
+                  height: "clamp(52px, 7.65vh, 72px)",
+                  gap: "clamp(10px, 0.84vw, 14px)",
+                }}
+              >
+                {loading ? (
+                  <svg
+                    className="orgkit-spinner"
+                    width={26}
+                    height={26}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="#E4E4E7"
+                      strokeWidth="3"
+                    />
+                    <path
+                      fill="#059669"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                ) : (
+                  <GoogleLogo size={36} />
+                )}
+                <span
+                  style={{
+                    fontSize: "clamp(17px, 1.44vw, 24px)",
+                    fontWeight: 500,
+                    color: "#18181B",
+                  }}
+                >
+                  {loading ? "Signing in..." : "Sign in with Google"}
+                </span>
+              </button>
+              <div className="sr-only" aria-live="polite">
+                {loading ? "Connecting to Google, please wait..." : ""}
+              </div>
+            </div>
           )}
         </AuthErrorAlert>
 
-        {/* 5. Terms & Automatic account info */}
+        {/* 5. Terms & Sign Up Link */}
         <div
           style={{
             marginTop: "clamp(24px, 3.8vh, 36px)",
@@ -228,9 +233,15 @@ export default function SignInPage() {
               fontWeight: 400,
             }}
           >
-            New to OrgKit? Signing in with Google creates your
-            <br />
-            account automatically.
+            New to OrgKit?{" "}
+            <Link
+              href="/register"
+              prefetch={true}
+              className="orgkit-signin-link"
+              title="Create a new OrgKit account"
+            >
+              Sign up
+            </Link>
           </p>
         </div>
       </div>
