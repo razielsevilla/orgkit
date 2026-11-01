@@ -6,7 +6,11 @@ export const metadata: Metadata = {
   description:
     "Organize. Collaborate. Lead. A modern platform for student organizations to connect, manage, and grow together.",
   icons: {
-    icon: "/orgkit-logo.png",
+    icon: [
+      { url: "/orgkit-logo.png", type: "image/png" },
+    ],
+    shortcut: "/orgkit-logo.png",
+    apple: "/orgkit-logo.png",
   },
 };
 

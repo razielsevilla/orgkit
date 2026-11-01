@@ -23,8 +23,6 @@ export const AUTH_ERROR_MESSAGE_ID = "auth-error-message";
 
 type AuthErrorRender = (hasError: boolean) => React.ReactNode;
 
-// The error is shown to sighted users only as a red border on the control
-// rendered by `children`; the message itself stays available to screen readers.
 function ErrorTracker({
   manualError,
   children,
@@ -34,18 +32,9 @@ function ErrorTracker({
 }) {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
-  const activeError = manualError || getErrorMessage(urlError);
+  const hasError = Boolean(manualError || urlError);
 
-  return (
-    <>
-      {activeError && (
-        <div role="alert" id={AUTH_ERROR_MESSAGE_ID} className="sr-only">
-          {activeError}
-        </div>
-      )}
-      {children(!!activeError)}
-    </>
-  );
+  return <>{children(hasError)}</>;
 }
 
 export function AuthErrorAlert({
@@ -61,4 +50,3 @@ export function AuthErrorAlert({
     </Suspense>
   );
 }
-
