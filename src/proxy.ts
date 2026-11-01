@@ -76,33 +76,30 @@ export async function proxy(request: NextRequest) {
       return redirectTo(`/workspace/${orgId}`);
     }
 
-    const admin = createAdminClient();
-    const { data: membership } = await admin
-      .from("org_officers")
-      .select("org_id")
-      .eq("officer_id", user.id)
-      .order("joined_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    // Only query membership for entry, signin, and workspace-creation routes
+    const isEntryOrWorkspace =
+      pathname === "/" ||
+      pathname === "/signin" ||
+      pathname === "/register" ||
+      pathname === "/workspace" ||
+      pathname === "/orgs/new";
 
-    if (!membership?.org_id) {
-      // Officer is NOT in any org: redirect any other page to the create-workspace screen
-      if (!isPublic(pathname) && pathname !== "/workspace") {
-        return redirectTo("/workspace");
-      }
-      if (pathname === "/" || pathname === "/signin" || pathname === "/register") {
-        return redirectTo("/workspace");
-      }
-    } else {
-      // Officer ALREADY has an org: cannot create another in v0.2, send straight to existing workspace
-      const isCreateOrEntry =
-        pathname === "/" ||
-        pathname === "/signin" ||
-        pathname === "/register" ||
-        pathname === "/workspace";
+    if (isEntryOrWorkspace) {
+      const admin = createAdminClient();
+      const { data: membership } = await admin
+        .from("org_officers")
+        .select("org_id")
+        .eq("officer_id", user.id)
+        .order("joined_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (isCreateOrEntry) {
+      if (membership?.org_id) {
         return redirectTo(`/workspace/${membership.org_id}`);
+      }
+
+      if (pathname !== "/workspace") {
+        return redirectTo("/workspace");
       }
     }
   }

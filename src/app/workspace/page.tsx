@@ -163,11 +163,11 @@ export default function WorkspacePage() {
         if (school.trim()) {
           query.set("school", school.trim());
         }
-        window.location.assign(`/workspace/${res.orgId}?${query.toString()}`);
+        router.push(`/workspace/${res.orgId}?${query.toString()}`);
         return;
       }
       if (res.existingOrgId) {
-        window.location.assign(`/workspace/${res.existingOrgId}`);
+        router.push(`/workspace/${res.existingOrgId}`);
         return;
       }
       if (res.fieldError) {
@@ -183,7 +183,6 @@ export default function WorkspacePage() {
     } catch (err) {
       console.error("Error creating workspace:", err);
       setSaveError("We couldn't create your workspace. Please try again.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -207,11 +206,44 @@ export default function WorkspacePage() {
         boxSizing: "border-box",
       }}
     >
+      {/* Top Emerald Progress Beam during transition */}
+      {isSubmitting && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            zIndex: 9999,
+            overflow: "hidden",
+            backgroundColor: "rgba(5, 150, 105, 0.15)",
+          }}
+        >
+          <div
+            className="orgkit-progress-beam"
+            style={{
+              height: "100%",
+              width: "40%",
+              backgroundColor: "#059669",
+              borderRadius: 9999,
+            }}
+          />
+        </div>
+      )}
+
       <style>{`
         html, body {
           margin: 0 !important;
           padding: 0 !important;
           background-color: #F4F4F5 !important;
+        }
+        @keyframes progressSlide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(350%); }
+        }
+        .orgkit-progress-beam {
+          animation: progressSlide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
         .orgkit-workspace-input:focus {
           border-color: #059669 !important;
@@ -1181,6 +1213,7 @@ export default function WorkspacePage() {
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "center",
+                    gap: 8,
                     borderRadius: 9999,
                     backgroundColor: "#059669",
                     fontSize: 14.5,
@@ -1188,12 +1221,28 @@ export default function WorkspacePage() {
                     color: "#FFFFFF",
                     border: "none",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
-                    opacity: isSubmitting ? 0.75 : 1,
+                    opacity: isSubmitting ? 0.85 : 1,
                     boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
                     transition: "all 0.15s ease",
                   }}
                 >
-                  {isSubmitting ? "Creating…" : "Create workspace"}
+                  {isSubmitting ? (
+                    <>
+                      <div
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: "50%",
+                          border: "2.5px solid rgba(255, 255, 255, 0.35)",
+                          borderTopColor: "#FFFFFF",
+                          animation: "spin 0.6s linear infinite",
+                        }}
+                      />
+                      <span>Creating…</span>
+                    </>
+                  ) : (
+                    "Create workspace"
+                  )}
                 </button>
               </form>
             </div>

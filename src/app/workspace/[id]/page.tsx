@@ -45,11 +45,13 @@ function WorkspaceDetailContent() {
   const searchParams = useSearchParams();
   const rawId = (params?.id as string) || "";
 
-  // Query param overrides or fallback defaults from design
+  // Query param overrides for instant frame-0 rendering without buffering
   const queryName = searchParams.get("name");
   const querySchool = searchParams.get("school");
 
-  const [orgData, setOrgData] = useState<{ name: string; school: string } | null>(null);
+  const [orgData, setOrgData] = useState<{ name: string; school: string } | null>(
+    queryName ? { name: queryName, school: querySchool || "" } : null
+  );
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Restore sidebar preference from localStorage
@@ -74,18 +76,28 @@ function WorkspaceDetailContent() {
     });
   };
 
-  const [isLoadingOrg, setIsLoadingOrg] = useState(true);
+  const [isLoadingOrg, setIsLoadingOrg] = useState(!queryName);
   const [accessDenied, setAccessDenied] = useState(false);
+  const [officer, setOfficer] = useState<OfficerProps | null>(null);
 
+  // Parallel fetch: loads organization and officer profile concurrently
   useEffect(() => {
-    async function loadOrg() {
+    async function loadWorkspaceData() {
       if (!rawId) {
         setIsLoadingOrg(false);
         setAccessDenied(true);
         return;
       }
       try {
-        const org = await getOrganizationById(rawId);
+        const [org, officerData] = await Promise.all([
+          getOrganizationById(rawId),
+          getCurrentOfficer(),
+        ]);
+
+        if (officerData) {
+          setOfficer(officerData);
+        }
+
         if (org) {
           setOrgData({ name: org.name, school: org.school || "" });
           setAccessDenied(false);
@@ -100,13 +112,13 @@ function WorkspaceDetailContent() {
           setAccessDenied(true);
         }
       } catch (err) {
-        console.error("Error loading org from database:", err);
+        console.error("Error loading workspace data:", err);
         setAccessDenied(true);
       } finally {
         setIsLoadingOrg(false);
       }
     }
-    loadOrg();
+    loadWorkspaceData();
   }, [rawId, router]);
 
   const isUuid =
@@ -149,22 +161,6 @@ function WorkspaceDetailContent() {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  const [officer, setOfficer] = useState<OfficerProps | null>(null);
-
-  // Load signed-in officer session
-  useEffect(() => {
-    async function loadOfficerSession() {
-      try {
-        const officerData = await getCurrentOfficer();
-        if (officerData) {
-          setOfficer(officerData);
-        }
-      } catch (err) {
-        console.error("Failed to load officer session:", err);
-      }
-    }
-    loadOfficerSession();
-  }, []);
 
   // Strict zero-scroll desktop policy
   useEffect(() => {
@@ -1767,27 +1763,202 @@ function WorkspaceLoadingSkeleton() {
     <div
       style={{
         height: "100vh",
+        maxHeight: "100vh",
         width: "100%",
+        overflow: "hidden",
+        position: "relative",
         backgroundColor: "#F4F4F5",
         display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        boxSizing: "border-box",
       }}
     >
+      {/* Top Emerald Loading Progress Beam */}
       <div
         style={{
-          width: 38,
-          height: 38,
-          borderRadius: "50%",
-          border: "3px solid rgba(5, 150, 105, 0.2)",
-          borderTopColor: "#059669",
-          animation: "spin 0.8s linear infinite",
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 3,
+          zIndex: 9999,
+          overflow: "hidden",
+          backgroundColor: "rgba(5, 150, 105, 0.15)",
         }}
-      />
+      >
+        <div
+          className="orgkit-progress-beam"
+          style={{
+            height: "100%",
+            width: "40%",
+            backgroundColor: "#059669",
+            borderRadius: 9999,
+          }}
+        />
+      </div>
+
+      {/* Sidebar Skeleton (Expanded 256px) */}
+      <aside
+        style={{
+          width: 256,
+          minWidth: 256,
+          height: "100vh",
+          backgroundColor: "#FFFFFF",
+          borderRight: "1px solid #E4E4E7",
+          padding: "16px 14px 14px 14px",
+          display: "flex",
+          flexDirection: "column",
+          boxSizing: "border-box",
+          flexShrink: 0,
+        }}
+      >
+        {/* Top Header Placeholder */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 16,
+            height: 36,
+          }}
+        >
+          <div
+            className="orgkit-shimmer"
+            style={{ width: 100, height: 26, borderRadius: 8, backgroundColor: "#F4F4F5" }}
+          />
+          <div
+            className="orgkit-shimmer"
+            style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: "#F4F4F5" }}
+          />
+        </div>
+
+        {/* Workspace Card Shimmer */}
+        <div
+          className="orgkit-shimmer"
+          style={{
+            height: 104,
+            borderRadius: 18,
+            backgroundColor: "rgba(5, 150, 105, 0.08)",
+            border: "1px solid rgba(5, 150, 105, 0.12)",
+            marginBottom: 16,
+          }}
+        />
+
+        {/* Nav Items Shimmer */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+          <div
+            className="orgkit-shimmer"
+            style={{ height: 38, borderRadius: 12, backgroundColor: "rgba(5, 150, 105, 0.10)" }}
+          />
+          <div style={{ height: 16, width: 60, marginTop: 12, marginBottom: 4 }} className="orgkit-shimmer" />
+          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
+          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
+          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
+        </div>
+
+        {/* Bottom Officer Profile Card Shimmer */}
+        <div
+          className="orgkit-shimmer"
+          style={{
+            height: 52,
+            borderRadius: 14,
+            border: "1px solid #E4E4E7",
+            backgroundColor: "#FFFFFF",
+          }}
+        />
+      </aside>
+
+      {/* Main Canvas Skeleton */}
+      <main
+        style={{
+          flex: 1,
+          height: "100vh",
+          backgroundColor: "#F4F4F5",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          position: "relative",
+          overflow: "hidden",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Center Card Skeleton */}
+        <div
+          style={{
+            width: "100%",
+            maxWidth: 440,
+            borderRadius: 26,
+            border: "1px solid #E4E4E7",
+            backgroundColor: "#FFFFFF",
+            padding: "44px 36px 40px 36px",
+            boxShadow: "0 20px 50px rgba(24, 24, 27, 0.06)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Circular Badge Placeholder */}
+          <div
+            className="orgkit-shimmer"
+            style={{
+              width: 66,
+              height: 66,
+              borderRadius: "50%",
+              backgroundColor: "rgba(5, 150, 105, 0.10)",
+              marginBottom: 22,
+            }}
+          />
+          {/* Title Placeholder */}
+          <div
+            className="orgkit-shimmer"
+            style={{
+              width: 220,
+              height: 28,
+              borderRadius: 8,
+              backgroundColor: "#E4E4E7",
+              marginBottom: 10,
+            }}
+          />
+          {/* Subtitle Placeholder */}
+          <div
+            className="orgkit-shimmer"
+            style={{
+              width: 150,
+              height: 16,
+              borderRadius: 6,
+              backgroundColor: "#F4F4F5",
+              marginBottom: 28,
+            }}
+          />
+          {/* Action Button Placeholder */}
+          <div
+            className="orgkit-shimmer"
+            style={{
+              width: 140,
+              height: 46,
+              borderRadius: 9999,
+              backgroundColor: "#059669",
+              opacity: 0.85,
+            }}
+          />
+        </div>
+      </main>
+
       <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes shimmerPulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.95; }
+        }
+        @keyframes progressSlide {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(350%); }
+        }
+        .orgkit-shimmer {
+          animation: shimmerPulse 1.4s ease-in-out infinite;
+        }
+        .orgkit-progress-beam {
+          animation: progressSlide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
         }
       `}</style>
     </div>
