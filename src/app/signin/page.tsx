@@ -24,6 +24,9 @@ export default function SignInPage() {
     setManualError(null);
     try {
       const supabase = createClient();
+      // Sign out any existing session so a different Google account
+      // isn't linked to the previous officer's record.
+      await supabase.auth.signOut();
       const origin = typeof window !== "undefined" ? window.location.origin : "";
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
