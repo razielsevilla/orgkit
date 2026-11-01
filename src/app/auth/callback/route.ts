@@ -52,10 +52,9 @@ export async function GET(request: Request) {
     }
 
     const email = user.email ?? "";
-    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
     const now = new Date().toISOString();
 
-    // Use service-role client for DB writes so RLS doesn't block the callback route
+    // Use service-role client for DB reads/writes so RLS never blocks the callback
     const admin = createAdminClient();
 
     // Check if an officer record already exists for this Google sub
@@ -79,28 +78,13 @@ export async function GET(request: Request) {
         })
         .eq("id", officer.id);
 
+      // Already consented — go straight to the app
       return NextResponse.redirect(new URL("/setup", requestUrl.origin));
     }
 
-    // First-time officer: create the row immediately.
-    // Consent is implicitly given by completing Google's own OAuth screen.
-    const { error: insertError } = await admin.from("officers").insert({
-      id: user.id,
-      google_sub: googleSub as string,
-      email,
-      full_name: fullName,
-      consent_version: "v1",
-      consent_at: now,
-      created_at: now,
-      last_sign_in_at: now,
-    });
-
-    if (insertError) {
-      console.error("Error inserting new officer:", insertError);
-      return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
-    }
-
-    return NextResponse.redirect(new URL("/setup", requestUrl.origin));
+    // First-time officer: send to the OrgKit consent/privacy notice page
+    // The officer row is created only after they tick "I agree" on /consent
+    return NextResponse.redirect(new URL("/consent", requestUrl.origin));
   }
 
   return NextResponse.redirect(new URL("/register", requestUrl.origin));
