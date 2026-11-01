@@ -1,0 +1,24 @@
+name: branch-flow
+on:
+  pull_request:
+    branches: [main, develop, 'epic/**']
+    types: [opened, reopened, synchronize, edited]
+
+jobs:
+  check-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate source branch
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          case "$BASE" in
+            main)    ok=$([ "$HEAD" = "develop" ] && echo 1) ;;
+            develop) ok=$(echo "$HEAD" | grep -E '^epic/' >/dev/null && echo 1) ;;
+            epic/*)  ok=$(echo "$HEAD" | grep -E '^ticket/' >/dev/null && echo 1) ;;
+          esac
+          if [ -z "$ok" ]; then
+            echo "::error::'$HEAD' cannot be merged into '$BASE'"
+            exit 1
+          fi
