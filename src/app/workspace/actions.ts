@@ -6,6 +6,8 @@ import { createAdminClient } from "@/src/lib/supabase/service-role";
 export interface CreateWorkspaceResponse {
   success: boolean;
   orgId?: string;
+  existingOrgId?: string;
+  fieldError?: string;
   error?: string;
 }
 
@@ -30,11 +32,33 @@ export async function createWorkspace(
 
     const cleanName = orgName.trim();
     if (!cleanName) {
-      return { success: false, error: "Organization name is required." };
+      return { success: false, fieldError: "Org name is required." };
     }
 
     if (cleanName.length < 2) {
-      return { success: false, error: "Organization name must be at least 2 characters." };
+      return { success: false, fieldError: "Org name must be at least 2 characters." };
+    }
+
+    if (cleanName.length > 80) {
+      return { success: false, fieldError: "Org name cannot be longer than 80 characters." };
+    }
+
+    const admin = createAdminClient();
+
+    // 0. Error or edge case handled: an officer who is already in an org cannot create a second one in v0.2
+    const { data: existingMember } = await admin
+      .from("org_officers")
+      .select("org_id")
+      .eq("officer_id", user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingMember?.org_id) {
+      return {
+        success: false,
+        existingOrgId: existingMember.org_id,
+        error: "You already have an existing workspace.",
+      };
     }
 
     // school is nullable
@@ -46,8 +70,6 @@ export async function createWorkspace(
       ? `${normalizedName} ${cleanSchool.toLowerCase().replace(/\s+/g, " ")}`
       : normalizedName;
 
-    const admin = createAdminClient();
-
     // 1. Check for duplicate organization name + school
     const { data: existing } = await admin
       .from("orgs")
@@ -58,9 +80,7 @@ export async function createWorkspace(
     if (existing) {
       return {
         success: false,
-        error: cleanSchool
-          ? `An organization named "${cleanName}" at "${cleanSchool}" already exists.`
-          : `An organization named "${cleanName}" already exists.`,
+        error: "An org with this name already exists. Ask one of its officers to add you.",
       };
     }
 
@@ -80,12 +100,12 @@ export async function createWorkspace(
       if (orgError?.code === "23505") {
         return {
           success: false,
-          error: "An organization with this name and school already exists.",
+          error: "An org with this name already exists. Ask one of its officers to add you.",
         };
       }
       return {
         success: false,
-        error: "Failed to create organization. Please try again.",
+        error: "We couldn't create your workspace. Please try again.",
       };
     }
 
@@ -104,7 +124,7 @@ export async function createWorkspace(
       await admin.from("orgs").delete().eq("id", newOrg.id);
       return {
         success: false,
-        error: "Failed to establish workspace membership. Please try again.",
+        error: "We couldn't create your workspace. Please try again.",
       };
     }
 
@@ -113,7 +133,7 @@ export async function createWorkspace(
     console.error("Unexpected error in createWorkspace:", err);
     return {
       success: false,
-      error: "An unexpected error occurred while creating your workspace.",
+      error: "We couldn't create your workspace. Please try again.",
     };
   }
 }

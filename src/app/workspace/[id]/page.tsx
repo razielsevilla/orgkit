@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import {
   ChevronDown,
@@ -20,7 +20,7 @@ import {
   PanelLeftClose,
 } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
-import { getOrganizationById } from "@/src/app/workspace/actions";
+import { getOrganizationById, getOfficerDefaultWorkspace } from "@/src/app/workspace/actions";
 import { createClient } from "@/src/lib/supabase/client";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -36,6 +36,7 @@ interface OfficerProps {
 }
 
 function WorkspaceDetailContent() {
+  const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const rawId = (params?.id as string) || "";
@@ -69,20 +70,40 @@ function WorkspaceDetailContent() {
     });
   };
 
+  const [isLoadingOrg, setIsLoadingOrg] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+
   useEffect(() => {
     async function loadOrg() {
-      if (!rawId || rawId === "default") return;
+      if (!rawId) {
+        setIsLoadingOrg(false);
+        setAccessDenied(true);
+        return;
+      }
       try {
         const org = await getOrganizationById(rawId);
         if (org) {
           setOrgData({ name: org.name, school: org.school || "" });
+          setAccessDenied(false);
+        } else {
+          // Check if officer belongs to their own workspace and route them there
+          const defaultWs = await getOfficerDefaultWorkspace();
+          if (defaultWs?.orgId && defaultWs.orgId !== rawId) {
+            router.replace(`/workspace/${defaultWs.orgId}`);
+            return;
+          }
+          // Officer is not a member of this organization, or organization does not exist
+          setAccessDenied(true);
         }
       } catch (err) {
         console.error("Error loading org from database:", err);
+        setAccessDenied(true);
+      } finally {
+        setIsLoadingOrg(false);
       }
     }
     loadOrg();
-  }, [rawId]);
+  }, [rawId, router]);
 
   const isUuid =
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
@@ -209,6 +230,194 @@ function WorkspaceDetailContent() {
     }
     return "AR";
   })();
+
+  if (isLoadingOrg) {
+    return <WorkspaceLoadingSkeleton />;
+  }
+
+  if (accessDenied) {
+    return (
+      <div
+        className={plusJakarta.className}
+        style={{
+          height: "100vh",
+          width: "100%",
+          overflow: "hidden",
+          position: "relative",
+          margin: 0,
+          padding: 0,
+          backgroundColor: "#F4F4F5",
+          color: "#18181B",
+          display: "flex",
+          flexDirection: "column",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Top Minimal Navigation Bar */}
+        <header
+          style={{
+            height: 60,
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 clamp(16px, 3.5vw, 40px)",
+            boxSizing: "border-box",
+          }}
+        >
+          <Image
+            src="/orgkit-text-logo.png"
+            alt="OrgKit"
+            width={132}
+            height={32}
+            priority
+            style={{ height: 30, width: "auto", objectFit: "contain" }}
+          />
+
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: "50%",
+                backgroundColor: "#D1FAE5",
+                color: "#059669",
+                fontSize: 12,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                userSelect: "none",
+              }}
+            >
+              {officerInitials}
+            </div>
+            <span
+              style={{
+                fontSize: 13.5,
+                fontWeight: 600,
+                color: "#18181B",
+              }}
+            >
+              {displayName}
+            </span>
+          </div>
+        </header>
+
+        {/* Access Refused Main Canvas */}
+        <main
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "24px",
+            textAlign: "center",
+            boxSizing: "border-box",
+          }}
+        >
+          <div
+            style={{
+              maxWidth: 360,
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            {/* Search/Not Found Circle Icon */}
+            <div
+              style={{
+                marginBottom: 20,
+                display: "flex",
+                width: 66,
+                height: 66,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.10)",
+              }}
+            >
+              <svg
+                style={{
+                  width: 28,
+                  height: 28,
+                  display: "block",
+                  color: "#059669",
+                }}
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#059669"
+                strokeWidth="1.85"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <circle cx="11.5" cy="14" r="2.25" />
+                <path d="m13.2 15.7 2.3 2.3" />
+              </svg>
+            </div>
+
+            <h1
+              style={{
+                fontSize: 28,
+                fontWeight: 800,
+                letterSpacing: "-0.025em",
+                color: "#18181B",
+                margin: "0 0 8px 0",
+                lineHeight: 1.15,
+              }}
+            >
+              We can’t find that page.
+            </h1>
+
+            <p
+              style={{
+                fontSize: 14.5,
+                fontWeight: 400,
+                lineHeight: 1.45,
+                color: "#71717A",
+                margin: "0 0 24px 0",
+              }}
+            >
+              It may not exist, or you may not have access to it.
+            </p>
+
+            <button
+              type="button"
+              onClick={async () => {
+                const defaultWs = await getOfficerDefaultWorkspace();
+                if (defaultWs?.orgId) {
+                  router.replace(`/workspace/${defaultWs.orgId}`);
+                } else {
+                  router.replace("/workspace");
+                }
+              }}
+              className="orgkit-cta-btn"
+              style={{
+                display: "inline-flex",
+                height: 46,
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 9999,
+                backgroundColor: "#059669",
+                padding: "0 32px",
+                fontSize: 14.5,
+                fontWeight: 600,
+                color: "#FFFFFF",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
+              }}
+            >
+              Go to your workspace
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div

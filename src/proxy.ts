@@ -62,29 +62,45 @@ export async function proxy(request: NextRequest) {
     return redirectTo("/signin?error=session_expired");
   }
 
-  // If user is authenticated, enforce 1 officer -> 1 org policy
+  // If user is authenticated, enforce workspace assignment & 1 officer -> 1 org policy
   if (user) {
-    const isEntryOrWorkspace =
-      request.nextUrl.pathname === "/" ||
-      request.nextUrl.pathname === "/signin" ||
-      request.nextUrl.pathname === "/register" ||
-      request.nextUrl.pathname === "/workspace";
+    const pathname = request.nextUrl.pathname;
 
-    if (isEntryOrWorkspace) {
-      const { data: membership } = await supabase
-        .from("org_officers")
-        .select("org_id")
-        .eq("officer_id", user.id)
-        .order("joined_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+    // Support ticket /orgs/new and /org/:id alias routes
+    if (pathname === "/orgs/new") {
+      return redirectTo("/workspace");
+    }
+    if (pathname.startsWith("/org/")) {
+      const orgId = pathname.replace("/org/", "");
+      return redirectTo(`/workspace/${orgId}`);
+    }
 
-      if (membership?.org_id) {
-        return redirectTo(`/workspace/${membership.org_id}`);
-      }
+    const { data: membership } = await supabase
+      .from("org_officers")
+      .select("org_id")
+      .eq("officer_id", user.id)
+      .order("joined_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-      if (request.nextUrl.pathname !== "/workspace") {
+    if (!membership?.org_id) {
+      // Officer is NOT in any org: redirect any other page to the create-workspace screen
+      if (!isPublic(pathname) && pathname !== "/workspace") {
         return redirectTo("/workspace");
+      }
+      if (pathname === "/" || pathname === "/signin" || pathname === "/register") {
+        return redirectTo("/workspace");
+      }
+    } else {
+      // Officer ALREADY has an org: cannot create another in v0.2, send straight to existing workspace
+      const isCreateOrEntry =
+        pathname === "/" ||
+        pathname === "/signin" ||
+        pathname === "/register" ||
+        pathname === "/workspace";
+
+      if (isCreateOrEntry) {
+        return redirectTo(`/workspace/${membership.org_id}`);
       }
     }
   }

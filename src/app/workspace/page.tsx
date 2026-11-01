@@ -36,9 +36,9 @@ interface OfficerProps {
 
 export default function WorkspacePage() {
   const router = useRouter();
-  // view: "empty" corresponds to Image 2 ("We can't find that page.")
-  // view: "create" corresponds to Image 3 ("Set up your org" card)
-  const [view, setView] = useState<"empty" | "create">("empty");
+  // view: "create" corresponds to "Set up your org" card (first screen for signed-in officer with no org)
+  // view: "empty" corresponds to "We can't find that page."
+  const [view, setView] = useState<"empty" | "create">("create");
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [officer, setOfficer] = useState<OfficerProps | null>(null);
@@ -47,7 +47,8 @@ export default function WorkspacePage() {
   const [orgName, setOrgName] = useState("");
   const [school, setSchool] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [isCheckingWorkspace, setIsCheckingWorkspace] = useState(true);
 
   // Load current signed-in officer session and check if they already have a workspace
@@ -145,12 +146,23 @@ export default function WorkspacePage() {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setNameError(null);
+    setSaveError(null);
+
     const cleanName = orgName.trim();
     if (!cleanName) {
-      setErrorMessage("Organization name is required.");
+      setNameError("Org name is required.");
       return;
     }
-    setErrorMessage(null);
+    if (cleanName.length < 2) {
+      setNameError("Org name must be at least 2 characters.");
+      return;
+    }
+    if (cleanName.length > 80) {
+      setNameError("Org name cannot be longer than 80 characters.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -164,32 +176,26 @@ export default function WorkspacePage() {
         router.push(`/workspace/${res.orgId}?${query.toString()}`);
         return;
       }
+      if (res.existingOrgId) {
+        router.replace(`/workspace/${res.existingOrgId}`);
+        return;
+      }
+      if (res.fieldError) {
+        setNameError(res.fieldError);
+        setIsSubmitting(false);
+        return;
+      }
       if (res.error) {
-        setErrorMessage(res.error);
+        setSaveError(res.error);
         setIsSubmitting(false);
         return;
       }
     } catch (err) {
       console.error("Error creating workspace:", err);
-      // Fallback in case of database offline / preview mode
-      const slug =
-        encodeURIComponent(
-          cleanName
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "")
-        ) || "default";
-
-      const query = new URLSearchParams();
-      query.set("name", cleanName);
-      if (school.trim()) {
-        query.set("school", school.trim());
-      }
-      router.push(`/workspace/${slug}?${query.toString()}`);
-      return;
+      setSaveError("We couldn't create your workspace. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
 
   return (
@@ -1012,7 +1018,7 @@ export default function WorkspacePage() {
                     margin: "0 0 5px 0",
                   }}
                 >
-                  Set up your Organization
+                  Set up your org
                 </h1>
                 <p
                   style={{
@@ -1026,8 +1032,8 @@ export default function WorkspacePage() {
               </div>
 
               {/* Form */}
-              <form onSubmit={handleCreateSubmit}>
-                {/* Field 1: Organization Name */}
+              <form onSubmit={handleCreateSubmit} noValidate>
+                {/* Field 1: Org name (required) */}
                 <div style={{ marginBottom: 16 }}>
                   <label
                     htmlFor="org-name"
@@ -1039,21 +1045,27 @@ export default function WorkspacePage() {
                       marginBottom: 7,
                     }}
                   >
-                    Organization Name
+                    Org name
                   </label>
                   <input
                     id="org-name"
                     type="text"
                     required
                     value={orgName}
-                    onChange={(e) => setOrgName(e.target.value)}
+                    onChange={(e) => {
+                      setOrgName(e.target.value);
+                      if (nameError) setNameError(null);
+                      if (saveError) setSaveError(null);
+                    }}
                     placeholder="e.g. Junior Marketing Association"
                     className="orgkit-workspace-input"
                     style={{
                       height: 46,
                       width: "100%",
                       borderRadius: 12,
-                      border: "1px solid #E4E4E7",
+                      border: nameError
+                        ? "1px solid #DC2626"
+                        : "1px solid #E4E4E7",
                       backgroundColor: "#FFFFFF",
                       padding: "0 14px",
                       fontSize: 14,
@@ -1063,9 +1075,23 @@ export default function WorkspacePage() {
                       transition: "border-color 0.15s ease, box-shadow 0.15s ease",
                     }}
                   />
+                  {/* Validation Error Message Under Field */}
+                  {nameError && (
+                    <p
+                      style={{
+                        fontSize: 12,
+                        color: "#DC2626",
+                        fontWeight: 500,
+                        margin: "6px 0 0 0",
+                        textAlign: "left",
+                      }}
+                    >
+                      {nameError}
+                    </p>
+                  )}
                 </div>
 
-                {/* Field 2: School or Community (Optional) */}
+                {/* Field 2: School or community (Optional) */}
                 <div style={{ marginBottom: 24 }}>
                   <div
                     style={{
@@ -1083,7 +1109,7 @@ export default function WorkspacePage() {
                         color: "#18181B",
                       }}
                     >
-                      School or Community
+                      School or community
                     </label>
                     <span
                       style={{
@@ -1104,7 +1130,10 @@ export default function WorkspacePage() {
                     id="school-community"
                     type="text"
                     value={school}
-                    onChange={(e) => setSchool(e.target.value)}
+                    onChange={(e) => {
+                      setSchool(e.target.value);
+                      if (saveError) setSaveError(null);
+                    }}
                     placeholder="e.g. Your school or community"
                     className="orgkit-workspace-input"
                     style={{
@@ -1132,8 +1161,8 @@ export default function WorkspacePage() {
                   </p>
                 </div>
 
-                {/* Validation / Database Error Alert */}
-                {errorMessage && (
+                {/* Save Error Alert (Above Button) */}
+                {saveError && (
                   <div
                     style={{
                       marginBottom: 16,
@@ -1147,7 +1176,7 @@ export default function WorkspacePage() {
                       textAlign: "left",
                     }}
                   >
-                    {errorMessage}
+                    {saveError}
                   </div>
                 )}
 
@@ -1174,7 +1203,7 @@ export default function WorkspacePage() {
                     transition: "all 0.15s ease",
                   }}
                 >
-                  {isSubmitting ? "Creating…" : "Create Workspace"}
+                  {isSubmitting ? "Creating…" : "Create workspace"}
                 </button>
               </form>
             </div>
