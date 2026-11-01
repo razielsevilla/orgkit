@@ -526,7 +526,7 @@ export function WorkspaceView({ officer }: { officer?: OfficerProps }) {
                     margin: "0 0 4px 0",
                   }}
                 >
-                  Set up your org
+                  Set up your Organization
                 </h1>
                 <p
                   style={{
