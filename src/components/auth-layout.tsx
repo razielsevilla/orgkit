@@ -210,6 +210,11 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
           background-color: #F4F4F5;
         }
 
+        .orgkit-google-btn[data-error="true"],
+        .orgkit-google-btn[data-error="true"]:hover:not(:disabled) {
+          border-color: #DC2626;
+        }
+
         .orgkit-google-btn:focus-visible {
           box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #059669;
         }

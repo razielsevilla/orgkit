@@ -19,52 +19,45 @@ export function getErrorMessage(errorParam: string | null): string | null {
   }
 }
 
+export const AUTH_ERROR_MESSAGE_ID = "auth-error-message";
+
+type AuthErrorRender = (hasError: boolean) => React.ReactNode;
+
+// The error is shown to sighted users only as a red border on the control
+// rendered by `children`; the message itself stays available to screen readers.
 function ErrorTracker({
   manualError,
-  align,
+  children,
 }: {
   manualError: string | null;
-  align: "center" | "left";
+  children: AuthErrorRender;
 }) {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
   const activeError = manualError || getErrorMessage(urlError);
 
-  if (!activeError) return null;
-
   return (
-    <div
-      role="alert"
-      style={{
-        width: "100%",
-        marginTop: "clamp(12px, 2vh, 20px)",
-        padding: "10px 16px",
-        borderRadius: 14,
-        backgroundColor: "#FEF2F2",
-        border: "1px solid #FCA5A5",
-        color: "#991B1B",
-        fontSize: "clamp(12.5px, 0.92vw, 14.5px)",
-        lineHeight: 1.45,
-        textAlign: align,
-        fontWeight: 500,
-        boxSizing: "border-box",
-      }}
-    >
-      {activeError}
-    </div>
+    <>
+      {activeError && (
+        <div role="alert" id={AUTH_ERROR_MESSAGE_ID} className="sr-only">
+          {activeError}
+        </div>
+      )}
+      {children(!!activeError)}
+    </>
   );
 }
 
 export function AuthErrorAlert({
   manualError,
-  align = "center",
+  children,
 }: {
   manualError: string | null;
-  align?: "center" | "left";
+  children: AuthErrorRender;
 }) {
   return (
-    <Suspense fallback={null}>
-      <ErrorTracker manualError={manualError} align={align} />
+    <Suspense fallback={children(false)}>
+      <ErrorTracker manualError={manualError}>{children}</ErrorTracker>
     </Suspense>
   );
 }

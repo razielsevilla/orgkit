@@ -6,7 +6,7 @@ import { useState } from "react";
 import { createClient } from "@/src/lib/supabase/client";
 import { AuthLayout } from "@/src/components/auth-layout";
 import { GoogleLogo } from "@/src/components/google-logo";
-import { AuthErrorAlert, getErrorMessage } from "@/src/components/auth-error-alert";
+import { AuthErrorAlert, AUTH_ERROR_MESSAGE_ID, getErrorMessage } from "@/src/components/auth-error-alert";
 
 const GOOGLE_ERROR_MESSAGE = getErrorMessage("google_error") as string;
 
@@ -115,10 +115,9 @@ export default function SignInPage() {
           <span>events, and campus community.</span>
         </p>
 
-        {/* Error Message banner from Ticket A1 */}
-        <AuthErrorAlert manualError={manualError} align="center" />
-
-        {/* 4. Google Sign-in Button: "Sign in with Google" */}
+        {/* 4. Google Sign-in Button: "Sign in with Google" (red border on error, Ticket A1) */}
+        <AuthErrorAlert manualError={manualError}>
+          {(hasError) => (
         <div
           style={{
             width: "100%",
@@ -130,6 +129,8 @@ export default function SignInPage() {
             disabled={loading}
             onClick={handleGoogleSignIn}
             className="orgkit-google-btn"
+            data-error={hasError}
+            aria-describedby={hasError ? AUTH_ERROR_MESSAGE_ID : undefined}
             aria-busy={loading}
             title={loading ? "Connecting to Google..." : "Sign in with Google"}
             style={{
@@ -176,6 +177,8 @@ export default function SignInPage() {
             {loading ? "Connecting to Google, please wait..." : ""}
           </div>
         </div>
+          )}
+        </AuthErrorAlert>
 
         {/* 5. Terms & Automatic account info */}
         <div
