@@ -497,7 +497,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       <div className="orgkit-layout-body">
         {/* ── Left Pane: Header + Marketing Stack ── */}
         <div className="orgkit-left-pane">
-          {/* Header: Logo + Divider + Wordmark */}
+          {/* Header: Logo with OrgKit wordmark */}
           <header
             style={{
               display: "flex",
@@ -506,40 +506,19 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
             }}
           >
             <Image
-              src="/orgkit-logo.png"
+              src="/orgkit-text-logo.png"
               alt="OrgKit"
-              width={82}
-              height={52}
+              width={217}
+              height={72}
               priority
               draggable={false}
               className="object-contain select-none"
               style={{
-                width: "clamp(56px, 4.9vw, 82px)",
+                width: "clamp(150px, 13vw, 220px)",
                 height: "auto",
                 display: "block",
               }}
             />
-            <div
-              style={{
-                width: 1.5,
-                height: "clamp(34px, 5.3vh, 50px)",
-                backgroundColor: "#E4E4E7",
-                marginLeft: "clamp(14px, 1.44vw, 24px)",
-                marginRight: "clamp(14px, 1.44vw, 24px)",
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontSize: "clamp(26px, 2.27vw, 38px)",
-                fontWeight: 700,
-                color: "#18181B",
-                letterSpacing: "-0.015em",
-                lineHeight: 1,
-              }}
-            >
-              OrgKit
-            </span>
           </header>
 
           {/* Marketing Content: Desktop only, hidden on mobile */}

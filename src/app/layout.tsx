@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "OrgKit - Student Organization Management System",
+  title: "OrgKit",
   description:
     "Organize. Collaborate. Lead. A modern platform for student organizations to connect, manage, and grow together.",
   icons: {

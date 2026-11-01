@@ -7,17 +7,15 @@ export default function TermsPage() {
       <div className="max-w-3xl mx-auto">
         {/* Navigation / Header Brand */}
         <div className="flex items-center justify-between mb-8">
-          <Link href="/signin" className="flex items-center gap-2 group">
+          <Link href="/signin" className="flex items-center group">
             <Image
-              src="/orgkit-logo.png"
+              src="/orgkit-text-logo.png"
               alt="OrgKit"
-              width={42}
-              height={26}
-              className="select-none"
+              width={135}
+              height={45}
+              priority
+              className="h-8 w-auto object-contain select-none transition-opacity group-hover:opacity-85"
             />
-            <span className="font-bold text-lg text-[#18181B] group-hover:text-[#059669] transition-colors">
-              OrgKit
-            </span>
           </Link>
           <Link
             href="/signin"
