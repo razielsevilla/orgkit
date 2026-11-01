@@ -20,7 +20,11 @@ import {
   PanelLeftClose,
 } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
-import { getOrganizationById, getOfficerDefaultWorkspace } from "@/src/app/workspace/actions";
+import {
+  getOrganizationById,
+  getOfficerDefaultWorkspace,
+  getCurrentOfficer,
+} from "@/src/app/workspace/actions";
 import { createClient } from "@/src/lib/supabase/client";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -118,7 +122,7 @@ function WorkspaceDetailContent() {
           .split("-")
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(" ")
-      : "Junior Marketing Association");
+      : "Organization");
 
   // Only display school/community if explicitly provided or saved in DB (never fall back to static text)
   const schoolName = (() => {
@@ -127,10 +131,6 @@ function WorkspaceDetailContent() {
     }
     if (querySchool !== null && querySchool !== undefined) {
       return querySchool.trim() || null;
-    }
-    // Only fall back to "Sample College" on default demo view
-    if (!rawId || rawId === "default") {
-      return "Sample College";
     }
     return null;
   })();
@@ -155,21 +155,9 @@ function WorkspaceDetailContent() {
   useEffect(() => {
     async function loadOfficerSession() {
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          const { data } = await supabase
-            .from("officers")
-            .select("id, email, full_name")
-            .eq("id", user.id)
-            .maybeSingle();
-
-          if (data) {
-            setOfficer(data);
-          }
+        const officerData = await getCurrentOfficer();
+        if (officerData) {
+          setOfficer(officerData);
         }
       } catch (err) {
         console.error("Failed to load officer session:", err);
@@ -218,17 +206,18 @@ function WorkspaceDetailContent() {
     };
   }, []);
 
-  const displayName = officer?.full_name?.trim() || "Alex Reyes";
+  const displayName = officer?.full_name?.trim() || officer?.email?.split("@")[0] || "Officer";
   const officerInitials = (() => {
-    if (!officer?.full_name) return "AR";
-    const parts = officer.full_name.trim().split(/\s+/).filter(Boolean);
+    const nameToUse = officer?.full_name?.trim() || officer?.email || "";
+    if (!nameToUse) return "OF";
+    const parts = nameToUse.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     if (parts.length === 1 && parts[0].length > 0) {
       return parts[0].slice(0, 2).toUpperCase();
     }
-    return "AR";
+    return "OF";
   })();
 
   if (isLoadingOrg) {
@@ -1320,7 +1309,7 @@ function WorkspaceDetailContent() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {officer?.email || "officer@example.com"}
+                  {officer?.email || ""}
                 </p>
               </div>
 

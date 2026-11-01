@@ -19,6 +19,7 @@ import { signOut } from "@/src/app/auth/actions";
 import {
   createWorkspace,
   getOfficerDefaultWorkspace,
+  getCurrentOfficer,
 } from "@/src/app/workspace/actions";
 import { createClient } from "@/src/lib/supabase/client";
 
@@ -55,24 +56,12 @@ export default function WorkspacePage() {
   useEffect(() => {
     async function loadOfficerSession() {
       try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (!user) {
+        const officerData = await getCurrentOfficer();
+        if (officerData) {
+          setOfficer(officerData);
+        } else {
           window.location.href = "/signin";
           return;
-        }
-
-        const { data } = await supabase
-          .from("officers")
-          .select("id, email, full_name")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (data) {
-          setOfficer(data);
         }
 
         // Check if this officer already has an assigned workspace
@@ -131,17 +120,18 @@ export default function WorkspacePage() {
   }, []);
 
   // Compute officer initials and display name
-  const displayName = officer?.full_name?.trim() || "Alex Reyes";
+  const displayName = officer?.full_name?.trim() || officer?.email?.split("@")[0] || "Officer";
   const initials = (() => {
-    if (!officer?.full_name) return "AR";
-    const parts = officer.full_name.trim().split(/\s+/).filter(Boolean);
+    const nameToUse = officer?.full_name?.trim() || officer?.email || "";
+    if (!nameToUse) return "OF";
+    const parts = nameToUse.split(/\s+/).filter(Boolean);
     if (parts.length >= 2) {
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
     if (parts.length === 1 && parts[0].length > 0) {
       return parts[0].slice(0, 2).toUpperCase();
     }
-    return "AR";
+    return "OF";
   })();
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -593,7 +583,7 @@ export default function WorkspacePage() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {officer?.email || "officer@example.com"}
+                  {officer?.email || ""}
                 </p>
               </div>
 

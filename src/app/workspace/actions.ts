@@ -237,3 +237,50 @@ export async function getOfficerDefaultWorkspace(): Promise<{
     return null;
   }
 }
+
+/**
+ * Loads the currently authenticated officer's profile securely using server credentials.
+ */
+export async function getCurrentOfficer(): Promise<{
+  id: string;
+  email: string;
+  full_name: string;
+} | null> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const admin = createAdminClient();
+    const { data: officer } = await admin
+      .from("officers")
+      .select("id, email, full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (officer && officer.full_name?.trim()) {
+      return {
+        id: officer.id,
+        email: officer.email || user.email || "",
+        full_name: officer.full_name.trim(),
+      };
+    }
+
+    const metadataName =
+      (user.user_metadata?.full_name as string) ||
+      (user.user_metadata?.name as string) ||
+      (user.email ? user.email.split("@")[0] : "");
+
+    return {
+      id: user.id,
+      email: user.email || "",
+      full_name: metadataName || "Officer",
+    };
+  } catch (err) {
+    console.error("Unexpected error in getCurrentOfficer:", err);
+    return null;
+  }
+}
