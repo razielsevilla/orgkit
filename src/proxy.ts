@@ -4,7 +4,7 @@ import { isSessionExpired, SESSION_MAX_SECONDS } from "@/src/lib/session-config"
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 
 // Pages a signed-out visitor may open. Everything else needs a session.
-const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms"];
+const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms", "/consent"];
 
 function isPublic(pathname: string) {
   return (

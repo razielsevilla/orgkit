@@ -109,7 +109,39 @@ export async function createWorkspace(
       };
     }
 
-    // 3. Insert into org_officers (role: "officer", joined_at: now)
+    // 3. Ensure officer record exists in public.officers before linking (satisfies foreign key)
+    const { data: officerRow } = await admin
+      .from("officers")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!officerRow) {
+      const googleSub =
+        (user.user_metadata?.sub as string) ||
+        (user.user_metadata?.provider_id as string) ||
+        user.id;
+      const fullName =
+        (user.user_metadata?.full_name as string) ||
+        (user.user_metadata?.name as string) ||
+        (user.email ? user.email.split("@")[0] : "Officer");
+      const now = new Date().toISOString();
+      await admin.from("officers").upsert(
+        {
+          id: user.id,
+          google_sub: googleSub,
+          email: user.email || "",
+          full_name: fullName,
+          consent_version: "v1.0",
+          consent_at: now,
+          created_at: now,
+          last_sign_in_at: now,
+        },
+        { onConflict: "id" }
+      );
+    }
+
+    // 4. Insert into org_officers (role: "officer", joined_at: now)
     const now = new Date().toISOString();
     const { error: memberError } = await admin.from("org_officers").insert({
       org_id: newOrg.id,
