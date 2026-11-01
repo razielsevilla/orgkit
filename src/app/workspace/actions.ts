@@ -130,28 +130,36 @@ export async function getOrganizationById(orgId: string) {
 
     if (!user) return null;
 
+    const admin = createAdminClient();
+
     // Check membership in org_officers
-    const { data: membership } = await supabase
+    const { data: membership, error: memError } = await admin
       .from("org_officers")
       .select("role, joined_at")
       .eq("org_id", orgId)
       .eq("officer_id", user.id)
       .maybeSingle();
 
-    if (!membership) {
+    if (memError || !membership) {
+      console.warn("Officer not member of org:", orgId, memError);
       return null;
     }
 
     // Fetch org record
-    const { data: org } = await supabase
+    const { data: org, error: orgError } = await admin
       .from("orgs")
       .select("id, name, school, created_at")
       .eq("id", orgId)
       .maybeSingle();
 
+    if (orgError || !org) {
+      console.error("Error fetching org record:", orgError);
+      return null;
+    }
+
     return org;
   } catch (err) {
-    console.error("Error fetching organization:", err);
+    console.error("Unexpected error in getOrganizationById:", err);
     return null;
   }
 }

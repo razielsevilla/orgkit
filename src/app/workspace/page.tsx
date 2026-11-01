@@ -143,7 +143,12 @@ export default function WorkspacePage() {
     try {
       const res = await createWorkspace(cleanName, school);
       if (res.success && res.orgId) {
-        router.push(`/workspace/${res.orgId}`);
+        const query = new URLSearchParams();
+        query.set("name", cleanName);
+        if (school.trim()) {
+          query.set("school", school.trim());
+        }
+        router.push(`/workspace/${res.orgId}?${query.toString()}`);
         return;
       }
       if (res.error) {

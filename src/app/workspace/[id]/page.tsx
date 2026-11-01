@@ -56,17 +56,35 @@ function WorkspaceDetailContent() {
     loadOrg();
   }, [rawId]);
 
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      rawId
+    );
+
   const orgName =
     orgData?.name ||
     queryName?.trim() ||
-    (rawId && rawId !== "default"
+    (!isUuid && rawId && rawId !== "default"
       ? rawId
           .split("-")
           .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
           .join(" ")
       : "Junior Marketing Association");
 
-  const schoolName = orgData?.school ?? (querySchool?.trim() || "Sample College");
+  // Only display school/community if explicitly provided or saved in DB (never fall back to static text)
+  const schoolName = (() => {
+    if (orgData) {
+      return orgData.school?.trim() || null;
+    }
+    if (querySchool !== null && querySchool !== undefined) {
+      return querySchool.trim() || null;
+    }
+    // Only fall back to "Sample College" on default demo view
+    if (!rawId || rawId === "default") {
+      return "Sample College";
+    }
+    return null;
+  })();
 
   // Derive organization initials (e.g. "Junior Marketing Association" -> "JM")
   const orgInitials = (() => {
@@ -518,21 +536,23 @@ function WorkspaceDetailContent() {
               >
                 {orgName}
               </div>
-              <div
-                style={{
-                  fontSize: 11.5,
-                  fontWeight: 400,
-                  color: "#71717A",
-                  lineHeight: 1.25,
-                  marginTop: 2,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-                title={schoolName}
-              >
-                {schoolName}
-              </div>
+              {schoolName ? (
+                <div
+                  style={{
+                    fontSize: 11.5,
+                    fontWeight: 400,
+                    color: "#71717A",
+                    lineHeight: 1.25,
+                    marginTop: 2,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={schoolName}
+                >
+                  {schoolName}
+                </div>
+              ) : null}
             </div>
           </div>
 
