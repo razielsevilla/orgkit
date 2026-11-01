@@ -110,7 +110,7 @@ export function Sidebar({
       <style>{`
         .orgkit-sidebar-toggle:hover {
           background-color: #F4F4F5 !important;
-          color: #18181B !important;
+          color: #71717A !important;
         }
         .orgkit-nav-btn:hover {
           background-color: #F4F4F5 !important;
@@ -209,7 +209,7 @@ export function Sidebar({
             }}
           >
             {isBrandHovered ? (
-              <PanelLeft size={20} strokeWidth={1.8} color="#18181B" />
+              <PanelLeft size={19} strokeWidth={1.8} color="#71717A" />
             ) : (
               <Image
                 src="/orgkit-logo.png"
