@@ -26,7 +26,7 @@ export default function SetupPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push("/register");
+        router.push("/signin");
         return;
       }
 
