@@ -1,164 +1,294 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Plus_Jakarta_Sans } from "next/font/google";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
 
 export default function TermsPage() {
   return (
-    <main className="min-h-screen bg-[#F4F4F5] text-[#18181B] py-12 px-4 sm:px-6">
-      <div className="max-w-3xl mx-auto">
-        {/* Navigation / Header Brand */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/signin" className="flex items-center group">
+    <main
+      className={plusJakarta.className}
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#F4F4F5",
+        color: "#18181B",
+        padding: "clamp(24px, 5vh, 48px) clamp(16px, 3vw, 24px)",
+      }}
+    >
+      <div style={{ maxWidth: 820, margin: "0 auto" }}>
+        {/* Top Header / Navigation */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "clamp(20px, 3.5vh, 32px)",
+          }}
+        >
+          <Link href="/signin" style={{ display: "inline-flex", textDecoration: "none" }}>
             <Image
               src="/orgkit-text-logo.png"
               alt="OrgKit"
-              width={135}
-              height={45}
+              width={140}
+              height={46}
               priority
-              className="h-8 w-auto object-contain select-none transition-opacity group-hover:opacity-85"
+              style={{ height: 32, width: "auto", display: "block" }}
             />
           </Link>
           <Link
             href="/signin"
-            className="text-sm font-semibold text-[#059669] hover:underline"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#059669",
+              textDecoration: "none",
+            }}
           >
             ← Back to Sign in
           </Link>
         </div>
 
-        {/* Page Title & Date outside the card */}
-        <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#18181B]">
+        {/* Page Title & Last Updated (Outside Card, matching reference) */}
+        <div style={{ marginBottom: "clamp(20px, 3.5vh, 28px)" }}>
+          <h1
+            style={{
+              fontSize: "clamp(28px, 3.2vw, 40px)",
+              fontWeight: 800,
+              letterSpacing: "-0.02em",
+              color: "#18181B",
+              margin: 0,
+              lineHeight: 1.15,
+            }}
+          >
             Terms of Service
           </h1>
-          <p className="mt-2 text-sm text-[#71717A]">
+          <p
+            style={{
+              marginTop: 8,
+              fontSize: 14,
+              color: "#71717A",
+              marginBottom: 0,
+            }}
+          >
             Last updated: November 1, 2026
           </p>
         </div>
 
-        {/* Content Card */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E4E4E7] p-8 sm:p-12 shadow-sm space-y-6">
-          <p className="text-[15px] sm:text-base leading-relaxed text-[#3F3F46]">
+        {/* Clean Content Card */}
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: 24,
+            border: "1px solid #E4E4E7",
+            boxShadow: "0 10px 40px -10px rgba(24, 24, 27, 0.08), 0 1px 3px rgba(24, 24, 27, 0.04)",
+            padding: "clamp(24px, 4.5vw, 48px)",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Intro text */}
+          <p
+            style={{
+              fontSize: "clamp(14.5px, 1.1vw, 16px)",
+              lineHeight: 1.65,
+              color: "#3F3F46",
+              marginTop: 0,
+              marginBottom: 28,
+            }}
+          >
             Welcome to OrgKit — a modern platform for student organizations to connect,
-            manage, and grow together. By using the website or mobile web application you agree
+            manage, and grow together. By using the website or mobile application, you agree
             to these terms.
           </p>
 
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#18181B] mb-3">
+          {/* Section: Your account */}
+          <div style={{ marginBottom: 28 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "#18181B",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
               Your account
             </h2>
-            <ul className="space-y-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#3F3F46]">
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  You are responsible for your account and activity under it when you sign in with
-                  Google.
-                </span>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "#3F3F46",
+              }}
+            >
+              <li>
+                You are responsible for your account and any activity conducted under it when you sign in
+                with your Google credentials.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">One account per person.</strong>{" "}
-                  Each officer must sign in using their own personal Google account. Sharing a single
-                  Google login among multiple officers is strictly prohibited.
-                </span>
+              <li>
+                <strong style={{ color: "#18181B" }}>One account per person.</strong> Each officer must
+                authenticate using their individual Google account. Shared or team-wide accounts are strictly
+                prohibited to maintain audit integrity.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  You must be an authorized officer or student leader of your organization to access
-                  administrative tools and student rosters.
-                </span>
+              <li>
+                You must be an authorized officer or student leader of your organization to access
+                administrative tools, membership lists, and financial records.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  You can delete or deactivate your officer account anytime through your organization
-                  administration settings.
-                </span>
+              <li>
+                You may request deactivation or removal of your officer account by contacting your organization
+                administrator.
               </li>
             </ul>
           </div>
 
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#18181B] mb-3">
+          {/* Section: Content & ownership */}
+          <div style={{ marginBottom: 28 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "#18181B",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
               Your content & organization data
             </h2>
-            <ul className="space-y-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#3F3F46]">
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  Student organizations retain full ownership of all materials they publish — member
-                  directories, event calendars, announcements, and documentation.
-                </span>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "#3F3F46",
+              }}
+            >
+              <li>
+                Student organizations retain full ownership of all materials they publish and manage —
+                including rosters, calendars, event details, and documentation.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  By using OrgKit, you give us permission to store, display, and process this information
-                  solely to operate the organization management platform for your team.
-                </span>
+              <li>
+                By using OrgKit, you grant us permission to securely host, process, and display this content
+                solely for providing the organization management platform.
               </li>
             </ul>
           </div>
 
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#18181B] mb-3">
+          {/* Section: Acceptable use */}
+          <div style={{ marginBottom: 28 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "#18181B",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
               Acceptable use
             </h2>
-            <ul className="space-y-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#3F3F46]">
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  Do not impersonate other student officers, organizations, or university administrators.
-                </span>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "#3F3F46",
+              }}
+            >
+              <li>
+                Do not impersonate other student officers, organizations, or campus administration.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  Do not extract, scrape, or misuse student contact information for unauthorized commercial,
-                  promotional, or harassment purposes.
-                </span>
+              <li>
+                Do not misuse, scrape, or export member contact information for unauthorized personal,
+                commercial, or promotional solicitations.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  Do not attempt to disrupt or tamper with the platform&apos;s infrastructure or security controls.
-                </span>
+              <li>
+                Do not attempt to compromise the security, integrity, or accessibility of OrgKit services.
               </li>
             </ul>
           </div>
 
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#18181B] mb-3">
-              Service changes & termination
+          {/* Section: Service terms */}
+          <div style={{ marginBottom: 32 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "#18181B",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
+              Service availability & updates
             </h2>
-            <ul className="space-y-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#3F3F46]">
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  We continuously improve OrgKit features. While we aim for maximum availability, occasional
-                  maintenance or updates may take place.
-                </span>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "#3F3F46",
+              }}
+            >
+              <li>
+                We continuously improve OrgKit features. Occasional maintenance or feature rollouts may occur.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  We reserve the right to suspend or terminate accounts that violate these terms or compromise
-                  the safety of the student community.
-                </span>
+              <li>
+                We reserve the right to suspend or restrict accounts that violate these terms or compromise
+                campus community standards.
               </li>
             </ul>
           </div>
 
-          <div className="pt-6 border-t border-[#E4E4E7] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#71717A]">
+          {/* Card Footer */}
+          <div
+            style={{
+              paddingTop: 20,
+              borderTop: "1px solid #E4E4E7",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              fontSize: 13,
+              color: "#71717A",
+            }}
+          >
             <span>© {new Date().getFullYear()} OrgKit. All rights reserved.</span>
-            <div className="flex items-center gap-4">
-              <Link href="/privacy" className="hover:text-[#18181B] hover:underline">
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <Link
+                href="/privacy"
+                style={{ color: "#71717A", textDecoration: "none" }}
+              >
                 Privacy Policy
               </Link>
               <span>•</span>
-              <Link href="/signin" className="hover:text-[#18181B] hover:underline">
+              <Link
+                href="/signin"
+                style={{ color: "#059669", fontWeight: 600, textDecoration: "none" }}
+              >
                 Sign in
               </Link>
             </div>

@@ -1,151 +1,263 @@
 import Link from "next/link";
 import Image from "next/image";
+import { Plus_Jakarta_Sans } from "next/font/google";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
 
 export default function PrivacyPage() {
   return (
-    <main className="min-h-screen bg-[#F4F4F5] text-[#18181B] py-12 px-4 sm:px-6">
-      <div className="max-w-3xl mx-auto">
-        {/* Navigation / Header Brand */}
-        <div className="flex items-center justify-between mb-8">
-          <Link href="/signin" className="flex items-center group">
+    <main
+      className={plusJakarta.className}
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#F4F4F5",
+        color: "#18181B",
+        padding: "clamp(24px, 5vh, 48px) clamp(16px, 3vw, 24px)",
+      }}
+    >
+      <div style={{ maxWidth: 820, margin: "0 auto" }}>
+        {/* Top Header / Navigation */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: "clamp(20px, 3.5vh, 32px)",
+          }}
+        >
+          <Link href="/signin" style={{ display: "inline-flex", textDecoration: "none" }}>
             <Image
               src="/orgkit-text-logo.png"
               alt="OrgKit"
-              width={135}
-              height={45}
+              width={140}
+              height={46}
               priority
-              className="h-8 w-auto object-contain select-none transition-opacity group-hover:opacity-85"
+              style={{ height: 32, width: "auto", display: "block" }}
             />
           </Link>
           <Link
             href="/signin"
-            className="text-sm font-semibold text-[#059669] hover:underline"
+            style={{
+              fontSize: 14,
+              fontWeight: 600,
+              color: "#059669",
+              textDecoration: "none",
+            }}
           >
             ← Back to Sign in
           </Link>
         </div>
 
-        {/* Page Title & Date outside the card */}
-        <div className="mb-6">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-[#18181B]">
+        {/* Page Title & Last Updated (Outside Card, matching reference) */}
+        <div style={{ marginBottom: "clamp(20px, 3.5vh, 28px)" }}>
+          <h1
+            style={{
+              fontSize: "clamp(28px, 3.2vw, 40px)",
+              fontWeight: 800,
+              letterSpacing: "-0.02em",
+              color: "#18181B",
+              margin: 0,
+              lineHeight: 1.15,
+            }}
+          >
             Privacy Policy
           </h1>
-          <p className="mt-2 text-sm text-[#71717A]">
+          <p
+            style={{
+              marginTop: 8,
+              fontSize: 14,
+              color: "#71717A",
+              marginBottom: 0,
+            }}
+          >
             Last updated: November 1, 2026
           </p>
         </div>
 
-        {/* Content Card */}
-        <div className="bg-white rounded-2xl sm:rounded-3xl border border-[#E4E4E7] p-8 sm:p-12 shadow-sm space-y-6">
-          <p className="text-[15px] sm:text-base leading-relaxed text-[#3F3F46]">
+        {/* Clean Content Card */}
+        <div
+          style={{
+            backgroundColor: "#FFFFFF",
+            borderRadius: 24,
+            border: "1px solid #E4E4E7",
+            boxShadow: "0 10px 40px -10px rgba(24, 24, 27, 0.08), 0 1px 3px rgba(24, 24, 27, 0.04)",
+            padding: "clamp(24px, 4.5vw, 48px)",
+            boxSizing: "border-box",
+          }}
+        >
+          {/* Intro text */}
+          <p
+            style={{
+              fontSize: "clamp(14.5px, 1.1vw, 16px)",
+              lineHeight: 1.65,
+              color: "#3F3F46",
+              marginTop: 0,
+              marginBottom: 28,
+            }}
+          >
             OrgKit is a modern management platform for student organizations to connect,
             manage, and grow together. This policy applies to our website and application.
           </p>
 
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#18181B] mb-3">
+          {/* Section: What we collect */}
+          <div style={{ marginBottom: 28 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "#18181B",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
               What we collect
             </h2>
-            <ul className="space-y-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#3F3F46]">
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">Account data.</strong>{" "}
-                  Google sign-in provides your name, email address, and permanent Google account
-                  identifier (<code className="text-xs bg-[#F4F4F5] px-1.5 py-0.5 rounded text-[#18181B]">google_sub</code>).
-                  Google may also provide your profile photo. We never receive your Google password.
-                </span>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "#3F3F46",
+              }}
+            >
+              <li>
+                <strong style={{ color: "#18181B" }}>Account data.</strong> Google sign-in provides
+                your name, email address, and permanent Google account identifier (<code>google_sub</code>).
+                Google may also provide your profile photo. We never receive your Google account password.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">Organizational data.</strong>{" "}
-                  Student organization rosters, assigned officer positions, events, and campus activities
-                  are stored within your organization&apos;s workspace.
-                </span>
+              <li>
+                <strong style={{ color: "#18181B" }}>Organizational data.</strong> Student organization
+                rosters, officer roles, event schedules, and activity records are securely stored within
+                your organization&apos;s workspace and accessible only to authorized officers.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">Minimal permissions.</strong>{" "}
-                  OrgKit requests only the minimal <code className="text-xs bg-[#F4F4F5] px-1.5 py-0.5 rounded text-[#18181B]">openid</code>,{" "}
-                  <code className="text-xs bg-[#F4F4F5] px-1.5 py-0.5 rounded text-[#18181B]">email</code>, and{" "}
-                  <code className="text-xs bg-[#F4F4F5] px-1.5 py-0.5 rounded text-[#18181B]">profile</code> scopes.
-                  We never request or access your Gmail, Google Drive, or Google Sheets.
-                </span>
+              <li>
+                <strong style={{ color: "#18181B" }}>Minimal permissions.</strong> OrgKit requests
+                only the minimal <code>openid</code>, <code>email</code>, and <code>profile</code> scopes.
+                We never request or access your Gmail, Google Drive, or Google Sheets.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">Safety & audit logs.</strong>{" "}
-                  Sign-in records and consent agreement timestamps are recorded to verify officer identities
-                  and protect student organizational data from unauthorized access.
-                </span>
+              <li>
+                <strong style={{ color: "#18181B" }}>Security & audit records.</strong> Sign-in
+                timestamps and agreement logs are recorded to verify officer access and ensure accountability
+                across organizational operations.
               </li>
             </ul>
           </div>
 
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#18181B] mb-3">
+          {/* Section: How we use your data */}
+          <div style={{ marginBottom: 28 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "#18181B",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
               How we use your information
             </h2>
-            <ul className="space-y-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#3F3F46]">
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">Authentication & session management.</strong>{" "}
-                  We match your sign-in to your officer account using Google&apos;s permanent account identifier,
-                  ensuring your access is preserved even if your university email changes.
-                </span>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "#3F3F46",
+              }}
+            >
+              <li>
+                <strong style={{ color: "#18181B" }}>Officer authentication.</strong> We use your Google
+                account ID to authenticate your session, ensuring that account access remains uninterrupted
+                even if your institutional email changes.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">Team collaboration.</strong>{" "}
-                  Your name and contact email are visible only to fellow officers and authorized members
-                  of your own student organization.
-                </span>
+              <li>
+                <strong style={{ color: "#18181B" }}>Organization management.</strong> Your name and email
+                allow fellow student leaders to coordinate events, assign tasks, and manage organization
+                affairs effectively.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  <strong className="font-semibold text-[#18181B]">No data selling.</strong>{" "}
-                  We do not sell, rent, or monetize your personal or organization information.
-                </span>
+              <li>
+                <strong style={{ color: "#18181B" }}>No data sale.</strong> We do not sell, rent, or monetize
+                student personal information or organization data to third parties.
               </li>
             </ul>
           </div>
 
-          <div>
-            <h2 className="text-base sm:text-lg font-bold text-[#18181B] mb-3">
-              Your rights & control
+          {/* Section: Your rights */}
+          <div style={{ marginBottom: 32 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "#18181B",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
+              Your control & choices
             </h2>
-            <ul className="space-y-3 text-[14.5px] sm:text-[15px] leading-relaxed text-[#3F3F46]">
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  You can revoke OrgKit&apos;s access to your Google account at any time through your Google
-                  Security settings.
-                </span>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "#3F3F46",
+              }}
+            >
+              <li>
+                You can revoke OrgKit&apos;s connection at any time in your Google Account security settings.
               </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#18181B] font-bold select-none">•</span>
-                <span>
-                  You may request deletion of your officer profile and records by contacting your organization
-                  lead administrator.
-                </span>
+              <li>
+                You can request deletion of your officer record through your student organization administrator
+                or by contacting OrgKit support.
               </li>
             </ul>
           </div>
 
-          <div className="pt-6 border-t border-[#E4E4E7] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#71717A]">
+          {/* Card Footer */}
+          <div
+            style={{
+              paddingTop: 20,
+              borderTop: "1px solid #E4E4E7",
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              fontSize: 13,
+              color: "#71717A",
+            }}
+          >
             <span>© {new Date().getFullYear()} OrgKit. All rights reserved.</span>
-            <div className="flex items-center gap-4">
-              <Link href="/terms" className="hover:text-[#18181B] hover:underline">
+            <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+              <Link
+                href="/terms"
+                style={{ color: "#71717A", textDecoration: "none" }}
+              >
                 Terms of Service
               </Link>
               <span>•</span>
-              <Link href="/signin" className="hover:text-[#18181B] hover:underline">
+              <Link
+                href="/signin"
+                style={{ color: "#059669", fontWeight: 600, textDecoration: "none" }}
+              >
                 Sign in
               </Link>
             </div>
