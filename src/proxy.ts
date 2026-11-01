@@ -62,14 +62,31 @@ export async function proxy(request: NextRequest) {
     return redirectTo("/signin?error=session_expired");
   }
 
-  // Already authenticated: redirect away from entry/auth pages to workspace
-  if (
-    user &&
-    (request.nextUrl.pathname === "/" ||
+  // If user is authenticated, enforce 1 officer -> 1 org policy
+  if (user) {
+    const isEntryOrWorkspace =
+      request.nextUrl.pathname === "/" ||
       request.nextUrl.pathname === "/signin" ||
-      request.nextUrl.pathname === "/register")
-  ) {
-    return redirectTo("/workspace");
+      request.nextUrl.pathname === "/register" ||
+      request.nextUrl.pathname === "/workspace";
+
+    if (isEntryOrWorkspace) {
+      const { data: membership } = await supabase
+        .from("org_officers")
+        .select("org_id")
+        .eq("officer_id", user.id)
+        .order("joined_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (membership?.org_id) {
+        return redirectTo(`/workspace/${membership.org_id}`);
+      }
+
+      if (request.nextUrl.pathname !== "/workspace") {
+        return redirectTo("/workspace");
+      }
+    }
   }
 
   if (!user && !isPublic(request.nextUrl.pathname)) {

@@ -317,7 +317,7 @@ function WorkspaceDetailContent() {
             }}
           >
             <Link
-              href="/workspace"
+              href={`/workspace/${rawId}`}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
