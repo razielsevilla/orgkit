@@ -3,8 +3,6 @@ import { connection } from "next/server";
 import { requireOfficer } from "@/src/lib/officer";
 import { WorkspaceView } from "./workspace-view";
 
-export const dynamic = "force-dynamic";
-
 export default function WorkspacePage() {
   return (
     <Suspense
