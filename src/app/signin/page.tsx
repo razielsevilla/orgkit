@@ -15,7 +15,7 @@ const plusJakarta = Plus_Jakarta_Sans({
 });
 
 /* ── Google "G" multicolor official logo (inline SVG, 24×24 viewBox) ── */
-function GoogleLogo({ size = 26 }: { size?: number }) {
+function GoogleLogo({ size = 36 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -248,11 +248,11 @@ function SignInContent() {
           transition: box-shadow 0.25s ease, border-color 0.25s ease;
         }
 
-        .orgkit-signin-btn {
+        .orgkit-google-btn {
           width: 100%;
-          border-radius: 16px;
-          background-color: #F4F4F5;
-          border: 1px solid rgba(228, 228, 231, 0.8);
+          border-radius: 9999px;
+          background-color: #FFFFFF;
+          border: 2px solid #E4E4E7;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -261,25 +261,27 @@ function SignInContent() {
           outline: none;
           box-sizing: border-box;
           user-select: none;
+          box-shadow: 0 1px 3px rgba(24, 24, 27, 0.04);
         }
 
-        .orgkit-signin-btn:hover:not(:disabled) {
-          background-color: #E4E4E7;
+        .orgkit-google-btn:hover:not(:disabled) {
+          background-color: #FAFAFA;
           border-color: #D4D4D8;
-          box-shadow: 0 4px 14px rgba(24, 24, 27, 0.06);
+          box-shadow: 0 6px 18px rgba(24, 24, 27, 0.08);
           transform: translateY(-1px);
         }
 
-        .orgkit-signin-btn:active:not(:disabled) {
+        .orgkit-google-btn:active:not(:disabled) {
           transform: translateY(0.5px) scale(0.995);
-          background-color: #D4D4D8;
+          box-shadow: 0 1px 2px rgba(24, 24, 27, 0.05);
+          background-color: #F4F4F5;
         }
 
-        .orgkit-signin-btn:focus-visible {
+        .orgkit-google-btn:focus-visible {
           box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #059669;
         }
 
-        .orgkit-signin-btn:disabled {
+        .orgkit-google-btn:disabled {
           opacity: 0.75;
           cursor: not-allowed;
           transform: none !important;
@@ -353,8 +355,8 @@ function SignInContent() {
             transition-duration: 0.01ms !important;
             scroll-behavior: auto !important;
           }
-          .orgkit-signin-btn:hover,
-          .orgkit-signin-btn:active,
+          .orgkit-google-btn:hover,
+          .orgkit-google-btn:active,
           .orgkit-feature-item:hover {
             transform: none !important;
           }
@@ -751,44 +753,65 @@ function SignInContent() {
               maxWidth: 566,
               backgroundColor: "#FFFFFF",
               borderRadius: "clamp(20px, 1.67vw, 28px)",
-              padding: "clamp(32px, 4.8vh, 48px) clamp(32px, 3.2vw, 48px)",
+              padding: "clamp(24px, 4.25vh, 40px) clamp(24px, 2.69vw, 45px)",
               boxShadow: "0 20px 50px rgba(24, 24, 27, 0.08)",
               border: "1px solid rgba(228, 228, 231, 0.6)",
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
-              textAlign: "left",
+              alignItems: "center",
+              textAlign: "center",
               boxSizing: "border-box",
             }}
           >
-            {/* 1. H2 "Welcome back" (Bold, tight tracking, left-aligned) */}
+            {/* 1. OrgKit Logo at the center top (without text "OrgKit") */}
+            <Image
+              src="/orgkit-logo.png"
+              alt="OrgKit Logo"
+              width={92}
+              height={58}
+              priority
+              draggable={false}
+              className="object-contain select-none"
+              style={{
+                width: "clamp(64px, 5.5vw, 92px)",
+                height: "auto",
+                display: "block",
+              }}
+            />
+
+            {/* 2. H2 "Welcome back" (Centered, 22px below logo) */}
             <h2
               style={{
-                margin: 0,
-                fontSize: "clamp(32px, 2.7vw, 44px)",
-                fontWeight: 800,
+                marginTop: "clamp(12px, 2.34vh, 22px)",
+                fontSize: "clamp(26px, 2.39vw, 40px)",
+                fontWeight: 700,
                 color: "#18181B",
                 lineHeight: 1.15,
-                letterSpacing: "-0.025em",
+                letterSpacing: "-0.015em",
+                marginBottom: 0,
+                whiteSpace: "nowrap",
               }}
             >
               Welcome back
             </h2>
 
-            {/* 2. Subtitle: exact text from reference */}
+            {/* 3. Subtitle (Centered, 16px below H2) */}
             <p
               style={{
-                marginTop: "clamp(12px, 1.8vh, 18px)",
-                fontSize: "clamp(14.5px, 1.1vw, 17.5px)",
-                lineHeight: 1.45,
-                color: "#52525B",
+                marginTop: "clamp(10px, 1.7vh, 16px)",
+                fontSize: "clamp(14px, 1.26vw, 21px)",
+                lineHeight: 1.38,
+                color: "#71717A",
+                maxWidth: 440,
                 marginBottom: 0,
                 fontWeight: 400,
               }}
             >
-              Sign in with Google to publish apps, upvote, and
+              <span style={{ whiteSpace: "nowrap" }}>
+                Sign in with Google to access your organizations,
+              </span>
               <br />
-              discover Filipino makers.
+              <span>events, and campus community.</span>
             </p>
 
             {/* Error Message banner from Ticket A1 */}
@@ -797,7 +820,7 @@ function SignInContent() {
                 role="alert"
                 style={{
                   width: "100%",
-                  marginTop: "clamp(14px, 2.2vh, 20px)",
+                  marginTop: "clamp(12px, 2vh, 20px)",
                   padding: "10px 16px",
                   borderRadius: 14,
                   backgroundColor: "#FEF2F2",
@@ -805,7 +828,7 @@ function SignInContent() {
                   color: "#991B1B",
                   fontSize: "clamp(12.5px, 0.92vw, 14.5px)",
                   lineHeight: 1.45,
-                  textAlign: "left",
+                  textAlign: "center",
                   fontWeight: 500,
                   boxSizing: "border-box",
                 }}
@@ -814,30 +837,30 @@ function SignInContent() {
               </div>
             )}
 
-            {/* 3. Button: "Continue with Google" */}
+            {/* 4. Google Sign-in Button: "Continue with Google" */}
             <div
               style={{
                 width: "100%",
-                marginTop: activeError ? "clamp(14px, 2.5vh, 22px)" : "clamp(24px, 3.8vh, 36px)",
+                marginTop: activeError ? "clamp(12px, 2.5vh, 22px)" : "clamp(20px, 4.25vh, 40px)",
               }}
             >
               <button
                 type="button"
                 disabled={loading}
                 onClick={handleGoogleSignIn}
-                className="orgkit-signin-btn"
+                className="orgkit-google-btn"
                 aria-busy={loading}
                 title={loading ? "Connecting to Google..." : "Continue with Google"}
                 style={{
-                  height: "clamp(52px, 6.8vh, 64px)",
-                  gap: "clamp(10px, 0.8vw, 14px)",
+                  height: "clamp(52px, 7.65vh, 72px)",
+                  gap: "clamp(10px, 0.84vw, 14px)",
                 }}
               >
                 {loading ? (
                   <svg
                     className="orgkit-spinner"
-                    width={24}
-                    height={24}
+                    width={26}
+                    height={26}
                     viewBox="0 0 24 24"
                     fill="none"
                     xmlns="http://www.w3.org/2000/svg"
@@ -856,12 +879,12 @@ function SignInContent() {
                     />
                   </svg>
                 ) : (
-                  <GoogleLogo size={28} />
+                  <GoogleLogo size={36} />
                 )}
                 <span
                   style={{
-                    fontSize: "clamp(15.5px, 1.15vw, 18px)",
-                    fontWeight: 600,
+                    fontSize: "clamp(17px, 1.44vw, 24px)",
+                    fontWeight: 500,
                     color: "#18181B",
                   }}
                 >
@@ -873,15 +896,14 @@ function SignInContent() {
               </div>
             </div>
 
-            {/* 4. Footer Copy: Terms + Automatic account creation */}
+            {/* 5. Terms & Automatic account info */}
             <div
               style={{
-                marginTop: "clamp(22px, 3.4vh, 32px)",
+                marginTop: "clamp(24px, 3.8vh, 36px)",
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "flex-start",
+                alignItems: "center",
                 gap: "clamp(12px, 1.8vh, 18px)",
-                width: "100%",
               }}
             >
               <p
@@ -891,9 +913,10 @@ function SignInContent() {
                   color: "#52525B",
                   margin: 0,
                   fontWeight: 400,
+                  whiteSpace: "nowrap",
                 }}
               >
-                By continuing you agree to our{" "}
+                By continuing, you agree to our{" "}
                 <Link
                   href="/terms"
                   className="orgkit-terms-link"
@@ -921,6 +944,7 @@ function SignInContent() {
                   fontWeight: 400,
                 }}
               >
+                New to OrgKit?{" "}
                 <Link
                   href="/register"
                   style={{
@@ -929,7 +953,7 @@ function SignInContent() {
                   }}
                   className="hover:text-[#18181B] transition-colors"
                 >
-                  New here? Continuing with Google creates your
+                  Continuing with Google creates your
                   <br />
                   account automatically.
                 </Link>
@@ -984,27 +1008,39 @@ function SignInContent() {
         <div
           style={{
             width: "100%",
-            maxWidth: 420,
+            maxWidth: 400,
             backgroundColor: "#FFFFFF",
             borderRadius: 24,
-            padding: "32px 24px",
+            padding: "32px 16px",
             boxShadow: "0 20px 50px rgba(24, 24, 27, 0.08)",
             border: "1px solid rgba(228, 228, 231, 0.6)",
             display: "flex",
             flexDirection: "column",
-            alignItems: "flex-start",
-            textAlign: "left",
+            alignItems: "center",
+            textAlign: "center",
             boxSizing: "border-box",
           }}
         >
+          {/* OrgKit Logo at the center top (without text "OrgKit") */}
+          <Image
+            src="/orgkit-logo.png"
+            alt="OrgKit"
+            width={68}
+            height={44}
+            draggable={false}
+            className="object-contain select-none"
+            style={{ width: 68, height: "auto" }}
+          />
+
           <h2
             style={{
-              margin: 0,
-              fontSize: "clamp(26px, 7vw, 32px)",
-              fontWeight: 800,
+              marginTop: 18,
+              fontSize: "clamp(20px, 6vw, 26px)",
+              fontWeight: 700,
               color: "#18181B",
               lineHeight: 1.2,
-              letterSpacing: "-0.02em",
+              letterSpacing: "-0.015em",
+              marginBottom: 0,
             }}
           >
             Welcome back
@@ -1013,13 +1049,14 @@ function SignInContent() {
           <p
             style={{
               marginTop: 12,
-              fontSize: "clamp(13.5px, 3.8vw, 15px)",
-              lineHeight: 1.45,
-              color: "#52525B",
+              fontSize: "clamp(13px, 3.6vw, 15px)",
+              lineHeight: "22px",
+              color: "#71717A",
+              maxWidth: 290,
               marginBottom: 0,
             }}
           >
-            Sign in with Google to publish apps, upvote, and discover Filipino makers.
+            Sign in with Google to access your organizations, events, and campus community.
           </p>
 
           {activeError && (
@@ -1035,7 +1072,7 @@ function SignInContent() {
                 color: "#991B1B",
                 fontSize: 13,
                 lineHeight: 1.4,
-                textAlign: "left",
+                textAlign: "center",
                 fontWeight: 500,
                 boxSizing: "border-box",
               }}
@@ -1049,7 +1086,7 @@ function SignInContent() {
               type="button"
               disabled={loading}
               onClick={handleGoogleSignIn}
-              className="orgkit-signin-btn"
+              className="orgkit-google-btn"
               aria-busy={loading}
               title={loading ? "Connecting to Google..." : "Continue with Google"}
               style={{
@@ -1082,12 +1119,12 @@ function SignInContent() {
                   />
                 </svg>
               ) : (
-                <GoogleLogo size={24} />
+                <GoogleLogo size={28} />
               )}
               <span
                 style={{
-                  fontSize: "clamp(15px, 4vw, 17px)",
-                  fontWeight: 600,
+                  fontSize: "clamp(14px, 4vw, 17px)",
+                  fontWeight: 500,
                   color: "#18181B",
                 }}
               >
@@ -1101,9 +1138,8 @@ function SignInContent() {
               marginTop: 22,
               display: "flex",
               flexDirection: "column",
-              alignItems: "flex-start",
+              alignItems: "center",
               gap: 12,
-              width: "100%",
             }}
           >
             <p
@@ -1115,7 +1151,7 @@ function SignInContent() {
                 fontWeight: 400,
               }}
             >
-              By continuing you agree to our{" "}
+              By continuing, you agree to our{" "}
               <Link
                 href="/terms"
                 className="orgkit-terms-link"
@@ -1143,6 +1179,7 @@ function SignInContent() {
                 fontWeight: 400,
               }}
             >
+              New to OrgKit?{" "}
               <Link
                 href="/register"
                 style={{
@@ -1150,7 +1187,7 @@ function SignInContent() {
                   textDecoration: "none",
                 }}
               >
-                New here? Continuing with Google creates your account automatically.
+                Continuing with Google creates your account automatically.
               </Link>
             </p>
           </div>
@@ -1167,4 +1204,3 @@ export default function SignInPage() {
     </Suspense>
   );
 }
-
