@@ -187,89 +187,89 @@ export default function WorkspacePage() {
           }
         }
 
-        /* ── Floating Icons Burst Outward from Center/Button ── */
+        /* ── Floating Icons Burst Outward from Center/Button with Natural Tilt ── */
         @keyframes burstTL {
           0% {
             opacity: 0;
-            transform: translate(140px, 220px) scale(0.2);
+            transform: translate(160px, 240px) scale(0.2) rotate(0deg);
           }
           65% {
             opacity: 1;
-            transform: translate(-5px, -6px) scale(1.08);
+            transform: translate(-5px, -6px) scale(1.08) rotate(-8.5deg);
           }
           100% {
             opacity: 1;
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(-7deg);
           }
         }
         @keyframes burstFL {
           0% {
             opacity: 0;
-            transform: translate(200px, 30px) scale(0.2);
+            transform: translate(220px, 30px) scale(0.2) rotate(0deg);
           }
           65% {
             opacity: 1;
-            transform: translate(-6px, 0px) scale(1.08);
+            transform: translate(-6px, 0px) scale(1.08) rotate(-6deg);
           }
           100% {
             opacity: 1;
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(-5deg);
           }
         }
         @keyframes burstBL {
           0% {
             opacity: 0;
-            transform: translate(130px, -80px) scale(0.2);
+            transform: translate(150px, -90px) scale(0.2) rotate(0deg);
           }
           65% {
             opacity: 1;
-            transform: translate(-5px, 4px) scale(1.08);
+            transform: translate(-5px, 4px) scale(1.08) rotate(8.5deg);
           }
           100% {
             opacity: 1;
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(7deg);
           }
         }
         @keyframes burstTR {
           0% {
             opacity: 0;
-            transform: translate(-140px, 220px) scale(0.2);
+            transform: translate(-150px, 240px) scale(0.2) rotate(0deg);
           }
           65% {
             opacity: 1;
-            transform: translate(5px, -6px) scale(1.08);
+            transform: translate(5px, -6px) scale(1.08) rotate(8.5deg);
           }
           100% {
             opacity: 1;
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(7deg);
           }
         }
         @keyframes burstFR {
           0% {
             opacity: 0;
-            transform: translate(-190px, 20px) scale(0.2);
+            transform: translate(-210px, 20px) scale(0.2) rotate(0deg);
           }
           65% {
             opacity: 1;
-            transform: translate(6px, 0px) scale(1.08);
+            transform: translate(6px, 0px) scale(1.08) rotate(6deg);
           }
           100% {
             opacity: 1;
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(5deg);
           }
         }
         @keyframes burstBR {
           0% {
             opacity: 0;
-            transform: translate(-130px, -80px) scale(0.2);
+            transform: translate(-150px, -90px) scale(0.2) rotate(0deg);
           }
           65% {
             opacity: 1;
-            transform: translate(5px, 4px) scale(1.08);
+            transform: translate(5px, 4px) scale(1.08) rotate(-7.5deg);
           }
           100% {
             opacity: 1;
-            transform: translate(0, 0) scale(1);
+            transform: translate(0, 0) scale(1) rotate(-6deg);
           }
         }
         @keyframes burstDot {
@@ -672,7 +672,7 @@ export default function WorkspacePage() {
                 transition: "all 0.15s ease",
               }}
             >
-              Go to my workspace
+              Create your Workspace
             </button>
           </div>
         ) : (
@@ -689,14 +689,14 @@ export default function WorkspacePage() {
               animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
             }}
           >
-            {/* ── Floating Icons Decor (Burst outward with popout animation) ── */}
-            {/* 1. Top-Left: Users (White Card) */}
+            {/* ── Floating Icons Decor (Burst outward with popout animation, natural spacing & tilt) ── */}
+            {/* 1. Top-Left: Users (White Card, -7deg tilt) */}
             <div
               className="orgkit-floating-decor orgkit-burst-tl"
               style={{
                 position: "absolute",
-                top: -34,
-                left: -80,
+                top: -46,
+                left: -100,
                 zIndex: 20,
               }}
             >
@@ -718,13 +718,13 @@ export default function WorkspacePage() {
               </div>
             </div>
 
-            {/* 2. Far-Left: Calendar (Mint Card) */}
+            {/* 2. Far-Left: Calendar (Mint Card, -5deg tilt) */}
             <div
               className="orgkit-floating-decor orgkit-burst-fl"
               style={{
                 position: "absolute",
-                top: 175,
-                left: -142,
+                top: 170,
+                left: -168,
                 zIndex: 20,
               }}
             >
@@ -745,13 +745,13 @@ export default function WorkspacePage() {
               </div>
             </div>
 
-            {/* 3. Bottom-Left: Wallet (White Card) */}
+            {/* 3. Bottom-Left: Wallet (White Card, +7deg tilt) */}
             <div
               className="orgkit-floating-decor orgkit-burst-bl"
               style={{
                 position: "absolute",
                 bottom: 42,
-                left: -75,
+                left: -100,
                 zIndex: 20,
               }}
             >
@@ -773,13 +773,13 @@ export default function WorkspacePage() {
               </div>
             </div>
 
-            {/* 4. Top-Right: QR Code (Emerald Solid Card) */}
+            {/* 4. Top-Right: QR Code (Emerald Solid Card, +7deg tilt) */}
             <div
               className="orgkit-floating-decor orgkit-burst-tr"
               style={{
                 position: "absolute",
-                top: -26,
-                right: -72,
+                top: -40,
+                right: -96,
                 zIndex: 20,
               }}
             >
@@ -800,13 +800,13 @@ export default function WorkspacePage() {
               </div>
             </div>
 
-            {/* 5. Far-Right: Archive Box (White Card) */}
+            {/* 5. Far-Right: Archive Box (White Card, +5deg tilt) */}
             <div
               className="orgkit-floating-decor orgkit-burst-fr"
               style={{
                 position: "absolute",
-                top: 185,
-                right: -134,
+                top: 175,
+                right: -158,
                 zIndex: 20,
               }}
             >
@@ -828,13 +828,13 @@ export default function WorkspacePage() {
               </div>
             </div>
 
-            {/* 6. Bottom-Right: Clipboard Check (Mint Card) */}
+            {/* 6. Bottom-Right: Clipboard Check (Mint Card, -6deg tilt) */}
             <div
               className="orgkit-floating-decor orgkit-burst-br"
               style={{
                 position: "absolute",
-                bottom: 35,
-                right: -72,
+                bottom: 38,
+                right: -96,
                 zIndex: 20,
               }}
             >
@@ -860,8 +860,8 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                left: -46,
-                top: 115,
+                left: -54,
+                top: 110,
                 width: 5.5,
                 height: 5.5,
                 borderRadius: "50%",
@@ -872,8 +872,8 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                left: -110,
-                bottom: 105,
+                left: -130,
+                bottom: 95,
                 width: 5,
                 height: 5,
                 borderRadius: "50%",
@@ -884,8 +884,8 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                right: -32,
-                top: 135,
+                right: -38,
+                top: 125,
                 width: 5.5,
                 height: 5.5,
                 borderRadius: "50%",
@@ -896,8 +896,8 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                right: -110,
-                top: 55,
+                right: -128,
+                top: 48,
                 width: 5,
                 height: 5,
                 borderRadius: "50%",
@@ -1073,7 +1073,7 @@ export default function WorkspacePage() {
                     transition: "all 0.15s ease",
                   }}
                 >
-                  {isSubmitting ? "Creating…" : "Create workspace"}
+                  {isSubmitting ? "Creating…" : "Create Workspace"}
                 </button>
               </form>
             </div>
