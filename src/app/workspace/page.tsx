@@ -191,7 +191,7 @@ export default function WorkspacePage() {
         @keyframes burstTL {
           0% {
             opacity: 0;
-            transform: translate(120px, 190px) scale(0.2);
+            transform: translate(140px, 220px) scale(0.2);
           }
           65% {
             opacity: 1;
@@ -205,7 +205,7 @@ export default function WorkspacePage() {
         @keyframes burstFL {
           0% {
             opacity: 0;
-            transform: translate(180px, 30px) scale(0.2);
+            transform: translate(200px, 30px) scale(0.2);
           }
           65% {
             opacity: 1;
@@ -219,7 +219,7 @@ export default function WorkspacePage() {
         @keyframes burstBL {
           0% {
             opacity: 0;
-            transform: translate(110px, -70px) scale(0.2);
+            transform: translate(130px, -80px) scale(0.2);
           }
           65% {
             opacity: 1;
@@ -233,7 +233,7 @@ export default function WorkspacePage() {
         @keyframes burstTR {
           0% {
             opacity: 0;
-            transform: translate(-120px, 190px) scale(0.2);
+            transform: translate(-140px, 220px) scale(0.2);
           }
           65% {
             opacity: 1;
@@ -247,7 +247,7 @@ export default function WorkspacePage() {
         @keyframes burstFR {
           0% {
             opacity: 0;
-            transform: translate(-170px, 20px) scale(0.2);
+            transform: translate(-190px, 20px) scale(0.2);
           }
           65% {
             opacity: 1;
@@ -261,7 +261,7 @@ export default function WorkspacePage() {
         @keyframes burstBR {
           0% {
             opacity: 0;
-            transform: translate(-110px, -70px) scale(0.2);
+            transform: translate(-130px, -80px) scale(0.2);
           }
           65% {
             opacity: 1;
@@ -581,7 +581,7 @@ export default function WorkspacePage() {
             style={{
               display: "flex",
               width: "100%",
-              maxWidth: 320,
+              maxWidth: 360,
               flexDirection: "column",
               alignItems: "center",
               textAlign: "center",
@@ -590,10 +590,10 @@ export default function WorkspacePage() {
             {/* Circular Document Search Badge */}
             <div
               style={{
-                marginBottom: 16,
+                marginBottom: 20,
                 display: "flex",
-                width: 52,
-                height: 52,
+                width: 66,
+                height: 66,
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: "50%",
@@ -602,8 +602,8 @@ export default function WorkspacePage() {
             >
               <svg
                 style={{
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   display: "block",
                   color: "#059669",
                 }}
@@ -624,11 +624,11 @@ export default function WorkspacePage() {
             {/* Heading */}
             <h1
               style={{
-                fontSize: 25,
+                fontSize: 30,
                 fontWeight: 800,
                 letterSpacing: "-0.025em",
                 color: "#18181B",
-                margin: "0 0 6px 0",
+                margin: "0 0 8px 0",
                 lineHeight: 1.15,
               }}
             >
@@ -638,12 +638,12 @@ export default function WorkspacePage() {
             {/* Subtitle */}
             <p
               style={{
-                fontSize: 13,
+                fontSize: 14.5,
                 fontWeight: 400,
                 lineHeight: 1.45,
                 color: "#71717A",
-                margin: "0 0 20px 0",
-                maxWidth: 270,
+                margin: "0 0 24px 0",
+                maxWidth: 310,
               }}
             >
               It may not exist, or you may not have access to it.
@@ -656,13 +656,13 @@ export default function WorkspacePage() {
               className="orgkit-workspace-btn"
               style={{
                 display: "inline-flex",
-                height: 40,
+                height: 46,
                 alignItems: "center",
                 justifyContent: "center",
                 borderRadius: 9999,
                 backgroundColor: "#059669",
-                padding: "0 24px",
-                fontSize: 13,
+                padding: "0 28px",
+                fontSize: 14.5,
                 fontWeight: 600,
                 letterSpacing: "0.01em",
                 color: "#FFFFFF",
@@ -684,7 +684,7 @@ export default function WorkspacePage() {
             style={{
               position: "relative",
               width: "100%",
-              maxWidth: 380,
+              maxWidth: 450,
               boxSizing: "border-box",
               animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
             }}
@@ -695,17 +695,17 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-tl"
               style={{
                 position: "absolute",
-                top: -30,
-                left: -70,
+                top: -34,
+                left: -80,
                 zIndex: 20,
               }}
             >
               <div
                 className="orgkit-float-a"
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 16,
                   backgroundColor: "#FFFFFF",
                   border: "1px solid rgba(228, 228, 231, 0.8)",
                   boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
@@ -714,7 +714,7 @@ export default function WorkspacePage() {
                   justifyContent: "center",
                 }}
               >
-                <Users size={20} color="#059669" strokeWidth={2} />
+                <Users size={22} color="#059669" strokeWidth={2} />
               </div>
             </div>
 
@@ -723,17 +723,17 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-fl"
               style={{
                 position: "absolute",
-                top: 155,
-                left: -128,
+                top: 175,
+                left: -142,
                 zIndex: 20,
               }}
             >
               <div
                 className="orgkit-float-b"
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 13,
+                  width: 46,
+                  height: 46,
+                  borderRadius: 15,
                   backgroundColor: "rgba(5, 150, 105, 0.12)",
                   boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
                   display: "flex",
@@ -741,7 +741,7 @@ export default function WorkspacePage() {
                   justifyContent: "center",
                 }}
               >
-                <Calendar size={18} color="#059669" strokeWidth={2} />
+                <Calendar size={20} color="#059669" strokeWidth={2} />
               </div>
             </div>
 
@@ -750,17 +750,17 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-bl"
               style={{
                 position: "absolute",
-                bottom: 38,
-                left: -66,
+                bottom: 42,
+                left: -75,
                 zIndex: 20,
               }}
             >
               <div
                 className="orgkit-float-a"
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 16,
                   backgroundColor: "#FFFFFF",
                   border: "1px solid rgba(228, 228, 231, 0.8)",
                   boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
@@ -769,7 +769,7 @@ export default function WorkspacePage() {
                   justifyContent: "center",
                 }}
               >
-                <Wallet size={20} color="#059669" strokeWidth={2} />
+                <Wallet size={22} color="#059669" strokeWidth={2} />
               </div>
             </div>
 
@@ -778,17 +778,17 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-tr"
               style={{
                 position: "absolute",
-                top: -24,
-                right: -62,
+                top: -26,
+                right: -72,
                 zIndex: 20,
               }}
             >
               <div
                 className="orgkit-float-b"
                 style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: 14,
+                  width: 50,
+                  height: 50,
+                  borderRadius: 16,
                   backgroundColor: "#059669",
                   boxShadow: "0 10px 22px rgba(5, 150, 105, 0.35)",
                   display: "flex",
@@ -796,7 +796,7 @@ export default function WorkspacePage() {
                   justifyContent: "center",
                 }}
               >
-                <QrCode size={20} color="#FFFFFF" strokeWidth={2} />
+                <QrCode size={22} color="#FFFFFF" strokeWidth={2} />
               </div>
             </div>
 
@@ -805,17 +805,17 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-fr"
               style={{
                 position: "absolute",
-                top: 165,
-                right: -118,
+                top: 185,
+                right: -134,
                 zIndex: 20,
               }}
             >
               <div
                 className="orgkit-float-a"
                 style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 13,
+                  width: 46,
+                  height: 46,
+                  borderRadius: 15,
                   backgroundColor: "#FFFFFF",
                   border: "1px solid rgba(228, 228, 231, 0.8)",
                   boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
@@ -824,7 +824,7 @@ export default function WorkspacePage() {
                   justifyContent: "center",
                 }}
               >
-                <Archive size={18} color="#059669" strokeWidth={2} />
+                <Archive size={20} color="#059669" strokeWidth={2} />
               </div>
             </div>
 
@@ -833,17 +833,17 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-br"
               style={{
                 position: "absolute",
-                bottom: 32,
-                right: -62,
+                bottom: 35,
+                right: -72,
                 zIndex: 20,
               }}
             >
               <div
                 className="orgkit-float-b"
                 style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 13,
+                  width: 48,
+                  height: 48,
+                  borderRadius: 15,
                   backgroundColor: "rgba(5, 150, 105, 0.12)",
                   boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
                   display: "flex",
@@ -851,7 +851,7 @@ export default function WorkspacePage() {
                   justifyContent: "center",
                 }}
               >
-                <ClipboardCheck size={19} color="#059669" strokeWidth={2} />
+                <ClipboardCheck size={21} color="#059669" strokeWidth={2} />
               </div>
             </div>
 
@@ -860,10 +860,10 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                left: -40,
-                top: 105,
-                width: 5,
-                height: 5,
+                left: -46,
+                top: 115,
+                width: 5.5,
+                height: 5.5,
                 borderRadius: "50%",
                 backgroundColor: "rgba(5, 150, 105, 0.35)",
               }}
@@ -872,10 +872,10 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                left: -95,
-                bottom: 95,
-                width: 4.5,
-                height: 4.5,
+                left: -110,
+                bottom: 105,
+                width: 5,
+                height: 5,
                 borderRadius: "50%",
                 backgroundColor: "rgba(5, 150, 105, 0.25)",
               }}
@@ -884,10 +884,10 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                right: -28,
-                top: 125,
-                width: 5,
-                height: 5,
+                right: -32,
+                top: 135,
+                width: 5.5,
+                height: 5.5,
                 borderRadius: "50%",
                 backgroundColor: "rgba(5, 150, 105, 0.35)",
               }}
@@ -896,10 +896,10 @@ export default function WorkspacePage() {
               className="orgkit-floating-decor orgkit-burst-dot"
               style={{
                 position: "absolute",
-                right: -95,
-                top: 50,
-                width: 4.5,
-                height: 4.5,
+                right: -110,
+                top: 55,
+                width: 5,
+                height: 5,
                 borderRadius: "50%",
                 backgroundColor: "rgba(5, 150, 105, 0.25)",
               }}
@@ -911,11 +911,11 @@ export default function WorkspacePage() {
                 position: "relative",
                 zIndex: 10,
                 width: "100%",
-                borderRadius: 22,
+                borderRadius: 26,
                 border: "1px solid #E4E4E7",
                 backgroundColor: "#FFFFFF",
-                padding: "26px 28px",
-                boxShadow: "0 16px 40px rgba(24, 24, 27, 0.06)",
+                padding: "32px 34px",
+                boxShadow: "0 18px 45px rgba(24, 24, 27, 0.06)",
                 boxSizing: "border-box",
               }}
             >
@@ -923,20 +923,20 @@ export default function WorkspacePage() {
               <div style={{ textAlign: "center" }}>
                 <h1
                   style={{
-                    fontSize: 22,
+                    fontSize: 26,
                     fontWeight: 700,
-                    letterSpacing: "-0.015em",
+                    letterSpacing: "-0.02em",
                     color: "#18181B",
-                    margin: "0 0 4px 0",
+                    margin: "0 0 5px 0",
                   }}
                 >
                   Set up your Organization
                 </h1>
                 <p
                   style={{
-                    fontSize: 12.5,
+                    fontSize: 14,
                     color: "#71717A",
-                    margin: "0 0 22px 0",
+                    margin: "0 0 26px 0",
                   }}
                 >
                   Start by giving your organization a name.
@@ -945,16 +945,16 @@ export default function WorkspacePage() {
 
               {/* Form */}
               <form onSubmit={handleCreateSubmit}>
-                {/* Field 1: Org name */}
-                <div style={{ marginBottom: 14 }}>
+                {/* Field 1: Organization Name */}
+                <div style={{ marginBottom: 16 }}>
                   <label
                     htmlFor="org-name"
                     style={{
                       display: "block",
-                      fontSize: 12.5,
+                      fontSize: 13.5,
                       fontWeight: 600,
                       color: "#18181B",
-                      marginBottom: 6,
+                      marginBottom: 7,
                     }}
                   >
                     Organization Name
@@ -968,13 +968,13 @@ export default function WorkspacePage() {
                     placeholder="e.g. Junior Marketing Association"
                     className="orgkit-workspace-input"
                     style={{
-                      height: 40,
+                      height: 46,
                       width: "100%",
-                      borderRadius: 10,
+                      borderRadius: 12,
                       border: "1px solid #E4E4E7",
                       backgroundColor: "#FFFFFF",
-                      padding: "0 12px",
-                      fontSize: 12.5,
+                      padding: "0 14px",
+                      fontSize: 14,
                       color: "#18181B",
                       boxSizing: "border-box",
                       outline: "none",
@@ -983,20 +983,20 @@ export default function WorkspacePage() {
                   />
                 </div>
 
-                {/* Field 2: School or community (Optional) */}
-                <div style={{ marginBottom: 20 }}>
+                {/* Field 2: School or Community (Optional) */}
+                <div style={{ marginBottom: 24 }}>
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
                       gap: 8,
-                      marginBottom: 6,
+                      marginBottom: 7,
                     }}
                   >
                     <label
                       htmlFor="school-community"
                       style={{
-                        fontSize: 12.5,
+                        fontSize: 13.5,
                         fontWeight: 600,
                         color: "#18181B",
                       }}
@@ -1009,8 +1009,8 @@ export default function WorkspacePage() {
                         alignItems: "center",
                         borderRadius: 9999,
                         backgroundColor: "#F4F4F5",
-                        padding: "2px 8px",
-                        fontSize: 10,
+                        padding: "2.5px 8px",
+                        fontSize: 11,
                         fontWeight: 500,
                         color: "#71717A",
                       }}
@@ -1026,13 +1026,13 @@ export default function WorkspacePage() {
                     placeholder="e.g. Your school or community"
                     className="orgkit-workspace-input"
                     style={{
-                      height: 40,
+                      height: 46,
                       width: "100%",
-                      borderRadius: 10,
+                      borderRadius: 12,
                       border: "1px solid #E4E4E7",
                       backgroundColor: "#FFFFFF",
-                      padding: "0 12px",
-                      fontSize: 12.5,
+                      padding: "0 14px",
+                      fontSize: 14,
                       color: "#18181B",
                       boxSizing: "border-box",
                       outline: "none",
@@ -1041,9 +1041,9 @@ export default function WorkspacePage() {
                   />
                   <p
                     style={{
-                      fontSize: 11,
+                      fontSize: 11.5,
                       color: "#71717A",
-                      margin: "6px 0 0 0",
+                      margin: "7px 0 0 0",
                     }}
                   >
                     Leave blank if your org isn't tied to one school.
@@ -1057,13 +1057,13 @@ export default function WorkspacePage() {
                   className="orgkit-workspace-btn"
                   style={{
                     display: "flex",
-                    height: 40,
+                    height: 46,
                     width: "100%",
                     alignItems: "center",
                     justifyContent: "center",
                     borderRadius: 9999,
                     backgroundColor: "#059669",
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: 600,
                     color: "#FFFFFF",
                     border: "none",
