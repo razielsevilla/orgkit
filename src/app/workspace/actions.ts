@@ -163,3 +163,57 @@ export async function getOrganizationById(orgId: string) {
     return null;
   }
 }
+
+/**
+ * Checks if the currently authenticated officer has an assigned workspace.
+ * Returns the most recently joined organization or null.
+ */
+export async function getOfficerDefaultWorkspace(): Promise<{
+  orgId: string;
+  name: string;
+  school: string | null;
+} | null> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const admin = createAdminClient();
+
+    // Check if officer belongs to any organization
+    const { data: membership, error: memError } = await admin
+      .from("org_officers")
+      .select("org_id, role, joined_at")
+      .eq("officer_id", user.id)
+      .order("joined_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (memError || !membership) {
+      return null;
+    }
+
+    // Fetch the organization details
+    const { data: org, error: orgError } = await admin
+      .from("orgs")
+      .select("id, name, school")
+      .eq("id", membership.org_id)
+      .maybeSingle();
+
+    if (orgError || !org) {
+      return null;
+    }
+
+    return {
+      orgId: org.id,
+      name: org.name,
+      school: org.school || null,
+    };
+  } catch (err) {
+    console.error("Unexpected error in getOfficerDefaultWorkspace:", err);
+    return null;
+  }
+}

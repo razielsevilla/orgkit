@@ -94,6 +94,21 @@ export async function GET(request: Request) {
       return toSignIn("google_error");
     }
 
+    // Check if returning officer already has an assigned workspace
+    const { data: membership } = await admin
+      .from("org_officers")
+      .select("org_id")
+      .eq("officer_id", officer.id)
+      .order("joined_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (membership?.org_id) {
+      return NextResponse.redirect(
+        new URL(`/workspace/${membership.org_id}`, requestUrl.origin)
+      );
+    }
+
     return NextResponse.redirect(new URL("/workspace", requestUrl.origin));
   }
 

@@ -16,7 +16,10 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
-import { createWorkspace } from "@/src/app/workspace/actions";
+import {
+  createWorkspace,
+  getOfficerDefaultWorkspace,
+} from "@/src/app/workspace/actions";
 import { createClient } from "@/src/lib/supabase/client";
 
 const plusJakarta = Plus_Jakarta_Sans({
@@ -45,8 +48,9 @@ export default function WorkspacePage() {
   const [school, setSchool] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isCheckingWorkspace, setIsCheckingWorkspace] = useState(true);
 
-  // Load current signed-in officer session
+  // Load current signed-in officer session and check if they already have a workspace
   useEffect(() => {
     async function loadOfficerSession() {
       try {
@@ -69,12 +73,21 @@ export default function WorkspacePage() {
         if (data) {
           setOfficer(data);
         }
+
+        // Check if this officer already has an assigned workspace
+        const existingWorkspace = await getOfficerDefaultWorkspace();
+        if (existingWorkspace?.orgId) {
+          router.replace(`/workspace/${existingWorkspace.orgId}`);
+          return;
+        }
       } catch (err) {
         console.error("Failed to load officer session:", err);
+      } finally {
+        setIsCheckingWorkspace(false);
       }
     }
     loadOfficerSession();
-  }, []);
+  }, [router]);
 
   // Lock scrollbars on desktop viewports to guarantee 100% viewport-fit
   useEffect(() => {
@@ -218,6 +231,10 @@ export default function WorkspacePage() {
         }
         .orgkit-profile-trigger:hover {
           background-color: rgba(0, 0, 0, 0.04);
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
 
         /* ── Card Popout Animation ── */
@@ -618,7 +635,27 @@ export default function WorkspacePage() {
           boxSizing: "border-box",
         }}
       >
-        {view === "empty" ? (
+        {isCheckingWorkspace ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: 220,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: "50%",
+                border: "3px solid rgba(5, 150, 105, 0.2)",
+                borderTopColor: "#059669",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+          </div>
+        ) : view === "empty" ? (
           /* ═════════════════════════════════════════════════════════════════
              IMAGE 2: Empty State ("We can't find that page.")
              ═════════════════════════════════════════════════════════════════ */
