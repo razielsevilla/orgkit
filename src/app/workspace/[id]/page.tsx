@@ -7,12 +7,15 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import {
   ChevronDown,
+  ChevronsUpDown,
   LogOut,
   Home,
   Users,
   Calendar,
   Wallet,
   Archive,
+  PanelLeft,
+  PanelLeftClose,
 } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
 import { getOrganizationById } from "@/src/app/workspace/actions";
@@ -40,6 +43,29 @@ function WorkspaceDetailContent() {
   const querySchool = searchParams.get("school");
 
   const [orgData, setOrgData] = useState<{ name: string; school: string } | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Restore sidebar preference from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("orgkit_sidebar_collapsed");
+      if (saved === "true") {
+        setIsSidebarCollapsed(true);
+      }
+    } catch {
+      // localStorage may be disabled in some sandboxes
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("orgkit_sidebar_collapsed", String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   useEffect(() => {
     async function loadOrg() {
@@ -197,7 +223,6 @@ function WorkspaceDetailContent() {
         backgroundColor: "#F4F4F5",
         color: "#18181B",
         display: "flex",
-        flexDirection: "column",
         boxSizing: "border-box",
       }}
     >
@@ -207,7 +232,7 @@ function WorkspaceDetailContent() {
           padding: 0 !important;
           background-color: #F4F4F5 !important;
         }
-        .orgkit-nav-btn:hover {
+        .orgkit-nav-item:hover {
           background-color: rgba(0, 0, 0, 0.04);
         }
         .orgkit-cta-btn:hover {
@@ -218,7 +243,11 @@ function WorkspaceDetailContent() {
         .orgkit-cta-btn:active {
           transform: translateY(0);
         }
-        .orgkit-profile-trigger:hover {
+        .orgkit-sidebar-toggle:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+          color: #18181B !important;
+        }
+        .orgkit-profile-row:hover {
           background-color: rgba(0, 0, 0, 0.04);
         }
         @keyframes cardPopout {
@@ -234,34 +263,38 @@ function WorkspaceDetailContent() {
       `}</style>
 
       {/* ═════════════════════════════════════════════════════════════════
-          TOP NAVBAR
+          REVAMPED SIDEBAR (EXPANDED & COLLAPSIBLE)
           ═════════════════════════════════════════════════════════════════ */}
-      <header
+      <aside
         style={{
-          height: 64,
-          minHeight: 64,
-          width: "100%",
+          width: isSidebarCollapsed ? 70 : 256,
+          minWidth: isSidebarCollapsed ? 70 : 256,
+          maxWidth: isSidebarCollapsed ? 70 : 256,
+          height: "100vh",
           backgroundColor: "#FFFFFF",
-          borderBottom: "1px solid #E4E4E7",
+          borderRight: "1px solid #E4E4E7",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "0 24px 0 20px",
-          position: "relative",
-          zIndex: 30,
+          flexDirection: "column",
+          padding: isSidebarCollapsed ? "16px 10px" : "16px 14px 14px 14px",
           boxSizing: "border-box",
+          flexShrink: 0,
+          zIndex: 30,
+          transition: "width 0.25s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.25s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.25s cubic-bezier(0.16, 1, 0.3, 1), padding 0.25s ease",
+          position: "relative",
         }}
       >
-        {/* Left Section: Logo + Divider + Page Title ("Home") */}
-        <div style={{ display: "flex", alignItems: "center" }}>
-          {/* Logo container sized to align nicely with sidebar */}
-          <div
-            style={{
-              width: 236,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
+        {/* ── Top Brand Header & Sidebar Toggle ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: isSidebarCollapsed ? "center" : "space-between",
+            marginBottom: 16,
+            height: 36,
+          }}
+        >
+          {/* Logo */}
+          {!isSidebarCollapsed ? (
             <Link
               href="/workspace"
               style={{
@@ -274,107 +307,609 @@ function WorkspaceDetailContent() {
               <Image
                 src="/orgkit-text-logo.png"
                 alt="OrgKit"
-                width={140}
-                height={34}
+                width={132}
+                height={32}
                 priority
                 style={{
-                  height: 32,
+                  height: 30,
                   width: "auto",
                   objectFit: "contain",
                   display: "block",
                 }}
               />
             </Link>
-          </div>
+          ) : (
+            <Link
+              href="/workspace"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textDecoration: "none",
+              }}
+              title="OrgKit"
+            >
+              <Image
+                src="/orgkit-logo.png"
+                alt="OrgKit"
+                width={30}
+                height={30}
+                priority
+                style={{
+                  height: 28,
+                  width: 28,
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
+            </Link>
+          )}
 
-          {/* Vertical subtle divider */}
-          <div
-            style={{
-              width: 1,
-              height: 22,
-              backgroundColor: "#E4E4E7",
-              margin: "0 20px 0 4px",
-            }}
-          />
-
-          {/* Page Title */}
-          <h1
-            style={{
-              fontSize: 18,
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-              color: "#18181B",
-              margin: 0,
-            }}
-          >
-            Home
-          </h1>
+          {/* Sidebar Toggle Button */}
+          {!isSidebarCollapsed && (
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="orgkit-sidebar-toggle"
+              title="Collapse sidebar"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 32,
+                height: 32,
+                borderRadius: 8,
+                border: "none",
+                backgroundColor: "transparent",
+                color: "#71717A",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <PanelLeft size={18} strokeWidth={1.8} />
+            </button>
+          )}
         </div>
 
-        {/* Right Section: Officer Profile Dropdown */}
-        <div style={{ position: "relative" }} ref={menuRef}>
+        {/* When collapsed, toggle button placed below logo */}
+        {isSidebarCollapsed && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 14,
+            }}
+          >
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="orgkit-sidebar-toggle"
+              title="Expand sidebar"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                border: "none",
+                backgroundColor: "transparent",
+                color: "#71717A",
+                cursor: "pointer",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <PanelLeft size={18} strokeWidth={1.8} />
+            </button>
+          </div>
+        )}
+
+        {/* ── Bespoke Workspace Card ── */}
+        {!isSidebarCollapsed ? (
+          <div
+            style={{
+              position: "relative",
+              overflow: "hidden",
+              borderRadius: 18,
+              background:
+                "linear-gradient(135deg, rgba(236, 253, 245, 0.85) 0%, rgba(209, 250, 229, 0.45) 100%)",
+              border: "1px solid rgba(5, 150, 105, 0.18)",
+              padding: "12px 14px 14px 14px",
+              marginBottom: 16,
+              boxShadow: "0 2px 6px rgba(5, 150, 105, 0.04)",
+            }}
+          >
+            {/* Top decorative handle bar */}
+            <div
+              style={{
+                width: 32,
+                height: 3.5,
+                borderRadius: 9999,
+                backgroundColor: "rgba(5, 150, 105, 0.22)",
+                margin: "0 auto 10px auto",
+              }}
+            />
+
+            {/* Subtle decorative curved arcs in bottom right */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: -15,
+                right: -15,
+                width: 80,
+                height: 80,
+                pointerEvents: "none",
+              }}
+            >
+              <svg viewBox="0 0 80 80" fill="none" style={{ width: "100%", height: "100%" }}>
+                <circle cx="80" cy="80" r="60" stroke="rgba(5, 150, 105, 0.16)" strokeWidth="1.2" />
+                <circle cx="80" cy="80" r="40" stroke="rgba(5, 150, 105, 0.12)" strokeWidth="1.2" />
+                <circle cx="80" cy="80" r="20" stroke="rgba(5, 150, 105, 0.08)" strokeWidth="1.2" />
+              </svg>
+            </div>
+
+            {/* Label: WORKSPACE */}
+            <div
+              style={{
+                fontSize: 9.5,
+                fontWeight: 700,
+                letterSpacing: "0.08em",
+                color: "#059669",
+                textTransform: "uppercase",
+                marginBottom: 3,
+              }}
+            >
+              WORKSPACE
+            </div>
+
+            {/* Organization Name */}
+            <div
+              style={{
+                fontSize: 14.5,
+                fontWeight: 800,
+                letterSpacing: "-0.015em",
+                color: "#18181B",
+                lineHeight: 1.25,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+              }}
+              title={orgName}
+            >
+              {orgName}
+            </div>
+
+            {/* School / Community (Only rendered if present) */}
+            {schoolName && (
+              <div
+                style={{
+                  fontSize: 11.5,
+                  fontWeight: 400,
+                  color: "#52525B",
+                  marginTop: 3,
+                  lineHeight: 1.2,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={schoolName}
+              >
+                {schoolName}
+              </div>
+            )}
+
+            {/* Role Badge */}
+            <div style={{ marginTop: 10 }}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 5,
+                  borderRadius: 9999,
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid rgba(228, 228, 231, 0.9)",
+                  padding: "2.5px 8.5px",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#059669",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
+                }}
+              >
+                <span
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    backgroundColor: "#059669",
+                  }}
+                />
+                Officer
+              </span>
+            </div>
+          </div>
+        ) : (
+          /* Collapsed Workspace Icon Card */
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: 16,
+            }}
+          >
+            <div
+              title={`${orgName}${schoolName ? ` (${schoolName})` : ""}`}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 14,
+                backgroundColor: "rgba(5, 150, 105, 0.12)",
+                border: "1px solid rgba(5, 150, 105, 0.22)",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#059669",
+                fontSize: 13,
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                cursor: "pointer",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  width: 14,
+                  height: 2.5,
+                  borderRadius: 9999,
+                  backgroundColor: "rgba(5, 150, 105, 0.3)",
+                  position: "absolute",
+                  top: 3,
+                }}
+              />
+              {orgInitials}
+            </div>
+          </div>
+        )}
+
+        {/* ── Navigation Links ── */}
+        <nav
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+          }}
+        >
+          {/* 1. Home (Active) */}
+          <Link
+            href={`/workspace/${rawId || "default"}`}
+            title="Home"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+              gap: 12,
+              borderRadius: 12,
+              padding: isSidebarCollapsed ? "9px 0" : "9px 12px",
+              backgroundColor: "rgba(5, 150, 105, 0.10)",
+              color: "#059669",
+              textDecoration: "none",
+              fontWeight: 600,
+              fontSize: 13.5,
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Home size={18} strokeWidth={2.2} color="#059669" />
+            {!isSidebarCollapsed && <span>Home</span>}
+          </Link>
+
+          {/* Section Divider: Manage */}
+          {!isSidebarCollapsed ? (
+            <div
+              style={{
+                fontSize: 11.5,
+                fontWeight: 600,
+                letterSpacing: "0.01em",
+                color: "#71717A",
+                padding: "12px 10px 5px 10px",
+                userSelect: "none",
+              }}
+            >
+              Manage
+            </div>
+          ) : (
+            <div
+              style={{
+                width: 22,
+                height: 1,
+                backgroundColor: "#E4E4E7",
+                margin: "8px auto 6px auto",
+              }}
+            />
+          )}
+
+          {/* 2. Members (Soon) */}
+          <div
+            className="orgkit-nav-item"
+            title="Members (Coming soon)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              borderRadius: 12,
+              padding: isSidebarCollapsed ? "9px 0" : "9px 12px",
+              color: "#52525B",
+              fontSize: 13.5,
+              fontWeight: 500,
+              cursor: "default",
+              userSelect: "none",
+              transition: "background-color 0.15s ease",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+              }}
+            >
+              <Users size={18} strokeWidth={1.8} color="#71717A" />
+              {!isSidebarCollapsed && <span>Members</span>}
+            </div>
+            {!isSidebarCollapsed && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            )}
+          </div>
+
+          {/* 3. Events (Soon) */}
+          <div
+            className="orgkit-nav-item"
+            title="Events (Coming soon)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              borderRadius: 12,
+              padding: isSidebarCollapsed ? "9px 0" : "9px 12px",
+              color: "#52525B",
+              fontSize: 13.5,
+              fontWeight: 500,
+              cursor: "default",
+              userSelect: "none",
+              transition: "background-color 0.15s ease",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+              }}
+            >
+              <Calendar size={18} strokeWidth={1.8} color="#71717A" />
+              {!isSidebarCollapsed && <span>Events</span>}
+            </div>
+            {!isSidebarCollapsed && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            )}
+          </div>
+
+          {/* 4. Dues (Soon) */}
+          <div
+            className="orgkit-nav-item"
+            title="Dues (Coming soon)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              borderRadius: 12,
+              padding: isSidebarCollapsed ? "9px 0" : "9px 12px",
+              color: "#52525B",
+              fontSize: 13.5,
+              fontWeight: 500,
+              cursor: "default",
+              userSelect: "none",
+              transition: "background-color 0.15s ease",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+              }}
+            >
+              <Wallet size={18} strokeWidth={1.8} color="#71717A" />
+              {!isSidebarCollapsed && <span>Dues</span>}
+            </div>
+            {!isSidebarCollapsed && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            )}
+          </div>
+
+          {/* 5. Archive (Soon) */}
+          <div
+            className="orgkit-nav-item"
+            title="Archive (Coming soon)"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isSidebarCollapsed ? "center" : "space-between",
+              borderRadius: 12,
+              padding: isSidebarCollapsed ? "9px 0" : "9px 12px",
+              color: "#52525B",
+              fontSize: 13.5,
+              fontWeight: 500,
+              cursor: "default",
+              userSelect: "none",
+              transition: "background-color 0.15s ease",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+              }}
+            >
+              <Archive size={18} strokeWidth={1.8} color="#71717A" />
+              {!isSidebarCollapsed && <span>Archive</span>}
+            </div>
+            {!isSidebarCollapsed && (
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  borderRadius: 9999,
+                  backgroundColor: "#F4F4F5",
+                  border: "1px solid #E4E4E7",
+                  padding: "2px 7px",
+                  fontSize: 10.5,
+                  fontWeight: 500,
+                  color: "#71717A",
+                }}
+              >
+                Soon
+              </span>
+            )}
+          </div>
+        </nav>
+
+        {/* ── Bottom Officer Profile Section (Pinned) ── */}
+        <div
+          style={{
+            position: "relative",
+            marginTop: "auto",
+            paddingTop: 10,
+            borderTop: "1px solid #E4E4E7",
+          }}
+          ref={menuRef}
+        >
           <button
             type="button"
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-expanded={menuOpen}
             aria-haspopup="menu"
-            className="orgkit-profile-trigger"
+            className="orgkit-profile-row"
+            title={displayName}
             style={{
+              width: "100%",
               display: "flex",
               alignItems: "center",
+              justifyContent: isSidebarCollapsed ? "center" : "space-between",
               gap: 10,
-              padding: "6px 10px 6px 6px",
-              borderRadius: 9999,
+              padding: isSidebarCollapsed ? "6px 0" : "7px 8px",
+              borderRadius: 12,
               backgroundColor: "transparent",
               border: "none",
               cursor: "pointer",
               transition: "background-color 0.15s ease",
+              textAlign: "left",
             }}
           >
-            {/* Officer Avatar Badge */}
-            <div
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: "50%",
-                backgroundColor: "rgba(5, 150, 105, 0.12)",
-                color: "#059669",
-                fontSize: 12,
-                fontWeight: 700,
-                letterSpacing: "0.02em",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {officerInitials}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+              {/* Avatar */}
+              <div
+                style={{
+                  width: 34,
+                  height: 34,
+                  minWidth: 34,
+                  borderRadius: "50%",
+                  backgroundColor: "rgba(5, 150, 105, 0.12)",
+                  color: "#059669",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {officerInitials}
+              </div>
+
+              {!isSidebarCollapsed && (
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "#18181B",
+                      lineHeight: 1.25,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {displayName}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 400,
+                      color: "#71717A",
+                      lineHeight: 1.2,
+                      marginTop: 1,
+                    }}
+                  >
+                    Officer
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Officer Name */}
-            <span
-              style={{
-                fontSize: 13.5,
-                fontWeight: 600,
-                color: "#18181B",
-                maxWidth: 200,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {displayName}
-            </span>
-
-            {/* Dropdown Chevron */}
-            <ChevronDown
-              style={{
-                width: 15,
-                height: 15,
-                color: "#71717A",
-                transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)",
-                transition: "transform 0.18s ease",
-              }}
-            />
+            {!isSidebarCollapsed && (
+              <ChevronsUpDown size={14} color="#71717A" style={{ flexShrink: 0 }} />
+            )}
           </button>
 
           {/* Profile Dropdown Menu */}
@@ -383,9 +918,9 @@ function WorkspaceDetailContent() {
               role="menu"
               style={{
                 position: "absolute",
-                right: 0,
-                top: "calc(100% + 8px)",
-                width: 210,
+                left: isSidebarCollapsed ? "calc(100% + 8px)" : 0,
+                bottom: isSidebarCollapsed ? 0 : "calc(100% + 8px)",
+                width: 220,
                 borderRadius: 14,
                 backgroundColor: "#FFFFFF",
                 border: "1px solid #E4E4E7",
@@ -403,7 +938,7 @@ function WorkspaceDetailContent() {
                 <p
                   style={{
                     fontSize: 12.5,
-                    fontWeight: 600,
+                    fontWeight: 700,
                     color: "#18181B",
                     margin: 0,
                   }}
@@ -452,299 +987,58 @@ function WorkspaceDetailContent() {
             </div>
           )}
         </div>
-      </header>
+      </aside>
 
       {/* ═════════════════════════════════════════════════════════════════
-          MAIN SHELL (SIDEBAR + CONTENT CANVAS)
+          MAIN CONTENT AREA (WITH TOP BAR & CANVAS)
           ═════════════════════════════════════════════════════════════════ */}
       <div
         style={{
           display: "flex",
+          flexDirection: "column",
           flex: 1,
-          height: "calc(100vh - 64px)",
-          maxHeight: "calc(100vh - 64px)",
-          width: "100%",
+          height: "100vh",
           overflow: "hidden",
           position: "relative",
           boxSizing: "border-box",
         }}
       >
-        {/* ── LEFT SIDEBAR ── */}
-        <aside
+        {/* Top Minimal Canvas Header */}
+        <header
           style={{
-            width: 260,
-            minWidth: 260,
-            maxWidth: 260,
-            height: "100%",
+            height: 56,
+            minHeight: 56,
+            width: "100%",
             backgroundColor: "#FFFFFF",
-            borderRight: "1px solid #E4E4E7",
+            borderBottom: "1px solid #E4E4E7",
             display: "flex",
-            flexDirection: "column",
-            padding: "16px 14px",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "0 24px",
             boxSizing: "border-box",
-            flexShrink: 0,
             zIndex: 20,
           }}
         >
-          {/* Organization Switcher Card */}
-          <div
-            style={{
-              backgroundColor: "#F4F4F5",
-              border: "1px solid rgba(228, 228, 231, 0.7)",
-              borderRadius: 14,
-              padding: "10px 12px",
-              display: "flex",
-              alignItems: "center",
-              gap: 11,
-              marginBottom: 16,
-            }}
-          >
-            {/* Org Initials Avatar */}
-            <div
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <h1
               style={{
-                width: 36,
-                height: 36,
-                minWidth: 36,
-                borderRadius: 10,
-                backgroundColor: "rgba(5, 150, 105, 0.12)",
-                color: "#059669",
-                fontSize: 13,
+                fontSize: 16.5,
                 fontWeight: 700,
-                letterSpacing: "0.02em",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                letterSpacing: "-0.015em",
+                color: "#18181B",
+                margin: 0,
               }}
             >
-              {orgInitials}
-            </div>
-
-            {/* Org Info */}
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  letterSpacing: "-0.01em",
-                  color: "#18181B",
-                  lineHeight: 1.25,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-                title={orgName}
-              >
-                {orgName}
-              </div>
-              {schoolName ? (
-                <div
-                  style={{
-                    fontSize: 11.5,
-                    fontWeight: 400,
-                    color: "#71717A",
-                    lineHeight: 1.25,
-                    marginTop: 2,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                  title={schoolName}
-                >
-                  {schoolName}
-                </div>
-              ) : null}
-            </div>
+              Home
+            </h1>
           </div>
+        </header>
 
-          {/* Navigation Links */}
-          <nav
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 4,
-              flex: 1,
-            }}
-          >
-            {/* 1. Home (Active) */}
-            <Link
-              href={`/workspace/${rawId || "default"}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                borderRadius: 12,
-                padding: "9px 12px",
-                backgroundColor: "rgba(5, 150, 105, 0.10)",
-                color: "#059669",
-                textDecoration: "none",
-                fontWeight: 600,
-                fontSize: 13.5,
-                transition: "all 0.15s ease",
-              }}
-            >
-              <Home size={18} strokeWidth={2.2} color="#059669" />
-              <span>Home</span>
-            </Link>
-
-            {/* 2. Members (Soon) */}
-            <div
-              className="orgkit-nav-btn"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderRadius: 12,
-                padding: "9px 12px",
-                color: "#52525B",
-                fontSize: 13.5,
-                fontWeight: 500,
-                cursor: "default",
-                userSelect: "none",
-                transition: "background-color 0.15s ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <Users size={18} strokeWidth={1.8} color="#71717A" />
-                <span>Members</span>
-              </div>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  borderRadius: 9999,
-                  backgroundColor: "#F4F4F5",
-                  border: "1px solid #E4E4E7",
-                  padding: "2px 7px",
-                  fontSize: 10.5,
-                  fontWeight: 500,
-                  color: "#71717A",
-                }}
-              >
-                Soon
-              </span>
-            </div>
-
-            {/* 3. Events (Soon) */}
-            <div
-              className="orgkit-nav-btn"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderRadius: 12,
-                padding: "9px 12px",
-                color: "#52525B",
-                fontSize: 13.5,
-                fontWeight: 500,
-                cursor: "default",
-                userSelect: "none",
-                transition: "background-color 0.15s ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <Calendar size={18} strokeWidth={1.8} color="#71717A" />
-                <span>Events</span>
-              </div>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  borderRadius: 9999,
-                  backgroundColor: "#F4F4F5",
-                  border: "1px solid #E4E4E7",
-                  padding: "2px 7px",
-                  fontSize: 10.5,
-                  fontWeight: 500,
-                  color: "#71717A",
-                }}
-              >
-                Soon
-              </span>
-            </div>
-
-            {/* 4. Dues (Soon) */}
-            <div
-              className="orgkit-nav-btn"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderRadius: 12,
-                padding: "9px 12px",
-                color: "#52525B",
-                fontSize: 13.5,
-                fontWeight: 500,
-                cursor: "default",
-                userSelect: "none",
-                transition: "background-color 0.15s ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <Wallet size={18} strokeWidth={1.8} color="#71717A" />
-                <span>Dues</span>
-              </div>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  borderRadius: 9999,
-                  backgroundColor: "#F4F4F5",
-                  border: "1px solid #E4E4E7",
-                  padding: "2px 7px",
-                  fontSize: 10.5,
-                  fontWeight: 500,
-                  color: "#71717A",
-                }}
-              >
-                Soon
-              </span>
-            </div>
-
-            {/* 5. Archive (Soon) */}
-            <div
-              className="orgkit-nav-btn"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                borderRadius: 12,
-                padding: "9px 12px",
-                color: "#52525B",
-                fontSize: 13.5,
-                fontWeight: 500,
-                cursor: "default",
-                userSelect: "none",
-                transition: "background-color 0.15s ease",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <Archive size={18} strokeWidth={1.8} color="#71717A" />
-                <span>Archive</span>
-              </div>
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  borderRadius: 9999,
-                  backgroundColor: "#F4F4F5",
-                  border: "1px solid #E4E4E7",
-                  padding: "2px 7px",
-                  fontSize: 10.5,
-                  fontWeight: 500,
-                  color: "#71717A",
-                }}
-              >
-                Soon
-              </span>
-            </div>
-          </nav>
-        </aside>
-
-        {/* ── MAIN CONTENT CANVAS ── */}
+        {/* ── Main Content Canvas ── */}
         <main
           style={{
             flex: 1,
-            height: "100%",
+            height: "calc(100vh - 56px)",
             position: "relative",
             overflow: "hidden",
             backgroundColor: "#F4F4F5",
@@ -971,4 +1265,3 @@ export default function WorkspaceDetailPage() {
     </Suspense>
   );
 }
-
