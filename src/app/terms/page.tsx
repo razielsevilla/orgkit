@@ -19,6 +19,14 @@ export default function TermsPage() {
         padding: "clamp(24px, 5vh, 48px) clamp(16px, 3vw, 24px)",
       }}
     >
+      <style>{`
+        html, body {
+          overflow-y: auto !important;
+          height: auto !important;
+          min-height: 100% !important;
+          max-height: none !important;
+        }
+      `}</style>
       <div style={{ maxWidth: 820, margin: "0 auto" }}>
         {/* Top Header / Navigation */}
         <div
@@ -276,7 +284,7 @@ export default function TermsPage() {
               color: "#71717A",
             }}
           >
-            <span>© {new Date().getFullYear()} OrgKit. All rights reserved.</span>
+            <span>© 2026 OrgKit. All rights reserved.</span>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <Link
                 href="/privacy"

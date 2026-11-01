@@ -18,19 +18,11 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
       const w = window.innerWidth;
 
       if (w >= 1024) {
-        document.documentElement.style.overflow = "hidden";
-        document.documentElement.style.height = "100%";
-        document.documentElement.style.backgroundColor = "#F4F4F5";
-        document.body.style.overflow = "hidden";
-        document.body.style.height = "100%";
-        document.body.style.backgroundColor = "#F4F4F5";
+        document.documentElement.classList.add("orgkit-auth-active");
+        document.body.classList.add("orgkit-auth-active");
       } else {
-        document.documentElement.style.overflow = "";
-        document.documentElement.style.height = "";
-        document.documentElement.style.backgroundColor = "";
-        document.body.style.overflow = "";
-        document.body.style.height = "";
-        document.body.style.backgroundColor = "";
+        document.documentElement.classList.remove("orgkit-auth-active");
+        document.body.classList.remove("orgkit-auth-active");
       }
     }
 
@@ -38,12 +30,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
     window.addEventListener("resize", enforceDesktop);
     return () => {
       window.removeEventListener("resize", enforceDesktop);
-      document.documentElement.style.overflow = "";
-      document.documentElement.style.height = "";
-      document.documentElement.style.backgroundColor = "";
-      document.body.style.overflow = "";
-      document.body.style.height = "";
-      document.body.style.backgroundColor = "";
+      document.documentElement.classList.remove("orgkit-auth-active");
+      document.body.classList.remove("orgkit-auth-active");
     };
   }, []);
 
@@ -72,7 +60,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
 
         /* ── Desktop View (>= 1024px): Zero Scroll, Edge-to-Edge Full Bleed ── */
         @media (min-width: 1024px) {
-          html, body {
+          html.orgkit-auth-active, body.orgkit-auth-active {
             overflow: hidden !important;
             height: 100vh !important;
             max-height: 100vh !important;
