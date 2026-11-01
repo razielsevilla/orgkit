@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSessionExpired } from "@/src/lib/session-config";
+import { isSessionExpired, SESSION_MAX_SECONDS } from "@/src/lib/session-config";
 
 // Pages a signed-out visitor may open. Everything else needs a session.
 const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms"];
@@ -20,6 +20,11 @@ export async function proxy(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
     {
+      cookieOptions: {
+        maxAge: SESSION_MAX_SECONDS,
+        sameSite: "lax",
+        path: "/",
+      },
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -28,7 +33,12 @@ export async function proxy(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, {
+              ...options,
+              maxAge: options?.maxAge ?? SESSION_MAX_SECONDS,
+              sameSite: (options?.sameSite as "lax" | "strict" | "none") ?? "lax",
+              path: options?.path ?? "/",
+            })
           );
         },
       },
