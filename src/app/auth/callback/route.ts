@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
+import { getGoogleSub } from "@/src/lib/google-sub";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -8,102 +9,95 @@ export async function GET(request: Request) {
   const error = requestUrl.searchParams.get("error");
   const errorDescription = requestUrl.searchParams.get("error_description");
 
+  const toSignIn = (errorCode?: string) =>
+    NextResponse.redirect(
+      new URL(errorCode ? `/signin?error=${errorCode}` : "/signin", requestUrl.origin)
+    );
+
   // Handle errors or user cancellations returned by Google or Supabase Auth
   if (error) {
+    const description = errorDescription?.toLowerCase() ?? "";
     if (
       error === "access_denied" ||
-      errorDescription?.toLowerCase().includes("denied") ||
-      errorDescription?.toLowerCase().includes("cancel")
+      description.includes("denied") ||
+      description.includes("cancel")
     ) {
-      return NextResponse.redirect(new URL("/register?error=cancelled", requestUrl.origin));
+      return toSignIn("cancelled");
     }
     if (
-      errorDescription?.toLowerCase().includes("admin") ||
-      errorDescription?.toLowerCase().includes("policy") ||
-      errorDescription?.toLowerCase().includes("school") ||
-      errorDescription?.toLowerCase().includes("domain")
+      error === "admin_policy_enforced" ||
+      description.includes("admin") ||
+      description.includes("policy") ||
+      description.includes("school") ||
+      description.includes("domain")
     ) {
-      return NextResponse.redirect(new URL("/register?error=school_blocked", requestUrl.origin));
+      return toSignIn("school_blocked");
     }
-    return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
+    return toSignIn("google_error");
   }
 
-  if (code) {
-    const supabase = await createClient();
-    const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+  if (!code) return toSignIn();
 
-    if (exchangeError || !data.user) {
-      console.error("Auth exchange error:", exchangeError);
-      return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
+  const supabase = await createClient();
+  const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+
+  if (exchangeError || !data.user) {
+    console.error("Auth exchange error:", exchangeError);
+    return toSignIn("google_error");
+  }
+
+  const user = data.user;
+  const googleSub = getGoogleSub(user);
+
+  if (!googleSub) {
+    console.error("Missing Google sub claim for user:", user.id);
+    return toSignIn("google_error");
+  }
+
+  // Service-role client so row level security never blocks the callback
+  const admin = createAdminClient();
+
+  // Match by Google's permanent account ID, never by email
+  const { data: officer, error: officerQueryError } = await admin
+    .from("officers")
+    .select("id, email")
+    .eq("google_sub", googleSub)
+    .maybeSingle();
+
+  // Never fall through to "new officer" when the lookup itself failed,
+  // or a returning officer could end up looking new
+  if (officerQueryError) {
+    console.error("Error querying officers table:", officerQueryError);
+    await supabase.auth.signOut();
+    return toSignIn("google_error");
+  }
+
+  if (officer) {
+    if (officer.id !== user.id) {
+      console.error("Officer row and auth user disagree:", officer.id, user.id);
+      await supabase.auth.signOut();
+      return toSignIn("google_error");
     }
 
-    const user = data.user;
-
-    // Extract Google sub (permanent account ID — used for all matching, not email)
-    const googleIdentity = user.identities?.find((i: { provider: string }) => i.provider === "google");
-    const googleSub =
-      user.user_metadata?.sub ||
-      (googleIdentity?.identity_data as Record<string, unknown> | undefined)?.sub ||
-      user.user_metadata?.provider_id;
-
-    if (!googleSub) {
-      console.error("Missing Google sub claim for user:", user.id);
-      return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
-    }
-
-    const email = user.email ?? "";
-    const now = new Date().toISOString();
-
-    // Use service-role client for DB reads/writes so RLS never blocks the callback
-    const admin = createAdminClient();
-
-    // Check if an officer record already exists for this Google sub
-    const { data: officer, error: officerQueryError } = await admin
+    // Returning officer: keep the email current and record the sign-in
+    const { error: updateError } = await admin
       .from("officers")
-      .select("id, email, consent_version")
-      .eq("google_sub", googleSub as string)
-      .maybeSingle();
+      .update({
+        last_sign_in_at: new Date().toISOString(),
+        email: user.email || officer.email,
+      })
+      .eq("id", officer.id);
 
-    if (officerQueryError) {
-      console.error("Error querying officers table:", officerQueryError);
-    }
-
-    if (officer) {
-      // Returning officer: sync email and update last_sign_in_at
-      await admin
-        .from("officers")
-        .update({
-          last_sign_in_at: now,
-          email: email || officer.email,
-        })
-        .eq("id", officer.id);
-
-      // Already consented — go straight to the app
-      return NextResponse.redirect(new URL("/setup", requestUrl.origin));
-    }
-
-    // First-time officer: create the row now.
-    // Google's own OAuth consent screen (shown before this callback runs)
-    // is the official consent — no custom page needed.
-    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
-    const { error: insertError } = await admin.from("officers").insert({
-      id: user.id,
-      google_sub: googleSub as string,
-      email,
-      full_name: fullName,
-      consent_version: "v1",
-      consent_at: now,
-      created_at: now,
-      last_sign_in_at: now,
-    });
-
-    if (insertError) {
-      console.error("Error inserting new officer:", insertError);
-      return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
+    if (updateError) {
+      console.error("Error updating officer:", updateError);
+      await supabase.auth.signOut();
+      return toSignIn("google_error");
     }
 
     return NextResponse.redirect(new URL("/setup", requestUrl.origin));
   }
 
-  return NextResponse.redirect(new URL("/register", requestUrl.origin));
+  // First-time officer: no account row yet. They see the privacy notice first,
+  // and the row is created only after they agree (see /consent).
+  return NextResponse.redirect(new URL("/consent", requestUrl.origin));
 }

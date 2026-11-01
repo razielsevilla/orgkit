@@ -2,22 +2,17 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { createClient } from "@/src/lib/supabase/client";
 import { AuthLayout } from "@/src/components/auth-layout";
 import { GoogleLogo } from "@/src/components/google-logo";
-import { AuthErrorAlert } from "@/src/components/auth-error-alert";
+import { AuthErrorAlert, getErrorMessage } from "@/src/components/auth-error-alert";
+
+const GOOGLE_ERROR_MESSAGE = getErrorMessage("google_error") as string;
 
 export default function SignInPage() {
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [manualError, setManualError] = useState<string | null>(null);
-
-  // Instant prefetch for /register
-  useEffect(() => {
-    router.prefetch("/register");
-  }, [router]);
 
   async function handleGoogleSignIn() {
     setLoading(true);
@@ -39,13 +34,12 @@ export default function SignInPage() {
       if (error) {
         console.error("Sign-in error:", error);
         setLoading(false);
-        setManualError(error.message || "We couldn't reach Google. Please try again.");
+        setManualError(GOOGLE_ERROR_MESSAGE);
       }
     } catch (err: unknown) {
       console.error("Sign-in unexpected error:", err);
       setLoading(false);
-      const msg = err instanceof Error ? err.message : "We couldn't reach Google. Please try again.";
-      setManualError(msg);
+      setManualError(GOOGLE_ERROR_MESSAGE);
     }
   }
 
@@ -124,7 +118,7 @@ export default function SignInPage() {
         {/* Error Message banner from Ticket A1 */}
         <AuthErrorAlert manualError={manualError} align="center" />
 
-        {/* 4. Google Sign-in Button: "Continue with Google" */}
+        {/* 4. Google Sign-in Button: "Sign in with Google" */}
         <div
           style={{
             width: "100%",
@@ -137,7 +131,7 @@ export default function SignInPage() {
             onClick={handleGoogleSignIn}
             className="orgkit-google-btn"
             aria-busy={loading}
-            title={loading ? "Connecting to Google..." : "Continue with Google"}
+            title={loading ? "Connecting to Google..." : "Sign in with Google"}
             style={{
               height: "clamp(52px, 7.65vh, 72px)",
               gap: "clamp(10px, 0.84vw, 14px)",
@@ -175,7 +169,7 @@ export default function SignInPage() {
                 color: "#18181B",
               }}
             >
-              {loading ? "Signing in..." : "Continue with Google"}
+              {loading ? "Signing in…" : "Sign in with Google"}
             </span>
           </button>
           <div className="sr-only" aria-live="polite">
@@ -231,20 +225,9 @@ export default function SignInPage() {
               fontWeight: 400,
             }}
           >
-            New to OrgKit?{" "}
-            <Link
-              href="/register"
-              prefetch={true}
-              style={{
-                color: "#52525B",
-                textDecoration: "none",
-              }}
-              className="hover:text-[#18181B] transition-colors"
-            >
-              Continuing with Google creates your
-              <br />
-              account automatically.
-            </Link>
+            New to OrgKit? Signing in with Google creates your
+            <br />
+            account automatically.
           </p>
         </div>
       </div>
