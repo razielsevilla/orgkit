@@ -20,7 +20,10 @@
 .text-accent { color: var(--color-accent); }
 .text-accent-strong { color: var(--color-accent-strong); }
 
+html,
 body {
+  margin: 0;
+  padding: 0;
   background-color: var(--color-base);
   color: var(--color-ink);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;

@@ -131,10 +131,12 @@ export default function WorkspacePage() {
       style={{
         height: "100vh",
         maxHeight: "100vh",
-        width: "100vw",
+        width: "100%",
         maxWidth: "100%",
         overflow: "hidden",
         position: "relative",
+        margin: 0,
+        padding: 0,
         backgroundColor: "#F4F4F5",
         color: "#18181B",
         display: "flex",
@@ -143,6 +145,11 @@ export default function WorkspacePage() {
       }}
     >
       <style>{`
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+          background-color: #F4F4F5 !important;
+        }
         .orgkit-workspace-input:focus {
           border-color: #059669 !important;
           box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
