@@ -4,7 +4,16 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { ChevronDown, LogOut } from "lucide-react";
+import {
+  ChevronDown,
+  LogOut,
+  Users,
+  Calendar,
+  Wallet,
+  QrCode,
+  Archive,
+  ClipboardCheck,
+} from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
 import { createClient } from "@/src/lib/supabase/client";
 
@@ -164,6 +173,140 @@ export default function WorkspacePage() {
         }
         .orgkit-profile-trigger:hover {
           background-color: rgba(0, 0, 0, 0.04);
+        }
+
+        /* ── Card Popout Animation ── */
+        @keyframes cardPopout {
+          0% {
+            opacity: 0;
+            transform: scale(0.92) translateY(14px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+          }
+        }
+
+        /* ── Floating Icons Burst Outward from Center/Button ── */
+        @keyframes burstTL {
+          0% {
+            opacity: 0;
+            transform: translate(120px, 190px) scale(0.2);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(-5px, -6px) scale(1.08);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+        }
+        @keyframes burstFL {
+          0% {
+            opacity: 0;
+            transform: translate(180px, 30px) scale(0.2);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(-6px, 0px) scale(1.08);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+        }
+        @keyframes burstBL {
+          0% {
+            opacity: 0;
+            transform: translate(110px, -70px) scale(0.2);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(-5px, 4px) scale(1.08);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+        }
+        @keyframes burstTR {
+          0% {
+            opacity: 0;
+            transform: translate(-120px, 190px) scale(0.2);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(5px, -6px) scale(1.08);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+        }
+        @keyframes burstFR {
+          0% {
+            opacity: 0;
+            transform: translate(-170px, 20px) scale(0.2);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(6px, 0px) scale(1.08);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+        }
+        @keyframes burstBR {
+          0% {
+            opacity: 0;
+            transform: translate(-110px, -70px) scale(0.2);
+          }
+          65% {
+            opacity: 1;
+            transform: translate(5px, 4px) scale(1.08);
+          }
+          100% {
+            opacity: 1;
+            transform: translate(0, 0) scale(1);
+          }
+        }
+        @keyframes burstDot {
+          0% {
+            opacity: 0;
+            transform: scale(0);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .orgkit-burst-tl { animation: burstTL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.04s both; }
+        .orgkit-burst-fl { animation: burstFL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.08s both; }
+        .orgkit-burst-bl { animation: burstBL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.12s both; }
+        .orgkit-burst-tr { animation: burstTR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.06s both; }
+        .orgkit-burst-fr { animation: burstFR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.1s both; }
+        .orgkit-burst-br { animation: burstBR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.14s both; }
+        .orgkit-burst-dot { animation: burstDot 0.4s ease 0.2s both; }
+
+        /* Gentle ambient floating loop */
+        @keyframes ambientFloatA {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        @keyframes ambientFloatB {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(4px); }
+        }
+        .orgkit-float-a { animation: ambientFloatA 3.4s ease-in-out infinite; }
+        .orgkit-float-b { animation: ambientFloatB 3.8s ease-in-out infinite; }
+
+        @media (max-width: 639px) {
+          .orgkit-floating-decor {
+            display: none !important;
+          }
         }
       `}</style>
 
@@ -566,7 +709,7 @@ export default function WorkspacePage() {
                     margin: "0 0 4px 0",
                   }}
                 >
-                  Set up your org
+                  Set up your Organization
                 </h1>
                 <p
                   style={{
@@ -593,7 +736,7 @@ export default function WorkspacePage() {
                       marginBottom: 6,
                     }}
                   >
-                    Org name
+                    Organization Name
                   </label>
                   <input
                     id="org-name"
@@ -637,7 +780,7 @@ export default function WorkspacePage() {
                         color: "#18181B",
                       }}
                     >
-                      School or community
+                      School or Community
                     </label>
                     <span
                       style={{
