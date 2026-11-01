@@ -680,15 +680,236 @@ export default function WorkspacePage() {
              IMAGE 3: Workspace Creation Card ("Set up your org")
              ═════════════════════════════════════════════════════════════════ */
           <div
+            className="orgkit-card-wrapper"
             style={{
+              position: "relative",
               width: "100%",
               maxWidth: 380,
               boxSizing: "border-box",
+              animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
             }}
           >
+            {/* ── Floating Icons Decor (Burst outward with popout animation) ── */}
+            {/* 1. Top-Left: Users (White Card) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-tl"
+              style={{
+                position: "absolute",
+                top: -30,
+                left: -70,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-a"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid rgba(228, 228, 231, 0.8)",
+                  boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Users size={20} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* 2. Far-Left: Calendar (Mint Card) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-fl"
+              style={{
+                position: "absolute",
+                top: 155,
+                left: -128,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-b"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 13,
+                  backgroundColor: "rgba(5, 150, 105, 0.12)",
+                  boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Calendar size={18} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* 3. Bottom-Left: Wallet (White Card) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-bl"
+              style={{
+                position: "absolute",
+                bottom: 38,
+                left: -66,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-a"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid rgba(228, 228, 231, 0.8)",
+                  boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Wallet size={20} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* 4. Top-Right: QR Code (Emerald Solid Card) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-tr"
+              style={{
+                position: "absolute",
+                top: -24,
+                right: -62,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-b"
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 14,
+                  backgroundColor: "#059669",
+                  boxShadow: "0 10px 22px rgba(5, 150, 105, 0.35)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <QrCode size={20} color="#FFFFFF" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* 5. Far-Right: Archive Box (White Card) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-fr"
+              style={{
+                position: "absolute",
+                top: 165,
+                right: -118,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-a"
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 13,
+                  backgroundColor: "#FFFFFF",
+                  border: "1px solid rgba(228, 228, 231, 0.8)",
+                  boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Archive size={18} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* 6. Bottom-Right: Clipboard Check (Mint Card) */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-br"
+              style={{
+                position: "absolute",
+                bottom: 32,
+                right: -62,
+                zIndex: 20,
+              }}
+            >
+              <div
+                className="orgkit-float-b"
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 13,
+                  backgroundColor: "rgba(5, 150, 105, 0.12)",
+                  boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <ClipboardCheck size={19} color="#059669" strokeWidth={2} />
+              </div>
+            </div>
+
+            {/* ── Floating Accent Dots ── */}
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                left: -40,
+                top: 105,
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.35)",
+              }}
+            />
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                left: -95,
+                bottom: 95,
+                width: 4.5,
+                height: 4.5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.25)",
+              }}
+            />
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                right: -28,
+                top: 125,
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.35)",
+              }}
+            />
+            <div
+              className="orgkit-floating-decor orgkit-burst-dot"
+              style={{
+                position: "absolute",
+                right: -95,
+                top: 50,
+                width: 4.5,
+                height: 4.5,
+                borderRadius: "50%",
+                backgroundColor: "rgba(5, 150, 105, 0.25)",
+              }}
+            />
+
             {/* Main Card */}
             <div
               style={{
+                position: "relative",
+                zIndex: 10,
                 width: "100%",
                 borderRadius: 22,
                 border: "1px solid #E4E4E7",
