@@ -247,28 +247,49 @@ export default function WorkspacePage() {
           boxSizing: "border-box",
         }}
       >
-        {/* OrgKit Logo */}
+        {/* OrgKit Logo & Brand Mark */}
         <Link
           href="/workspace"
           style={{
             display: "inline-flex",
             alignItems: "center",
             textDecoration: "none",
+            gap: 11,
+            transition: "opacity 0.15s ease",
           }}
         >
           <Image
-            src="/orgkit-text-logo.png"
-            alt="OrgKit"
-            width={96}
+            src="/orgkit-logo.png"
+            alt="OrgKit Logo"
+            width={48}
             height={32}
             priority
             style={{
-              height: 24,
+              height: 28,
               width: "auto",
               display: "block",
               userSelect: "none",
             }}
           />
+          <div
+            style={{
+              width: 1.5,
+              height: 18,
+              backgroundColor: "#E4E4E7",
+              borderRadius: 1,
+            }}
+          />
+          <span
+            style={{
+              fontSize: 17,
+              fontWeight: 800,
+              color: "#18181B",
+              letterSpacing: "-0.03em",
+              lineHeight: 1,
+            }}
+          >
+            OrgKit
+          </span>
         </Link>
 
         {/* Officer Profile Badge & Dropdown */}
