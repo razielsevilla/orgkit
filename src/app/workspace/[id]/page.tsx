@@ -247,6 +247,27 @@ function WorkspaceDetailContent() {
           background-color: rgba(0, 0, 0, 0.05);
           color: #18181B !important;
         }
+        .orgkit-collapsed-brand-btn:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+        .orgkit-collapsed-brand-btn .orgkit-toggle-icon {
+          opacity: 0;
+          transform: scale(0.85);
+          pointer-events: none;
+        }
+        .orgkit-collapsed-brand-btn:hover .orgkit-toggle-icon {
+          opacity: 1;
+          transform: scale(1);
+          pointer-events: auto;
+        }
+        .orgkit-collapsed-brand-btn .orgkit-brand-icon {
+          opacity: 1;
+          transform: scale(1);
+        }
+        .orgkit-collapsed-brand-btn:hover .orgkit-brand-icon {
+          opacity: 0;
+          transform: scale(0.85);
+        }
         .orgkit-profile-row:hover {
           background-color: rgba(0, 0, 0, 0.04);
         }
@@ -284,17 +305,17 @@ function WorkspaceDetailContent() {
         }}
       >
         {/* ── Top Brand Header & Sidebar Toggle ── */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: isSidebarCollapsed ? "center" : "space-between",
-            marginBottom: 16,
-            height: 36,
-          }}
-        >
-          {/* Logo */}
-          {!isSidebarCollapsed ? (
+        {!isSidebarCollapsed ? (
+          /* Expanded: Logo on left, Toggle on right */
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+              height: 36,
+            }}
+          >
             <Link
               href="/workspace"
               style={{
@@ -318,35 +339,7 @@ function WorkspaceDetailContent() {
                 }}
               />
             </Link>
-          ) : (
-            <Link
-              href="/workspace"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                textDecoration: "none",
-              }}
-              title="OrgKit"
-            >
-              <Image
-                src="/orgkit-logo.png"
-                alt="OrgKit"
-                width={30}
-                height={30}
-                priority
-                style={{
-                  height: 28,
-                  width: 28,
-                  objectFit: "contain",
-                  display: "block",
-                }}
-              />
-            </Link>
-          )}
 
-          {/* Sidebar Toggle Button */}
-          {!isSidebarCollapsed && (
             <button
               type="button"
               onClick={toggleSidebar}
@@ -368,38 +361,77 @@ function WorkspaceDetailContent() {
             >
               <PanelLeft size={18} strokeWidth={1.8} />
             </button>
-          )}
-        </div>
-
-        {/* When collapsed, toggle button placed below logo */}
-        {isSidebarCollapsed && (
+          </div>
+        ) : (
+          /* Collapsed: Logo is the toggle button! Swaps to PanelLeft on hover */
           <div
             style={{
               display: "flex",
               justifyContent: "center",
-              marginBottom: 14,
+              marginBottom: 16,
+              height: 36,
             }}
           >
             <button
               type="button"
               onClick={toggleSidebar}
-              className="orgkit-sidebar-toggle"
+              className="orgkit-collapsed-brand-btn"
               title="Expand sidebar"
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 34,
-                height: 34,
-                borderRadius: 8,
+                position: "relative",
+                width: 36,
+                height: 36,
+                borderRadius: 10,
                 border: "none",
                 backgroundColor: "transparent",
-                color: "#71717A",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 cursor: "pointer",
-                transition: "all 0.15s ease",
+                padding: 0,
+                transition: "background-color 0.15s ease",
               }}
             >
-              <PanelLeft size={18} strokeWidth={1.8} />
+              {/* Default: OrgKit brand icon */}
+              <div
+                className="orgkit-brand-icon"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: "opacity 0.15s ease, transform 0.15s ease",
+                }}
+              >
+                <Image
+                  src="/orgkit-logo.png"
+                  alt="OrgKit"
+                  width={28}
+                  height={28}
+                  priority
+                  style={{
+                    height: 26,
+                    width: 26,
+                    objectFit: "contain",
+                    display: "block",
+                  }}
+                />
+              </div>
+
+              {/* Hover: Sidebar expand toggle icon */}
+              <div
+                className="orgkit-toggle-icon"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: "#18181B",
+                  transition: "opacity 0.15s ease, transform 0.15s ease",
+                }}
+              >
+                <PanelLeft size={20} strokeWidth={1.8} />
+              </div>
             </button>
           </div>
         )}
