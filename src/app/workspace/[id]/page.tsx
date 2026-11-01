@@ -1146,65 +1146,22 @@ function WorkspaceDetailContent() {
       </aside>
 
       {/* ═════════════════════════════════════════════════════════════════
-          MAIN CONTENT AREA (WITH TOP BAR & CANVAS)
+          MAIN CONTENT CANVAS (FULL BLEED)
           ═════════════════════════════════════════════════════════════════ */}
-      <div
+      <main
         style={{
-          display: "flex",
-          flexDirection: "column",
           flex: 1,
           height: "100vh",
-          overflow: "hidden",
           position: "relative",
+          overflow: "hidden",
+          backgroundColor: "#F4F4F5",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px",
           boxSizing: "border-box",
         }}
       >
-        {/* Top Minimal Canvas Header */}
-        <header
-          style={{
-            height: 56,
-            minHeight: 56,
-            width: "100%",
-            backgroundColor: "#FFFFFF",
-            borderBottom: "1px solid #E4E4E7",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 24px",
-            boxSizing: "border-box",
-            zIndex: 20,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <h1
-              style={{
-                fontSize: 16.5,
-                fontWeight: 700,
-                letterSpacing: "-0.015em",
-                color: "#18181B",
-                margin: 0,
-              }}
-            >
-              Home
-            </h1>
-          </div>
-        </header>
-
-        {/* ── Main Content Canvas ── */}
-        <main
-          style={{
-            flex: 1,
-            height: "calc(100vh - 56px)",
-            position: "relative",
-            overflow: "hidden",
-            backgroundColor: "#F4F4F5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "24px",
-            boxSizing: "border-box",
-          }}
-        >
           {/* Background Concentric SVG Circles (design.md aesthetic) */}
           {/* Top-Left Arc */}
           <div
@@ -1603,7 +1560,6 @@ function WorkspaceDetailContent() {
             </div>
           </div>
         </main>
-      </div>
     </div>
   );
 }
