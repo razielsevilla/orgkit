@@ -82,9 +82,27 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/setup", requestUrl.origin));
     }
 
-    // First-time officer: send to the OrgKit consent/privacy notice page
-    // The officer row is created only after they tick "I agree" on /consent
-    return NextResponse.redirect(new URL("/consent", requestUrl.origin));
+    // First-time officer: create the row now.
+    // Google's own OAuth consent screen (shown before this callback runs)
+    // is the official consent — no custom page needed.
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+    const { error: insertError } = await admin.from("officers").insert({
+      id: user.id,
+      google_sub: googleSub as string,
+      email,
+      full_name: fullName,
+      consent_version: "v1",
+      consent_at: now,
+      created_at: now,
+      last_sign_in_at: now,
+    });
+
+    if (insertError) {
+      console.error("Error inserting new officer:", insertError);
+      return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
+    }
+
+    return NextResponse.redirect(new URL("/setup", requestUrl.origin));
   }
 
   return NextResponse.redirect(new URL("/register", requestUrl.origin));
