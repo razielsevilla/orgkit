@@ -12,6 +12,8 @@ export function getErrorMessage(errorParam: string | null): string | null {
       return "We couldn't reach Google. Please try again.";
     case "school_blocked":
       return "Your school account may not allow this app. Try a personal Google account, or ask your school's IT admin.";
+    case "session_expired":
+      return "Your session expired after 7 days. Please sign in again.";
     default:
       return "Something went wrong. Please try again.";
   }

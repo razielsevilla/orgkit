@@ -5,6 +5,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
+import { isSessionExpired } from "@/src/lib/session-config";
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -27,6 +28,13 @@ export default function SetupPage() {
 
       if (!user) {
         router.push("/signin");
+        return;
+      }
+
+      // Check if session has exceeded 7 days limit
+      if (isSessionExpired(user.last_sign_in_at)) {
+        await supabase.auth.signOut();
+        router.push("/signin?error=session_expired");
         return;
       }
 
