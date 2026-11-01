@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
+import { createAdminClient } from "@/src/lib/supabase/service-role";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
 
     const user = data.user;
 
-    // Extract Google sub (account ID)
+    // Extract Google sub (permanent account ID — used for all matching, not email)
     const googleIdentity = user.identities?.find((i: { provider: string }) => i.provider === "google");
     const googleSub =
       user.user_metadata?.sub ||
@@ -50,10 +51,17 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
     }
 
+    const email = user.email ?? "";
+    const fullName = user.user_metadata?.full_name || user.user_metadata?.name || "";
+    const now = new Date().toISOString();
+
+    // Use service-role client for DB writes so RLS doesn't block the callback route
+    const admin = createAdminClient();
+
     // Check if an officer record already exists for this Google sub
-    const { data: officer, error: officerQueryError } = await supabase
+    const { data: officer, error: officerQueryError } = await admin
       .from("officers")
-      .select("*")
+      .select("id, email, consent_version")
       .eq("google_sub", googleSub as string)
       .maybeSingle();
 
@@ -62,26 +70,37 @@ export async function GET(request: Request) {
     }
 
     if (officer) {
-      // Existing officer: update last_sign_in_at and sync current email
-      await supabase
+      // Returning officer: sync email and update last_sign_in_at
+      await admin
         .from("officers")
         .update({
-          last_sign_in_at: new Date().toISOString(),
-          email: user.email ?? officer.email,
+          last_sign_in_at: now,
+          email: email || officer.email,
         })
         .eq("id", officer.id);
 
-      // If consent hasn't been recorded yet, direct to consent
-      if (!officer.consent_version) {
-        return NextResponse.redirect(new URL("/consent", requestUrl.origin));
-      }
-
-      // Acceptance criterion: Land on org setup (EP-1) if no org, or on their org page if they do
       return NextResponse.redirect(new URL("/setup", requestUrl.origin));
     }
 
-    // First-time sign-in: Show the privacy notice and unticked "I agree" box
-    return NextResponse.redirect(new URL("/consent", requestUrl.origin));
+    // First-time officer: create the row immediately.
+    // Consent is implicitly given by completing Google's own OAuth screen.
+    const { error: insertError } = await admin.from("officers").insert({
+      id: user.id,
+      google_sub: googleSub as string,
+      email,
+      full_name: fullName,
+      consent_version: "v1",
+      consent_at: now,
+      created_at: now,
+      last_sign_in_at: now,
+    });
+
+    if (insertError) {
+      console.error("Error inserting new officer:", insertError);
+      return NextResponse.redirect(new URL("/register?error=google_error", requestUrl.origin));
+    }
+
+    return NextResponse.redirect(new URL("/setup", requestUrl.origin));
   }
 
   return NextResponse.redirect(new URL("/register", requestUrl.origin));
