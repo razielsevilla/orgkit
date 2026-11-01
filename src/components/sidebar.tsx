@@ -36,6 +36,7 @@ export function Sidebar({
   activePath = "home",
 }: SidebarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isBrandHovered, setIsBrandHovered] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Compute officer initials and display name
@@ -106,6 +107,19 @@ export function Sidebar({
       }}
     >
       {/* ── Top Brand Header & Sidebar Toggle ── */}
+      <style>{`
+        .orgkit-sidebar-toggle:hover {
+          background-color: #F4F4F5 !important;
+          color: #18181B !important;
+        }
+        .orgkit-nav-btn:hover {
+          background-color: #F4F4F5 !important;
+          color: #18181B !important;
+        }
+        .orgkit-profile-row:hover {
+          background-color: #FEF2F2 !important;
+        }
+      `}</style>
       {!isCollapsed ? (
         /* Expanded: Logo on left, Toggle on right */
         <div
@@ -164,7 +178,7 @@ export function Sidebar({
           </button>
         </div>
       ) : (
-        /* Collapsed: Logo is the toggle button! Swaps to PanelLeft on hover */
+        /* Collapsed: Show OrgKit icon by default; switch to PanelLeft open icon ONLY when hovered */
         <div
           style={{
             display: "flex",
@@ -176,15 +190,16 @@ export function Sidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
+            onMouseEnter={() => setIsBrandHovered(true)}
+            onMouseLeave={() => setIsBrandHovered(false)}
             className="orgkit-collapsed-brand-btn"
             title="Expand sidebar"
             style={{
-              position: "relative",
               width: 36,
               height: 36,
               borderRadius: 10,
               border: "none",
-              backgroundColor: "transparent",
+              backgroundColor: isBrandHovered ? "#F4F4F5" : "transparent",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -193,16 +208,9 @@ export function Sidebar({
               transition: "background-color 0.15s ease",
             }}
           >
-            {/* Default: OrgKit brand icon */}
-            <div
-              className="orgkit-brand-icon"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "opacity 0.15s ease, transform 0.15s ease",
-              }}
-            >
+            {isBrandHovered ? (
+              <PanelLeft size={20} strokeWidth={1.8} color="#18181B" />
+            ) : (
               <Image
                 src="/orgkit-logo.png"
                 alt="OrgKit"
@@ -215,23 +223,7 @@ export function Sidebar({
                   display: "block",
                 }}
               />
-            </div>
-
-            {/* Hover: Sidebar expand toggle icon */}
-            <div
-              className="orgkit-toggle-icon"
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "#18181B",
-                transition: "opacity 0.15s ease, transform 0.15s ease",
-              }}
-            >
-              <PanelLeft size={20} strokeWidth={1.8} />
-            </div>
+            )}
           </button>
         </div>
       )}
