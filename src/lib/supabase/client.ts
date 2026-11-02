@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { SESSION_MAX_SECONDS } from "@/src/lib/session-config";
 
 function getSupabaseUrl(): string {
   let url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
@@ -27,5 +28,11 @@ export function createClient() {
   const url = getSupabaseUrl();
   const anonKey = getSupabaseAnonKey();
 
-  return createBrowserClient(url, anonKey);
+  return createBrowserClient(url, anonKey, {
+    cookieOptions: {
+      maxAge: SESSION_MAX_SECONDS,
+      sameSite: "lax",
+      path: "/",
+    },
+  });
 }

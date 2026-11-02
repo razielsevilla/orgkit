@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { SESSION_MAX_SECONDS } from "@/src/lib/session-config";
 
 function getSupabaseUrl(): string {
   let url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
@@ -26,6 +27,11 @@ export async function createClient() {
   const anonKey = getSupabaseAnonKey();
 
   return createServerClient(url, anonKey, {
+    cookieOptions: {
+      maxAge: SESSION_MAX_SECONDS,
+      sameSite: "lax",
+      path: "/",
+    },
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -33,7 +39,12 @@ export async function createClient() {
       setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
+            cookieStore.set(name, value, {
+              ...options,
+              maxAge: options?.maxAge ?? SESSION_MAX_SECONDS,
+              sameSite: (options?.sameSite as "lax" | "strict" | "none") ?? "lax",
+              path: options?.path ?? "/",
+            })
           );
         } catch {
           // The `setAll` method was called from a Server Component.

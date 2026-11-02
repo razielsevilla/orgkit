@@ -94,7 +94,22 @@ export async function GET(request: Request) {
       return toSignIn("google_error");
     }
 
-    return NextResponse.redirect(new URL("/setup", requestUrl.origin));
+    // Returning officer: send them to their workspace if they have one
+    const { data: membership } = await supabase
+      .from("org_officers")
+      .select("org_id")
+      .eq("officer_id", officer.id)
+      .order("joined_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (membership?.org_id) {
+      return NextResponse.redirect(
+        new URL(`/org/${membership.org_id}`, requestUrl.origin)
+      );
+    }
+
+    return NextResponse.redirect(new URL("/orgs/new", requestUrl.origin));
   }
 
   // First-time officer: no account row yet. They see the privacy notice first,

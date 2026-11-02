@@ -4,6 +4,7 @@
  */
 
 export const SESSION_MAX_DAYS = 7;
+export const SESSION_MAX_SECONDS = SESSION_MAX_DAYS * 24 * 60 * 60; // 604,800 seconds (7 days)
 export const SESSION_MAX_MS = SESSION_MAX_DAYS * 24 * 60 * 60 * 1000;
 
 /**
@@ -16,4 +17,3 @@ export function isSessionExpired(lastSignInAt?: string | null): boolean {
   if (isNaN(lastSignInTime)) return false;
   return Date.now() - lastSignInTime > SESSION_MAX_MS;
 }
-
