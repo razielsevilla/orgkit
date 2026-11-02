@@ -9,6 +9,7 @@ import {
   getOfficerDefaultWorkspace,
   getCurrentOfficer,
 } from "@/src/app/(workspace)/actions";
+import { Sidebar } from "@/src/components/sidebar";
 import { Navbar, OfficerProfile } from "@/src/components/navbar";
 import {
   Card,
@@ -16,7 +17,6 @@ import {
   CardBadge,
   CardTitle,
   CardDescription,
-  CardContent,
 } from "@/src/components/card";
 import { FloatingIconsDecor } from "@/src/components/floating-decor";
 
@@ -37,6 +37,29 @@ function WorkspaceDetailContent() {
   const [isLoadingOrg, setIsLoadingOrg] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [officer, setOfficer] = useState<OfficerProfile | null>(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  // Restore sidebar preference from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("orgkit_sidebar_collapsed");
+      if (saved === "true") {
+        setIsSidebarCollapsed(true);
+      }
+    } catch {
+      // localStorage may be disabled in some sandboxes
+    }
+  }, []);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("orgkit_sidebar_collapsed", String(next));
+      } catch {}
+      return next;
+    });
+  };
 
   // Parallel fetch: loads organization and officer profile concurrently
   useEffect(() => {
@@ -118,7 +141,7 @@ function WorkspaceDetailContent() {
           boxSizing: "border-box",
         }}
       >
-        {/* Standalone Reusable Top Navbar */}
+        {/* Top Navbar for Access Refused Screen */}
         <Navbar officer={officer} logoHref="/" />
 
         {/* Access Refused Main Canvas */}
@@ -132,7 +155,6 @@ function WorkspaceDetailContent() {
             boxSizing: "border-box",
           }}
         >
-          {/* Reusable Standalone Card Component */}
           <Card maxWidth={380} padding="36px 32px">
             <CardHeader style={{ marginBottom: 20 }}>
               <CardBadge size={66}>
@@ -163,7 +185,7 @@ function WorkspaceDetailContent() {
                 It may not exist, or you may not have access to it.
               </CardDescription>
             </CardHeader>
-            <CardContent style={{ textAlign: "center" }}>
+            <div style={{ textAlign: "center", width: "100%" }}>
               <button
                 type="button"
                 onClick={async () => {
@@ -199,7 +221,7 @@ function WorkspaceDetailContent() {
               >
                 Go to my workspace
               </button>
-            </CardContent>
+            </div>
           </Card>
         </main>
       </div>
@@ -220,7 +242,6 @@ function WorkspaceDetailContent() {
         backgroundColor: "#F4F4F5",
         color: "#18181B",
         display: "flex",
-        flexDirection: "column",
         boxSizing: "border-box",
       }}
     >
@@ -242,13 +263,22 @@ function WorkspaceDetailContent() {
         }
       `}</style>
 
-      <Navbar officer={officer} logoHref="/" />
+      {/* ── Reusable Standalone Collapsible Sidebar (Navbar removed) ── */}
+      <Sidebar
+        rawId={rawId}
+        orgName={orgName}
+        schoolName={schoolName}
+        officer={officer}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={toggleSidebar}
+        activePath="home"
+      />
 
       {/* ── Main Full-Bleed Content Canvas ── */}
       <main
         style={{
           flex: 1,
-          minHeight: 0,
+          height: "100vh",
           position: "relative",
           overflow: "hidden",
           backgroundColor: "#F4F4F5",
@@ -334,7 +364,7 @@ function WorkspaceDetailContent() {
           </svg>
         </div>
 
-        {/* Center Floating Card & Decor */}
+        {/* Center Floating Card Wrapper */}
         <div
           className="orgkit-card-wrapper"
           style={{
@@ -345,7 +375,7 @@ function WorkspaceDetailContent() {
             animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
           }}
         >
-          {/* Reusable Standalone Floating Icons Decor */}
+          {/* Reusable Floating Decor */}
           <FloatingIconsDecor />
 
           {/* Reusable Standalone Card Component */}
@@ -354,13 +384,32 @@ function WorkspaceDetailContent() {
               <CardBadge size={72} style={{ marginBottom: 24 }}>
                 <Users size={32} color="#059669" strokeWidth={2} />
               </CardBadge>
-              <p style={{ margin: "0 0 6px 0", fontSize: 13.5, fontWeight: 600, color: "#059669" }}>
+              <p
+                style={{
+                  margin: "0 0 6px 0",
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  color: "#059669",
+                }}
+              >
                 {schoolName ? `${orgName} · ${schoolName}` : orgName}
               </p>
-              <CardTitle style={{ fontSize: 27, lineHeight: 1.2, margin: "0 0 8px 0" }}>
+              <CardTitle
+                style={{
+                  fontSize: 27,
+                  lineHeight: 1.2,
+                  margin: "0 0 8px 0",
+                }}
+              >
                 Your workspace is ready.
               </CardTitle>
-              <CardDescription style={{ fontSize: 14.5, color: "#71717A", lineHeight: 1.4 }}>
+              <CardDescription
+                style={{
+                  fontSize: 14.5,
+                  color: "#71717A",
+                  lineHeight: 1.4,
+                }}
+              >
                 Next: add your members.
               </CardDescription>
             </CardHeader>
@@ -408,6 +457,77 @@ function WorkspaceLoadingSkeleton() {
           }}
         />
       </div>
+
+      {/* Sidebar Skeleton (Expanded 256px) */}
+      <aside
+        style={{
+          width: 256,
+          minWidth: 256,
+          height: "100vh",
+          backgroundColor: "#FFFFFF",
+          borderRight: "1px solid #E4E4E7",
+          padding: "16px 14px 14px 14px",
+          display: "flex",
+          flexDirection: "column",
+          boxSizing: "border-box",
+          flexShrink: 0,
+        }}
+      >
+        {/* Top Header Placeholder */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            marginBottom: 16,
+            height: 36,
+          }}
+        >
+          <div
+            className="orgkit-shimmer"
+            style={{ width: 100, height: 26, borderRadius: 8, backgroundColor: "#F4F4F5" }}
+          />
+          <div
+            className="orgkit-shimmer"
+            style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: "#F4F4F5" }}
+          />
+        </div>
+
+        {/* Workspace Card Shimmer */}
+        <div
+          className="orgkit-shimmer"
+          style={{
+            height: 104,
+            borderRadius: 18,
+            backgroundColor: "rgba(5, 150, 105, 0.08)",
+            border: "1px solid rgba(5, 150, 105, 0.12)",
+            marginBottom: 16,
+          }}
+        />
+
+        {/* Nav Items Shimmer */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
+          <div
+            className="orgkit-shimmer"
+            style={{ height: 38, borderRadius: 12, backgroundColor: "rgba(5, 150, 105, 0.10)" }}
+          />
+          <div style={{ height: 16, width: 60, marginTop: 12, marginBottom: 4 }} className="orgkit-shimmer" />
+          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
+          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
+          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
+        </div>
+
+        {/* Bottom Officer Profile Card Shimmer */}
+        <div
+          className="orgkit-shimmer"
+          style={{
+            height: 52,
+            borderRadius: 14,
+            border: "1px solid #E4E4E7",
+            backgroundColor: "#FFFFFF",
+          }}
+        />
+      </aside>
 
       {/* Main Canvas Skeleton */}
       <main
