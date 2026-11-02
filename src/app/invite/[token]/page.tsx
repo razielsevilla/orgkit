@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import Image from "next/image";
 import Link from "next/link";
@@ -34,7 +35,7 @@ interface InvitePageProps {
   params: Promise<{ token: string }>;
 }
 
-export default async function InvitePage({ params }: InvitePageProps) {
+async function InviteContent({ params }: InvitePageProps) {
   const { token } = await params;
 
   // 1. Rate limit per IP
@@ -440,6 +441,14 @@ function InviteContainer({ children }: { children: React.ReactNode }) {
 
       {children}
     </main>
+  );
+}
+
+export default function InvitePage(props: InvitePageProps) {
+  return (
+    <Suspense fallback={null}>
+      <InviteContent {...props} />
+    </Suspense>
   );
 }
 
