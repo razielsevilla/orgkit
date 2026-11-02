@@ -9,7 +9,9 @@ function isPublic(pathname: string) {
   return (
     PUBLIC_PATHS.includes(pathname) ||
     pathname === "/auth" ||
-    pathname.startsWith("/auth/")
+    pathname.startsWith("/auth/") ||
+    // Member join links (A4): students open these with no account
+    pathname.startsWith("/join/")
   );
 }
 

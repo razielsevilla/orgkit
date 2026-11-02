@@ -12,6 +12,7 @@ import {
   Wallet,
   Archive,
   PanelLeft,
+  QrCode,
 } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
 import { OfficerProfile } from "@/src/components/navbar";
@@ -21,6 +22,8 @@ export interface SidebarProps {
   orgName: string;
   schoolName?: string | null;
   officer?: OfficerProfile | null;
+  /** Admins of the org also see the member join link screen */
+  isAdmin?: boolean;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   activePath?: string;
@@ -31,6 +34,7 @@ export function Sidebar({
   orgName,
   schoolName,
   officer,
+  isAdmin = false,
   isCollapsed,
   onToggleCollapse,
   activePath = "home",
@@ -402,15 +406,15 @@ export function Sidebar({
             gap: 12,
             borderRadius: 12,
             padding: isCollapsed ? "9px 0" : "9px 12px",
-            backgroundColor: "rgba(5, 150, 105, 0.10)",
-            color: "#059669",
+            backgroundColor: activePath === "home" ? "rgba(5, 150, 105, 0.10)" : "transparent",
+            color: activePath === "home" ? "#059669" : "#52525B",
             textDecoration: "none",
             fontWeight: 600,
             fontSize: 13.5,
             transition: "all 0.15s ease",
           }}
         >
-          <Home size={18} strokeWidth={2.2} color="#059669" />
+          <Home size={18} strokeWidth={2.2} color={activePath === "home" ? "#059669" : "#71717A"} />
           {!isCollapsed && <span>Home</span>}
         </Link>
 
@@ -436,6 +440,36 @@ export function Sidebar({
               margin: "8px 12px",
             }}
           />
+        )}
+
+        {isAdmin && (
+          <Link
+            href={`/org/${rawId}/members/join`}
+            className="orgkit-nav-item"
+            title="Member join"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: isCollapsed ? "center" : "flex-start",
+              gap: 12,
+              borderRadius: 12,
+              padding: isCollapsed ? "9px 0" : "9px 12px",
+              backgroundColor:
+                activePath === "member-join" ? "rgba(5, 150, 105, 0.10)" : "transparent",
+              color: activePath === "member-join" ? "#059669" : "#52525B",
+              textDecoration: "none",
+              fontWeight: activePath === "member-join" ? 600 : 500,
+              fontSize: 13.5,
+              transition: "all 0.15s ease",
+            }}
+          >
+            <QrCode
+              size={18}
+              strokeWidth={1.8}
+              color={activePath === "member-join" ? "#059669" : "#71717A"}
+            />
+            {!isCollapsed && <span>Member join</span>}
+          </Link>
         )}
 
         {/* Future modules */}

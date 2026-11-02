@@ -8,6 +8,7 @@ import {
   getOrganizationById,
   getOfficerDefaultWorkspace,
   getCurrentOfficer,
+  isOrgAdmin,
 } from "@/src/app/(workspace)/actions";
 import { Sidebar } from "@/src/components/sidebar";
 import { Navbar, OfficerProfile } from "@/src/components/navbar";
@@ -37,6 +38,7 @@ function WorkspaceDetailContent() {
   const [isLoadingOrg, setIsLoadingOrg] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [officer, setOfficer] = useState<OfficerProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Restore sidebar preference from localStorage
@@ -70,10 +72,12 @@ function WorkspaceDetailContent() {
         return;
       }
       try {
-        const [org, officerData] = await Promise.all([
+        const [org, officerData, adminFlag] = await Promise.all([
           getOrganizationById(rawId),
           getCurrentOfficer(),
+          isOrgAdmin(rawId),
         ]);
+        setIsAdmin(adminFlag);
 
         if (officerData) {
           setOfficer(officerData);
@@ -269,6 +273,7 @@ function WorkspaceDetailContent() {
         orgName={orgName}
         schoolName={schoolName}
         officer={officer}
+        isAdmin={isAdmin}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={toggleSidebar}
         activePath="home"
