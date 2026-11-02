@@ -5,6 +5,7 @@ import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { getFullName, getGoogleSub } from "@/src/lib/google-sub";
 import { CONSENT_VERSION } from "@/src/lib/consent-config";
+import { getPendingInviteCookie } from "@/src/lib/session-invite";
 
 /** The officer ticked "I agree": create the account and store the agreement. */
 export async function acceptConsent(formData: FormData) {
@@ -39,6 +40,11 @@ export async function acceptConsent(formData: FormData) {
     console.error("Error creating officer:", error);
     await supabase.auth.signOut();
     redirect("/signin?error=google_error");
+  }
+
+  const pendingToken = await getPendingInviteCookie();
+  if (pendingToken) {
+    redirect(`/invite/${pendingToken}`);
   }
 
   redirect("/orgs/new");

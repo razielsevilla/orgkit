@@ -8,6 +8,7 @@ import {
   LogOut,
   Home,
   Users,
+  UserCheck,
   Calendar,
   Wallet,
   Archive,
@@ -116,6 +117,10 @@ export function Sidebar({
           background-color: #F4F4F5 !important;
           color: #18181B !important;
         }
+        .orgkit-nav-item:not(.active):hover {
+          background-color: #F4F4F5 !important;
+          color: #18181B !important;
+        }
         .orgkit-profile-row:hover {
           background-color: #FEF2F2 !important;
         }
@@ -132,7 +137,7 @@ export function Sidebar({
           }}
         >
           <Link
-            href={`/org/${rawId}`}
+            href={`/workspace/${rawId}`}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -392,8 +397,8 @@ export function Sidebar({
       >
         {/* Active: Home */}
         <Link
-          href={`/org/${rawId}`}
-          className="orgkit-nav-item"
+          href={`/workspace/${rawId}`}
+          className={`orgkit-nav-item ${activePath === "home" ? "active" : ""}`}
           title="Home"
           style={{
             display: "flex",
@@ -402,16 +407,40 @@ export function Sidebar({
             gap: 12,
             borderRadius: 12,
             padding: isCollapsed ? "9px 0" : "9px 12px",
-            backgroundColor: "rgba(5, 150, 105, 0.10)",
-            color: "#059669",
+            backgroundColor: activePath === "home" ? "rgba(5, 150, 105, 0.10)" : "transparent",
+            color: activePath === "home" ? "#059669" : "#52525B",
             textDecoration: "none",
-            fontWeight: 600,
+            fontWeight: activePath === "home" ? 600 : 500,
             fontSize: 13.5,
             transition: "all 0.15s ease",
           }}
         >
-          <Home size={18} strokeWidth={2.2} color="#059669" />
+          <Home size={18} strokeWidth={2.2} color={activePath === "home" ? "#059669" : "#71717A"} />
           {!isCollapsed && <span>Home</span>}
+        </Link>
+
+        {/* Navigation Item: Officers (Ticket Section 8: above Manage group) */}
+        <Link
+          href={`/workspace/${rawId}/officers`}
+          className={`orgkit-nav-item ${activePath === "officers" ? "active" : ""}`}
+          title="Officers"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: isCollapsed ? "center" : "flex-start",
+            gap: 12,
+            borderRadius: 12,
+            padding: isCollapsed ? "9px 0" : "9px 12px",
+            backgroundColor: activePath === "officers" ? "rgba(5, 150, 105, 0.10)" : "transparent",
+            color: activePath === "officers" ? "#059669" : "#52525B",
+            textDecoration: "none",
+            fontWeight: activePath === "officers" ? 600 : 500,
+            fontSize: 13.5,
+            transition: "all 0.15s ease",
+          }}
+        >
+          <UserCheck size={18} strokeWidth={2.2} color={activePath === "officers" ? "#059669" : "#71717A"} />
+          {!isCollapsed && <span>Officers</span>}
         </Link>
 
         {/* Section Divider: Manage */}
