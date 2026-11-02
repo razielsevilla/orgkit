@@ -41,7 +41,7 @@ export async function acceptConsent(formData: FormData) {
     redirect("/signin?error=google_error");
   }
 
-  redirect("/workspace");
+  redirect("/orgs/new");
 }
 
 /** The officer chose not to agree: no account is kept. */

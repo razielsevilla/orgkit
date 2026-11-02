@@ -1,10 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isSessionExpired, SESSION_MAX_SECONDS } from "@/src/lib/session-config";
-import { createAdminClient } from "@/src/lib/supabase/service-role";
 
 // Pages a signed-out visitor may open. Everything else needs a session.
-const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms", "/consent"];
+const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms"];
 
 function isPublic(pathname: string) {
   return (
@@ -67,26 +66,17 @@ export async function proxy(request: NextRequest) {
   if (user) {
     const pathname = request.nextUrl.pathname;
 
-    // Support ticket /orgs/new and /org/:id alias routes
-    if (pathname === "/orgs/new") {
-      return redirectTo("/workspace");
-    }
-    if (pathname.startsWith("/org/")) {
-      const orgId = pathname.replace("/org/", "");
-      return redirectTo(`/workspace/${orgId}`);
-    }
-
-    // Only query membership for entry, signin, and workspace-creation routes
-    const isEntryOrWorkspace =
+    // Entry and create-workspace screens: an officer who already has an org goes
+    // to it (one org per officer in v0.2); one without goes to the create screen.
+    const isEntryOrCreate =
       pathname === "/" ||
       pathname === "/signin" ||
       pathname === "/register" ||
-      pathname === "/workspace" ||
       pathname === "/orgs/new";
 
-    if (isEntryOrWorkspace) {
-      const admin = createAdminClient();
-      const { data: membership } = await admin
+    if (isEntryOrCreate) {
+      // As the signed-in officer, so row level security applies
+      const { data: membership } = await supabase
         .from("org_officers")
         .select("org_id")
         .eq("officer_id", user.id)
@@ -95,11 +85,11 @@ export async function proxy(request: NextRequest) {
         .maybeSingle();
 
       if (membership?.org_id) {
-        return redirectTo(`/workspace/${membership.org_id}`);
+        return redirectTo(`/org/${membership.org_id}`);
       }
 
-      if (pathname !== "/workspace") {
-        return redirectTo("/workspace");
+      if (pathname !== "/orgs/new") {
+        return redirectTo("/orgs/new");
       }
     }
   }

@@ -17,7 +17,7 @@ export interface NavbarProps {
   logoHref?: string;
 }
 
-export function Navbar({ officer, logoHref = "/workspace" }: NavbarProps) {
+export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

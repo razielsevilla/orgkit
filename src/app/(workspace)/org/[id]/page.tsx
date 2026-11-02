@@ -1,16 +1,15 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useParams, useSearchParams, useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Users } from "lucide-react";
 import {
   getOrganizationById,
   getOfficerDefaultWorkspace,
   getCurrentOfficer,
-} from "@/src/app/workspace/actions";
+} from "@/src/app/(workspace)/actions";
 import { Navbar, OfficerProfile } from "@/src/components/navbar";
-import { Sidebar } from "@/src/components/sidebar";
 import {
   Card,
   CardHeader,
@@ -30,41 +29,12 @@ const plusJakarta = Plus_Jakarta_Sans({
 function WorkspaceDetailContent() {
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams();
   const rawId = (params?.id as string) || "";
 
-  // Query param overrides for instant frame-0 rendering without buffering
-  const queryName = searchParams.get("name");
-  const querySchool = searchParams.get("school");
-
-  const [orgData, setOrgData] = useState<{ name: string; school: string } | null>(
-    queryName ? { name: queryName, school: querySchool || "" } : null
-  );
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  // Restore sidebar preference from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("orgkit_sidebar_collapsed");
-      if (saved === "true") {
-        setIsSidebarCollapsed(true);
-      }
-    } catch {
-      // localStorage may be disabled in some sandboxes
-    }
-  }, []);
-
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("orgkit_sidebar_collapsed", String(next));
-      } catch {}
-      return next;
-    });
-  };
-
-  const [isLoadingOrg, setIsLoadingOrg] = useState(!queryName);
+  // Org details come only from the server, which returns them to members only.
+  // Nothing from the URL is ever shown.
+  const [orgData, setOrgData] = useState<{ name: string; school: string } | null>(null);
+  const [isLoadingOrg, setIsLoadingOrg] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [officer, setOfficer] = useState<OfficerProfile | null>(null);
 
@@ -90,12 +60,6 @@ function WorkspaceDetailContent() {
           setOrgData({ name: org.name, school: org.school || "" });
           setAccessDenied(false);
         } else {
-          // Check if officer belongs to their own workspace and route them there
-          const defaultWs = await getOfficerDefaultWorkspace();
-          if (defaultWs?.orgId && defaultWs.orgId !== rawId) {
-            router.replace(`/workspace/${defaultWs.orgId}`);
-            return;
-          }
           // Officer is not a member of this organization, or organization does not exist
           setAccessDenied(true);
         }
@@ -109,31 +73,8 @@ function WorkspaceDetailContent() {
     loadWorkspaceData();
   }, [rawId, router]);
 
-  const isUuid =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      rawId
-    );
-
-  const orgName =
-    orgData?.name ||
-    queryName?.trim() ||
-    (!isUuid && rawId && rawId !== "default"
-      ? rawId
-          .split("-")
-          .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-          .join(" ")
-      : "Organization");
-
-  // Only display school/community if explicitly provided or saved in DB (never fall back to static text)
-  const schoolName = (() => {
-    if (orgData) {
-      return orgData.school?.trim() || null;
-    }
-    if (querySchool !== null && querySchool !== undefined) {
-      return querySchool.trim() || null;
-    }
-    return null;
-  })();
+  const orgName = orgData?.name || "Organization";
+  const schoolName = orgData?.school?.trim() || null;
 
   // Strict zero-scroll desktop policy
   useEffect(() => {
@@ -178,7 +119,7 @@ function WorkspaceDetailContent() {
         }}
       >
         {/* Standalone Reusable Top Navbar */}
-        <Navbar officer={officer} logoHref="/workspace" />
+        <Navbar officer={officer} logoHref="/" />
 
         {/* Access Refused Main Canvas */}
         <main
@@ -229,12 +170,12 @@ function WorkspaceDetailContent() {
                   try {
                     const defaultWs = await getOfficerDefaultWorkspace();
                     if (defaultWs?.orgId) {
-                      router.push(`/workspace/${defaultWs.orgId}`);
+                      router.push(`/org/${defaultWs.orgId}`);
                     } else {
-                      router.push("/workspace");
+                      router.push("/orgs/new");
                     }
                   } catch {
-                    router.push("/workspace");
+                    router.push("/orgs/new");
                   }
                 }}
                 className="orgkit-cta-btn"
@@ -279,6 +220,7 @@ function WorkspaceDetailContent() {
         backgroundColor: "#F4F4F5",
         color: "#18181B",
         display: "flex",
+        flexDirection: "column",
         boxSizing: "border-box",
       }}
     >
@@ -300,22 +242,13 @@ function WorkspaceDetailContent() {
         }
       `}</style>
 
-      {/* ── Reusable Standalone Collapsible Sidebar ── */}
-      <Sidebar
-        rawId={rawId}
-        orgName={orgName}
-        schoolName={schoolName}
-        officer={officer}
-        isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={toggleSidebar}
-        activePath="home"
-      />
+      <Navbar officer={officer} logoHref="/" />
 
       {/* ── Main Full-Bleed Content Canvas ── */}
       <main
         style={{
           flex: 1,
-          height: "100vh",
+          minHeight: 0,
           position: "relative",
           overflow: "hidden",
           backgroundColor: "#F4F4F5",
@@ -421,6 +354,9 @@ function WorkspaceDetailContent() {
               <CardBadge size={72} style={{ marginBottom: 24 }}>
                 <Users size={32} color="#059669" strokeWidth={2} />
               </CardBadge>
+              <p style={{ margin: "0 0 6px 0", fontSize: 13.5, fontWeight: 600, color: "#059669" }}>
+                {schoolName ? `${orgName} · ${schoolName}` : orgName}
+              </p>
               <CardTitle style={{ fontSize: 27, lineHeight: 1.2, margin: "0 0 8px 0" }}>
                 Your workspace is ready.
               </CardTitle>
@@ -428,30 +364,6 @@ function WorkspaceDetailContent() {
                 Next: add your members.
               </CardDescription>
             </CardHeader>
-            <CardContent style={{ textAlign: "center" }}>
-              <button
-                type="button"
-                className="orgkit-cta-btn"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: 46,
-                  borderRadius: 9999,
-                  backgroundColor: "#059669",
-                  padding: "0 34px",
-                  fontSize: 14.5,
-                  fontWeight: 600,
-                  color: "#FFFFFF",
-                  border: "none",
-                  cursor: "pointer",
-                  boxShadow: "0 2px 8px rgba(5, 150, 105, 0.2)",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                Add members
-              </button>
-            </CardContent>
           </Card>
         </div>
       </main>
@@ -496,77 +408,6 @@ function WorkspaceLoadingSkeleton() {
           }}
         />
       </div>
-
-      {/* Sidebar Skeleton (Expanded 256px) */}
-      <aside
-        style={{
-          width: 256,
-          minWidth: 256,
-          height: "100vh",
-          backgroundColor: "#FFFFFF",
-          borderRight: "1px solid #E4E4E7",
-          padding: "16px 14px 14px 14px",
-          display: "flex",
-          flexDirection: "column",
-          boxSizing: "border-box",
-          flexShrink: 0,
-        }}
-      >
-        {/* Top Header Placeholder */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 16,
-            height: 36,
-          }}
-        >
-          <div
-            className="orgkit-shimmer"
-            style={{ width: 100, height: 26, borderRadius: 8, backgroundColor: "#F4F4F5" }}
-          />
-          <div
-            className="orgkit-shimmer"
-            style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: "#F4F4F5" }}
-          />
-        </div>
-
-        {/* Workspace Card Shimmer */}
-        <div
-          className="orgkit-shimmer"
-          style={{
-            height: 104,
-            borderRadius: 18,
-            backgroundColor: "rgba(5, 150, 105, 0.08)",
-            border: "1px solid rgba(5, 150, 105, 0.12)",
-            marginBottom: 16,
-          }}
-        />
-
-        {/* Nav Items Shimmer */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
-          <div
-            className="orgkit-shimmer"
-            style={{ height: 38, borderRadius: 12, backgroundColor: "rgba(5, 150, 105, 0.10)" }}
-          />
-          <div style={{ height: 16, width: 60, marginTop: 12, marginBottom: 4 }} className="orgkit-shimmer" />
-          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
-          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
-          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "#F4F4F5" }} />
-        </div>
-
-        {/* Bottom Officer Profile Card Shimmer */}
-        <div
-          className="orgkit-shimmer"
-          style={{
-            height: 52,
-            borderRadius: 14,
-            border: "1px solid #E4E4E7",
-            backgroundColor: "#FFFFFF",
-          }}
-        />
-      </aside>
 
       {/* Main Canvas Skeleton */}
       <main

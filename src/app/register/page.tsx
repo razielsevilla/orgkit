@@ -136,7 +136,6 @@ export default function RegisterPage() {
                 onClick={handleGoogleSignUp}
                 className="orgkit-google-btn"
                 data-error={hasError}
-                aria-invalid={hasError}
                 aria-busy={loading}
                 title={loading ? "Connecting to Google..." : "Sign up with Google"}
                 style={{

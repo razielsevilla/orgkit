@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import {
   createWorkspace,
   getOfficerDefaultWorkspace,
   getCurrentOfficer,
-} from "@/src/app/workspace/actions";
+} from "@/src/app/(workspace)/actions";
 import { Navbar, OfficerProfile } from "@/src/components/navbar";
 import {
   Card,
@@ -39,6 +39,8 @@ export default function WorkspacePage() {
   const [nameError, setNameError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isCheckingWorkspace, setIsCheckingWorkspace] = useState(true);
+  // Blocks a second submit before state has re-rendered the disabled button
+  const submittingRef = useRef(false);
 
   // Load current signed-in officer session and check if they already have a workspace
   useEffect(() => {
@@ -48,14 +50,14 @@ export default function WorkspacePage() {
         if (officerData) {
           setOfficer(officerData);
         } else {
-          window.location.href = "/signin";
+          router.replace("/signin");
           return;
         }
 
         // Check if this officer already has an assigned workspace
         const existingWorkspace = await getOfficerDefaultWorkspace();
         if (existingWorkspace?.orgId) {
-          window.location.assign(`/workspace/${existingWorkspace.orgId}`);
+          router.replace(`/org/${existingWorkspace.orgId}`);
           return;
         }
       } catch (err) {
@@ -89,6 +91,7 @@ export default function WorkspacePage() {
 
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (submittingRef.current) return;
     setNameError(null);
     setSaveError(null);
 
@@ -106,23 +109,24 @@ export default function WorkspacePage() {
       return;
     }
 
+    submittingRef.current = true;
     setIsSubmitting(true);
 
     try {
       const res = await createWorkspace(cleanName, school);
+      if (res.needsConsent) {
+        router.push("/consent");
+        return;
+      }
       if (res.success && res.orgId) {
-        const query = new URLSearchParams();
-        query.set("name", cleanName);
-        if (school.trim()) {
-          query.set("school", school.trim());
-        }
-        router.push(`/workspace/${res.orgId}?${query.toString()}`);
+        router.push(`/org/${res.orgId}`);
         return;
       }
       if (res.existingOrgId) {
-        router.push(`/workspace/${res.existingOrgId}`);
+        router.push(`/org/${res.existingOrgId}`);
         return;
       }
+      submittingRef.current = false;
       if (res.fieldError) {
         setNameError(res.fieldError);
         setIsSubmitting(false);
@@ -134,6 +138,7 @@ export default function WorkspacePage() {
         return;
       }
     } catch {
+      submittingRef.current = false;
       setSaveError("We couldn't create your workspace. Please try again.");
       setIsSubmitting(false);
     }
@@ -299,7 +304,7 @@ export default function WorkspacePage() {
       </div>
 
       {/* ── Reusable Standalone Top Navigation Bar ── */}
-      <Navbar officer={officer} logoHref="/workspace" />
+      <Navbar officer={officer} logoHref="/" />
 
       {/* ── Main Viewport Content ── */}
       <main
@@ -545,7 +550,7 @@ export default function WorkspacePage() {
                         margin: "7px 0 0 0",
                       }}
                     >
-                      Leave blank if your org isn't tied to one school.
+                      Leave blank if your org isn&apos;t tied to one school.
                     </p>
                   </div>
 

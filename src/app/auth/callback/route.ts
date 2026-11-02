@@ -94,8 +94,8 @@ export async function GET(request: Request) {
       return toSignIn("google_error");
     }
 
-    // Check if returning officer already has an assigned workspace
-    const { data: membership } = await admin
+    // Returning officer: send them to their workspace if they have one
+    const { data: membership } = await supabase
       .from("org_officers")
       .select("org_id")
       .eq("officer_id", officer.id)
@@ -105,11 +105,11 @@ export async function GET(request: Request) {
 
     if (membership?.org_id) {
       return NextResponse.redirect(
-        new URL(`/workspace/${membership.org_id}`, requestUrl.origin)
+        new URL(`/org/${membership.org_id}`, requestUrl.origin)
       );
     }
 
-    return NextResponse.redirect(new URL("/workspace", requestUrl.origin));
+    return NextResponse.redirect(new URL("/orgs/new", requestUrl.origin));
   }
 
   // First-time officer: no account row yet. They see the privacy notice first,

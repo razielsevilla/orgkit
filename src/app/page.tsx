@@ -1,15 +1,6 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/src/lib/supabase/server";
 
-export default async function HomePage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (user) {
-    redirect("/workspace");
-  }
-
+// Signed-in officers are sent on to their workspace by the proxy before this runs.
+export default function HomePage() {
   redirect("/register");
 }

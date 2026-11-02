@@ -135,7 +135,6 @@ export default function SignInPage() {
                 onClick={handleGoogleSignIn}
                 className="orgkit-google-btn"
                 data-error={hasError}
-                aria-invalid={hasError}
                 aria-busy={loading}
                 title={loading ? "Connecting to Google..." : "Sign in with Google"}
                 style={{
