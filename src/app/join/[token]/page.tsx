@@ -17,13 +17,42 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+const messageStyle: React.CSSProperties = {
+  margin: 0,
+  textAlign: "center",
+  fontSize: 15,
+  lineHeight: 1.5,
+  color: "#18181B",
+};
+
 export default function JoinPage({ params }: { params: Promise<{ token: string }> }) {
   return (
     <main
-      className={`${plusJakarta.className} flex min-h-screen items-start justify-center bg-base px-4 py-6 sm:items-center`}
+      className={plusJakarta.className}
+      style={{
+        minHeight: "100vh",
+        backgroundColor: "#F4F4F5",
+        color: "#18181B",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "flex-start",
+        padding: "clamp(16px, 5vh, 48px) 16px",
+        boxSizing: "border-box",
+      }}
     >
-      <div className="w-full max-w-[440px] rounded-3xl border border-line/60 bg-surface p-5 shadow-[0_20px_50px_rgba(24,24,27,0.08)] sm:p-8">
-        <Suspense fallback={<p className="text-center text-muted">Loading…</p>}>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 440,
+          backgroundColor: "#FFFFFF",
+          border: "1px solid rgba(228, 228, 231, 0.6)",
+          borderRadius: 26,
+          padding: "clamp(20px, 5vw, 32px)",
+          boxShadow: "0 20px 50px rgba(24, 24, 27, 0.08)",
+          boxSizing: "border-box",
+        }}
+      >
+        <Suspense fallback={<p style={{ ...messageStyle, color: "#71717A" }}>Loading…</p>}>
           <JoinContent params={params} />
         </Suspense>
       </div>
@@ -37,7 +66,7 @@ async function JoinContent({ params }: { params: Promise<{ token: string }> }) {
   const orgName = await getJoinOrgName(token);
 
   if (!orgName) {
-    return <p className="text-center text-ink">{JOIN_MESSAGES.inactiveLink}</p>;
+    return <p style={messageStyle}>{JOIN_MESSAGES.inactiveLink}</p>;
   }
 
   return (

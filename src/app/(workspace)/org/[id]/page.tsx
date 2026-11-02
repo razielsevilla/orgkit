@@ -11,6 +11,7 @@ import {
   isOrgAdmin,
 } from "@/src/app/(workspace)/actions";
 import { Sidebar } from "@/src/components/sidebar";
+import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
 import { Navbar, OfficerProfile } from "@/src/components/navbar";
 import {
   Card,
@@ -39,29 +40,7 @@ function WorkspaceDetailContent() {
   const [accessDenied, setAccessDenied] = useState(false);
   const [officer, setOfficer] = useState<OfficerProfile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-
-  // Restore sidebar preference from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("orgkit_sidebar_collapsed");
-      if (saved === "true") {
-        setIsSidebarCollapsed(true);
-      }
-    } catch {
-      // localStorage may be disabled in some sandboxes
-    }
-  }, []);
-
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed((prev) => {
-      const next = !prev;
-      try {
-        localStorage.setItem("orgkit_sidebar_collapsed", String(next));
-      } catch {}
-      return next;
-    });
-  };
+  const [isSidebarCollapsed, toggleSidebar] = useSidebarCollapsed();
 
   // Parallel fetch: loads organization and officer profile concurrently
   useEffect(() => {

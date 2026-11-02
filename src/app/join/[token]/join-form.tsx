@@ -12,10 +12,40 @@ import { submitJoin, type JoinState } from "./actions";
 
 const INITIAL: JoinState = { status: "idle" };
 
-const inputClass =
-  "w-full rounded-xl border border-line bg-surface px-3.5 py-3 text-base text-ink " +
-  "outline-none focus:border-accent focus:ring-2 focus:ring-accent/30 " +
-  "aria-[invalid=true]:border-red-600";
+const labelStyle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: "#18181B" };
+const errorStyle: React.CSSProperties = { margin: 0, fontSize: 14, color: "#DC2626" };
+const fieldStyle: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 6 };
+const checkRowStyle: React.CSSProperties = {
+  display: "flex",
+  alignItems: "flex-start",
+  gap: 12,
+  fontSize: 14,
+  color: "#18181B",
+  cursor: "pointer",
+};
+const checkStyle: React.CSSProperties = {
+  width: 20,
+  height: 20,
+  marginTop: 1,
+  flexShrink: 0,
+  accentColor: "#059669",
+};
+
+function inputStyle(invalid: boolean): React.CSSProperties {
+  return {
+    width: "100%",
+    height: 48,
+    padding: "0 14px",
+    borderRadius: 12,
+    border: `1px solid ${invalid ? "#DC2626" : "#E4E4E7"}`,
+    backgroundColor: "#FFFFFF",
+    // 16px stops iOS from zooming in on focus
+    fontSize: 16,
+    fontFamily: "inherit",
+    color: "#18181B",
+    boxSizing: "border-box",
+  };
+}
 
 export function JoinForm({
   token,
@@ -37,12 +67,26 @@ export function JoinForm({
   const copy = JOIN_COPY[language];
 
   if (state.status === "inactive") {
-    return <p className="text-center text-ink">{JOIN_MESSAGES.inactiveLink}</p>;
+    return (
+      <p style={{ margin: 0, textAlign: "center", fontSize: 15, lineHeight: 1.5 }}>
+        {JOIN_MESSAGES.inactiveLink}
+      </p>
+    );
   }
 
   if (state.status === "success") {
     return (
-      <p role="status" className="text-center text-lg font-semibold text-ink">
+      <p
+        role="status"
+        style={{
+          margin: 0,
+          textAlign: "center",
+          fontSize: 18,
+          fontWeight: 600,
+          lineHeight: 1.45,
+          color: "#18181B",
+        }}
+      >
         {copy.thanks(orgName)}
       </p>
     );
@@ -54,28 +98,66 @@ export function JoinForm({
   });
 
   return (
-    <form action={formAction} noValidate className="flex flex-col gap-5">
-      <div className="flex justify-end gap-1 text-sm" role="group" aria-label="Language">
+    <form
+      action={formAction}
+      noValidate
+      style={{ display: "flex", flexDirection: "column", gap: 20 }}
+    >
+      <style>{`
+        .jf-input:focus-visible, .jf-btn:focus-visible, .jf-lang:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #059669;
+        }
+        .jf-link { color: #059669; font-weight: 600; font-size: 14px; text-decoration: none; }
+        .jf-link:hover { color: #047857; text-decoration: underline; }
+        .jf-submit:hover:not(:disabled) { background-color: #047857; }
+      `}</style>
+
+      <div
+        style={{ display: "flex", justifyContent: "flex-end", gap: 4 }}
+        role="group"
+        aria-label="Language"
+      >
         {(["en", "fil"] as const).map((code) => (
           <button
             key={code}
             type="button"
+            className="jf-lang"
             onClick={() => setLanguage(code)}
             aria-pressed={language === code}
-            className={
-              "min-h-9 rounded-full px-3 font-semibold " +
-              (language === code ? "bg-accent text-white" : "text-muted hover:text-ink")
-            }
+            style={{
+              height: 36,
+              padding: "0 14px",
+              borderRadius: 9999,
+              border: "none",
+              fontSize: 14,
+              fontWeight: 600,
+              fontFamily: "inherit",
+              cursor: "pointer",
+              backgroundColor: language === code ? "#059669" : "transparent",
+              color: language === code ? "#FFFFFF" : "#71717A",
+            }}
           >
             {code === "en" ? "English" : "Filipino"}
           </button>
         ))}
       </div>
 
-      <h1 className="text-2xl font-bold tracking-tight text-ink">{copy.heading(orgName)}</h1>
+      <h1
+        style={{
+          margin: 0,
+          fontSize: 26,
+          fontWeight: 700,
+          letterSpacing: "-0.015em",
+          lineHeight: 1.2,
+          color: "#18181B",
+        }}
+      >
+        {copy.heading(orgName)}
+      </h1>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="fullName" className="text-sm font-semibold text-ink">
+      <div style={fieldStyle}>
+        <label htmlFor="fullName" style={labelStyle}>
           {copy.fullName}
         </label>
         <input
@@ -83,21 +165,22 @@ export function JoinForm({
           name="fullName"
           type="text"
           autoComplete="name"
+          className="jf-input"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           aria-invalid={state.nameError ? true : undefined}
           aria-describedby={state.nameError ? "fullName-error" : undefined}
-          className={inputClass}
+          style={inputStyle(!!state.nameError)}
         />
         {state.nameError && (
-          <p id="fullName-error" className="text-sm text-red-600">
+          <p id="fullName-error" style={errorStyle}>
             {state.nameError}
           </p>
         )}
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="email" className="text-sm font-semibold text-ink">
+      <div style={fieldStyle}>
+        <label htmlFor="email" style={labelStyle}>
           {copy.email}
         </label>
         <input
@@ -106,14 +189,15 @@ export function JoinForm({
           type="email"
           inputMode="email"
           autoComplete="email"
+          className="jf-input"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           aria-invalid={state.emailError ? true : undefined}
           aria-describedby={state.emailError ? "email-error" : undefined}
-          className={inputClass}
+          style={inputStyle(!!state.emailError)}
         />
         {state.emailError && (
-          <p id="email-error" className="text-sm text-red-600">
+          <p id="email-error" style={errorStyle}>
             {state.emailError}
           </p>
         )}
@@ -121,55 +205,70 @@ export function JoinForm({
 
       <div
         lang={language === "fil" ? "fil" : "en"}
-        className="rounded-2xl border border-line bg-base p-4 text-sm leading-relaxed text-zinc-700"
+        style={{
+          padding: 16,
+          borderRadius: 16,
+          border: "1px solid #E4E4E7",
+          backgroundColor: "#F4F4F5",
+          fontSize: 14,
+          lineHeight: 1.6,
+          color: "#3F3F46",
+        }}
       >
         {consentText}
       </div>
 
-      <label className="flex items-start gap-3 text-sm text-ink">
+      <label style={checkRowStyle}>
         <input
           type="checkbox"
           name="agree"
           checked={agree}
           onChange={(e) => setAgree(e.target.checked)}
-          className="mt-0.5 size-5 shrink-0 accent-emerald-600"
+          style={checkStyle}
         />
         <span>{copy.agree}</span>
       </label>
 
-      <label className="flex items-start gap-3 text-sm text-ink">
+      <label style={checkRowStyle}>
         <input
           type="checkbox"
           name="adult"
           checked={adult}
           onChange={(e) => setAdult(e.target.checked)}
-          className="mt-0.5 size-5 shrink-0 accent-emerald-600"
+          style={checkStyle}
         />
         <span>{copy.adult}</span>
       </label>
 
-      <a
-        href="/privacy"
-        target="_blank"
-        rel="noopener"
-        className="text-sm font-semibold text-accent hover:text-accent-strong hover:underline"
-      >
+      <a href="/privacy" target="_blank" rel="noopener" className="jf-link">
         {copy.privacyLink}
       </a>
 
       <input type="hidden" name="language" value={language} />
       <input type="hidden" name="consentVersion" value={CURRENT_MEMBER_CONSENT.version} />
 
-      <div className="flex flex-col gap-2">
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
         {state.formError && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" style={errorStyle}>
             {state.formError}
           </p>
         )}
         <button
           type="submit"
           disabled={pending}
-          className="min-h-12 rounded-full bg-accent px-6 text-base font-semibold text-white hover:bg-accent-strong disabled:opacity-60"
+          className="jf-btn jf-submit"
+          style={{
+            height: 50,
+            borderRadius: 9999,
+            border: "none",
+            backgroundColor: "#059669",
+            color: "#FFFFFF",
+            fontSize: 16,
+            fontWeight: 600,
+            fontFamily: "inherit",
+            cursor: pending ? "default" : "pointer",
+            opacity: pending ? 0.6 : 1,
+          }}
         >
           {pending ? copy.joining : copy.join}
         </button>
