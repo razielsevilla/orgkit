@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getCurrentOfficer, getOfficerDefaultWorkspace } from "@/src/app/(workspace)/actions";
-import { CreateOrgForm } from "./create-org-form";
-import { NewOrgScreen } from "./new-org-screen";
+import { CreateOrgForm } from "@/src/components/workspace/new-org/create-org-form";
+import { NewOrgScreen } from "@/src/components/workspace/new-org/new-org-screen";
 import { ROUTES, workspacePath } from "@/src/lib/routes";
 
 /** Shown inside the frame while the server checks who is signing in. */

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
 import { requireOfficer } from "@/src/lib/auth/officer";
 import { isUuid } from "@/src/lib/validation";
-import { JoinPanel } from "./join-panel";
+import { JoinPanel } from "@/src/components/workspace/member-join/join-panel";
 
 export default function MemberJoinPage({ params }: { params: Promise<{ id: string }> }) {
   return (

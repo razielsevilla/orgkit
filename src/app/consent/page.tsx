@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/src/lib/auth/session-user";
 import { AuthLayout } from "@/src/components/auth/auth-layout";
-import { ConsentForm } from "./consent-form";
+import { ConsentForm } from "@/src/components/consent/consent-form";
 import { ROUTES } from "@/src/lib/routes";
 
 export default function ConsentPage() {

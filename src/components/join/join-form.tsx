@@ -9,7 +9,7 @@ import {
   fillConsentText,
   type ConsentLanguage,
 } from "@/src/lib/members/member-consent";
-import { submitJoin, type JoinState } from "./actions";
+import { submitJoin, type JoinState } from "@/src/app/join/[token]/actions";
 import { EmailField, FullNameField } from "./join-fields";
 import { ConsentBox, ConsentCheckboxes, LanguageSwitcher } from "./join-consent";
 import { JoinSubmit } from "./join-submit";

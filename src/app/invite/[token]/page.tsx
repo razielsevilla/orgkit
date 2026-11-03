@@ -20,8 +20,8 @@ import {
   SwitchAccountButton,
   GoToWorkspaceButton,
   ClearInviteCookie,
-} from "./invite-client";
-import { InvalidInviteCard, InviteContainer, TooManyRequestsCard } from "./invite-cards";
+} from "@/src/components/invite/invite-client";
+import { InvalidInviteCard, InviteContainer, TooManyRequestsCard } from "@/src/components/invite/invite-cards";
 import { ROUTES, inviteStartPath, workspacePath } from "@/src/lib/routes";
 
 interface InvitePageProps {

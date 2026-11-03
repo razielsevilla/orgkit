@@ -9,7 +9,7 @@ import type { OfficerProfile } from "@/src/components/layout/navbar";
 import { Card } from "@/src/components/ui/card";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
-import { setJoinLink } from "./actions";
+import { setJoinLink } from "@/src/app/(workspace)/workspace/[id]/members/join/actions";
 import { JoinPanelBackdrop } from "./join-panel-backdrop";
 import { JoinPanelHeader } from "./join-panel-header";
 import { JoinLinkInput, JoinQrPreview, JoinCopyAndSave } from "./join-link-display";

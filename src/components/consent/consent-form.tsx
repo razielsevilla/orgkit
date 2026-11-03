@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { acceptConsent, declineConsent } from "./actions";
+import { acceptConsent, declineConsent } from "@/src/app/consent/actions";
 import { ROUTES } from "@/src/lib/routes";
 
 export function ConsentForm() {

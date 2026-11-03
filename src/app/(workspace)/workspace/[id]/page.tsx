@@ -6,10 +6,10 @@ import {
   isOrgAdmin,
 } from "@/src/app/(workspace)/actions";
 import { isUuid } from "@/src/lib/validation";
-import { WorkspaceHome } from "./workspace-home";
-import { WorkspaceLoadingSkeleton } from "./workspace-skeleton";
-import { WorkspaceNotFound } from "./workspace-not-found";
-import { WorkspaceShell } from "./workspace-shell";
+import { WorkspaceHome } from "@/src/components/workspace/home/workspace-home";
+import { WorkspaceLoadingSkeleton } from "@/src/components/workspace/home/workspace-skeleton";
+import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
+import { WorkspaceShell } from "@/src/components/workspace/home/workspace-shell";
 import { officerLandingPath } from "@/src/lib/routes";
 
 async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string }> }) {

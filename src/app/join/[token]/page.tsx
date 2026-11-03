@@ -7,8 +7,8 @@ import { Card, CardBadge, CardTitle, CardDescription } from "@/src/components/ui
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { JOIN_MESSAGES } from "@/src/lib/members/member-join";
 import { getJoinOrgName } from "@/src/lib/members/member-join-server";
-import { JoinForm } from "./join-form";
-import { JoinBackdrop } from "./join-backdrop";
+import { JoinForm } from "@/src/components/join/join-form";
+import { JoinBackdrop } from "@/src/components/join/join-backdrop";
 
 // The link is a secret: keep it out of search results
 export const metadata: Metadata = {

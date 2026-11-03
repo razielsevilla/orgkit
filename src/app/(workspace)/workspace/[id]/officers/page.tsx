@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { plusJakarta } from "@/src/lib/fonts";
 import { getCurrentOfficer, getOrganizationById } from "@/src/app/(workspace)/actions";
 import { getWorkspaceOfficers } from "@/src/app/(workspace)/officers-actions";
-import { OfficersClientWrapper } from "./page-client-wrapper";
+import { OfficersClientWrapper } from "@/src/components/workspace/officers/page-client-wrapper";
 import { ROUTES, workspacePath } from "@/src/lib/routes";
 
 interface OfficersPageProps {
