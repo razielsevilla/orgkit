@@ -184,20 +184,18 @@ export async function getWorkspaceOfficers(
     if (!lookup.ok) return accessFailure(lookup.error);
     const { caller } = lookup;
 
-    const { data: org, error: orgError } = await caller.supabase
-      .from("orgs")
-      .select("id, name")
-      .eq("id", orgId)
-      .maybeSingle();
-
-    if (orgError || !org) return accessFailure("access_revoked");
-
     const canViewEmails = can(caller.role, "officer:view_emails");
 
-    const officers = await loadOfficers(caller, orgId, canViewEmails);
+    // The three reads don't depend on each other, so they run together
+    const [{ data: org, error: orgError }, officers, pendingInvites] = await Promise.all([
+      caller.supabase.from("orgs").select("id, name").eq("id", orgId).maybeSingle(),
+      loadOfficers(caller, orgId, canViewEmails),
+      loadPendingInvites(caller, orgId, canViewEmails),
+    ]);
+
+    if (orgError || !org) return accessFailure("access_revoked");
     if (!officers) return fail("failed", "Failed to load officers.");
 
-    const pendingInvites = await loadPendingInvites(caller, orgId, canViewEmails);
     const officerCount = officers.length;
 
     return ok({

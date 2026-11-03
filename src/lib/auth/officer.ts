@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/src/lib/auth/session-user";
+import { getOfficerRow } from "@/src/lib/auth/officer-profile";
 
 /**
  * Call at the top of any protected server page. Sends signed-out visitors to
@@ -7,15 +8,11 @@ import { getSessionUser } from "@/src/lib/auth/session-user";
  * to /consent. Reads through the user's own session, so row level security applies.
  */
 export async function requireOfficer() {
-  const { supabase, user } = await getSessionUser();
+  const { user } = await getSessionUser();
 
   if (!user) redirect("/signin");
 
-  const { data: officer } = await supabase
-    .from("officers")
-    .select("id, email, full_name")
-    .eq("id", user.id)
-    .maybeSingle();
+  const officer = await getOfficerRow(user.id);
 
   if (!officer) redirect("/consent");
 

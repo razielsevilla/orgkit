@@ -5,13 +5,8 @@ export const metadata: Metadata = {
   title: "OrgKit",
   description:
     "Organize. Collaborate. Lead. A modern platform for student organizations to connect, manage, and grow together.",
-  icons: {
-    icon: [
-      { url: "/orgkit-logo.png", type: "image/png" },
-    ],
-    shortcut: "/orgkit-logo.png",
-    apple: "/orgkit-logo.png",
-  },
+  // The tab and home-screen icons come from icon.png and apple-icon.png in this
+  // folder: small versions of the logo, so browsers don't download the 1.1 MB original.
 };
 
 export default function RootLayout({
