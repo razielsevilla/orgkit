@@ -9,6 +9,8 @@ import { isUuid } from "@/src/lib/validation";
 import { WorkspaceHome } from "@/src/components/workspace/home/workspace-home";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
 import { officerLandingPath } from "@/src/lib/routes";
+import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
 
 async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string }> }) {
   await connection();
@@ -33,12 +35,16 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
     );
   }
 
-  return <WorkspaceHome orgName={org.name} schoolName={org.school?.trim() || null} />;
+  return (
+    <PageReveal>
+      <WorkspaceHome orgName={org.name} schoolName={org.school?.trim() || null} />
+    </PageReveal>
+  );
 }
 
 export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WorkspaceContentLoader />}>
       <WorkspaceDetailContent params={params} />
     </Suspense>
   );

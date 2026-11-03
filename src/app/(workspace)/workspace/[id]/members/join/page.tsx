@@ -4,10 +4,12 @@ import { createClient } from "@/src/lib/supabase/server";
 import { requireOfficer } from "@/src/lib/auth/officer";
 import { isUuid } from "@/src/lib/validation";
 import { JoinPanel } from "@/src/components/workspace/member-join/join-panel";
+import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
 
 export default function MemberJoinPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WorkspaceContentLoader />}>
       <MemberJoinContent params={params} />
     </Suspense>
   );
@@ -43,12 +45,14 @@ async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }
     configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
 
   return (
-    <JoinPanel
-      orgId={id}
-      orgName={org.name}
-      schoolName={org.school}
-      siteUrl={siteUrl}
-      initialToken={link?.token ?? null}
-    />
+    <PageReveal>
+      <JoinPanel
+        orgId={id}
+        orgName={org.name}
+        schoolName={org.school}
+        siteUrl={siteUrl}
+        initialToken={link?.token ?? null}
+      />
+    </PageReveal>
   );
 }

@@ -1,6 +1,10 @@
+import { WorkspaceBackdrop } from "./workspace-backdrop";
+import { WorkspaceContentLoader } from "./workspace-content-loader";
+
 /**
- * What the workspace shows while the frame's data streams in: a shimmering copy
- * of the sidebar and an empty canvas, so the layout doesn't jump when it arrives.
+ * What the workspace shows while the frame's data streams in: a still copy of
+ * the sidebar, so the layout doesn't jump when it arrives, and the loading
+ * animation in the canvas. Only the canvas animates; the sidebar never does.
  */
 export function WorkspaceLoadingSkeleton() {
   return (
@@ -16,30 +20,6 @@ export function WorkspaceLoadingSkeleton() {
         boxSizing: "border-box",
       }}
     >
-      {/* Top Emerald Loading Progress Beam */}
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 3,
-          zIndex: 9999,
-          overflow: "hidden",
-          backgroundColor: "color-mix(in srgb, var(--color-accent) 15%, transparent)",
-        }}
-      >
-        <div
-          className="orgkit-progress-beam"
-          style={{
-            height: "100%",
-            width: "40%",
-            backgroundColor: "var(--color-accent)",
-            borderRadius: 9999,
-          }}
-        />
-      </div>
-
       {/* Sidebar Skeleton (Expanded 256px) */}
       <aside
         style={{
@@ -66,18 +46,18 @@ export function WorkspaceLoadingSkeleton() {
           }}
         >
           <div
-            className="orgkit-shimmer"
+           
             style={{ width: 100, height: 26, borderRadius: 8, backgroundColor: "var(--color-base)" }}
           />
           <div
-            className="orgkit-shimmer"
+           
             style={{ width: 28, height: 28, borderRadius: 8, backgroundColor: "var(--color-base)" }}
           />
         </div>
 
         {/* Workspace Card Shimmer */}
         <div
-          className="orgkit-shimmer"
+         
           style={{
             height: 104,
             borderRadius: 18,
@@ -90,18 +70,18 @@ export function WorkspaceLoadingSkeleton() {
         {/* Nav Items Shimmer */}
         <div style={{ display: "flex", flexDirection: "column", gap: 6, flex: 1 }}>
           <div
-            className="orgkit-shimmer"
+           
             style={{ height: 38, borderRadius: 12, backgroundColor: "color-mix(in srgb, var(--color-accent) 10%, transparent)" }}
           />
-          <div style={{ height: 16, width: 60, marginTop: 12, marginBottom: 4 }} className="orgkit-shimmer" />
-          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "var(--color-base)" }} />
-          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "var(--color-base)" }} />
-          <div className="orgkit-shimmer" style={{ height: 36, borderRadius: 10, backgroundColor: "var(--color-base)" }} />
+          <div style={{ height: 16, width: 60, marginTop: 12, marginBottom: 4 }} />
+          <div style={{ height: 36, borderRadius: 10, backgroundColor: "var(--color-base)" }} />
+          <div style={{ height: 36, borderRadius: 10, backgroundColor: "var(--color-base)" }} />
+          <div style={{ height: 36, borderRadius: 10, backgroundColor: "var(--color-base)" }} />
         </div>
 
         {/* Bottom Officer Profile Card Shimmer */}
         <div
-          className="orgkit-shimmer"
+         
           style={{
             height: 52,
             borderRadius: 14,
@@ -126,24 +106,11 @@ export function WorkspaceLoadingSkeleton() {
           boxSizing: "border-box",
         }}
       >
+        <WorkspaceBackdrop />
+        <div style={{ position: "relative", zIndex: 1, width: "100%", height: "100%" }}>
+          <WorkspaceContentLoader />
+        </div>
       </main>
-
-      <style>{`
-        @keyframes shimmerPulse {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 0.95; }
-        }
-        @keyframes progressSlide {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(350%); }
-        }
-        .orgkit-shimmer {
-          animation: shimmerPulse 1.4s ease-in-out infinite;
-        }
-        .orgkit-progress-beam {
-          animation: progressSlide 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-        }
-      `}</style>
     </div>
   );
 }

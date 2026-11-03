@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getWorkspaceOfficers } from "@/src/app/(workspace)/officers-actions";
 import { OfficersClientWrapper } from "@/src/components/workspace/officers/page-client-wrapper";
 import { ROUTES, workspacePath } from "@/src/lib/routes";
+import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
 
 interface OfficersPageProps {
   params: Promise<{ id: string }>;
@@ -28,12 +30,16 @@ async function OfficersContent({ params }: OfficersPageProps) {
     redirect(workspacePath(rawId));
   }
 
-  return <OfficersClientWrapper rawId={rawId} initialData={officersRes.data} />;
+  return (
+    <PageReveal>
+      <OfficersClientWrapper rawId={rawId} initialData={officersRes.data} />
+    </PageReveal>
+  );
 }
 
 export default function OfficersPage(props: OfficersPageProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WorkspaceContentLoader />}>
       <OfficersContent {...props} />
     </Suspense>
   );

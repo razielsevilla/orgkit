@@ -105,3 +105,53 @@ describe("workspace frame", () => {
     expect(html).not.toContain("<aside");
   });
 });
+
+async function renderLoader(props?: Record<string, unknown>) {
+  const { WorkspaceContentLoader } = await import(
+    "@/src/components/workspace/frame/workspace-content-loader"
+  );
+  const stream = await renderToReadableStream(createElement(WorkspaceContentLoader, props));
+  await stream.allReady;
+  return new Response(stream).text();
+}
+
+describe("workspace loading animation", () => {
+  it("defaults to the flow animation: the logo filling with color from below", async () => {
+    const html = await renderLoader();
+    expect(html).toContain("orgkit-flow-strip");
+    expect(html).toContain("orgkit-flow-ghost");
+    expect(html).not.toContain("orgkit-loader-ring");
+  });
+
+  it("keeps the arc animation available", async () => {
+    const html = await renderLoader({ variant: "arc" });
+    expect(html).toContain("orgkit-loader-ring");
+    expect(html).not.toContain("orgkit-flow-strip");
+  });
+
+  it.each(["flow", "arc"])("announces loading and uses no sidebar markup (%s)", async (variant) => {
+    const html = await renderLoader({ variant });
+    expect(html).toContain('role="status"');
+    expect(html).toContain("Loading");
+    expect(html).not.toContain("<aside");
+  });
+
+  it.each(["flow", "arc"])("marks itself finishing when the page is ready (%s)", async (variant) => {
+    expect(await renderLoader({ variant })).not.toContain("is-finishing");
+    expect(await renderLoader({ variant, finishing: true })).toContain("is-finishing");
+  });
+
+  it("shows the same loader beside a still sidebar skeleton on first load", async () => {
+    const { WorkspaceLoadingSkeleton } = await import(
+      "@/src/components/workspace/frame/workspace-skeleton"
+    );
+    const stream = await renderToReadableStream(createElement(WorkspaceLoadingSkeleton));
+    await stream.allReady;
+    const html = await new Response(stream).text();
+    expect(html).toContain("orgkit-loader");
+    // The sidebar placeholder must not animate
+    const aside = html.slice(html.indexOf("<aside"), html.indexOf("</aside>"));
+    expect(aside).not.toContain("orgkit-shimmer");
+    expect(aside).not.toContain("animation");
+  });
+});
