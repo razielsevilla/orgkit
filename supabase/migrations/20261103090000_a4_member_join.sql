@@ -246,7 +246,7 @@ begin
   if char_length(clean_name) < 2 or char_length(clean_name) > 100 then
     raise exception 'invalid_name';
   end if;
-  if char_length(clean_email) > 254 or clean_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then
+  if char_length(clean_email) > 254 or clean_email !~ '^[^[:space:]@]+@[^[:space:]@.]+(\.[^[:space:]@.]+)*\.[a-zA-Z]{2,}$' then
     raise exception 'invalid_email';
   end if;
   if p_language not in ('en', 'fil') then

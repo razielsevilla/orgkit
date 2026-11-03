@@ -9,7 +9,8 @@ export const JOIN_MESSAGES = {
   emailInvalid: "Please enter a valid email address.",
 } as const;
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Matches valid email format: user@domain.tld with at least 2 letters in the TLD (e.g. .com, .ph, .edu)
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@.]+(?:\.[^\s@.]+)*\.[a-zA-Z]{2,}$/;
 
 export function cleanName(raw: string): string {
   return raw.trim().replace(/\s+/g, " ");
