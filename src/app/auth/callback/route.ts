@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { getGoogleSub } from "@/src/lib/google-sub";
+import { getPendingInviteCookie } from "@/src/lib/session-invite";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -94,6 +95,14 @@ export async function GET(request: Request) {
       return toSignIn("google_error");
     }
 
+    const pendingInvite = await getPendingInviteCookie();
+
+    if (pendingInvite) {
+      return NextResponse.redirect(
+        new URL(`/invite/${pendingInvite}`, requestUrl.origin)
+      );
+    }
+
     // Returning officer: send them to their workspace if they have one
     const { data: membership } = await supabase
       .from("org_officers")
@@ -105,7 +114,7 @@ export async function GET(request: Request) {
 
     if (membership?.org_id) {
       return NextResponse.redirect(
-        new URL(`/org/${membership.org_id}`, requestUrl.origin)
+        new URL(`/workspace/${membership.org_id}`, requestUrl.origin)
       );
     }
 
