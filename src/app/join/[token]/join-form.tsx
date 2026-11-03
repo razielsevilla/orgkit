@@ -3,7 +3,14 @@
 import { useActionState, useState } from "react";
 import Image from "next/image";
 import { Check, Link2Off, AlertCircle } from "lucide-react";
-import { Card, CardBadge, CardTitle, CardDescription } from "@/src/components/card";
+import {
+  Card,
+  CardHeader,
+  CardBadge,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/src/components/card";
 import {
   CURRENT_MEMBER_CONSENT,
   JOIN_COPY,
@@ -87,6 +94,21 @@ export function JoinForm({
     return (
       <Card maxWidth={460} padding="clamp(32px, 4vw, 44px) clamp(24px, 3vw, 36px)">
         <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+            <Image
+              src="/orgkit-text-logo.png"
+              alt="OrgKit"
+              width={112}
+              height={34}
+              priority
+              style={{
+                height: 28,
+                width: "auto",
+                display: "block",
+                userSelect: "none",
+              }}
+            />
+          </div>
           <CardBadge size={68} style={{ backgroundColor: "rgba(220, 38, 38, 0.08)", marginBottom: 18 }}>
             <Link2Off size={30} color="#DC2626" strokeWidth={2.2} />
           </CardBadge>
@@ -104,57 +126,44 @@ export function JoinForm({
   if (state.status === "success") {
     return (
       <Card maxWidth={460} padding="clamp(32px, 4vw, 44px) clamp(24px, 3.5vw, 36px)">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            textAlign: "center",
-          }}
-        >
-          {/* Animated check badge */}
-          <div
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <Image
+            src="/orgkit-text-logo.png"
+            alt="OrgKit"
+            width={112}
+            height={34}
+            priority
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: "50%",
-              backgroundColor: "rgba(5, 150, 105, 0.10)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 20,
-              boxShadow: "0 0 0 8px rgba(5, 150, 105, 0.04)",
+              height: 28,
+              width: "auto",
+              display: "block",
+              userSelect: "none",
             }}
-          >
+          />
+        </div>
+
+        <CardHeader style={{ marginBottom: 0 }}>
+          <CardBadge size={72} style={{ marginBottom: 20 }}>
             <Check size={36} color="#059669" strokeWidth={2.8} />
-          </div>
-
-          <h2
-            style={{
-              margin: "0 0 12px 0",
-              fontSize: "clamp(24px, 2.4vw, 28px)",
-              fontWeight: 700,
-              letterSpacing: "-0.015em",
-              color: "#18181B",
-              lineHeight: 1.2,
-            }}
-          >
+          </CardBadge>
+          <CardTitle style={{ fontSize: "clamp(24px, 2.4vw, 28px)", marginBottom: 12 }}>
             {language === "fil" ? "Nasa listahan ka na!" : "You're on the list!"}
-          </h2>
-
-          <p
+          </CardTitle>
+          <CardDescription
             role="status"
             style={{
-              margin: "0 0 24px 0",
               fontSize: 15.5,
               lineHeight: 1.6,
               color: "#52525B",
               maxWidth: 380,
+              marginBottom: 20,
             }}
           >
             {copy.thanks(orgName)}
-          </p>
+          </CardDescription>
+        </CardHeader>
 
+        <CardContent>
           {/* Org Pill Badge */}
           <div
             style={{
@@ -208,13 +217,14 @@ export function JoinForm({
               fontSize: 13,
               lineHeight: 1.5,
               color: "#71717A",
+              textAlign: "center",
             }}
           >
             {language === "fil"
               ? "Maaari mo nang isara ang page na ito. Makikipag-ugnayan ang iyong mga opisyal sa lalong madaling panahon."
               : "You can safely close this page. Your org officers will review your details."}
           </p>
-        </div>
+        </CardContent>
       </Card>
     );
   }
@@ -258,7 +268,7 @@ export function JoinForm({
           }
         `}</style>
 
-        {/* Top Header: Brand Mark + Language Pill Switcher */}
+        {/* Top Header: Brand Text Logo + Language Pill Switcher */}
         <div
           style={{
             display: "flex",
@@ -267,24 +277,20 @@ export function JoinForm({
             marginBottom: 2,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
             <Image
-              src="/orgkit-logo.png"
+              src="/orgkit-text-logo.png"
               alt="OrgKit"
-              width={28}
-              height={28}
-              style={{ width: 26, height: "auto", display: "block" }}
-            />
-            <span
+              width={112}
+              height={34}
+              priority
               style={{
-                fontSize: 13.5,
-                fontWeight: 700,
-                letterSpacing: "-0.01em",
-                color: "#18181B",
+                height: 28,
+                width: "auto",
+                display: "block",
+                userSelect: "none",
               }}
-            >
-              OrgKit
-            </span>
+            />
           </div>
 
           {/* Language Switcher Pill */}
@@ -327,232 +333,232 @@ export function JoinForm({
           </div>
         </div>
 
-        {/* Heading & Subtitle */}
-        <div>
-          <h1
+        {/* Heading & Subtitle using CardHeader, CardTitle, CardDescription */}
+        <CardHeader style={{ textAlign: "left", alignItems: "flex-start", marginBottom: 0 }}>
+          <CardTitle
             style={{
-              margin: "0 0 6px 0",
               fontSize: "clamp(22px, 2.2vw, 26px)",
-              fontWeight: 700,
-              letterSpacing: "-0.015em",
-              lineHeight: 1.25,
-              color: "#18181B",
+              textAlign: "left",
+              marginBottom: 6,
             }}
           >
             {copy.heading(orgName)}
-          </h1>
-          <p
+          </CardTitle>
+          <CardDescription
             style={{
-              margin: 0,
               fontSize: 13.5,
               lineHeight: 1.45,
+              textAlign: "left",
               color: "#71717A",
+              maxWidth: "100%",
             }}
           >
             {language === "fil"
               ? "Punan ang iyong impormasyon upang magsumite ng pagsali."
               : "Fill in your details to submit your membership request."}
-          </p>
-        </div>
+          </CardDescription>
+        </CardHeader>
 
-        {/* Field 1: Full name */}
-        <div style={fieldStyle}>
-          <label htmlFor="fullName" style={labelStyle}>
-            {copy.fullName}
-          </label>
-          <input
-            id="fullName"
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            placeholder={language === "fil" ? "Hal. Juan Dela Cruz" : "e.g. Juan Dela Cruz"}
-            className="jf-input"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            aria-invalid={state.nameError ? true : undefined}
-            aria-describedby={state.nameError ? "fullName-error" : undefined}
-            style={inputStyle(!!state.nameError)}
-          />
-          {state.nameError && (
-            <p id="fullName-error" style={errorStyle}>
-              {state.nameError}
-            </p>
-          )}
-        </div>
-
-        {/* Field 2: Email */}
-        <div style={fieldStyle}>
-          <label htmlFor="email" style={labelStyle}>
-            {copy.email}
-          </label>
-          <input
-            id="email"
-            name="email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            placeholder={language === "fil" ? "Hal. juan@pamantasan.edu.ph" : "e.g. juan@university.edu"}
-            className="jf-input"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-invalid={state.emailError ? true : undefined}
-            aria-describedby={state.emailError ? "email-error" : undefined}
-            style={inputStyle(!!state.emailError)}
-          />
-          {state.emailError && (
-            <p id="email-error" style={errorStyle}>
-              {state.emailError}
-            </p>
-          )}
-        </div>
-
-        {/* Consent Box */}
-        <div
-          lang={language === "fil" ? "fil" : "en"}
-          style={{
-            padding: "14px 16px",
-            borderRadius: 16,
-            border: "1px solid #E4E4E7",
-            backgroundColor: "#F4F4F5",
-            fontSize: 13,
-            lineHeight: 1.6,
-            color: "#3F3F46",
-            boxSizing: "border-box",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              fontSize: 11.5,
-              fontWeight: 700,
-              letterSpacing: "0.03em",
-              textTransform: "uppercase",
-              color: "#71717A",
-              marginBottom: 8,
-            }}
-          >
-            <span>{language === "fil" ? "Kasunduan sa Pagpapahintulot" : "Consent Agreement"}</span>
+        <CardContent style={{ display: "flex", flexDirection: "column", gap: 18, padding: 0 }}>
+          {/* Field 1: Full name */}
+          <div style={fieldStyle}>
+            <label htmlFor="fullName" style={labelStyle}>
+              {copy.fullName}
+            </label>
+            <input
+              id="fullName"
+              name="fullName"
+              type="text"
+              autoComplete="name"
+              placeholder={language === "fil" ? "Hal. Juan Dela Cruz" : "e.g. Juan Dela Cruz"}
+              className="jf-input"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              aria-invalid={state.nameError ? true : undefined}
+              aria-describedby={state.nameError ? "fullName-error" : undefined}
+              style={inputStyle(!!state.nameError)}
+            />
+            {state.nameError && (
+              <p id="fullName-error" style={errorStyle}>
+                {state.nameError}
+              </p>
+            )}
           </div>
-          <div>{consentText}</div>
-        </div>
 
-        {/* Checkboxes */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label style={checkRowStyle}>
+          {/* Field 2: Email */}
+          <div style={fieldStyle}>
+            <label htmlFor="email" style={labelStyle}>
+              {copy.email}
+            </label>
             <input
-              type="checkbox"
-              name="agree"
-              checked={agree}
-              onChange={(e) => setAgree(e.target.checked)}
-              style={checkStyle}
+              id="email"
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              placeholder={language === "fil" ? "Hal. juan@pamantasan.edu.ph" : "e.g. juan@university.edu"}
+              className="jf-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={state.emailError ? true : undefined}
+              aria-describedby={state.emailError ? "email-error" : undefined}
+              style={inputStyle(!!state.emailError)}
             />
-            <span style={{ fontSize: 13.5, lineHeight: 1.45 }}>{copy.agree}</span>
-          </label>
+            {state.emailError && (
+              <p id="email-error" style={errorStyle}>
+                {state.emailError}
+              </p>
+            )}
+          </div>
 
-          <label style={checkRowStyle}>
-            <input
-              type="checkbox"
-              name="adult"
-              checked={adult}
-              onChange={(e) => setAdult(e.target.checked)}
-              style={checkStyle}
-            />
-            <span style={{ fontSize: 13.5, lineHeight: 1.45 }}>{copy.adult}</span>
-          </label>
-        </div>
-
-        {/* Privacy Notice Link */}
-        <div>
-          <a
-            href="/privacy"
-            target="_blank"
-            rel="noopener"
-            className="jf-link"
+          {/* Consent Box */}
+          <div
+            lang={language === "fil" ? "fil" : "en"}
             style={{
+              padding: "14px 16px",
+              borderRadius: 16,
+              border: "1px solid #E4E4E7",
+              backgroundColor: "#F4F4F5",
               fontSize: 13,
-              color: "#059669",
-              fontWeight: 600,
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 4,
+              lineHeight: 1.6,
+              color: "#3F3F46",
+              boxSizing: "border-box",
             }}
           >
-            <span>{copy.privacyLink}</span>
-            <span aria-hidden>→</span>
-          </a>
-        </div>
-
-        <input type="hidden" name="language" value={language} />
-        <input type="hidden" name="consentVersion" value={CURRENT_MEMBER_CONSENT.version} />
-
-        {/* Form Error and Submit Button */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
-          {state.formError && (
             <div
-              role="alert"
               style={{
                 display: "flex",
-                alignItems: "flex-start",
-                gap: 8,
-                padding: "10px 14px",
-                borderRadius: 12,
-                backgroundColor: "rgba(220, 38, 38, 0.08)",
-                border: "1px solid rgba(220, 38, 38, 0.2)",
-                color: "#DC2626",
-                fontSize: 13.5,
-                lineHeight: 1.4,
+                alignItems: "center",
+                gap: 6,
+                fontSize: 11.5,
+                fontWeight: 700,
+                letterSpacing: "0.03em",
+                textTransform: "uppercase",
+                color: "#71717A",
+                marginBottom: 8,
               }}
             >
-              <AlertCircle size={17} color="#DC2626" style={{ flexShrink: 0, marginTop: 1 }} />
-              <span>{state.formError}</span>
+              <span>{language === "fil" ? "Kasunduan sa Pagpapahintulot" : "Consent Agreement"}</span>
             </div>
-          )}
+            <div>{consentText}</div>
+          </div>
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="jf-btn jf-submit"
-            style={{
-              height: 48,
-              borderRadius: 9999,
-              border: "none",
-              backgroundColor: "#059669",
-              color: "#FFFFFF",
-              fontSize: 15,
-              fontWeight: 600,
-              fontFamily: "inherit",
-              cursor: pending ? "default" : "pointer",
-              opacity: pending ? 0.7 : 1,
-              boxShadow: "0 2px 8px rgba(5, 150, 105, 0.22)",
-              transition: "all 0.15s ease",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            {pending ? (
-              <>
-                <div
-                  style={{
-                    width: 18,
-                    height: 18,
-                    borderRadius: "50%",
-                    border: "2.5px solid rgba(255, 255, 255, 0.35)",
-                    borderTopColor: "#FFFFFF",
-                    animation: "spin 0.8s linear infinite",
-                  }}
-                />
-                <span>{copy.joining}</span>
-              </>
-            ) : (
-              <span>{copy.join}</span>
+          {/* Checkboxes */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <label style={checkRowStyle}>
+              <input
+                type="checkbox"
+                name="agree"
+                checked={agree}
+                onChange={(e) => setAgree(e.target.checked)}
+                style={checkStyle}
+              />
+              <span style={{ fontSize: 13.5, lineHeight: 1.45 }}>{copy.agree}</span>
+            </label>
+
+            <label style={checkRowStyle}>
+              <input
+                type="checkbox"
+                name="adult"
+                checked={adult}
+                onChange={(e) => setAdult(e.target.checked)}
+                style={checkStyle}
+              />
+              <span style={{ fontSize: 13.5, lineHeight: 1.45 }}>{copy.adult}</span>
+            </label>
+          </div>
+
+          {/* Privacy Notice Link */}
+          <div>
+            <a
+              href="/privacy"
+              target="_blank"
+              rel="noopener"
+              className="jf-link"
+              style={{
+                fontSize: 13,
+                color: "#059669",
+                fontWeight: 600,
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+              }}
+            >
+              <span>{copy.privacyLink}</span>
+              <span aria-hidden>→</span>
+            </a>
+          </div>
+
+          <input type="hidden" name="language" value={language} />
+          <input type="hidden" name="consentVersion" value={CURRENT_MEMBER_CONSENT.version} />
+
+          {/* Form Error and Submit Button */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 4 }}>
+            {state.formError && (
+              <div
+                role="alert"
+                style={{
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 8,
+                  padding: "10px 14px",
+                  borderRadius: 12,
+                  backgroundColor: "rgba(220, 38, 38, 0.08)",
+                  border: "1px solid rgba(220, 38, 38, 0.2)",
+                  color: "#DC2626",
+                  fontSize: 13.5,
+                  lineHeight: 1.4,
+                }}
+              >
+                <AlertCircle size={17} color="#DC2626" style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>{state.formError}</span>
+              </div>
             )}
-          </button>
-        </div>
+
+            <button
+              type="submit"
+              disabled={pending}
+              className="jf-btn jf-submit"
+              style={{
+                height: 48,
+                borderRadius: 9999,
+                border: "none",
+                backgroundColor: "#059669",
+                color: "#FFFFFF",
+                fontSize: 15,
+                fontWeight: 600,
+                fontFamily: "inherit",
+                cursor: pending ? "default" : "pointer",
+                opacity: pending ? 0.7 : 1,
+                boxShadow: "0 2px 8px rgba(5, 150, 105, 0.22)",
+                transition: "all 0.15s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+              }}
+            >
+              {pending ? (
+                <>
+                  <div
+                    style={{
+                      width: 18,
+                      height: 18,
+                      borderRadius: "50%",
+                      border: "2.5px solid rgba(255, 255, 255, 0.35)",
+                      borderTopColor: "#FFFFFF",
+                      animation: "spin 0.8s linear infinite",
+                    }}
+                  />
+                  <span>{copy.joining}</span>
+                </>
+              ) : (
+                <span>{copy.join}</span>
+              )}
+            </button>
+          </div>
+        </CardContent>
       </form>
     </Card>
   );

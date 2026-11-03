@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import Image from "next/image";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { Link2Off } from "lucide-react";
 import { Card, CardBadge, CardTitle, CardDescription } from "@/src/components/card";
@@ -237,6 +238,21 @@ async function JoinContent({ params }: { params: Promise<{ token: string }> }) {
     return (
       <Card maxWidth={460} padding="clamp(32px, 4vw, 44px) clamp(24px, 3vw, 36px)">
         <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+            <Image
+              src="/orgkit-text-logo.png"
+              alt="OrgKit"
+              width={112}
+              height={34}
+              priority
+              style={{
+                height: 28,
+                width: "auto",
+                display: "block",
+                userSelect: "none",
+              }}
+            />
+          </div>
           <CardBadge size={68} style={{ backgroundColor: "rgba(220, 38, 38, 0.08)", marginBottom: 18 }}>
             <Link2Off size={30} color="#DC2626" strokeWidth={2.2} />
           </CardBadge>
