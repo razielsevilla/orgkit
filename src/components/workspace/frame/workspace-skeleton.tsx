@@ -1,6 +1,6 @@
 /**
- * What the workspace page shows while its data streams in: a shimmering copy of
- * the sidebar and the welcome card, so the layout doesn't jump when it arrives.
+ * What the workspace shows while the frame's data streams in: a shimmering copy
+ * of the sidebar and an empty canvas, so the layout doesn't jump when it arrives.
  */
 export function WorkspaceLoadingSkeleton() {
   return (
@@ -126,67 +126,6 @@ export function WorkspaceLoadingSkeleton() {
           boxSizing: "border-box",
         }}
       >
-        {/* Center Card Skeleton */}
-        <div
-          style={{
-            width: "100%",
-            maxWidth: 440,
-            borderRadius: 26,
-            border: "1px solid var(--color-line)",
-            backgroundColor: "var(--color-surface)",
-            padding: "44px 36px 40px 36px",
-            boxShadow: "0 20px 50px color-mix(in srgb, var(--color-ink) 6%, transparent)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            boxSizing: "border-box",
-          }}
-        >
-          {/* Circular Badge Placeholder */}
-          <div
-            className="orgkit-shimmer"
-            style={{
-              width: 66,
-              height: 66,
-              borderRadius: "50%",
-              backgroundColor: "color-mix(in srgb, var(--color-accent) 10%, transparent)",
-              marginBottom: 22,
-            }}
-          />
-          {/* Title Placeholder */}
-          <div
-            className="orgkit-shimmer"
-            style={{
-              width: 220,
-              height: 28,
-              borderRadius: 8,
-              backgroundColor: "var(--color-line)",
-              marginBottom: 10,
-            }}
-          />
-          {/* Subtitle Placeholder */}
-          <div
-            className="orgkit-shimmer"
-            style={{
-              width: 150,
-              height: 16,
-              borderRadius: 6,
-              backgroundColor: "var(--color-base)",
-              marginBottom: 28,
-            }}
-          />
-          {/* Action Button Placeholder */}
-          <div
-            className="orgkit-shimmer"
-            style={{
-              width: 140,
-              height: 46,
-              borderRadius: 9999,
-              backgroundColor: "var(--color-accent)",
-              opacity: 0.85,
-            }}
-          />
-        </div>
       </main>
 
       <style>{`

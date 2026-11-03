@@ -46,9 +46,9 @@ layout but is not part of the URL.
 | URL | Who | What it is | File |
 |---|---|---|---|
 | `/workspace/new` | Any officer | Create your org's workspace | `(workspace)/workspace/new/page.tsx` |
-| `/workspace/:id` | Officer of that org | Workspace home | `(workspace)/workspace/[id]/page.tsx` |
-| `/workspace/:id/officers` | Officer of that org | Officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
-| `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | Manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
+| `/workspace/:id` | Officer of that org | **Home**: workspace landing | `(workspace)/workspace/[id]/page.tsx` |
+| `/workspace/:id/officers` | Officer of that org | **Invite**: officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
+| `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | **Join**: manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
 
 `:id` is an org UUID. `:token` is a secret token. A malformed value is handled
 as "not found" without a database query. `/workspace/new` is a fixed path, so
@@ -125,11 +125,20 @@ in order:
 5. **Signed in, on `/workspace/*`:** delete the pending-invite cookie, because
    the invite flow is over.
 
-### Step 3: the workspace gate
+### Step 3: the workspace gate and frame
 
 [`(workspace)/layout.tsx`](../src/app/(workspace)/layout.tsx) wraps everything
 under `/workspace/*`. `/consent`, `/join/*` and `/invite/*` are outside it on
 purpose.
+
+[`workspace/[id]/layout.tsx`](../src/app/(workspace)/workspace/[id]/layout.tsx)
+then draws the **one sidebar frame** for Home, Join and Invite. Those three pages
+only render their own content. Don't build a sidebar into a page: add the page
+under `workspace/[id]/` and it gets the same frame. The sidebar lists only
+features that exist (**Home**, **Join** for admins, **Invite**); add an entry in
+`src/components/layout/sidebar/nav-list.tsx` when a real page ships.
+`/workspace/new` and the "can't find that page" screen sit outside the frame and
+use the top navbar, because there is no workspace to show.
 
 ### Step 4: the page
 

@@ -19,7 +19,7 @@ async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }
   const { id } = await params;
   if (!isUuid(id)) notFound();
 
-  const { officer } = await requireOfficer();
+  await requireOfficer();
   const supabase = await createClient();
 
   const { data: isAdmin } = await supabase.rpc("is_org_admin", { target_org: id });
@@ -47,7 +47,6 @@ async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }
       orgId={id}
       orgName={org.name}
       schoolName={org.school}
-      officer={officer}
       siteUrl={siteUrl}
       initialToken={link?.token ?? null}
     />

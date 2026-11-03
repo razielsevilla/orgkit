@@ -4,7 +4,7 @@ import { OfficerProfile } from "@/src/components/layout/navbar";
 import { SidebarStyles } from "@/src/components/layout/sidebar/sidebar-styles";
 import { BrandHeader } from "@/src/components/layout/sidebar/brand-header";
 import { WorkspaceCard } from "@/src/components/layout/sidebar/workspace-card";
-import { NavList } from "@/src/components/layout/sidebar/nav-list";
+import { NavList, type SidebarSection } from "@/src/components/layout/sidebar/nav-list";
 import { ProfileMenu } from "@/src/components/layout/sidebar/profile-menu";
 
 export interface SidebarProps {
@@ -16,7 +16,8 @@ export interface SidebarProps {
   isAdmin?: boolean;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
-  activePath?: string;
+  /** Which entry is highlighted */
+  activeSection?: SidebarSection;
 }
 
 export function Sidebar({
@@ -27,7 +28,7 @@ export function Sidebar({
   isAdmin = false,
   isCollapsed,
   onToggleCollapse,
-  activePath = "home",
+  activeSection = "home",
 }: SidebarProps) {
   return (
     <aside
@@ -58,7 +59,7 @@ export function Sidebar({
       <WorkspaceCard orgName={orgName} schoolName={schoolName} isCollapsed={isCollapsed} />
 
       {/* ── Navigation Items ── */}
-      <NavList rawId={rawId} isAdmin={isAdmin} isCollapsed={isCollapsed} activePath={activePath} />
+      <NavList rawId={rawId} isAdmin={isAdmin} isCollapsed={isCollapsed} activeSection={activeSection} />
 
       {/* ── Pinned Bottom Officer Profile Card ── */}
       <ProfileMenu officer={officer} isCollapsed={isCollapsed} />

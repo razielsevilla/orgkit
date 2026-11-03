@@ -1,9 +1,9 @@
 "use server";
 
 import { unstable_rethrow } from "next/navigation";
-import { createClient } from "@/src/lib/supabase/server";
 import { getSessionUser } from "@/src/lib/auth/session-user";
 import { getOfficerRow } from "@/src/lib/auth/officer-profile";
+import { getIsOrgAdmin, getOrgRow } from "@/src/lib/orgs/org-queries";
 import { getLatestOrgId } from "@/src/lib/orgs/memberships";
 
 export interface CreateWorkspaceResponse {
@@ -93,19 +93,7 @@ export async function createWorkspace(
  */
 export async function getOrganizationById(orgId: string) {
   try {
-    const { supabase, user } = await getSessionUser();
-
-    if (!user) return null;
-
-    const { data: org, error } = await supabase
-      .from("orgs")
-      .select("id, name, school, created_at")
-      .eq("id", orgId)
-      .maybeSingle();
-
-    if (error || !org) return null;
-
-    return org;
+    return await getOrgRow(orgId);
   } catch (err) {
     // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
     unstable_rethrow(err);
@@ -184,9 +172,7 @@ export async function getCurrentOfficer(): Promise<{
  */
 export async function isOrgAdmin(orgId: string): Promise<boolean> {
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.rpc("is_org_admin", { target_org: orgId });
-    return data === true;
+    return await getIsOrgAdmin(orgId);
   } catch (err) {
     // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
     unstable_rethrow(err);

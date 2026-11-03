@@ -3,13 +3,10 @@ import {
   getOrganizationById,
   getOfficerDefaultWorkspace,
   getCurrentOfficer,
-  isOrgAdmin,
 } from "@/src/app/(workspace)/actions";
 import { isUuid } from "@/src/lib/validation";
 import { WorkspaceHome } from "@/src/components/workspace/home/workspace-home";
-import { WorkspaceLoadingSkeleton } from "@/src/components/workspace/home/workspace-skeleton";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
-import { WorkspaceShell } from "@/src/components/workspace/home/workspace-shell";
 import { officerLandingPath } from "@/src/lib/routes";
 
 async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string }> }) {
@@ -17,16 +14,15 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
 
   // Org details come only from the server, which returns them to members only.
   // Nothing from the URL is ever shown. A malformed ID can't be an org, so it
-  // gets the same screen as an org the officer doesn't belong to.
-  const valid = isUuid(id);
-  const [org, officer, isAdmin] = await Promise.all([
-    valid ? getOrganizationById(id) : null,
-    getCurrentOfficer(),
-    valid ? isOrgAdmin(id) : false,
-  ]);
+  // gets the same screen as an org the officer doesn't belong to. The sidebar
+  // frame around this screen comes from the workspace layout.
+  const org = isUuid(id) ? await getOrganizationById(id) : null;
 
   if (!org) {
-    const workspace = await getOfficerDefaultWorkspace();
+    const [officer, workspace] = await Promise.all([
+      getCurrentOfficer(),
+      getOfficerDefaultWorkspace(),
+    ]);
     return (
       <WorkspaceNotFound
         officer={officer}
@@ -35,24 +31,12 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
     );
   }
 
-  const schoolName = org.school?.trim() || null;
-
-  return (
-    <WorkspaceShell
-      rawId={id}
-      orgName={org.name}
-      schoolName={schoolName}
-      officer={officer}
-      isAdmin={isAdmin}
-    >
-      <WorkspaceHome orgName={org.name} schoolName={schoolName} />
-    </WorkspaceShell>
-  );
+  return <WorkspaceHome orgName={org.name} schoolName={org.school?.trim() || null} />;
 }
 
 export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<WorkspaceLoadingSkeleton />}>
+    <Suspense fallback={null}>
       <WorkspaceDetailContent params={params} />
     </Suspense>
   );
