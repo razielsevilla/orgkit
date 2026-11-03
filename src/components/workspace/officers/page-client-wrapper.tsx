@@ -20,6 +20,9 @@ export function OfficersClientWrapper({ rawId, initialData }: OfficersClientWrap
         overflowY: "auto",
         padding: "36px clamp(16px, 4vw, 36px) 60px clamp(16px, 4vw, 36px)",
         boxSizing: "border-box",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
       <OfficersClient initialData={initialData} orgId={rawId} />

@@ -10,7 +10,10 @@ import {
   WorkspaceFrame,
   type WorkspaceFrameData,
 } from "@/src/components/workspace/frame/workspace-frame";
-import { WorkspaceLoadingSkeleton } from "@/src/components/workspace/frame/workspace-skeleton";
+import {
+  WorkspaceLoadingSkeleton,
+  WorkspaceCanvasSkeleton,
+} from "@/src/components/workspace/frame/workspace-skeleton";
 
 async function loadFrameData(id: string): Promise<WorkspaceFrameData | null> {
   // A malformed ID can't be an org, so skip the database
@@ -48,7 +51,13 @@ async function WorkspaceFrameLoader({
   children: React.ReactNode;
 }) {
   const { id } = await params;
-  return <WorkspaceFrame data={loadFrameData(id)}>{children}</WorkspaceFrame>;
+  return (
+    <WorkspaceFrame data={loadFrameData(id)}>
+      <Suspense fallback={<WorkspaceCanvasSkeleton />}>
+        {children}
+      </Suspense>
+    </WorkspaceFrame>
+  );
 }
 
 /**

@@ -1,7 +1,9 @@
-import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import { WorkspaceCanvasSkeleton } from "@/src/components/workspace/frame/workspace-skeleton";
 
-// Shown in the content area while Home, Join or Invite loads. The sidebar sits
-// in the layout above this, so it stays put and never joins the animation.
-export default function WorkspaceLoading() {
-  return <WorkspaceContentLoader />;
+/**
+ * Loading boundary for workspace canvas content.
+ * Keeps the sidebar permanently mounted and interactive while switching pages.
+ */
+export default function WorkspaceContentLoading() {
+  return <WorkspaceCanvasSkeleton />;
 }
