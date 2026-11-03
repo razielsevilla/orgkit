@@ -20,6 +20,7 @@ import {
   ActiveOfficer,
   PendingInvite,
   getWorkspaceOfficers,
+  createOfficerInvite,
   updateOfficerRole,
   revokeOfficerInvite,
 } from "@/src/app/(workspace)/officers-actions";
@@ -112,15 +113,32 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
     }
   }
 
-  // Handle recreate invite
-  function handleRecreate(invite: PendingInvite) {
-    setInvitePrefill({
-      email: invite.email || "",
-      role: invite.role,
-    });
-    setInviteDialogSession((n) => n + 1);
-    setInviteModalOpen(true);
+  // Only the hash of an invite link is stored, so an old link cannot be shown
+  // again. This makes a fresh link for the same email and role (the old one
+  // stops working) and opens the copy panel.
+  async function handleRecreate(invite: PendingInvite) {
+    if (!invite.email) return;
+    setLoading(true);
+    setPageError(null);
+    try {
+      const res = await createOfficerInvite(orgId, invite.email, invite.role);
+      if (res.success && res.data) {
+        setSuccessData(res.data);
+        await refreshData();
+      } else if (res.error === "access_revoked") {
+        setAccessRevoked(true);
+      } else {
+        setPageError(res.errorMessage || "Failed to create a new link.");
+      }
+    } catch {
+      setPageError("Failed to create a new link.");
+    } finally {
+      setLoading(false);
+    }
   }
+
+  // The last admin cannot be demoted or removed. Say why instead of leaving a dead control.
+  const LAST_ADMIN_MESSAGE = "Every org needs at least one admin. Make someone else an admin first.";
 
   // Compute initials for an officer
   function getInitials(name: string): string {
@@ -540,13 +558,12 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
                       <span
                         style={{
                           display: "block",
-                          fontSize: 11,
-                          color: "#71717A",
+                          fontSize: 12,
+                          color: "#B45309",
                           marginTop: 4,
-                          fontStyle: "italic",
                         }}
                       >
-                        Every org needs at least one admin. Make someone else an admin first.
+                        {LAST_ADMIN_MESSAGE}
                       </span>
                     )}
                   </div>
@@ -571,7 +588,8 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
                         onChange={(e) =>
                           handleRoleChange(officer, e.target.value as OfficerRole)
                         }
-                        disabled={loading || isSoleAdmin}
+                        disabled={loading}
+                        title={isSoleAdmin ? LAST_ADMIN_MESSAGE : undefined}
                         style={{
                           padding: "6px 12px",
                           borderRadius: 9999,
@@ -580,9 +598,8 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
                           color: badgeStyle.text,
                           fontSize: 12.5,
                           fontWeight: 600,
-                          cursor: isSoleAdmin ? "not-allowed" : "pointer",
+                          cursor: "pointer",
                           outline: "none",
-                          opacity: isSoleAdmin ? 0.7 : 1,
                         }}
                       >
                         <option value="admin">Admin</option>
@@ -595,8 +612,15 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
                     {data.canRemove && (
                       <button
                         type="button"
-                        onClick={() => setRemoveTarget(officer)}
-                        disabled={loading || isSoleAdmin}
+                        onClick={() => {
+                          if (isSoleAdmin) {
+                            setPageError(LAST_ADMIN_MESSAGE);
+                            return;
+                          }
+                          setRemoveTarget(officer);
+                        }}
+                        disabled={loading}
+                        title={isSoleAdmin ? LAST_ADMIN_MESSAGE : undefined}
                         aria-label={`Remove ${officer.fullName}`}
                         style={{
                           display: "inline-flex",
@@ -606,12 +630,12 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
                           borderRadius: 9999,
                           border: "1px solid #E4E4E7",
                           backgroundColor: "#FFFFFF",
-                          color: isSoleAdmin ? "#A1A1AA" : "#DC2626",
+                          color: "#DC2626",
                           fontSize: 12,
                           fontWeight: 500,
-                          cursor: isSoleAdmin ? "not-allowed" : "pointer",
+                          cursor: "pointer",
                           transition: "all 0.15s ease",
-                          opacity: isSoleAdmin ? 0.5 : 1,
+                          opacity: isSoleAdmin ? 0.6 : 1,
                         }}
                         onMouseEnter={(e) => {
                           if (!isSoleAdmin && !loading) {
@@ -788,7 +812,7 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
                       type="button"
                       onClick={() => handleRecreate(invite)}
                       disabled={loading}
-                      title="Create a new link (replaces this invite)"
+                      title="Make a fresh link you can copy. The old link stops working."
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
@@ -811,7 +835,7 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
                       }
                     >
                       <RefreshCw size={12} />
-                      <span>Create new link</span>
+                      <span>Copy new link</span>
                     </button>
 
                     <button
