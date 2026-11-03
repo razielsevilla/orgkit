@@ -4,6 +4,7 @@ import { plusJakarta } from "@/src/lib/fonts";
 import { getCurrentOfficer, getOrganizationById } from "@/src/app/(workspace)/actions";
 import { getWorkspaceOfficers } from "@/src/app/(workspace)/officers-actions";
 import { OfficersClientWrapper } from "./page-client-wrapper";
+import { ROUTES, workspacePath } from "@/src/lib/routes";
 
 interface OfficersPageProps {
   params: Promise<{ id: string }>;
@@ -13,7 +14,7 @@ async function OfficersContent({ params }: OfficersPageProps) {
   const { id: rawId } = await params;
 
   if (!rawId) {
-    redirect("/");
+    redirect(ROUTES.home);
   }
 
   // Parallel fetch: current officer profile, workspace org details, and officers list
@@ -26,9 +27,9 @@ async function OfficersContent({ params }: OfficersPageProps) {
   // If not authenticated or not in this org
   if (!officersRes.success || !officersRes.data || !org) {
     if (officersRes.error === "not_authenticated") {
-      redirect("/signin");
+      redirect(ROUTES.signIn);
     }
-    redirect(`/workspace/${rawId}`);
+    redirect(workspacePath(rawId));
   }
 
   return (

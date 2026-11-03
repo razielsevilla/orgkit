@@ -7,7 +7,6 @@ import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { findUsableInvite } from "@/src/lib/invites/invite-lookup";
 import { acceptInvite } from "@/src/lib/invites/invite-accept";
 import { allowRequest, INVITE_ATTEMPTS_PER_MINUTE } from "@/src/lib/rate-limit";
-import { workspacePath } from "@/src/lib/orgs/memberships";
 import { ROLE_DETAILS, isOfficerRole } from "@/src/lib/orgs/permissions";
 import {
   Card,
@@ -23,6 +22,7 @@ import {
   ClearInviteCookie,
 } from "./invite-client";
 import { InvalidInviteCard, InviteContainer, TooManyRequestsCard } from "./invite-cards";
+import { ROUTES, inviteStartPath, workspacePath } from "@/src/lib/routes";
 
 interface InvitePageProps {
   params: Promise<{ token: string }>;
@@ -148,11 +148,11 @@ async function InviteContent({ params }: InvitePageProps) {
             }}
           >
             By continuing, you agree to OrgKit&apos;s{" "}
-            <Link href="/terms" style={{ color: "var(--color-accent)", textDecoration: "underline" }}>
+            <Link href={ROUTES.terms} style={{ color: "var(--color-accent)", textDecoration: "underline" }}>
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" style={{ color: "var(--color-accent)", textDecoration: "underline" }}>
+            <Link href={ROUTES.privacy} style={{ color: "var(--color-accent)", textDecoration: "underline" }}>
               Privacy Policy
             </Link>
             .
@@ -171,7 +171,7 @@ async function InviteContent({ params }: InvitePageProps) {
 
   if (!officer || !officer.consent_at) {
     // The start route remembers the invite, then sends them to the A1 consent screen
-    redirect(`/invite/${token}/start`);
+    redirect(inviteStartPath(token));
   }
 
   // Visitor has consent: accept the invite in one database transaction

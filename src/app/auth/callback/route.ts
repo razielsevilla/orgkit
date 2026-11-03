@@ -3,7 +3,8 @@ import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { getGoogleSub } from "@/src/lib/auth/google-sub";
 import { getPendingInviteCookie } from "@/src/lib/auth/session-invite";
-import { getLatestOrgId, workspacePath } from "@/src/lib/orgs/memberships";
+import { getLatestOrgId } from "@/src/lib/orgs/memberships";
+import { ROUTES, officerLandingPath, signInPath } from "@/src/lib/routes";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
 
   const toSignIn = (errorCode?: string) =>
     NextResponse.redirect(
-      new URL(errorCode ? `/signin?error=${errorCode}` : "/signin", requestUrl.origin)
+      new URL(signInPath(errorCode), requestUrl.origin)
     );
 
   // Handle errors or user cancellations returned by Google or Supabase Auth
@@ -96,25 +97,17 @@ export async function GET(request: Request) {
       return toSignIn("google_error");
     }
 
+    // A pending invite wins over their workspace, so skip the lookup when there is one.
+    // Otherwise a returning officer goes to their workspace, or to the create screen.
     const pendingInvite = await getPendingInviteCookie();
+    const orgId = pendingInvite ? null : await getLatestOrgId(supabase, officer.id);
 
-    if (pendingInvite) {
-      return NextResponse.redirect(
-        new URL(`/invite/${pendingInvite}`, requestUrl.origin)
-      );
-    }
-
-    // Returning officer: send them to their workspace if they have one
-    const orgId = await getLatestOrgId(supabase, officer.id);
-
-    if (orgId) {
-      return NextResponse.redirect(new URL(workspacePath(orgId), requestUrl.origin));
-    }
-
-    return NextResponse.redirect(new URL("/orgs/new", requestUrl.origin));
+    return NextResponse.redirect(
+      new URL(officerLandingPath({ orgId, pendingInvite, inviteFirst: true }), requestUrl.origin)
+    );
   }
 
   // First-time officer: no account row yet. They see the privacy notice first,
   // and the row is created only after they agree (see /consent).
-  return NextResponse.redirect(new URL("/consent", requestUrl.origin));
+  return NextResponse.redirect(new URL(ROUTES.consent, requestUrl.origin));
 }

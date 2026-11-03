@@ -8,6 +8,7 @@ import { useGoogleSignIn } from "@/src/lib/use-google-sign-in";
 import { AuthLayout } from "@/src/components/auth/auth-layout";
 import { GoogleAuthButton } from "@/src/components/auth/google-auth-button";
 import { AuthErrorAlert } from "@/src/components/auth/auth-error-alert";
+import { ROUTES } from "@/src/lib/routes";
 
 export default function SignInPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function SignInPage() {
   const { loading, error: manualError, start } = useGoogleSignIn({ signOutFirst: true });
 
   useEffect(() => {
-    router.prefetch("/register");
+    router.prefetch(ROUTES.register);
   }, [router]);
 
   return (
@@ -125,7 +126,7 @@ export default function SignInPage() {
           >
             By continuing, you agree to our{" "}
             <Link
-              href="/terms"
+              href={ROUTES.terms}
               className="orgkit-terms-link"
               title="View OrgKit Terms of Service"
             >
@@ -133,7 +134,7 @@ export default function SignInPage() {
             </Link>{" "}
             and{" "}
             <Link
-              href="/privacy"
+              href={ROUTES.privacy}
               className="orgkit-terms-link"
               title="View OrgKit Privacy Policy"
             >
@@ -153,7 +154,7 @@ export default function SignInPage() {
           >
             New to OrgKit?{" "}
             <Link
-              href="/register"
+              href={ROUTES.register}
               prefetch={true}
               className="orgkit-signin-link"
               title="Create a new OrgKit account"

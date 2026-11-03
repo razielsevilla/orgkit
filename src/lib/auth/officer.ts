@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/src/lib/auth/session-user";
 import { getOfficerRow } from "@/src/lib/auth/officer-profile";
+import { ROUTES } from "@/src/lib/routes";
 
 /**
  * Call at the top of any protected server page. Sends signed-out visitors to
@@ -10,11 +11,11 @@ import { getOfficerRow } from "@/src/lib/auth/officer-profile";
 export async function requireOfficer() {
   const { user } = await getSessionUser();
 
-  if (!user) redirect("/signin");
+  if (!user) redirect(ROUTES.signIn);
 
   const officer = await getOfficerRow(user.id);
 
-  if (!officer) redirect("/consent");
+  if (!officer) redirect(ROUTES.consent);
 
   return { user, officer };
 }

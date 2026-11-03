@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/src/lib/auth/session-user";
 import { AuthLayout } from "@/src/components/auth/auth-layout";
 import { ConsentForm } from "./consent-form";
+import { ROUTES } from "@/src/lib/routes";
 
 export default function ConsentPage() {
   return (
@@ -19,7 +20,7 @@ export default function ConsentPage() {
 async function ConsentCard() {
   const { supabase, user } = await getSessionUser();
 
-  if (!user) redirect("/signin");
+  if (!user) redirect(ROUTES.signIn);
 
   // Already agreed on an earlier sign-in: nothing to show
   const { data: officer } = await supabase
@@ -27,7 +28,7 @@ async function ConsentCard() {
     .select("id")
     .eq("id", user.id)
     .maybeSingle();
-  if (officer) redirect("/orgs/new");
+  if (officer) redirect(ROUTES.newWorkspace);
 
   return (
     <div

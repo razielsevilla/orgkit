@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { PanelLeft } from "lucide-react";
+import { workspacePath } from "@/src/lib/routes";
 
 interface BrandHeaderProps {
   rawId: string;
@@ -26,7 +27,7 @@ export function BrandHeader({ rawId, isCollapsed, onToggleCollapse }: BrandHeade
       }}
     >
       <Link
-        href={`/workspace/${rawId}`}
+        href={workspacePath(rawId)}
         style={{
           display: "inline-flex",
           alignItems: "center",

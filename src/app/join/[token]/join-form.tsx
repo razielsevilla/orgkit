@@ -14,6 +14,7 @@ import { EmailField, FullNameField } from "./join-fields";
 import { ConsentBox, ConsentCheckboxes, LanguageSwitcher } from "./join-consent";
 import { JoinSubmit } from "./join-submit";
 import { JoinInactiveView, JoinSuccessView } from "./join-results";
+import { ROUTES } from "@/src/lib/routes";
 
 const INITIAL: JoinState = { status: "idle" };
 
@@ -166,7 +167,7 @@ export function JoinForm({
           {/* Privacy Notice Link */}
           <div>
             <a
-              href="/privacy"
+              href={ROUTES.privacy}
               target="_blank"
               rel="noopener"
               className="jf-link"

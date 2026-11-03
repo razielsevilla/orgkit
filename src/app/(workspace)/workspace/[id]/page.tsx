@@ -10,6 +10,7 @@ import { WorkspaceHome } from "./workspace-home";
 import { WorkspaceLoadingSkeleton } from "./workspace-skeleton";
 import { WorkspaceNotFound } from "./workspace-not-found";
 import { WorkspaceShell } from "./workspace-shell";
+import { officerLandingPath } from "@/src/lib/routes";
 
 async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -29,7 +30,7 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
     return (
       <WorkspaceNotFound
         officer={officer}
-        workspaceHref={workspace?.orgId ? `/org/${workspace.orgId}` : "/orgs/new"}
+        workspaceHref={officerLandingPath({ orgId: workspace?.orgId })}
       />
     );
   }

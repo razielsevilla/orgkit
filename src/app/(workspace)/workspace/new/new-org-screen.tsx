@@ -1,6 +1,7 @@
 import { plusJakarta } from "@/src/lib/fonts";
 import { Navbar, type OfficerProfile } from "@/src/components/layout/navbar";
 import { ZeroScrollLock } from "@/src/components/ui/zero-scroll-lock";
+import { ROUTES } from "@/src/lib/routes";
 
 interface NewOrgScreenProps {
   officer: OfficerProfile | null;
@@ -118,7 +119,7 @@ export function NewOrgScreen({ officer, children }: NewOrgScreenProps) {
       </div>
 
       {/* ── Reusable Standalone Top Navigation Bar ── */}
-      <Navbar officer={officer} logoHref="/" />
+      <Navbar officer={officer} logoHref={ROUTES.home} />
 
       {/* ── Main Viewport Content ── */}
       <main

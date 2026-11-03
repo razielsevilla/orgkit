@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { plusJakarta } from "@/src/lib/fonts";
+import { ROUTES } from "@/src/lib/routes";
 
 export default function TermsPage() {
   return (
@@ -31,7 +32,7 @@ export default function TermsPage() {
             marginBottom: "clamp(20px, 3.5vh, 32px)",
           }}
         >
-          <Link href="/signin" style={{ display: "inline-flex", textDecoration: "none" }}>
+          <Link href={ROUTES.signIn} style={{ display: "inline-flex", textDecoration: "none" }}>
             <Image
               src="/orgkit-text-logo.png"
               alt="OrgKit"
@@ -42,7 +43,7 @@ export default function TermsPage() {
             />
           </Link>
           <Link
-            href="/signin"
+            href={ROUTES.signIn}
             style={{
               fontSize: 14,
               fontWeight: 600,
@@ -281,14 +282,14 @@ export default function TermsPage() {
             <span>© 2026 OrgKit. All rights reserved.</span>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <Link
-                href="/privacy"
+                href={ROUTES.privacy}
                 style={{ color: "var(--color-muted)", textDecoration: "none" }}
               >
                 Privacy Policy
               </Link>
               <span>•</span>
               <Link
-                href="/signin"
+                href={ROUTES.signIn}
                 style={{ color: "var(--color-accent)", fontWeight: 600, textDecoration: "none" }}
               >
                 Sign in

@@ -14,6 +14,7 @@ import { JoinPanelBackdrop } from "./join-panel-backdrop";
 import { JoinPanelHeader } from "./join-panel-header";
 import { JoinLinkInput, JoinQrPreview, JoinCopyAndSave } from "./join-link-display";
 import { JoinLinkControls, JoinTurnOnButton, type Confirming } from "./join-link-controls";
+import { joinLinkPath, workspacePath } from "@/src/lib/routes";
 
 export function JoinPanel({
   orgId,
@@ -38,7 +39,7 @@ export function JoinPanel({
   const [pending, startTransition] = useTransition();
   const [isSidebarCollapsed, toggleSidebar] = useSidebarCollapsed();
 
-  const joinUrl = token && siteUrl ? `${siteUrl}/join/${token}` : null;
+  const joinUrl = token && siteUrl ? `${siteUrl}${joinLinkPath(token)}` : null;
   // Only show a QR that was drawn from the link currently on screen
   const qrUrl = qr && qr.forUrl === joinUrl ? qr.dataUrl : null;
 
@@ -173,7 +174,7 @@ export function JoinPanel({
             }}
           >
             <Link
-              href={`/org/${orgId}`}
+              href={workspacePath(orgId)}
               className="mj-back"
               style={{
                 alignItems: "center",

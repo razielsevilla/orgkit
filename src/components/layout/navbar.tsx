@@ -6,6 +6,7 @@ import Link from "next/link";
 import { ChevronDown, LogOut } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
 import { useDismissable } from "@/src/lib/use-dismissable";
+import { ROUTES } from "@/src/lib/routes";
 
 export interface OfficerProfile {
   id?: string;
@@ -18,7 +19,7 @@ export interface NavbarProps {
   logoHref?: string;
 }
 
-export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
+export function Navbar({ officer, logoHref = ROUTES.home }: NavbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 

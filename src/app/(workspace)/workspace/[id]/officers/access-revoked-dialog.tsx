@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 import { Dialog } from "@/src/components/ui/dialog";
+import { ROUTES } from "@/src/lib/routes";
 
 export function AccessRevokedDialog() {
   const router = useRouter();
@@ -49,7 +50,7 @@ export function AccessRevokedDialog() {
 
       <button
         type="button"
-        onClick={() => router.push("/")}
+        onClick={() => router.push(ROUTES.home)}
         style={{
           width: "100%",
           padding: "12px 20px",

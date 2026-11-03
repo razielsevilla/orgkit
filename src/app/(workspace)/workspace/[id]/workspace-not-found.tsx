@@ -9,6 +9,7 @@ import {
 } from "@/src/components/ui/card";
 import { ZeroScrollLock } from "@/src/components/ui/zero-scroll-lock";
 import { GoToWorkspaceButton } from "./go-to-workspace-button";
+import { ROUTES } from "@/src/lib/routes";
 
 interface WorkspaceNotFoundProps {
   officer: OfficerProfile | null;
@@ -40,7 +41,7 @@ export function WorkspaceNotFound({ officer, workspaceHref }: WorkspaceNotFoundP
     >
       <ZeroScrollLock />
 
-      <Navbar officer={officer} logoHref="/" />
+      <Navbar officer={officer} logoHref={ROUTES.home} />
 
       <main
         style={{

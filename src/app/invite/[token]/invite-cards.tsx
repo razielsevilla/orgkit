@@ -5,6 +5,7 @@ import { plusJakarta } from "@/src/lib/fonts";
 import { Card, CardBadge, CardTitle, CardDescription, CardHeader } from "@/src/components/ui/card";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { ClearInviteCookie } from "./invite-client";
+import { ROUTES } from "@/src/lib/routes";
 
 /**
  * Centered responsive canvas wrapper matching OrgKit design system (design.md).
@@ -124,7 +125,7 @@ export function InviteContainer({ children }: { children: React.ReactNode }) {
         <FloatingIconsDecor />
 
         <div style={{ marginBottom: 22, zIndex: 10 }}>
-          <Link href="/" aria-label="OrgKit Home">
+          <Link href={ROUTES.home} aria-label="OrgKit Home">
             <Image
               src="/orgkit-text-logo.png"
               alt="OrgKit"
@@ -178,7 +179,7 @@ function WarningCard({
       </CardHeader>
       <div style={{ textAlign: "center" }}>
         <Link
-          href="/"
+          href={ROUTES.home}
           style={{
             display: "inline-block",
             padding: "12px 24px",

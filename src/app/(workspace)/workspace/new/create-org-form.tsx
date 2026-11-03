@@ -11,6 +11,7 @@ import {
   CardContent,
 } from "@/src/components/ui/card";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
+import { ROUTES, workspacePath } from "@/src/lib/routes";
 
 /** The "Set up your Organization" card: name and school fields and the create button. */
 export function CreateOrgForm() {
@@ -51,15 +52,15 @@ export function CreateOrgForm() {
     try {
       const res = await createWorkspace(cleanName, school);
       if (res.needsConsent) {
-        router.push("/consent");
+        router.push(ROUTES.consent);
         return;
       }
       if (res.success && res.orgId) {
-        router.push(`/org/${res.orgId}`);
+        router.push(workspacePath(res.orgId));
         return;
       }
       if (res.existingOrgId) {
-        router.push(`/org/${res.existingOrgId}`);
+        router.push(workspacePath(res.existingOrgId));
         return;
       }
       submittingRef.current = false;

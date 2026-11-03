@@ -181,7 +181,7 @@ describe("auth callback: where an officer lands", () => {
 
   it("sends a returning officer with no org to create one", async () => {
     state.officer = { id: ME, email: "me@school.edu" };
-    expect(destination(await callback("?code=abc"))).toBe("/orgs/new");
+    expect(destination(await callback("?code=abc"))).toBe("/workspace/new");
   });
 
   it("lets a pending invite win over the workspace", async () => {

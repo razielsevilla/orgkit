@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { acceptConsent, declineConsent } from "./actions";
+import { ROUTES } from "@/src/lib/routes";
 
 export function ConsentForm() {
   const [agreed, setAgreed] = useState(false);
@@ -30,7 +31,7 @@ export function ConsentForm() {
         />
         <span>
           I agree to the{" "}
-          <Link href="/privacy" target="_blank" className="orgkit-terms-link">
+          <Link href={ROUTES.privacy} target="_blank" className="orgkit-terms-link">
             Privacy Notice
           </Link>
           .

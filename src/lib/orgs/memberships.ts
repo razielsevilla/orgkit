@@ -19,7 +19,3 @@ export async function getLatestOrgId(
 
   return membership?.org_id ?? null;
 }
-
-export function workspacePath(orgId: string): string {
-  return `/workspace/${orgId}`;
-}

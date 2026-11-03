@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentOfficer, getOfficerDefaultWorkspace } from "@/src/app/(workspace)/actions";
 import { CreateOrgForm } from "./create-org-form";
 import { NewOrgScreen } from "./new-org-screen";
+import { ROUTES, workspacePath } from "@/src/lib/routes";
 
 /** Shown inside the frame while the server checks who is signing in. */
 function CheckingWorkspace() {
@@ -32,11 +33,11 @@ function CheckingWorkspace() {
 // Reads the session, so it streams in behind the Suspense boundary below.
 async function NewOrgContent() {
   const officer = await getCurrentOfficer();
-  if (!officer) redirect("/signin");
+  if (!officer) redirect(ROUTES.signIn);
 
   // One org per officer: someone who already has a workspace goes straight to it
   const existing = await getOfficerDefaultWorkspace();
-  if (existing?.orgId) redirect(`/org/${existing.orgId}`);
+  if (existing?.orgId) redirect(workspacePath(existing.orgId));
 
   return (
     <NewOrgScreen officer={officer}>

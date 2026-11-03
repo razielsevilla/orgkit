@@ -4,11 +4,18 @@ How URLs work in OrgKit: what exists, who can open it, which file answers it,
 and what runs before it.
 
 Paths are inside `src/app/` unless they start with `src/` or `next.config.ts`.
-A folder in parentheses, like `(workspace)`, is a route group: it organizes
-code and adds a shared layout, but it is not part of the URL.
+A folder in parentheses, like `(workspace)`, is a route group: it adds a shared
+layout but is not part of the URL.
 
-**Start here if you're lost:** the folder names do not always match the URL.
-See [URL to file](#url-to-file) and [The `/workspace` and `/org` prefixes](#the-workspace-and-org-prefixes).
+**The rules, in short**
+
+1. **One URL per page, and the folders match it.** There are no rewrites. The
+   page for `/workspace/:id/officers` lives in `workspace/[id]/officers/`.
+2. **Never type a path string.** Import it from
+   [`src/lib/routes.ts`](../src/lib/routes.ts) (`workspacePath(id)`,
+   `ROUTES.signIn`, and so on).
+3. **Every route is classified** as public or private in that same file. A test
+   fails if you add a page and forget.
 
 ---
 
@@ -33,76 +40,64 @@ See [URL to file](#url-to-file) and [The `/workspace` and `/org` prefixes](#the-
 | URL | What it is | File |
 |---|---|---|
 | `/consent` | Privacy agreement, shown once on first sign-in | `consent/page.tsx` |
-| `/setup` | Old address. Redirects to `/orgs/new` | `setup/page.tsx` |
 
 ### Needs sign-in and the privacy agreement (inside the `(workspace)` group)
 
 | URL | Who | What it is | File |
 |---|---|---|---|
-| `/orgs/new` | Any officer | Create your org's workspace | `(workspace)/orgs/new/page.tsx` |
-| `/workspace/:id` | Officer of that org | Workspace home | `(workspace)/org/[id]/page.tsx` |
-| `/org/:id` | Officer of that org | The same page, reached directly | same file |
+| `/workspace/new` | Any officer | Create your org's workspace | `(workspace)/workspace/new/page.tsx` |
+| `/workspace/:id` | Officer of that org | Workspace home | `(workspace)/workspace/[id]/page.tsx` |
 | `/workspace/:id/officers` | Officer of that org | Officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
-| `/org/:id/officers` | Officer of that org | The same page | same file |
-| `/org/:id/members/join` | **Admin** of that org (others get a 404) | Manage the join link and QR code | `(workspace)/org/[id]/members/join/page.tsx` |
+| `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | Manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
 
 `:id` is an org UUID. `:token` is a secret token. A malformed value is handled
-as "not found" without a database query.
+as "not found" without a database query. `/workspace/new` is a fixed path, so
+it is never mistaken for an `:id`.
+
+### Old addresses (redirects)
+
+Set in `next.config.ts`. They send old bookmarks and shared links to the right
+page, and run before the proxy. They are temporary (307) redirects, so they can
+be made permanent later.
+
+| Old URL | Goes to |
+|---|---|
+| `/org/:id` | `/workspace/:id` |
+| `/org/:id/...` (for example `/org/:id/officers`, `/org/:id/members/join`) | `/workspace/:id/...` |
+| `/orgs/new` | `/workspace/new` |
+| `/setup` | `/workspace/new` |
+
+Do not link to these. They exist for people who saved an old address.
 
 ---
 
-## 2. URL to file
+## 2. Paths in code: `src/lib/routes.ts`
 
-This is the table that answers "where is the code for this URL?"
-
-| You see this URL in the browser | Open this folder |
+| Need | Use |
 |---|---|
-| `/workspace/:id` | `(workspace)/org/[id]/` |
-| `/org/:id` | `(workspace)/org/[id]/` |
-| `/workspace/:id/officers` | `(workspace)/workspace/[id]/officers/` |
-| `/org/:id/officers` | `(workspace)/workspace/[id]/officers/` |
-| `/org/:id/members/join` | `(workspace)/org/[id]/members/join/` |
-| `/workspace/:id/members/join` | nothing: this is a 404 |
-| everything else | the folder with the same path as the URL |
+| A fixed page | `ROUTES.home`, `.signIn`, `.register`, `.privacy`, `.terms`, `.consent`, `.authCallback`, `.newWorkspace` |
+| An org's pages | `workspacePath(id)`, `officersPath(id)`, `joinPanelPath(id)` |
+| An invite | `invitePath(token)`, `inviteStartPath(encodedToken)` |
+| A student join link | `joinLinkPath(token)` |
+| Sign-in with an error | `signInPath("google_error")` |
+| "Where does this officer go next?" | `officerLandingPath({ orgId, pendingInvite, inviteFirst })` |
+| "May a signed-out visitor open this?" | `isPublicPath(pathname)` |
+
+`officerLandingPath` is the one place that decides where a signed-in officer
+belongs: their org first, then a pending invite, then `/workspace/new`. Right
+after a fresh Google sign-in the invite wins over an existing org
+(`inviteFirst`). The proxy, `/auth/callback` and `/consent` all use it.
 
 ---
 
-## 3. The `/workspace` and `/org` prefixes
-
-Two rewrites in `next.config.ts` make some pages answer to both prefixes:
-
-| Requested URL | Served by |
-|---|---|
-| `/workspace/:id` | the page in `org/[id]` |
-| `/org/:id/officers` | the page in `workspace/[id]/officers` |
-
-A rewrite changes which file answers. It does not change the address bar, so the
-visitor still sees the URL they asked for.
-
-**Which prefix the app links to**
-
-| Prefix | Used by |
-|---|---|
-| `/workspace/:id` (the main one) | the proxy, the sign-in callback, the invite flow, the sidebar and brand logo |
-| `/org/:id` | the create-org form (after creating), the "Go to my workspace" button, the join panel's back link |
-| `/org/:id/members/join` | the sidebar link to the join panel (it has no `/workspace` version) |
-
-New links to home and officers should use `/workspace/:id`. Keep the join panel
-at `/org/:id/members/join` until it gets its own rewrite or move.
-
----
-
-## 4. What happens to a request
-
-A request goes through these steps in order. Knowing the order explains most
-surprising redirects.
+## 3. What happens to a request
 
 ```
 Browser asks for /workspace/123/officers
   │
-  ├─ 1. Proxy (src/proxy.ts)            checks the session, may redirect
+  ├─ 1. Redirects (next.config.ts)      old addresses such as /org/123
   │
-  ├─ 2. Rewrites (next.config.ts)       picks the file that answers
+  ├─ 2. Proxy (src/proxy.ts)            checks the session, may redirect
   │
   ├─ 3. (workspace) layout              signed out → /signin
   │                                     no officer profile → /consent
@@ -111,35 +106,35 @@ Browser asks for /workspace/123/officers
                                         database, may redirect or 404
 ```
 
-### Step 1: the proxy
+### Step 2: the proxy
 
 [`src/proxy.ts`](../src/proxy.ts) runs on every request except static files
-(`_next/static`, `_next/image`, `favicon.ico` and image extensions). It sees the
-URL the visitor typed, before the rewrites. Its rules, in order:
+(`_next/static`, `_next/image`, `favicon.ico` and image extensions). Its rules,
+in order:
 
 1. Validate the session with Supabase and refresh its cookies.
 2. **Session older than 7 days** (`src/lib/auth/session-config.ts`): sign out and
    go to `/signin?error=session_expired`.
-3. **Signed in, on `/`, `/signin`, `/register` or `/orgs/new`:**
-   - has an org: go to `/workspace/:id`
-   - no org, pending invite cookie: go to `/invite/:token`
-   - no org, no invite: go to `/orgs/new`
+3. **Signed in, on `/`, `/signin`, `/register` or `/workspace/new`:** go to
+   `officerLandingPath({ orgId, pendingInvite })`. That is their workspace, or
+   their invite, or (if neither) they stay on, or go to, `/workspace/new`.
 4. **Signed out, on a non-public path:** go to `/signin`. Public means `/`,
-   `/signin`, `/register`, `/privacy`, `/terms`, `/auth/*`, `/join/*`, `/invite/*`.
-   Anything not on that list needs a session, so a forgotten route fails safe.
+   `/signin`, `/register`, `/privacy`, `/terms`, `/auth/*`, `/join/*`, `/invite/*`
+   (`isPublicPath`). Anything not on that list needs a session, so a forgotten
+   route fails safe.
 5. **Signed in, on `/workspace/*`:** delete the pending-invite cookie, because
    the invite flow is over.
 
 ### Step 3: the workspace gate
 
-[`(workspace)/layout.tsx`](../src/app/(workspace)/layout.tsx) wraps `/orgs/new`,
-`/org/*` and `/workspace/*`. `/consent`, `/join/*` and `/invite/*` are outside it
-on purpose.
+[`(workspace)/layout.tsx`](../src/app/(workspace)/layout.tsx) wraps everything
+under `/workspace/*`. `/consent`, `/join/*` and `/invite/*` are outside it on
+purpose.
 
 ### Step 4: the page
 
 Every page re-checks access in the database, so a changed role or a removed
-officer takes effect on the very next request. Failures look like this:
+officer takes effect on the very next request.
 
 | Situation | Result |
 |---|---|
@@ -153,15 +148,15 @@ that the org exists.
 
 ---
 
-## 5. Journeys
+## 4. Journeys
 
 **New officer**
 `/register` or `/signin` → Google → `/auth/callback` → `/consent` → agree →
-`/orgs/new` → create → `/org/:id`
+`/workspace/new` → create → `/workspace/:id`
 
 **Returning officer**
 `/signin` → Google → `/auth/callback` → `/workspace/:id`
-(or `/orgs/new` if they have no org yet)
+(or `/workspace/new` if they have no org yet)
 
 **Invited officer**
 `/invite/:token` → "Continue with Google" (the cookie is set through
@@ -173,11 +168,20 @@ required" card.
 
 **Student joining**
 `/join/:token` (no account) → form and consent → success card. Rate limited per
-device. The page sends no Referer and asks search engines not to index it,
-because the token is in the URL.
+device.
 
 **Sign out**
 The `signOut` action ends the session and goes to `/signin`.
+
+---
+
+## 5. Secret URLs
+
+`/join/:token` and `/invite/:token` carry a secret in the path. Both are sent
+with `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex, nofollow`
+(`headers()` in `next.config.ts`). The prefixes are listed in
+`SECRET_URL_PREFIXES` in `src/lib/routes.ts`, and a test fails if the config
+misses one. A new route with a secret in its URL goes in both places.
 
 ---
 
@@ -204,7 +208,7 @@ Not URLs, but how pages change data.
 | `consent/actions.ts` | `acceptConsent`, `declineConsent` |
 | `(workspace)/actions.ts` | `createWorkspace`, plus readers `getOrganizationById`, `getOfficerDefaultWorkspace`, `getCurrentOfficer`, `isOrgAdmin` |
 | `(workspace)/officers-actions.ts` | `getWorkspaceOfficers`, `createOfficerInvite`, `revokeOfficerInvite`, `updateOfficerRole`, `removeWorkspaceOfficer` |
-| `(workspace)/org/[id]/members/join/actions.ts` | `setJoinLink` |
+| `(workspace)/workspace/[id]/members/join/actions.ts` | `setJoinLink` |
 | `invite/actions.ts` | `clearInviteCookie` |
 | `join/[token]/actions.ts` | `submitJoin` |
 
@@ -212,30 +216,33 @@ Not URLs, but how pages change data.
 
 ## 8. Adding or changing a route
 
-1. **Put the page where its URL says.** Avoid new rewrites. If you must add one,
-   add it to sections 2 and 3 as well.
-2. **Public or private?** A public page must be added to `PUBLIC_PATHS` (or the
-   prefix checks) in `src/proxy.ts`. Otherwise signed-out visitors are sent to
-   `/signin`.
-3. **Inside `(workspace)`?** You get the sign-in and consent gate for free.
+1. **Put the page where its URL says.** No rewrites. If you rename or move a URL,
+   add a redirect from the old one in `next.config.ts` and list it in section 1.
+2. **Add helpers** for any new path to `src/lib/routes.ts`, and use them instead
+   of typing the string.
+3. **Classify it.** Public: make `isPublicPath` allow it. Private: add it to
+   `PRIVATE_ROUTES`. Both are in `src/lib/routes.ts`.
+4. **Inside `(workspace)`?** You get the sign-in and consent gate for free.
    Admin-only pages must check the role in the database, not from the URL. Use a
    404 for "not allowed" so the page's existence isn't revealed.
-4. **Reads cookies or the session?** Put it inside a `<Suspense>` boundary,
+5. **Reads cookies or the session?** Put it inside a `<Suspense>` boundary,
    because Cache Components is on. Copy an existing page.
-5. **Secret in the URL?** Follow `/join/*`: send no Referer and mark it `noindex`.
-6. **Update this file.**
+6. **Secret in the URL?** Add the prefix to `SECRET_URL_PREFIXES` and to
+   `headers()` in `next.config.ts`.
+7. **Update this file.** A test fails if a route under `src/app` isn't written
+   here as `` `/like/:this` ``.
+8. Run `npm test`. `tests/unit/routes.test.ts` checks the classification, the
+   docs and the secret-URL headers. `tests/actions/proxy.test.ts` checks the
+   proxy's redirects.
 
 ---
 
-## 9. Known quirks
+## 9. Behavior worth knowing
 
-Documented so nobody has to rediscover them. These are the current behavior,
-not recommendations.
-
-- Home and officers each have two URLs. Their folders don't match the main URL.
-- `/workspace/:id/members/join` is a 404; only `/org/:id/members/join` exists.
-- The links to home are split between `/workspace/:id` and `/org/:id`.
-- `/orgs/new` (plural) sits next to `/org/:id` (singular).
-- `/setup` only redirects to `/orgs/new` and appears unused.
-- `/invite/:token` carries a secret in the URL but has no Referer or `noindex`
-  protection, unlike `/join/:token`.
+- The proxy is a quick check, not the real gate. Authorization lives in the page
+  and the database, so don't add role rules to the proxy.
+- After a fresh Google sign-in a pending invite wins over an existing org
+  (`/auth/callback`). Inside the app an existing org wins (the proxy). Both come
+  from `officerLandingPath`, which is where to change it.
+- Access to a page you can't see is a 404 or the same "can't find" card as a
+  page that doesn't exist.

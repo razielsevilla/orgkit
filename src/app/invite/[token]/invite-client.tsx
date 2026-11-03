@@ -7,13 +7,14 @@ import { signInWithGoogle, useGoogleSignIn } from "@/src/lib/use-google-sign-in"
 import { GoogleLogo } from "@/src/components/auth/google-logo";
 import { LogOut, ArrowRight } from "lucide-react";
 import { clearInviteCookie } from "@/src/app/invite/actions";
+import { ROUTES, invitePath, inviteStartPath, workspacePath } from "@/src/lib/routes";
 
 /**
  * Remembers the invite across the Google round trip. Pages cannot set cookies
  * while they render, so this asks the start route to do it.
  */
 async function rememberInvite(token: string) {
-  const res = await fetch(`/invite/${encodeURIComponent(token)}/start`, {
+  const res = await fetch(inviteStartPath(encodeURIComponent(token)), {
     method: "POST",
     credentials: "same-origin",
   });
@@ -112,7 +113,7 @@ export function SwitchAccountButton({ token }: SwitchAccountButtonProps) {
       await signInWithGoogle({ selectAccount: true });
     } catch {
       setLoading(false);
-      router.push(`/invite/${token}`);
+      router.push(invitePath(token));
     }
   }
 
@@ -165,7 +166,7 @@ export function GoToWorkspaceButton({ orgId }: GoToWorkspaceButtonProps) {
   return (
     <button
       type="button"
-      onClick={() => router.push(orgId ? `/workspace/${orgId}` : "/")}
+      onClick={() => router.push(orgId ? workspacePath(orgId) : ROUTES.home)}
       style={{
         width: "100%",
         display: "inline-flex",

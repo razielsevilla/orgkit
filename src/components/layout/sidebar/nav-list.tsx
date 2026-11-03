@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { Home, Users, UserCheck, Calendar, Wallet, Archive, QrCode } from "lucide-react";
+import { joinPanelPath, officersPath, workspacePath } from "@/src/lib/routes";
 
 interface NavLinkItemProps {
   href: string;
@@ -70,7 +71,7 @@ export function NavList({ rawId, isAdmin, isCollapsed, activePath }: NavListProp
     >
       {/* Active: Home */}
       <NavLinkItem
-        href={`/workspace/${rawId}`}
+        href={workspacePath(rawId)}
         title="Home"
         label="Home"
         icon={Home}
@@ -81,7 +82,7 @@ export function NavList({ rawId, isAdmin, isCollapsed, activePath }: NavListProp
 
       {/* Navigation Item: Officers (Ticket Section 8: above Manage group) */}
       <NavLinkItem
-        href={`/workspace/${rawId}/officers`}
+        href={officersPath(rawId)}
         title="Officers"
         label="Officers"
         icon={UserCheck}
@@ -116,7 +117,7 @@ export function NavList({ rawId, isAdmin, isCollapsed, activePath }: NavListProp
 
       {isAdmin && (
         <NavLinkItem
-          href={`/org/${rawId}/members/join`}
+          href={joinPanelPath(rawId)}
           title="Member join"
           label="Member join"
           icon={QrCode}
