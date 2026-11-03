@@ -10,7 +10,8 @@ import { looksLikeToken } from "@/src/lib/member-join";
  * share one campus Wi-Fi or mobile-carrier IP when a QR is shown at an event.
  * 30 still stops scripted hammering while letting a crowd join. Founders to confirm.
  */
-export const JOIN_ATTEMPTS_PER_MINUTE = 30;
+export const JOIN_ATTEMPTS_PER_MINUTE =
+  Number(process.env.JOIN_ATTEMPTS_PER_MINUTE) || 10;
 
 /** The org's name for an active token, or null. Nothing else leaves the server. */
 export async function getJoinOrgName(token: string): Promise<string | null> {
