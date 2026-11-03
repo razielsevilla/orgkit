@@ -28,16 +28,6 @@ export function InviteDialog({
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Synchronize when prefilling from "Create new link"
-  React.useEffect(() => {
-    if (isOpen) {
-      setEmail(initialEmail);
-      setRole(initialRole);
-      setFieldError(null);
-      setServerError(null);
-    }
-  }, [isOpen, initialEmail, initialRole]);
-
   if (!isOpen) return null;
 
   async function handleSubmit(e: React.FormEvent) {

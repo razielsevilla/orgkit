@@ -17,6 +17,15 @@ export function hashInviteToken(token: string): string {
 }
 
 /**
+ * Checks that a string has the shape of a token from generateInviteToken():
+ * 32 bytes in base64url is exactly 43 URL-safe characters. Used before a token
+ * from a URL or cookie is trusted for lookups or redirects.
+ */
+export function isValidInviteToken(token: unknown): token is string {
+  return typeof token === "string" && /^[A-Za-z0-9_-]{43}$/.test(token);
+}
+
+/**
  * Normalizes an email address according to OrgKit decisions:
  * Trim and lowercase for comparison.
  * Note: Never strip dots or plus signs (e.g. name+tag@school.edu is preserved).

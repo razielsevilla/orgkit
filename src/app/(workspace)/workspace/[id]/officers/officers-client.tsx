@@ -40,6 +40,7 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
 
   // Invite modal state
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
+  const [inviteDialogSession, setInviteDialogSession] = useState(0);
   const [invitePrefill, setInvitePrefill] = useState<{ email?: string; role?: OfficerRole }>({});
 
   // Success panel state
@@ -117,6 +118,7 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
       email: invite.email || "",
       role: invite.role,
     });
+    setInviteDialogSession((n) => n + 1);
     setInviteModalOpen(true);
   }
 
@@ -319,6 +321,7 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
               type="button"
               onClick={() => {
                 setInvitePrefill({});
+                setInviteDialogSession((n) => n + 1);
                 setInviteModalOpen(true);
               }}
               style={{
@@ -852,6 +855,8 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
 
       {/* ── Dialog Modals ── */}
       <InviteDialog
+        // Remount on every open so the form starts from the prefill, not old input
+        key={`${inviteDialogSession}`}
         orgId={orgId}
         isOpen={inviteModalOpen}
         initialEmail={invitePrefill.email}

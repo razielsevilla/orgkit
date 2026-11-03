@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { getGoogleSub } from "@/src/lib/google-sub";
-import { INVITE_COOKIE_NAME } from "@/src/lib/session-invite";
+import { getPendingInviteCookie } from "@/src/lib/session-invite";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -96,8 +95,7 @@ export async function GET(request: Request) {
       return toSignIn("google_error");
     }
 
-    const cookieStore = await cookies();
-    const pendingInvite = cookieStore.get(INVITE_COOKIE_NAME)?.value;
+    const pendingInvite = await getPendingInviteCookie();
 
     if (pendingInvite) {
       return NextResponse.redirect(

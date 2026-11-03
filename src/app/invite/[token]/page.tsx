@@ -11,11 +11,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
-import { hashInviteToken } from "@/src/lib/tokens";
-import {
-  setPendingInviteCookie,
-  clearPendingInviteCookie,
-} from "@/src/lib/session-invite";
+import { findUsableInvite } from "@/src/lib/invite-lookup";
 import { checkInviteRateLimit } from "@/src/lib/rate-limit";
 import { ROLE_DETAILS, OfficerRole } from "@/src/lib/permissions";
 import {
@@ -29,6 +25,7 @@ import {
   InviteGuestButton,
   SwitchAccountButton,
   GoToWorkspaceButton,
+  ClearInviteCookie,
 } from "./invite-client";
 
 interface InvitePageProps {
@@ -81,27 +78,17 @@ async function InviteContent({ params }: InvitePageProps) {
     );
   }
 
-  // 2. Look up token in database by SHA-256 hash
-  const tokenHash = hashInviteToken(token);
+  // 2. Look up the token by its SHA-256 hash. Cookies cannot be written while a
+  //    page renders, so this page only reads them; the cookie is set by
+  //    /invite/[token]/start and cleared by <ClearInviteCookie />.
   const adminClient = createAdminClient();
-
-  const { data: invite, error: inviteLookupError } = await adminClient
-    .from("org_invites")
-    .select("id, org_id, role, expires_at, used_at, revoked_at, email_key, orgs(id, name, school)")
-    .eq("token_hash", tokenHash)
-    .maybeSingle();
-
-  const isInvalid =
-    inviteLookupError ||
-    !invite ||
-    invite.used_at !== null ||
-    invite.revoked_at !== null ||
-    new Date(invite.expires_at).getTime() <= Date.now();
+  const found = await findUsableInvite(token);
 
   // Uniform invalid invite message (Ticket Rule: Same message for invalid, used, revoked, expired, or missing)
-  if (isInvalid) {
+  if (!found) {
     return (
       <InviteContainer>
+        <ClearInviteCookie />
         <Card maxWidth={460} padding="36px 32px">
           <CardHeader>
             <CardBadge
@@ -137,11 +124,9 @@ async function InviteContent({ params }: InvitePageProps) {
     );
   }
 
-  // Extract organization details
-  const orgRaw = invite.orgs;
-  const org = Array.isArray(orgRaw) ? orgRaw[0] : orgRaw;
-  const orgName = org?.name || "the organization";
-  const orgSchool = org?.school || null;
+  const { invite, tokenHash } = found;
+  const orgName = invite.orgName || "the organization";
+  const orgSchool = invite.orgSchool || null;
   const role = (invite.role as OfficerRole) || "officer";
   const roleInfo = ROLE_DETAILS[role] || {
     label: "Officer",
@@ -156,8 +141,6 @@ async function InviteContent({ params }: InvitePageProps) {
 
   // Visitor is NOT signed in: set HttpOnly cookie and offer Google sign-in
   if (!user) {
-    await setPendingInviteCookie(token);
-
     return (
       <InviteContainer>
         <Card maxWidth={480} padding="40px 36px">
@@ -273,13 +256,12 @@ async function InviteContent({ params }: InvitePageProps) {
     .maybeSingle();
 
   if (!officer || !officer.consent_at) {
-    // Keep cookie and redirect to A1 consent screen
-    await setPendingInviteCookie(token);
-    redirect("/consent");
+    // The start route remembers the invite, then sends them to the A1 consent screen
+    redirect(`/invite/${token}/start`);
   }
 
   // Visitor has consent: invoke atomic accept_invite RPC
-  const { data: acceptResult, error: acceptError } = await supabase.rpc(
+  const { data: acceptResult } = await supabase.rpc(
     "accept_invite",
     {
       p_token_hash: tokenHash,
@@ -288,17 +270,15 @@ async function InviteContent({ params }: InvitePageProps) {
 
   const status = acceptResult?.status;
 
-  // 1. Success or Already Member: clear cookie and redirect to workspace
+  // 1. Success or Already Member: go to the workspace (the proxy clears the cookie there)
   if (status === "success" || status === "already_member") {
-    await clearPendingInviteCookie();
     redirect(`/workspace/${acceptResult.org_id}`);
   }
 
   // 2. Email mismatch: show switch account card
   if (status === "email_mismatch") {
-    // Keep cookie intact so that when they sign in with the right Google account,
-    // they are automatically routed back to accept the invite.
-    await setPendingInviteCookie(token);
+    // The cookie stays as it is, so signing in with the right Google account
+    // routes them back here. The button below re-sets it before signing out.
 
     return (
       <InviteContainer>
@@ -340,10 +320,9 @@ async function InviteContent({ params }: InvitePageProps) {
 
   // 3. Already belongs to another org (one org per officer in v0.2)
   if (status === "in_other_org") {
-    await clearPendingInviteCookie();
-
     return (
       <InviteContainer>
+        <ClearInviteCookie />
         <Card maxWidth={480} padding="36px 32px">
           <CardHeader>
             <CardBadge
@@ -365,9 +344,9 @@ async function InviteContent({ params }: InvitePageProps) {
   }
 
   // 4. Default / Invalid token
-  await clearPendingInviteCookie();
   return (
     <InviteContainer>
+      <ClearInviteCookie />
       <Card maxWidth={460} padding="36px 32px">
         <CardHeader>
           <CardBadge

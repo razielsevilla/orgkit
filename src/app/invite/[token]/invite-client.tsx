@@ -1,10 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
 import { GoogleLogo } from "@/src/components/google-logo";
 import { LogOut, ArrowRight } from "lucide-react";
+import { clearInviteCookie } from "@/src/app/invite/actions";
+
+/**
+ * Remembers the invite across the Google round trip. Pages cannot set cookies
+ * while they render, so this asks the start route to do it.
+ */
+async function rememberInvite(token: string) {
+  const res = await fetch(`/invite/${encodeURIComponent(token)}/start`, {
+    method: "POST",
+    credentials: "same-origin",
+  });
+  if (!res.ok) throw new Error("Could not start sign-in. Please try again.");
+}
+
+/** Clears the pending-invite cookie once the invite can no longer be used. */
+export function ClearInviteCookie() {
+  useEffect(() => {
+    clearInviteCookie().catch(() => {});
+  }, []);
+  return null;
+}
 
 interface InviteGuestButtonProps {
   token: string;
@@ -18,6 +39,7 @@ export function InviteGuestButton({ token }: InviteGuestButtonProps) {
     setLoading(true);
     setError(null);
     try {
+      await rememberInvite(token);
       const supabase = createClient();
       const origin = typeof window !== "undefined" ? window.location.origin : "";
       const { error: signInError } = await supabase.auth.signInWithOAuth({
@@ -108,6 +130,7 @@ export function SwitchAccountButton({ token }: SwitchAccountButtonProps) {
   async function handleSwitchAccount() {
     setLoading(true);
     try {
+      await rememberInvite(token);
       const supabase = createClient();
       await supabase.auth.signOut();
       const origin = typeof window !== "undefined" ? window.location.origin : "";
