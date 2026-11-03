@@ -1,38 +1,44 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
-// The workspace sidebar's open/closed choice, remembered in localStorage.
-// Read through useSyncExternalStore so the server render (always expanded)
-// matches hydration, and every page using it stays in step.
-const SIDEBAR_KEY = "orgkit_sidebar_collapsed";
+const STORAGE_KEY = "orgkit_sidebar_collapsed";
 const listeners = new Set<() => void>();
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
+  window.addEventListener("storage", listener);
   return () => {
     listeners.delete(listener);
+    window.removeEventListener("storage", listener);
   };
 }
 
-function read() {
+function getSnapshot() {
   try {
-    return localStorage.getItem(SIDEBAR_KEY) === "true";
+    return localStorage.getItem(STORAGE_KEY) === "true";
   } catch {
     // localStorage may be disabled in some sandboxes
     return false;
   }
 }
 
-export function useSidebarCollapsed(): [boolean, () => void] {
-  const collapsed = useSyncExternalStore(subscribe, read, () => false);
+// The server and the first client render agree on "expanded"; the saved
+// preference is applied right after hydration.
+function getServerSnapshot() {
+  return false;
+}
 
-  const toggle = () => {
+/** The sidebar's collapsed state, remembered in localStorage. */
+export function useSidebarCollapsed(): [boolean, () => void] {
+  const collapsed = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+
+  const toggle = useCallback(() => {
     try {
-      localStorage.setItem(SIDEBAR_KEY, String(!collapsed));
+      localStorage.setItem(STORAGE_KEY, String(!getSnapshot()));
     } catch {}
     listeners.forEach((listener) => listener());
-  };
+  }, []);
 
   return [collapsed, toggle];
 }

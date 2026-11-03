@@ -10,8 +10,8 @@ import {
   getCurrentOfficer,
   isOrgAdmin,
 } from "@/src/app/(workspace)/actions";
-import { Sidebar } from "@/src/components/sidebar";
 import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
+import { Sidebar } from "@/src/components/sidebar";
 import { Navbar, OfficerProfile } from "@/src/components/navbar";
 import {
   Card,
