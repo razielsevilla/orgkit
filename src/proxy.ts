@@ -1,8 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSessionExpired, SESSION_MAX_SECONDS } from "@/src/lib/session-config";
-import { INVITE_COOKIE_NAME } from "@/src/lib/session-invite";
-import { isValidInviteToken } from "@/src/lib/tokens";
+import { isSessionExpired } from "@/src/lib/auth/session-config";
+import { INVITE_COOKIE_NAME } from "@/src/lib/auth/session-invite";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/src/lib/supabase/env";
+import { SESSION_COOKIE_OPTIONS, withSessionDefaults } from "@/src/lib/supabase/cookie-options";
+import { getLatestOrgId, workspacePath } from "@/src/lib/orgs/memberships";
+import { isValidInviteToken } from "@/src/lib/invites/tokens";
 
 // Pages a signed-out visitor may open. Everything else needs a session.
 const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms"];
@@ -26,34 +29,21 @@ function rawPendingInviteCookie(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
-    {
-      cookieOptions: {
-        maxAge: SESSION_MAX_SECONDS,
-        sameSite: "lax",
-        path: "/",
+  const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
       },
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, {
-              ...options,
-              maxAge: options?.maxAge ?? SESSION_MAX_SECONDS,
-              sameSite: (options?.sameSite as "lax" | "strict" | "none") ?? "lax",
-              path: options?.path ?? "/",
-            })
-          );
-        },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, withSessionDefaults(options))
+        );
       },
-    }
-  );
+    },
+  });
 
   // Validates the session with Supabase and refreshes it when needed
   const {
@@ -88,16 +78,10 @@ export async function proxy(request: NextRequest) {
 
     if (isEntryOrCreate) {
       // As the signed-in officer, so row level security applies
-      const { data: membership } = await supabase
-        .from("org_officers")
-        .select("org_id")
-        .eq("officer_id", user.id)
-        .order("joined_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const orgId = await getLatestOrgId(supabase, user.id);
 
-      if (membership?.org_id) {
-        return redirectTo(`/workspace/${membership.org_id}`);
+      if (orgId) {
+        return redirectTo(workspacePath(orgId));
       }
 
       // Ticket Conflict 5: An invitee has no org yet, so the invite must take priority over /orgs/new

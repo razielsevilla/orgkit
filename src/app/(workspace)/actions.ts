@@ -1,6 +1,8 @@
 "use server";
 
 import { createClient } from "@/src/lib/supabase/server";
+import { getSessionUser } from "@/src/lib/auth/session-user";
+import { getLatestOrgId } from "@/src/lib/orgs/memberships";
 
 export interface CreateWorkspaceResponse {
   success: boolean;
@@ -24,10 +26,7 @@ export async function createWorkspace(
   school: string = ""
 ): Promise<CreateWorkspaceResponse> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { supabase, user } = await getSessionUser();
 
     if (!user) {
       return { success: false, error: "You must be signed in to create a workspace." };
@@ -92,10 +91,7 @@ export async function createWorkspace(
  */
 export async function getOrganizationById(orgId: string) {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { supabase, user } = await getSessionUser();
 
     if (!user) return null;
 
@@ -123,27 +119,17 @@ export async function getOfficerDefaultWorkspace(): Promise<{
   school: string | null;
 } | null> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { supabase, user } = await getSessionUser();
 
     if (!user) return null;
 
-    const { data: membership } = await supabase
-      .from("org_officers")
-      .select("org_id")
-      .eq("officer_id", user.id)
-      .order("joined_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (!membership) return null;
+    const orgId = await getLatestOrgId(supabase, user.id);
+    if (!orgId) return null;
 
     const { data: org } = await supabase
       .from("orgs")
       .select("id, name, school")
-      .eq("id", membership.org_id)
+      .eq("id", orgId)
       .maybeSingle();
 
     if (!org) return null;
@@ -165,10 +151,7 @@ export async function getCurrentOfficer(): Promise<{
   full_name: string;
 } | null> {
   try {
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { supabase, user } = await getSessionUser();
 
     if (!user) return null;
 

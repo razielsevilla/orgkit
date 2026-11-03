@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { setPendingInviteCookie } from "@/src/lib/session-invite";
-import { isValidInviteToken } from "@/src/lib/tokens";
+import { setPendingInviteCookie } from "@/src/lib/auth/session-invite";
+import { isValidInviteToken } from "@/src/lib/invites/tokens";
 
 interface RouteContext {
   params: Promise<{ token: string }>;

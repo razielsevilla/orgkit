@@ -1,7 +1,7 @@
 import Image from "next/image";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { createClient } from "@/src/lib/supabase/server";
+import { getSessionUser } from "@/src/lib/auth/session-user";
 import { AuthLayout } from "@/src/components/auth-layout";
 import { ConsentForm } from "./consent-form";
 
@@ -17,10 +17,7 @@ export default function ConsentPage() {
 
 // Reads the session, so it streams in behind the Suspense boundary above
 async function ConsentCard() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
 
   if (!user) redirect("/signin");
 

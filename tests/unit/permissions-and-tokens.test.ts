@@ -1,12 +1,12 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { can, isOfficerRole, ROLE_DETAILS } from "../../src/lib/permissions.ts";
+import { can, isOfficerRole, ROLE_DETAILS } from "../../src/lib/orgs/permissions.ts";
 import {
   generateInviteToken,
   hashInviteToken,
   normalizeEmail,
   isValidEmail,
-} from "../../src/lib/tokens.ts";
+} from "../../src/lib/invites/tokens.ts";
 
 describe("Permissions Matrix (can)", () => {
   it("allows admin to perform all privileged actions", () => {

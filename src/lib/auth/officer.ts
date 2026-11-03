@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/src/lib/supabase/server";
+import { getSessionUser } from "@/src/lib/auth/session-user";
 
 /**
  * Call at the top of any protected server page. Sends signed-out visitors to
@@ -7,10 +7,7 @@ import { createClient } from "@/src/lib/supabase/server";
  * to /consent. Reads through the user's own session, so row level security applies.
  */
 export async function requireOfficer() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
 
   if (!user) redirect("/signin");
 

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/src/lib/supabase/server";
+import { isUuid } from "@/src/lib/validation";
 
 export interface JoinLinkResult {
   ok: boolean;
@@ -8,8 +9,6 @@ export interface JoinLinkResult {
   token: string | null;
   error?: string;
 }
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Turns the org's join link on or off, or replaces it. Runs as the signed-in
@@ -21,7 +20,7 @@ export async function setJoinLink(
 ): Promise<JoinLinkResult> {
   const failed = { ok: false, token: null, error: "We couldn't update the link. Please try again." };
   try {
-    if (!UUID.test(orgId) || !["on", "off", "regenerate"].includes(action)) return failed;
+    if (!isUuid(orgId) || !["on", "off", "regenerate"].includes(action)) return failed;
 
     const supabase = await createClient();
     const { data, error } = await supabase.rpc("set_join_link", {

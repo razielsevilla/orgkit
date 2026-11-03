@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/src/lib/supabase/service-role";
-import { hashInviteToken, isValidInviteToken } from "@/src/lib/tokens";
-import { isInviteUsable } from "@/src/lib/invite-status";
+import { hashInviteToken, isValidInviteToken } from "@/src/lib/invites/tokens";
+import { isInviteUsable } from "@/src/lib/invites/invite-status";
 
 export interface UsableInvite {
   id: string;

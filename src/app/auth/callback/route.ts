@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
-import { getGoogleSub } from "@/src/lib/google-sub";
-import { getPendingInviteCookie } from "@/src/lib/session-invite";
+import { getGoogleSub } from "@/src/lib/auth/google-sub";
+import { getPendingInviteCookie } from "@/src/lib/auth/session-invite";
+import { getLatestOrgId, workspacePath } from "@/src/lib/orgs/memberships";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
@@ -104,18 +105,10 @@ export async function GET(request: Request) {
     }
 
     // Returning officer: send them to their workspace if they have one
-    const { data: membership } = await supabase
-      .from("org_officers")
-      .select("org_id")
-      .eq("officer_id", officer.id)
-      .order("joined_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const orgId = await getLatestOrgId(supabase, officer.id);
 
-    if (membership?.org_id) {
-      return NextResponse.redirect(
-        new URL(`/workspace/${membership.org_id}`, requestUrl.origin)
-      );
+    if (orgId) {
+      return NextResponse.redirect(new URL(workspacePath(orgId), requestUrl.origin));
     }
 
     return NextResponse.redirect(new URL("/orgs/new", requestUrl.origin));

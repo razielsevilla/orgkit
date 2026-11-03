@@ -2,8 +2,8 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { generateInviteToken, isValidInviteToken } from "../../src/lib/tokens.ts";
-import { isInviteUsable } from "../../src/lib/invite-status.ts";
+import { generateInviteToken, isValidInviteToken } from "../../src/lib/invites/tokens.ts";
+import { isInviteUsable } from "../../src/lib/invites/invite-status.ts";
 
 const NOW = Date.parse("2026-11-03T12:00:00Z");
 const DAY = 24 * 60 * 60 * 1000;

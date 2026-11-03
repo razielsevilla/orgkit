@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
-import { requireOfficer } from "@/src/lib/officer";
+import { requireOfficer } from "@/src/lib/auth/officer";
+import { isUuid } from "@/src/lib/validation";
 import { JoinPanel } from "./join-panel";
-
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default function MemberJoinPage({ params }: { params: Promise<{ id: string }> }) {
   return (
@@ -18,7 +17,7 @@ export default function MemberJoinPage({ params }: { params: Promise<{ id: strin
 // Only the org's admin gets past this; everyone else sees a plain 404.
 async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!UUID.test(id)) notFound();
+  if (!isUuid(id)) notFound();
 
   const { officer } = await requireOfficer();
   const supabase = await createClient();

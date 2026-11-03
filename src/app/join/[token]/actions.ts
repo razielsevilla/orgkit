@@ -1,15 +1,15 @@
 "use server";
 
 import { createAdminClient } from "@/src/lib/supabase/service-role";
-import { CURRENT_MEMBER_CONSENT, type ConsentLanguage } from "@/src/lib/member-consent";
-import { allowJoinAttempt } from "@/src/lib/member-join-server";
+import { CURRENT_MEMBER_CONSENT, type ConsentLanguage } from "@/src/lib/members/member-consent";
+import { allowJoinAttempt } from "@/src/lib/members/member-join-server";
 import {
   JOIN_MESSAGES,
   cleanName,
   isValidEmail,
   isValidName,
   looksLikeToken,
-} from "@/src/lib/member-join";
+} from "@/src/lib/members/member-join";
 
 export interface JoinState {
   status: "idle" | "success" | "inactive" | "error";

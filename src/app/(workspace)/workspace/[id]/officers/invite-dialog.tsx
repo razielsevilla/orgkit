@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Copy, Check, AlertCircle, X, Shield, Wallet, UserCheck } from "lucide-react";
-import { OfficerRole, ROLE_DETAILS } from "@/src/lib/permissions";
+import { OfficerRole, ROLE_DETAILS } from "@/src/lib/orgs/permissions";
 import { createOfficerInvite } from "@/src/app/(workspace)/officers-actions";
 
 interface InviteDialogProps {

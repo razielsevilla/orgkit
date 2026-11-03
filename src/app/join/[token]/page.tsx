@@ -5,8 +5,8 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { Link2Off } from "lucide-react";
 import { Card, CardBadge, CardTitle, CardDescription } from "@/src/components/card";
 import { FloatingIconsDecor } from "@/src/components/floating-decor";
-import { JOIN_MESSAGES } from "@/src/lib/member-join";
-import { getJoinOrgName } from "@/src/lib/member-join-server";
+import { JOIN_MESSAGES } from "@/src/lib/members/member-join";
+import { getJoinOrgName } from "@/src/lib/members/member-join-server";
 import { JoinForm } from "./join-form";
 
 const plusJakarta = Plus_Jakarta_Sans({

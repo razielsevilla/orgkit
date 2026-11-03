@@ -16,8 +16,8 @@ import {
   JOIN_COPY,
   fillConsentText,
   type ConsentLanguage,
-} from "@/src/lib/member-consent";
-import { JOIN_MESSAGES } from "@/src/lib/member-join";
+} from "@/src/lib/members/member-consent";
+import { JOIN_MESSAGES } from "@/src/lib/members/member-join";
 import { submitJoin, type JoinState } from "./actions";
 
 const INITIAL: JoinState = { status: "idle" };

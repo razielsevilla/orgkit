@@ -175,18 +175,90 @@ describe("createOfficerInvite", () => {
   });
 });
 
+const INVITE = "44444444-4444-4444-8444-444444444444";
+
 describe("revokeOfficerInvite", () => {
   it("revokes through the database for an admin", async () => {
-    const res = await revokeOfficerInvite(ORG, "inv-1");
+    const res = await revokeOfficerInvite(ORG, INVITE);
     expect(res.success).toBe(true);
-    expect(state.rpcCalls).toEqual([{ fn: "revoke_invite", args: { p_invite_id: "inv-1" } }]);
+    expect(state.rpcCalls).toEqual([{ fn: "revoke_invite", args: { p_invite_id: INVITE } }]);
   });
 
   it("refuses non-admins before reaching the database", async () => {
     state.callerRole = "officer";
-    const res = await revokeOfficerInvite(ORG, "inv-1");
+    const res = await revokeOfficerInvite(ORG, INVITE);
     expect(res.error).toBe("not_authorized");
     expect(state.rpcCalls).toHaveLength(0);
+  });
+
+  it("rejects an invite ID that is not a UUID without reaching the database", async () => {
+    const res = await revokeOfficerInvite(ORG, "inv-1");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("failed");
+    expect(state.rpcCalls).toHaveLength(0);
+  });
+});
+
+describe("shared access rules", () => {
+  it("says a signed-out caller must sign in, on every action", async () => {
+    state.user = null;
+    const results = [
+      await getWorkspaceOfficers(ORG),
+      await createOfficerInvite(ORG, "x@school.edu", "officer"),
+      await revokeOfficerInvite(ORG, INVITE),
+      await updateOfficerRole(ORG, OTHER, "officer"),
+      await removeWorkspaceOfficer(ORG, OTHER),
+    ];
+    for (const res of results) {
+      expect(res.error).toBe("not_authenticated");
+      expect(res.errorMessage).toBe("You must be signed in.");
+    }
+    expect(state.rpcCalls).toHaveLength(0);
+  });
+
+  it("treats a malformed org ID as no access", async () => {
+    const res = await removeWorkspaceOfficer("not-a-uuid", OTHER);
+    expect(res.error).toBe("access_revoked");
+    expect(state.rpcCalls).toHaveLength(0);
+  });
+
+  it("rejects a target officer ID that is not a UUID", async () => {
+    for (const res of [
+      await updateOfficerRole(ORG, "someone", "officer"),
+      await removeWorkspaceOfficer(ORG, "someone"),
+    ]) {
+      expect(res.success).toBe(false);
+      expect(res.error).toBe("failed");
+    }
+    expect(state.rpcCalls).toHaveLength(0);
+  });
+
+  it("hides what a thrown error says behind a generic message", async () => {
+    state.rpcResult = undefined as never; // makes the action throw reading .error
+    const res = await removeWorkspaceOfficer(ORG, OTHER);
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("failed");
+    expect(res.errorMessage).toBe("An unexpected error occurred while removing officer.");
+  });
+
+  it("maps each database refusal to its own message", async () => {
+    const cases: [string, string][] = [
+      ["already_officer", "This person is already an officer of this org."],
+      ["officer_limit_reached", "This org has reached the maximum of 30 officers."],
+      ["invite_limit_reached", "This org has reached the maximum of 30 pending invites."],
+      ["not_authorized", "Only admins can invite officers."],
+    ];
+    for (const [code, message] of cases) {
+      state.rpcResult = { error: { message: `ERROR: ${code}` } };
+      const res = await createOfficerInvite(ORG, "x@school.edu", "officer");
+      expect(res.error).toBe(code);
+      expect(res.errorMessage).toBe(message);
+    }
+
+    state.rpcResult = { error: { message: "relation does not exist" } };
+    const res = await createOfficerInvite(ORG, "x@school.edu", "officer");
+    expect(res.error).toBe("failed");
+    expect(res.errorMessage).not.toMatch(/relation/);
   });
 });
 

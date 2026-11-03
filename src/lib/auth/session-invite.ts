@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { isValidInviteToken } from "@/src/lib/tokens";
+import { isValidInviteToken } from "@/src/lib/invites/tokens";
 
 export const INVITE_COOKIE_NAME = "orgkit_pending_invite";
 export const INVITE_COOKIE_MAX_AGE = 30 * 60; // 30 minutes in seconds

@@ -1,20 +1,17 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/src/lib/supabase/server";
+import { getSessionUser } from "@/src/lib/auth/session-user";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
-import { getFullName, getGoogleSub } from "@/src/lib/google-sub";
-import { CONSENT_VERSION } from "@/src/lib/consent-config";
-import { getPendingInviteCookie } from "@/src/lib/session-invite";
+import { getFullName, getGoogleSub } from "@/src/lib/auth/google-sub";
+import { CONSENT_VERSION } from "@/src/lib/auth/consent-config";
+import { getPendingInviteCookie } from "@/src/lib/auth/session-invite";
 
 /** The officer ticked "I agree": create the account and store the agreement. */
 export async function acceptConsent(formData: FormData) {
   if (formData.get("agree") !== "on") redirect("/consent");
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
   if (!user) redirect("/signin");
 
   const googleSub = getGoogleSub(user);
@@ -52,10 +49,7 @@ export async function acceptConsent(formData: FormData) {
 
 /** The officer chose not to agree: no account is kept. */
 export async function declineConsent() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
 
   if (user) {
     const admin = createAdminClient();

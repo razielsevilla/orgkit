@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { requireOfficer } from "@/src/lib/officer";
+import { requireOfficer } from "@/src/lib/auth/officer";
 
 // Reads the session, so it streams in behind the Suspense boundary below.
 // Signed-out visitors go to sign-in; officers who haven't agreed to the
