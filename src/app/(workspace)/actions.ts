@@ -190,3 +190,18 @@ export async function getCurrentOfficer(): Promise<{
     return null;
   }
 }
+
+/**
+ * Whether the signed-in officer is an admin of this org. The database decides,
+ * so a non-admin can't get a yes by changing anything in the browser.
+ */
+export async function isOrgAdmin(orgId: string): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const { data } = await supabase.rpc("is_org_admin", { target_org: orgId });
+    return data === true;
+  } catch (err) {
+    console.error("Unexpected error in isOrgAdmin:", err);
+    return false;
+  }
+}

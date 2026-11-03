@@ -8,6 +8,7 @@ import {
   getOrganizationById,
   getOfficerDefaultWorkspace,
   getCurrentOfficer,
+  isOrgAdmin,
 } from "@/src/app/(workspace)/actions";
 import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
 import { Sidebar } from "@/src/components/sidebar";
@@ -38,6 +39,7 @@ function WorkspaceDetailContent() {
   const [isLoadingOrg, setIsLoadingOrg] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
   const [officer, setOfficer] = useState<OfficerProfile | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isSidebarCollapsed, toggleSidebar] = useSidebarCollapsed();
 
   // Parallel fetch: loads organization and officer profile concurrently
@@ -49,10 +51,12 @@ function WorkspaceDetailContent() {
         return;
       }
       try {
-        const [org, officerData] = await Promise.all([
+        const [org, officerData, adminFlag] = await Promise.all([
           getOrganizationById(rawId),
           getCurrentOfficer(),
+          isOrgAdmin(rawId),
         ]);
+        setIsAdmin(adminFlag);
 
         if (officerData) {
           setOfficer(officerData);
@@ -248,6 +252,7 @@ function WorkspaceDetailContent() {
         orgName={orgName}
         schoolName={schoolName}
         officer={officer}
+        isAdmin={isAdmin}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={toggleSidebar}
         activePath="home"
