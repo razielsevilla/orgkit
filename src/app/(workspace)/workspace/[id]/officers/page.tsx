@@ -1,15 +1,9 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { plusJakarta } from "@/src/lib/fonts";
 import { getCurrentOfficer, getOrganizationById } from "@/src/app/(workspace)/actions";
 import { getWorkspaceOfficers } from "@/src/app/(workspace)/officers-actions";
 import { OfficersClientWrapper } from "./page-client-wrapper";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["400", "500", "600", "700", "800"],
-});
 
 interface OfficersPageProps {
   params: Promise<{ id: string }>;

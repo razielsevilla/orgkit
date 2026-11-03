@@ -1,8 +1,8 @@
 "use client";
 
 import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
-import { Sidebar } from "@/src/components/sidebar";
-import { OfficerProfile } from "@/src/components/navbar";
+import { Sidebar } from "@/src/components/layout/sidebar";
+import { OfficerProfile } from "@/src/components/layout/navbar";
 import { WorkspaceOfficersData } from "@/src/app/(workspace)/officers-actions";
 import { OfficersClient } from "./officers-client";
 
@@ -33,8 +33,8 @@ export function OfficersClientWrapper({
         position: "relative",
         margin: 0,
         padding: 0,
-        backgroundColor: "#F4F4F5",
-        color: "#18181B",
+        backgroundColor: "var(--color-base)",
+        color: "var(--color-ink)",
         display: "flex",
         boxSizing: "border-box",
       }}
@@ -55,7 +55,7 @@ export function OfficersClientWrapper({
           height: "100vh",
           position: "relative",
           overflowY: "auto",
-          backgroundColor: "#F4F4F5",
+          backgroundColor: "var(--color-base)",
           padding: "32px 24px",
           boxSizing: "border-box",
         }}

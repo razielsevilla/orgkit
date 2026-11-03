@@ -1,12 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus_Jakarta_Sans } from "next/font/google";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  subsets: ["latin"],
-  display: "swap",
-  weight: ["400", "500", "600", "700"],
-});
+import { plusJakarta } from "@/src/lib/fonts";
 
 export default function TermsPage() {
   return (
@@ -14,8 +8,8 @@ export default function TermsPage() {
       className={plusJakarta.className}
       style={{
         minHeight: "100vh",
-        backgroundColor: "#F4F4F5",
-        color: "#18181B",
+        backgroundColor: "var(--color-base)",
+        color: "var(--color-ink)",
         padding: "clamp(24px, 5vh, 48px) clamp(16px, 3vw, 24px)",
       }}
     >
@@ -52,7 +46,7 @@ export default function TermsPage() {
             style={{
               fontSize: 14,
               fontWeight: 600,
-              color: "#059669",
+              color: "var(--color-accent)",
               textDecoration: "none",
             }}
           >
@@ -65,9 +59,9 @@ export default function TermsPage() {
           <h1
             style={{
               fontSize: "clamp(28px, 3.2vw, 40px)",
-              fontWeight: 800,
+              fontWeight: 700, // the page font is loaded up to 800; this heading has always rendered at 700
               letterSpacing: "-0.02em",
-              color: "#18181B",
+              color: "var(--color-ink)",
               margin: 0,
               lineHeight: 1.15,
             }}
@@ -78,7 +72,7 @@ export default function TermsPage() {
             style={{
               marginTop: 8,
               fontSize: 14,
-              color: "#71717A",
+              color: "var(--color-muted)",
               marginBottom: 0,
             }}
           >
@@ -89,10 +83,10 @@ export default function TermsPage() {
         {/* Clean Content Card */}
         <div
           style={{
-            backgroundColor: "#FFFFFF",
+            backgroundColor: "var(--color-surface)",
             borderRadius: 24,
-            border: "1px solid #E4E4E7",
-            boxShadow: "0 10px 40px -10px rgba(24, 24, 27, 0.08), 0 1px 3px rgba(24, 24, 27, 0.04)",
+            border: "1px solid var(--color-line)",
+            boxShadow: "0 10px 40px -10px color-mix(in srgb, var(--color-ink) 8%, transparent), 0 1px 3px color-mix(in srgb, var(--color-ink) 4%, transparent)",
             padding: "clamp(24px, 4.5vw, 48px)",
             boxSizing: "border-box",
           }}
@@ -102,7 +96,7 @@ export default function TermsPage() {
             style={{
               fontSize: "clamp(14.5px, 1.1vw, 16px)",
               lineHeight: 1.65,
-              color: "#3F3F46",
+              color: "var(--color-ink-soft)",
               marginTop: 0,
               marginBottom: 28,
             }}
@@ -118,7 +112,7 @@ export default function TermsPage() {
               style={{
                 fontSize: "clamp(16px, 1.25vw, 18px)",
                 fontWeight: 700,
-                color: "#18181B",
+                color: "var(--color-ink)",
                 marginTop: 0,
                 marginBottom: 14,
               }}
@@ -135,7 +129,7 @@ export default function TermsPage() {
                 gap: 12,
                 fontSize: "clamp(14px, 1vw, 15px)",
                 lineHeight: 1.6,
-                color: "#3F3F46",
+                color: "var(--color-ink-soft)",
               }}
             >
               <li>
@@ -143,7 +137,7 @@ export default function TermsPage() {
                 with your Google credentials.
               </li>
               <li>
-                <strong style={{ color: "#18181B" }}>One account per person.</strong> Each officer must
+                <strong style={{ color: "var(--color-ink)" }}>One account per person.</strong> Each officer must
                 authenticate using their individual Google account. Shared or team-wide accounts are strictly
                 prohibited to maintain audit integrity.
               </li>
@@ -164,7 +158,7 @@ export default function TermsPage() {
               style={{
                 fontSize: "clamp(16px, 1.25vw, 18px)",
                 fontWeight: 700,
-                color: "#18181B",
+                color: "var(--color-ink)",
                 marginTop: 0,
                 marginBottom: 14,
               }}
@@ -181,7 +175,7 @@ export default function TermsPage() {
                 gap: 12,
                 fontSize: "clamp(14px, 1vw, 15px)",
                 lineHeight: 1.6,
-                color: "#3F3F46",
+                color: "var(--color-ink-soft)",
               }}
             >
               <li>
@@ -201,7 +195,7 @@ export default function TermsPage() {
               style={{
                 fontSize: "clamp(16px, 1.25vw, 18px)",
                 fontWeight: 700,
-                color: "#18181B",
+                color: "var(--color-ink)",
                 marginTop: 0,
                 marginBottom: 14,
               }}
@@ -218,7 +212,7 @@ export default function TermsPage() {
                 gap: 12,
                 fontSize: "clamp(14px, 1vw, 15px)",
                 lineHeight: 1.6,
-                color: "#3F3F46",
+                color: "var(--color-ink-soft)",
               }}
             >
               <li>
@@ -240,7 +234,7 @@ export default function TermsPage() {
               style={{
                 fontSize: "clamp(16px, 1.25vw, 18px)",
                 fontWeight: 700,
-                color: "#18181B",
+                color: "var(--color-ink)",
                 marginTop: 0,
                 marginBottom: 14,
               }}
@@ -257,7 +251,7 @@ export default function TermsPage() {
                 gap: 12,
                 fontSize: "clamp(14px, 1vw, 15px)",
                 lineHeight: 1.6,
-                color: "#3F3F46",
+                color: "var(--color-ink-soft)",
               }}
             >
               <li>
@@ -274,28 +268,28 @@ export default function TermsPage() {
           <div
             style={{
               paddingTop: 20,
-              borderTop: "1px solid #E4E4E7",
+              borderTop: "1px solid var(--color-line)",
               display: "flex",
               flexWrap: "wrap",
               alignItems: "center",
               justifyContent: "space-between",
               gap: 12,
               fontSize: 13,
-              color: "#71717A",
+              color: "var(--color-muted)",
             }}
           >
             <span>© 2026 OrgKit. All rights reserved.</span>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <Link
                 href="/privacy"
-                style={{ color: "#71717A", textDecoration: "none" }}
+                style={{ color: "var(--color-muted)", textDecoration: "none" }}
               >
                 Privacy Policy
               </Link>
               <span>•</span>
               <Link
                 href="/signin"
-                style={{ color: "#059669", fontWeight: 600, textDecoration: "none" }}
+                style={{ color: "var(--color-accent)", fontWeight: 600, textDecoration: "none" }}
               >
                 Sign in
               </Link>

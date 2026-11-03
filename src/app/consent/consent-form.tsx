@@ -17,7 +17,7 @@ export function ConsentForm() {
           marginTop: 24,
           fontSize: 15,
           lineHeight: 1.5,
-          color: "#3F3F46",
+          color: "var(--color-ink-soft)",
           cursor: "pointer",
         }}
       >
@@ -26,7 +26,7 @@ export function ConsentForm() {
           name="agree"
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
-          style={{ width: 20, height: 20, marginTop: 2, accentColor: "#059669", flexShrink: 0 }}
+          style={{ width: 20, height: 20, marginTop: 2, accentColor: "var(--color-accent)", flexShrink: 0 }}
         />
         <span>
           I agree to the{" "}
@@ -47,7 +47,7 @@ export function ConsentForm() {
           justifyContent: "center",
           fontSize: 16,
           fontWeight: 600,
-          color: "#18181B",
+          color: "var(--color-ink)",
         }}
       >
         Continue
@@ -64,7 +64,7 @@ export function ConsentForm() {
           background: "none",
           border: "none",
           fontSize: 14,
-          color: "#71717A",
+          color: "var(--color-muted)",
           cursor: "pointer",
         }}
       >

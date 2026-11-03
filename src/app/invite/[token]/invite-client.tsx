@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/client";
-import { GoogleLogo } from "@/src/components/google-logo";
+import { signInWithGoogle, useGoogleSignIn } from "@/src/lib/use-google-sign-in";
+import { GoogleLogo } from "@/src/components/auth/google-logo";
 import { LogOut, ArrowRight } from "lucide-react";
 import { clearInviteCookie } from "@/src/app/invite/actions";
 
@@ -32,37 +33,12 @@ interface InviteGuestButtonProps {
 }
 
 export function InviteGuestButton({ token }: InviteGuestButtonProps) {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleGoogleSignIn() {
-    setLoading(true);
-    setError(null);
-    try {
-      await rememberInvite(token);
-      const supabase = createClient();
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const { error: signInError } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${origin}/auth/callback`,
-          scopes: "openid email profile",
-          queryParams: {
-            // Prompt account selection so user picks the right Google account
-            prompt: "select_account",
-          },
-        },
-      });
-
-      if (signInError) {
-        setLoading(false);
-        setError(signInError.message);
-      }
-    } catch (err: unknown) {
-      setLoading(false);
-      setError(err instanceof Error ? err.message : "Failed to sign in");
-    }
-  }
+  // Prompt account selection so the user picks the right Google account
+  const { loading, error, start: handleGoogleSignIn } = useGoogleSignIn({
+    selectAccount: true,
+    prepare: () => rememberInvite(token),
+    fallbackError: "Failed to sign in",
+  });
 
   return (
     <div style={{ width: "100%", textAlign: "center" }}>
@@ -73,9 +49,9 @@ export function InviteGuestButton({ token }: InviteGuestButtonProps) {
             marginBottom: 16,
             padding: "10px 14px",
             borderRadius: 12,
-            backgroundColor: "#FEF2F2",
-            border: "1px solid #FCA5A5",
-            color: "#DC2626",
+            backgroundColor: "var(--color-danger-soft)",
+            border: "1px solid var(--color-danger-line)",
+            color: "var(--color-danger)",
             fontSize: 13,
             lineHeight: 1.4,
           }}
@@ -96,9 +72,9 @@ export function InviteGuestButton({ token }: InviteGuestButtonProps) {
           gap: 12,
           padding: "14px 20px",
           borderRadius: 9999,
-          border: "1px solid #E4E4E7",
-          backgroundColor: "#FFFFFF",
-          color: "#18181B",
+          border: "1px solid var(--color-line)",
+          backgroundColor: "var(--color-surface)",
+          color: "var(--color-ink)",
           fontSize: 15,
           fontWeight: 600,
           cursor: loading ? "not-allowed" : "pointer",
@@ -107,10 +83,10 @@ export function InviteGuestButton({ token }: InviteGuestButtonProps) {
           opacity: loading ? 0.7 : 1,
         }}
         onMouseEnter={(e) => {
-          if (!loading) e.currentTarget.style.backgroundColor = "#F4F4F5";
+          if (!loading) e.currentTarget.style.backgroundColor = "var(--color-base)";
         }}
         onMouseLeave={(e) => {
-          if (!loading) e.currentTarget.style.backgroundColor = "#FFFFFF";
+          if (!loading) e.currentTarget.style.backgroundColor = "var(--color-surface)";
         }}
       >
         <GoogleLogo size={20} />
@@ -125,28 +101,18 @@ interface SwitchAccountButtonProps {
 }
 
 export function SwitchAccountButton({ token }: SwitchAccountButtonProps) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
 
   async function handleSwitchAccount() {
     setLoading(true);
     try {
       await rememberInvite(token);
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
-      await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: `${origin}/auth/callback`,
-          scopes: "openid email profile",
-          queryParams: {
-            prompt: "select_account",
-          },
-        },
-      });
+      await createClient().auth.signOut();
+      await signInWithGoogle({ selectAccount: true });
     } catch {
       setLoading(false);
-      window.location.href = `/invite/${token}`;
+      router.push(`/invite/${token}`);
     }
   }
 
@@ -163,9 +129,9 @@ export function SwitchAccountButton({ token }: SwitchAccountButtonProps) {
         gap: 10,
         padding: "13px 20px",
         borderRadius: 9999,
-        border: "1px solid #DC2626",
-        backgroundColor: "#FFFFFF",
-        color: "#DC2626",
+        border: "1px solid var(--color-danger)",
+        backgroundColor: "var(--color-surface)",
+        color: "var(--color-danger)",
         fontSize: 14,
         fontWeight: 600,
         cursor: loading ? "not-allowed" : "pointer",
@@ -174,12 +140,12 @@ export function SwitchAccountButton({ token }: SwitchAccountButtonProps) {
       }}
       onMouseEnter={(e) => {
         if (!loading) {
-          e.currentTarget.style.backgroundColor = "#FEF2F2";
+          e.currentTarget.style.backgroundColor = "var(--color-danger-soft)";
         }
       }}
       onMouseLeave={(e) => {
         if (!loading) {
-          e.currentTarget.style.backgroundColor = "#FFFFFF";
+          e.currentTarget.style.backgroundColor = "var(--color-surface)";
         }
       }}
     >
@@ -209,19 +175,19 @@ export function GoToWorkspaceButton({ orgId }: GoToWorkspaceButtonProps) {
         padding: "13px 20px",
         borderRadius: 9999,
         border: "none",
-        backgroundColor: "#059669",
-        color: "#FFFFFF",
+        backgroundColor: "var(--color-accent)",
+        color: "var(--color-on-accent)",
         fontSize: 14.5,
         fontWeight: 600,
         cursor: "pointer",
         transition: "all 0.15s ease",
-        boxShadow: "0 2px 8px rgba(5, 150, 105, 0.25)",
+        boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = "#047857";
+        e.currentTarget.style.backgroundColor = "var(--color-accent-strong)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = "#059669";
+        e.currentTarget.style.backgroundColor = "var(--color-accent)";
       }}
     >
       <span>Go to my workspace</span>

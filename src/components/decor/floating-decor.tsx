@@ -20,15 +20,15 @@ export function FloatingIconsDecor() {
             width: 50,
             height: 50,
             borderRadius: 16,
-            backgroundColor: "#FFFFFF",
-            border: "1px solid rgba(228, 228, 231, 0.8)",
-            boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid color-mix(in srgb, var(--color-line) 80%, transparent)",
+            boxShadow: "0 10px 25px color-mix(in srgb, var(--color-ink) 8%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Users size={22} color="#059669" strokeWidth={2} />
+          <Users size={22} color="var(--color-accent)" strokeWidth={2} />
         </div>
       </div>
 
@@ -48,14 +48,14 @@ export function FloatingIconsDecor() {
             width: 46,
             height: 46,
             borderRadius: 15,
-            backgroundColor: "rgba(5, 150, 105, 0.12)",
-            boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 12%, transparent)",
+            boxShadow: "0 6px 18px color-mix(in srgb, var(--color-accent) 8%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Calendar size={20} color="#059669" strokeWidth={2} />
+          <Calendar size={20} color="var(--color-accent)" strokeWidth={2} />
         </div>
       </div>
 
@@ -75,15 +75,15 @@ export function FloatingIconsDecor() {
             width: 50,
             height: 50,
             borderRadius: 16,
-            backgroundColor: "#FFFFFF",
-            border: "1px solid rgba(228, 228, 231, 0.8)",
-            boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid color-mix(in srgb, var(--color-line) 80%, transparent)",
+            boxShadow: "0 10px 25px color-mix(in srgb, var(--color-ink) 8%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Wallet size={22} color="#059669" strokeWidth={2} />
+          <Wallet size={22} color="var(--color-accent)" strokeWidth={2} />
         </div>
       </div>
 
@@ -103,14 +103,14 @@ export function FloatingIconsDecor() {
             width: 50,
             height: 50,
             borderRadius: 16,
-            backgroundColor: "#059669",
-            boxShadow: "0 10px 22px rgba(5, 150, 105, 0.35)",
+            backgroundColor: "var(--color-accent)",
+            boxShadow: "0 10px 22px color-mix(in srgb, var(--color-accent) 35%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <QrCode size={22} color="#FFFFFF" strokeWidth={2} />
+          <QrCode size={22} color="var(--color-on-accent)" strokeWidth={2} />
         </div>
       </div>
 
@@ -130,15 +130,15 @@ export function FloatingIconsDecor() {
             width: 46,
             height: 46,
             borderRadius: 15,
-            backgroundColor: "#FFFFFF",
-            border: "1px solid rgba(228, 228, 231, 0.8)",
-            boxShadow: "0 10px 25px rgba(24, 24, 27, 0.08)",
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid color-mix(in srgb, var(--color-line) 80%, transparent)",
+            boxShadow: "0 10px 25px color-mix(in srgb, var(--color-ink) 8%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Archive size={20} color="#059669" strokeWidth={2} />
+          <Archive size={20} color="var(--color-accent)" strokeWidth={2} />
         </div>
       </div>
 
@@ -158,14 +158,14 @@ export function FloatingIconsDecor() {
             width: 48,
             height: 48,
             borderRadius: 15,
-            backgroundColor: "rgba(5, 150, 105, 0.12)",
-            boxShadow: "0 6px 18px rgba(5, 150, 105, 0.08)",
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 12%, transparent)",
+            boxShadow: "0 6px 18px color-mix(in srgb, var(--color-accent) 8%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <ClipboardCheck size={21} color="#059669" strokeWidth={2} />
+          <ClipboardCheck size={21} color="var(--color-accent)" strokeWidth={2} />
         </div>
       </div>
 
@@ -179,7 +179,7 @@ export function FloatingIconsDecor() {
           width: 5.5,
           height: 5.5,
           borderRadius: "50%",
-          backgroundColor: "rgba(5, 150, 105, 0.35)",
+          backgroundColor: "color-mix(in srgb, var(--color-accent) 35%, transparent)",
         }}
       />
       <div
@@ -191,7 +191,7 @@ export function FloatingIconsDecor() {
           width: 5,
           height: 5,
           borderRadius: "50%",
-          backgroundColor: "rgba(5, 150, 105, 0.25)",
+          backgroundColor: "color-mix(in srgb, var(--color-accent) 25%, transparent)",
         }}
       />
       <div
@@ -203,7 +203,7 @@ export function FloatingIconsDecor() {
           width: 5.5,
           height: 5.5,
           borderRadius: "50%",
-          backgroundColor: "rgba(5, 150, 105, 0.35)",
+          backgroundColor: "color-mix(in srgb, var(--color-accent) 35%, transparent)",
         }}
       />
       <div
@@ -215,7 +215,7 @@ export function FloatingIconsDecor() {
           width: 5,
           height: 5,
           borderRadius: "50%",
-          backgroundColor: "rgba(5, 150, 105, 0.25)",
+          backgroundColor: "color-mix(in srgb, var(--color-accent) 25%, transparent)",
         }}
       />
     </>

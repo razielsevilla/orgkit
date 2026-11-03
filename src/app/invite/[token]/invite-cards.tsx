@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
-import { Card, CardBadge, CardTitle, CardDescription, CardHeader } from "@/src/components/card";
+import { Card, CardBadge, CardTitle, CardDescription, CardHeader } from "@/src/components/ui/card";
 import { ClearInviteCookie } from "./invite-client";
 
 /**
@@ -16,7 +16,7 @@ export function InviteContainer({ children }: { children: React.ReactNode }) {
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#F4F4F5",
+        backgroundColor: "var(--color-base)",
         padding: "32px 16px",
         boxSizing: "border-box",
         position: "relative",
@@ -64,8 +64,8 @@ function WarningCard({
   return (
     <Card maxWidth={maxWidth} padding={padding}>
       <CardHeader>
-        <CardBadge size={64} style={{ backgroundColor: "rgba(220, 38, 38, 0.10)" }}>
-          <AlertTriangle size={30} color="#DC2626" />
+        <CardBadge size={64} style={{ backgroundColor: "color-mix(in srgb, var(--color-danger) 10%, transparent)" }}>
+          <AlertTriangle size={30} color="var(--color-danger)" />
         </CardBadge>
         <CardTitle>{title}</CardTitle>
         <CardDescription style={descriptionMaxWidth ? { maxWidth: descriptionMaxWidth } : undefined}>
@@ -79,8 +79,8 @@ function WarningCard({
             display: "inline-block",
             padding: "12px 24px",
             borderRadius: 9999,
-            backgroundColor: "#18181B",
-            color: "#FFFFFF",
+            backgroundColor: "var(--color-ink)",
+            color: "var(--color-on-accent)",
             fontSize: 14,
             fontWeight: 600,
             textDecoration: "none",

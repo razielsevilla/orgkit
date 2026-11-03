@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, LogOut } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
+import { useDismissable } from "@/src/lib/use-dismissable";
 
 export interface OfficerProfile {
   id?: string;
@@ -36,25 +37,7 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
     return "OF";
   })();
 
-  // Close dropdown on outside click or Escape
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setMenuOpen(false);
-      }
-    }
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setMenuOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, []);
+  useDismissable(menuRef, () => setMenuOpen(false));
 
   return (
     <header
@@ -124,8 +107,8 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
               width: 32,
               height: 32,
               borderRadius: "50%",
-              backgroundColor: "#D1FAE5",
-              color: "#059669",
+              backgroundColor: "var(--color-accent-soft)",
+              color: "var(--color-accent)",
               fontSize: 12,
               fontWeight: 700,
               letterSpacing: "-0.01em",
@@ -144,7 +127,7 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
             style={{
               fontSize: 13.5,
               fontWeight: 600,
-              color: "#18181B",
+              color: "var(--color-ink)",
               letterSpacing: "-0.01em",
             }}
           >
@@ -156,7 +139,7 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
             style={{
               width: 14.5,
               height: 14.5,
-              color: "#71717A",
+              color: "var(--color-muted)",
               transform: menuOpen ? "rotate(180deg)" : "none",
               transition: "transform 0.2s ease",
             }}
@@ -173,8 +156,8 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
               marginTop: 8,
               width: 220,
               borderRadius: 16,
-              border: "1px solid #E4E4E7",
-              backgroundColor: "#FFFFFF",
+              border: "1px solid var(--color-line)",
+              backgroundColor: "var(--color-surface)",
               padding: 6,
               boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
               zIndex: 50,
@@ -183,7 +166,7 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
           >
             <div
               style={{
-                borderBottom: "1px solid #E4E4E7",
+                borderBottom: "1px solid var(--color-line)",
                 padding: "8px 12px",
               }}
             >
@@ -191,7 +174,7 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: "#18181B",
+                  color: "var(--color-ink)",
                   margin: 0,
                 }}
               >
@@ -200,7 +183,7 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
               <p
                 style={{
                   fontSize: 11,
-                  color: "#71717A",
+                  color: "var(--color-muted)",
                   margin: "2px 0 0 0",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -224,7 +207,7 @@ export function Navbar({ officer, logoHref = "/" }: NavbarProps) {
                     padding: "8px 10px",
                     fontSize: 12,
                     fontWeight: 500,
-                    color: "#DC2626",
+                    color: "var(--color-danger)",
                     border: "none",
                     backgroundColor: "transparent",
                     cursor: "pointer",

@@ -15,7 +15,7 @@ import {
   CardTitle,
   CardDescription,
   CardHeader,
-} from "@/src/components/card";
+} from "@/src/components/ui/card";
 import {
   InviteGuestButton,
   SwitchAccountButton,
@@ -60,7 +60,7 @@ async function InviteContent({ params }: InvitePageProps) {
         <Card maxWidth={480} padding="40px 36px">
           <CardHeader>
             <CardBadge size={68}>
-              <UserCheck size={32} color="#059669" />
+              <UserCheck size={32} color="var(--color-accent)" />
             </CardBadge>
 
             <div
@@ -69,7 +69,7 @@ async function InviteContent({ params }: InvitePageProps) {
                 fontWeight: 700,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                color: "#059669",
+                color: "var(--color-accent)",
                 marginBottom: 6,
               }}
             >
@@ -84,7 +84,7 @@ async function InviteContent({ params }: InvitePageProps) {
               <p
                 style={{
                   fontSize: 13,
-                  color: "#71717A",
+                  color: "var(--color-muted)",
                   margin: "0 0 14px 0",
                 }}
               >
@@ -99,8 +99,8 @@ async function InviteContent({ params }: InvitePageProps) {
                 flexDirection: "column",
                 alignItems: "center",
                 borderRadius: 14,
-                backgroundColor: "rgba(5, 150, 105, 0.08)",
-                border: "1px solid rgba(5, 150, 105, 0.20)",
+                backgroundColor: "color-mix(in srgb, var(--color-accent) 8%, transparent)",
+                border: "1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)",
                 padding: "10px 16px",
                 margin: "8px 0 16px 0",
                 width: "100%",
@@ -111,7 +111,7 @@ async function InviteContent({ params }: InvitePageProps) {
                 style={{
                   fontSize: 12,
                   fontWeight: 700,
-                  color: "#047857",
+                  color: "var(--color-accent-strong)",
                   textTransform: "uppercase",
                   letterSpacing: "0.04em",
                   marginBottom: 2,
@@ -122,7 +122,7 @@ async function InviteContent({ params }: InvitePageProps) {
               <span
                 style={{
                   fontSize: 12,
-                  color: "#52525B",
+                  color: "var(--color-muted-strong)",
                   textAlign: "center",
                   lineHeight: 1.35,
                 }}
@@ -141,18 +141,18 @@ async function InviteContent({ params }: InvitePageProps) {
           <p
             style={{
               fontSize: 11.5,
-              color: "#71717A",
+              color: "var(--color-muted)",
               textAlign: "center",
               margin: "18px 0 0 0",
               lineHeight: 1.4,
             }}
           >
             By continuing, you agree to OrgKit&apos;s{" "}
-            <Link href="/terms" style={{ color: "#059669", textDecoration: "underline" }}>
+            <Link href="/terms" style={{ color: "var(--color-accent)", textDecoration: "underline" }}>
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="/privacy" style={{ color: "#059669", textDecoration: "underline" }}>
+            <Link href="/privacy" style={{ color: "var(--color-accent)", textDecoration: "underline" }}>
               Privacy Policy
             </Link>
             .
@@ -192,9 +192,9 @@ async function InviteContent({ params }: InvitePageProps) {
             <CardHeader>
               <CardBadge
                 size={64}
-                style={{ backgroundColor: "rgba(220, 38, 38, 0.10)" }}
+                style={{ backgroundColor: "color-mix(in srgb, var(--color-danger) 10%, transparent)" }}
               >
-                <AlertCircle size={30} color="#DC2626" />
+                <AlertCircle size={30} color="var(--color-danger)" />
               </CardBadge>
               <CardTitle>Different account required</CardTitle>
               <CardDescription style={{ marginBottom: 12 }}>
@@ -205,16 +205,16 @@ async function InviteContent({ params }: InvitePageProps) {
                 style={{
                   width: "100%",
                   borderRadius: 12,
-                  backgroundColor: "#F4F4F5",
+                  backgroundColor: "var(--color-base)",
                   padding: "10px 14px",
                   fontSize: 12.5,
-                  color: "#52525B",
+                  color: "var(--color-muted-strong)",
                   textAlign: "center",
                   boxSizing: "border-box",
                   marginBottom: 4,
                 }}
               >
-                Signed in as: <strong style={{ color: "#18181B" }}>{user.email}</strong>
+                Signed in as: <strong style={{ color: "var(--color-ink)" }}>{user.email}</strong>
               </div>
             </CardHeader>
 
@@ -232,9 +232,9 @@ async function InviteContent({ params }: InvitePageProps) {
             <CardHeader>
               <CardBadge
                 size={64}
-                style={{ backgroundColor: "rgba(5, 150, 105, 0.10)" }}
+                style={{ backgroundColor: "color-mix(in srgb, var(--color-accent) 10%, transparent)" }}
               >
-                <Building size={30} color="#059669" />
+                <Building size={30} color="var(--color-accent)" />
               </CardBadge>
               <CardTitle>Already in an organization</CardTitle>
               <CardDescription style={{ maxWidth: 380 }}>

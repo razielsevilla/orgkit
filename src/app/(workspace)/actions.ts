@@ -1,5 +1,6 @@
 "use server";
 
+import { unstable_rethrow } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
 import { getSessionUser } from "@/src/lib/auth/session-user";
 import { getLatestOrgId } from "@/src/lib/orgs/memberships";
@@ -105,6 +106,8 @@ export async function getOrganizationById(orgId: string) {
 
     return org;
   } catch (err) {
+    // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
+    unstable_rethrow(err);
     console.error("Unexpected error in getOrganizationById:", err);
     return null;
   }
@@ -136,6 +139,8 @@ export async function getOfficerDefaultWorkspace(): Promise<{
 
     return { orgId: org.id, name: org.name, school: org.school || null };
   } catch (err) {
+    // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
+    unstable_rethrow(err);
     console.error("Unexpected error in getOfficerDefaultWorkspace:", err);
     return null;
   }
@@ -169,6 +174,8 @@ export async function getCurrentOfficer(): Promise<{
       full_name: officer.full_name?.trim() || user.email?.split("@")[0] || "Officer",
     };
   } catch (err) {
+    // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
+    unstable_rethrow(err);
     console.error("Unexpected error in getCurrentOfficer:", err);
     return null;
   }
@@ -184,6 +191,8 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
     const { data } = await supabase.rpc("is_org_admin", { target_org: orgId });
     return data === true;
   } catch (err) {
+    // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
+    unstable_rethrow(err);
     console.error("Unexpected error in isOrgAdmin:", err);
     return false;
   }

@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { unstable_rethrow } from "next/navigation";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { can, OfficerRole, isOfficerRole } from "@/src/lib/orgs/permissions";
 import { generateInviteToken, hashInviteToken, normalizeEmail } from "@/src/lib/invites/tokens";
@@ -215,6 +216,8 @@ export async function getWorkspaceOfficers(
       canRemove: can(caller.role, "officer:remove"),
     });
   } catch (err) {
+    // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
+    unstable_rethrow(err);
     console.error("Unexpected error in getWorkspaceOfficers:", err);
     return fail("failed", "Failed to load officers.");
   }
