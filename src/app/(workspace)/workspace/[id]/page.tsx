@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import {
   getOrganizationById,
@@ -13,6 +14,7 @@ import { WorkspaceShell } from "@/src/components/workspace/home/workspace-shell"
 import { officerLandingPath } from "@/src/lib/routes";
 
 async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string }> }) {
+  await connection();
   const { id } = await params;
 
   // Org details come only from the server, which returns them to members only.

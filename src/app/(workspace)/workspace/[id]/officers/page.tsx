@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { plusJakarta } from "@/src/lib/fonts";
@@ -11,6 +12,7 @@ interface OfficersPageProps {
 }
 
 async function OfficersContent({ params }: OfficersPageProps) {
+  await connection();
   const { id: rawId } = await params;
 
   if (!rawId) {
