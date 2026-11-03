@@ -130,6 +130,12 @@ body {
 .orgkit-float-a { animation: ambientFloatA 3.4s ease-in-out infinite; }
 .orgkit-float-b { animation: ambientFloatB 3.8s ease-in-out infinite; }
 
+@media (max-width: 639px) {
+  .orgkit-floating-decor {
+    display: none !important;
+  }
+}
+
 /* Visually hidden, still read by screen readers (used for live regions) */
 .sr-only {
   position: absolute;

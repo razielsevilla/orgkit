@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -31,10 +32,9 @@ interface DialogProps {
 }
 
 /**
- * A modal dialog: dark backdrop, centered card, and the behaviour a modal
- * needs. Focus moves into the card and returns to the opener on close, Tab
- * stays inside, the page behind does not scroll, and Escape dismisses when the
- * caller allows it.
+ * A modal dialog: dark backdrop with blur, centered card, and accessible modal behavior.
+ * Uses React Portal to mount to document.body, ensuring it escapes ancestor transforms/overflows
+ * and centers cleanly on the screen while blurring the entire background.
  */
 export function Dialog({
   role = "dialog",
@@ -43,20 +43,27 @@ export function Dialog({
   dismissOnBackdrop = true,
   maxWidth = 480,
   padding = "28px 24px",
-  zIndex = 100,
+  zIndex = 1000,
   backdropPercent = 45,
-  shadowPercent = 12,
-  popSeconds = 0.2,
+  shadowPercent = 14,
+  popSeconds = 0.22,
   children,
   cardStyle,
 }: DialogProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const dismissRef = useRef(onDismiss);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     dismissRef.current = onDismiss;
   });
 
   useEffect(() => {
+    if (!mounted) return;
     const card = cardRef.current;
     const opener = document.activeElement as HTMLElement | null;
 
@@ -100,9 +107,11 @@ export function Dialog({
       document.body.style.overflow = previousOverflow;
       opener?.focus?.();
     };
-  }, []);
+  }, [mounted]);
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       role={role}
       aria-modal="true"
@@ -112,11 +121,12 @@ export function Dialog({
         inset: 0,
         zIndex,
         backgroundColor: `color-mix(in srgb, var(--color-ink) ${backdropPercent}%, transparent)`,
-        backdropFilter: "blur(4px)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "16px",
+        padding: "clamp(16px, 3vw, 24px)",
         boxSizing: "border-box",
       }}
       onClick={(event) => {
@@ -138,12 +148,13 @@ export function Dialog({
           boxSizing: "border-box",
           position: "relative",
           outline: "none",
-          animation: `cardPopout ${popSeconds}s cubic-bezier(0.16, 1, 0.3, 1) both`,
+          animation: `cardPopout ${popSeconds}s cubic-bezier(0.16, 1.25, 0.38, 1) both`,
           ...cardStyle,
         }}
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
