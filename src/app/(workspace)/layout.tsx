@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { requireOfficer } from "@/src/lib/auth/officer";
 
@@ -5,6 +6,7 @@ import { requireOfficer } from "@/src/lib/auth/officer";
 // Signed-out visitors go to sign-in; officers who haven't agreed to the
 // privacy notice go to /consent before they can reach any workspace page.
 async function OfficerGate({ children }: { children: React.ReactNode }) {
+  await connection();
   await requireOfficer();
   return <>{children}</>;
 }

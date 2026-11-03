@@ -1,3 +1,4 @@
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getWorkspaceOfficers } from "@/src/app/(workspace)/officers-actions";
@@ -9,6 +10,7 @@ interface OfficersPageProps {
 }
 
 async function OfficersContent({ params }: OfficersPageProps) {
+  await connection();
   const { id: rawId } = await params;
 
   if (!rawId) {
