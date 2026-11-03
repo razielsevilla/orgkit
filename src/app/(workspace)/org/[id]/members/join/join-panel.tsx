@@ -3,7 +3,6 @@
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { plusJakarta } from "@/src/lib/fonts";
-import QRCode from "qrcode";
 import { ArrowLeft } from "lucide-react";
 import { Sidebar } from "@/src/components/layout/sidebar";
 import type { OfficerProfile } from "@/src/components/layout/navbar";
@@ -47,7 +46,11 @@ export function JoinPanel({
   useEffect(() => {
     if (!joinUrl) return;
     let cancelled = false;
-    QRCode.toDataURL(joinUrl, { width: 640, margin: 2, errorCorrectionLevel: "M" })
+    // Loaded on demand: the QR library is only needed once there is a link to draw
+    import("qrcode")
+      .then(({ default: QRCode }) =>
+        QRCode.toDataURL(joinUrl, { width: 640, margin: 2, errorCorrectionLevel: "M" })
+      )
       .then((dataUrl) => {
         if (!cancelled) setQr({ forUrl: joinUrl, dataUrl });
       })

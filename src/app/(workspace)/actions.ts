@@ -3,6 +3,7 @@
 import { unstable_rethrow } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
 import { getSessionUser } from "@/src/lib/auth/session-user";
+import { getOfficerRow } from "@/src/lib/auth/officer-profile";
 import { getLatestOrgId } from "@/src/lib/orgs/memberships";
 
 export interface CreateWorkspaceResponse {
@@ -156,15 +157,11 @@ export async function getCurrentOfficer(): Promise<{
   full_name: string;
 } | null> {
   try {
-    const { supabase, user } = await getSessionUser();
+    const { user } = await getSessionUser();
 
     if (!user) return null;
 
-    const { data: officer } = await supabase
-      .from("officers")
-      .select("id, email, full_name")
-      .eq("id", user.id)
-      .maybeSingle();
+    const officer = await getOfficerRow(user.id);
 
     if (!officer) return null;
 
