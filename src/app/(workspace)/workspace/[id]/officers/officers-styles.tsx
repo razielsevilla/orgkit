@@ -1,6 +1,11 @@
 export function OfficersStyles() {
   return (
     <style>{`
+      @media (max-width: 1200px) {
+        .orgkit-floating-decor {
+          display: none !important;
+        }
+      }
       @media (max-width: 640px) {
         .orgkit-officer-row {
           flex-direction: column !important;

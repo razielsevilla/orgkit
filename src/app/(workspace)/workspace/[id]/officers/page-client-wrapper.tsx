@@ -54,15 +54,98 @@ export function OfficersClientWrapper({
           flex: 1,
           height: "100vh",
           position: "relative",
-          overflowY: "auto",
+          overflow: "hidden",
           backgroundColor: "var(--color-base)",
-          padding: "32px 24px",
+          display: "flex",
+          flexDirection: "column",
           boxSizing: "border-box",
         }}
       >
-        <OfficersClient initialData={initialData} orgId={rawId} />
+        {/* Background Concentric SVG Circles: Top-Left (Matching Workspace Home & Join Panel) */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 340,
+            height: 340,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          <svg viewBox="0 0 340 340" fill="none" style={{ width: "100%", height: "100%" }}>
+            <circle cx="0" cy="0" r="260" fill="color-mix(in srgb, var(--color-accent) 5%, transparent)" />
+            <circle
+              cx="0"
+              cy="0"
+              r="200"
+              stroke="color-mix(in srgb, var(--color-accent) 12%, transparent)"
+              strokeWidth="1.2"
+            />
+            <circle
+              cx="0"
+              cy="0"
+              r="320"
+              stroke="color-mix(in srgb, var(--color-accent) 8%, transparent)"
+              strokeWidth="1.2"
+            />
+          </svg>
+        </div>
+
+        {/* Background Concentric SVG Circles: Bottom-Right */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            width: 400,
+            height: 400,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          <svg viewBox="0 0 400 400" fill="none" style={{ width: "100%", height: "100%" }}>
+            <circle
+              cx="400"
+              cy="400"
+              r="340"
+              stroke="color-mix(in srgb, var(--color-accent) 12%, transparent)"
+              strokeWidth="1.2"
+            />
+            <circle
+              cx="400"
+              cy="400"
+              r="260"
+              stroke="color-mix(in srgb, var(--color-accent) 10%, transparent)"
+              strokeWidth="1.2"
+            />
+            <circle
+              cx="400"
+              cy="400"
+              r="180"
+              stroke="color-mix(in srgb, var(--color-accent) 8%, transparent)"
+              strokeWidth="1.2"
+            />
+          </svg>
+        </div>
+
+        {/* Scrollable Main Area */}
+        <div
+          style={{
+            position: "relative",
+            zIndex: 1,
+            flex: 1,
+            height: "100%",
+            overflowY: "auto",
+            padding: "36px clamp(16px, 4vw, 36px) 60px clamp(16px, 4vw, 36px)",
+            boxSizing: "border-box",
+          }}
+        >
+          <OfficersClient initialData={initialData} orgId={rawId} />
+        </div>
       </main>
     </div>
   );
 }
-

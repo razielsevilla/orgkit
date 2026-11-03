@@ -2,6 +2,7 @@
 
 import React from "react";
 import { WorkspaceOfficersData } from "@/src/app/(workspace)/officers-actions";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { InviteDialog, SuccessPanel } from "./invite-dialog";
 import { RemoveDialog } from "./remove-dialog";
 import { useOfficers } from "./use-officers";
@@ -39,7 +40,15 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
   } = useOfficers(initialData, orgId);
 
   return (
-    <div style={{ width: "100%", maxWidth: 1024, margin: "0 auto", paddingBottom: 60 }}>
+    <div
+      style={{
+        width: "100%",
+        maxWidth: 960,
+        margin: "0 auto",
+        position: "relative",
+        animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
+      }}
+    >
       {/* ── Keyframe Animations & Responsive Styles ── */}
       <OfficersStyles />
 
@@ -48,20 +57,39 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
 
       <OfficersHeader data={data} pageError={pageError} onInvite={openInvite} />
 
-      <ActiveOfficersSection
-        data={data}
-        loading={loading}
-        handleRoleChange={handleRoleChange}
-        setPageError={setPageError}
-        setRemoveTarget={setRemoveTarget}
-      />
+      {/* ── Cards Container with Floating Icons Behind ── */}
+      <div style={{ position: "relative", width: "100%" }}>
+        {/* Floating Icons Decor positioned behind the cards */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          <FloatingIconsDecor />
+        </div>
 
-      <PendingInvitesSection
-        data={data}
-        loading={loading}
-        handleRecreate={handleRecreate}
-        handleRevoke={handleRevoke}
-      />
+        {/* Foreground Content & Cards */}
+        <div style={{ position: "relative", zIndex: 2 }}>
+          <ActiveOfficersSection
+            data={data}
+            loading={loading}
+            handleRoleChange={handleRoleChange}
+            setPageError={setPageError}
+            setRemoveTarget={setRemoveTarget}
+          />
+
+          <PendingInvitesSection
+            data={data}
+            loading={loading}
+            handleRecreate={handleRecreate}
+            handleRevoke={handleRevoke}
+          />
+        </div>
+      </div>
 
       {/* ── Dialog Modals ── */}
       <InviteDialog
@@ -99,4 +127,3 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
     </div>
   );
 }
-

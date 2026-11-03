@@ -120,6 +120,16 @@ body {
   50% { transform: translateY(4px); }
 }
 
+.orgkit-burst-tl { animation: burstTL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.04s both; }
+.orgkit-burst-fl { animation: burstFL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.08s both; }
+.orgkit-burst-bl { animation: burstBL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.12s both; }
+.orgkit-burst-tr { animation: burstTR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.06s both; }
+.orgkit-burst-fr { animation: burstFR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.1s both; }
+.orgkit-burst-br { animation: burstBR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.14s both; }
+.orgkit-burst-dot { animation: burstDot 0.4s ease 0.2s both; }
+.orgkit-float-a { animation: ambientFloatA 3.4s ease-in-out infinite; }
+.orgkit-float-b { animation: ambientFloatB 3.8s ease-in-out infinite; }
+
 /* Visually hidden, still read by screen readers (used for live regions) */
 .sr-only {
   position: absolute;
