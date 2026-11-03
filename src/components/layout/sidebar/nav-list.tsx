@@ -25,6 +25,7 @@ function NavLinkItem({
   return (
     <Link
       href={href}
+      prefetch={true}
       className={`orgkit-nav-item ${isActive ? "active" : ""}`}
       title={title}
       style={{

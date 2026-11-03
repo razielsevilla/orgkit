@@ -8,6 +8,7 @@ import {
 import { isUuid } from "@/src/lib/validation";
 import { WorkspaceHome } from "@/src/components/workspace/home/workspace-home";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
+import { WorkspaceCanvasSkeleton } from "@/src/components/workspace/frame/workspace-skeleton";
 import { officerLandingPath } from "@/src/lib/routes";
 
 async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string }> }) {
@@ -38,7 +39,7 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
 
 export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WorkspaceCanvasSkeleton />}>
       <WorkspaceDetailContent params={params} />
     </Suspense>
   );

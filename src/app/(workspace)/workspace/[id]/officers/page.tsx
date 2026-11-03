@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getWorkspaceOfficers } from "@/src/app/(workspace)/officers-actions";
 import { OfficersClientWrapper } from "@/src/components/workspace/officers/page-client-wrapper";
+import { WorkspaceCanvasSkeleton } from "@/src/components/workspace/frame/workspace-skeleton";
 import { ROUTES, workspacePath } from "@/src/lib/routes";
 
 interface OfficersPageProps {
@@ -33,7 +34,7 @@ async function OfficersContent({ params }: OfficersPageProps) {
 
 export default function OfficersPage(props: OfficersPageProps) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WorkspaceCanvasSkeleton />}>
       <OfficersContent {...props} />
     </Suspense>
   );

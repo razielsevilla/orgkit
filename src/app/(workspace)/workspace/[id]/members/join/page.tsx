@@ -4,10 +4,11 @@ import { createClient } from "@/src/lib/supabase/server";
 import { requireOfficer } from "@/src/lib/auth/officer";
 import { isUuid } from "@/src/lib/validation";
 import { JoinPanel } from "@/src/components/workspace/member-join/join-panel";
+import { WorkspaceCanvasSkeleton } from "@/src/components/workspace/frame/workspace-skeleton";
 
 export default function MemberJoinPage({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<WorkspaceCanvasSkeleton />}>
       <MemberJoinContent params={params} />
     </Suspense>
   );
