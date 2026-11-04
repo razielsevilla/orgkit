@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { connection } from "next/server";
 import { createClient } from "@/src/lib/supabase/server";
 
 /**
@@ -12,6 +13,7 @@ import { createClient } from "@/src/lib/supabase/server";
  * signed-out officer is still caught on their very next one.
  */
 export const getSessionUser = cache(async () => {
+  await connection();
   const supabase = await createClient();
   const {
     data: { user },

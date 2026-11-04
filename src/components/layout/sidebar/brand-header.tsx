@@ -28,6 +28,7 @@ export function BrandHeader({ rawId, isCollapsed, onToggleCollapse }: BrandHeade
     >
       <Link
         href={workspacePath(rawId)}
+        prefetch={true}
         style={{
           display: "inline-flex",
           alignItems: "center",

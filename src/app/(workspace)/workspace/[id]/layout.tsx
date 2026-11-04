@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { unstable_rethrow } from "next/navigation";
 import {
   getCurrentOfficer,
@@ -13,6 +14,7 @@ import {
 import { FlowLoader } from "@/src/components/workspace/frame/flow-loader";
 
 async function loadFrameData(id: string): Promise<WorkspaceFrameData | null> {
+  await connection();
   // A malformed ID can't be an org, so skip the database
   if (!isUuid(id)) return null;
 
@@ -47,6 +49,7 @@ async function WorkspaceFrameLoader({
   params: Promise<{ id: string }>;
   children: React.ReactNode;
 }) {
+  await connection();
   const { id } = await params;
   return (
     <WorkspaceFrame data={loadFrameData(id)}>

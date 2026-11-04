@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { getCurrentOfficer, getOfficerDefaultWorkspace } from "@/src/app/(workspace)/actions";
 import { CreateOrgForm } from "@/src/components/workspace/new-org/create-org-form";
@@ -24,6 +25,7 @@ function CheckingWorkspace() {
 
 // Reads the session, so it streams in behind the Suspense boundary below.
 async function NewOrgContent() {
+  await connection();
   const officer = await getCurrentOfficer();
   if (!officer) redirect(ROUTES.signIn);
 

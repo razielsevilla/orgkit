@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { notFound } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
 import { requireOfficer } from "@/src/lib/auth/officer";
@@ -18,6 +19,7 @@ export default function MemberJoinPage({ params }: { params: Promise<{ id: strin
 // Reads the session and the database, so it streams in behind Suspense.
 // Only the org's admin gets past this; everyone else sees a plain 404.
 async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }) {
+  await connection();
   const { id } = await params;
   if (!isUuid(id)) notFound();
 
@@ -50,8 +52,8 @@ async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }
         orgId={id}
         orgName={org.name}
         schoolName={org.school}
-        siteUrl={siteUrl}
         initialToken={link?.token ?? null}
+        siteUrl={siteUrl}
       />
     </PageReveal>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import Image from "next/image";
 import { plusJakarta } from "@/src/lib/fonts";
 import { Link2Off } from "lucide-react";
@@ -78,6 +79,7 @@ function JoinLoadingCard() {
 
 // Reads the link from the URL and the database, so it streams in behind Suspense
 async function JoinContent({ params }: { params: Promise<{ token: string }> }) {
+  await connection();
   const { token } = await params;
   const orgName = await getJoinOrgName(token);
 

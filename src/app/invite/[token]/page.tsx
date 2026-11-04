@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import Link from "next/link";
 import { AlertCircle, Building, UserCheck } from "lucide-react";
 import { createClient } from "@/src/lib/supabase/server";
@@ -29,6 +30,7 @@ interface InvitePageProps {
 }
 
 async function InviteContent({ params }: InvitePageProps) {
+  await connection();
   const { token } = await params;
 
   // 1. Rate limit per device
