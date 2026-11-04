@@ -1,9 +1,9 @@
-import { WorkspaceCanvasSkeleton } from "@/src/components/workspace/frame/workspace-skeleton";
+import { FlowLoader } from "@/src/components/workspace/frame/flow-loader";
 
 /**
- * Loading boundary for workspace canvas content.
+ * Main loading boundary for workspace canvas content.
  * Keeps the sidebar permanently mounted and interactive while switching pages.
  */
 export default function WorkspaceContentLoading() {
-  return <WorkspaceCanvasSkeleton />;
+  return <FlowLoader />;
 }

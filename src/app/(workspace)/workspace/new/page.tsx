@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCurrentOfficer, getOfficerDefaultWorkspace } from "@/src/app/(workspace)/actions";
 import { CreateOrgForm } from "@/src/components/workspace/new-org/create-org-form";
 import { NewOrgScreen } from "@/src/components/workspace/new-org/new-org-screen";
+import { FlowLoader } from "@/src/components/workspace/frame/flow-loader";
 import { ROUTES, workspacePath } from "@/src/lib/routes";
 
 /** Shown inside the frame while the server checks who is signing in. */
@@ -16,16 +17,7 @@ function CheckingWorkspace() {
         height: 220,
       }}
     >
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: "50%",
-          border: "3px solid color-mix(in srgb, var(--color-accent) 20%, transparent)",
-          borderTopColor: "var(--color-accent)",
-          animation: "spin 0.8s linear infinite",
-        }}
-      />
+      <FlowLoader />
     </div>
   );
 }

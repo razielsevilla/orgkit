@@ -9,6 +9,7 @@ import { JOIN_MESSAGES } from "@/src/lib/members/member-join";
 import { getJoinOrgName } from "@/src/lib/members/member-join-server";
 import { JoinForm } from "@/src/components/join/join-form";
 import { JoinBackdrop } from "@/src/components/join/join-backdrop";
+import { FlowLoader } from "@/src/components/workspace/frame/flow-loader";
 
 // The link is a secret: keep it out of search results
 export const metadata: Metadata = {
@@ -66,20 +67,10 @@ function JoinLoadingCard() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          gap: 16,
+          minHeight: 180,
         }}
       >
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            border: "3px solid color-mix(in srgb, var(--color-accent) 20%, transparent)",
-            borderTopColor: "var(--color-accent)",
-            animation: "spin 0.8s linear infinite",
-          }}
-        />
-        <p style={{ margin: 0, fontSize: 14, color: "var(--color-muted)" }}>Loading join page…</p>
+        <FlowLoader />
       </div>
     </Card>
   );

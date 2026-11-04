@@ -10,10 +10,7 @@ import {
   WorkspaceFrame,
   type WorkspaceFrameData,
 } from "@/src/components/workspace/frame/workspace-frame";
-import {
-  WorkspaceLoadingSkeleton,
-  WorkspaceCanvasSkeleton,
-} from "@/src/components/workspace/frame/workspace-skeleton";
+import { FlowLoader } from "@/src/components/workspace/frame/flow-loader";
 
 async function loadFrameData(id: string): Promise<WorkspaceFrameData | null> {
   // A malformed ID can't be an org, so skip the database
@@ -53,10 +50,28 @@ async function WorkspaceFrameLoader({
   const { id } = await params;
   return (
     <WorkspaceFrame data={loadFrameData(id)}>
-      <Suspense fallback={<WorkspaceCanvasSkeleton />}>
+      <Suspense fallback={<FlowLoader />}>
         {children}
       </Suspense>
     </WorkspaceFrame>
+  );
+}
+
+function WorkspaceFullLoading() {
+  return (
+    <div
+      style={{
+        height: "100vh",
+        maxHeight: "100vh",
+        width: "100vw",
+        backgroundColor: "var(--color-base)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <FlowLoader />
+    </div>
   );
 }
 
@@ -72,7 +87,7 @@ export default function WorkspaceLayout({
   params: Promise<{ id: string }>;
 }) {
   return (
-    <Suspense fallback={<WorkspaceLoadingSkeleton />}>
+    <Suspense fallback={<WorkspaceFullLoading />}>
       <WorkspaceFrameLoader params={params}>{children}</WorkspaceFrameLoader>
     </Suspense>
   );
