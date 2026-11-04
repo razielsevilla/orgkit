@@ -55,7 +55,12 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
       {/* ── Removed Officer Alert Modal (Ticket Decision 7) ── */}
       {accessRevoked && <AccessRevokedDialog />}
 
-      <OfficersHeader data={data} pageError={pageError} onInvite={openInvite} />
+      <OfficersHeader
+        data={data}
+        pageError={pageError}
+        onInvite={openInvite}
+        onClearError={() => setPageError(null)}
+      />
 
       {/* ── Cards Container with Floating Icons Behind ── */}
       <div style={{ position: "relative", width: "100%" }}>

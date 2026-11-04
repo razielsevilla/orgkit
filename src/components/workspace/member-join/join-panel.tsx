@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Card } from "@/src/components/ui/card";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { setJoinLink } from "@/src/app/(workspace)/workspace/[id]/members/join/actions";
+import { ErrorToast } from "@/src/components/error-toast";
 import { JoinPanelHeader } from "./join-panel-header";
 import { JoinLinkInput, JoinQrPreview, JoinCopyAndSave } from "./join-link-display";
 import { JoinLinkControls, JoinTurnOnButton, type Confirming } from "./join-link-controls";
@@ -163,19 +164,14 @@ export function JoinPanel({
                 ) : (
                   <JoinTurnOnButton pending={pending} siteUrl={siteUrl} onTurnOn={() => change("on")} />
                 )}
-
-                <div aria-live="polite" style={{ minHeight: 18, textAlign: "center" }}>
-                  {error && (
-                    <p role="alert" style={{ margin: 0, fontSize: 14, color: "var(--color-danger)" }}>
-                      {error}
-                    </p>
-                  )}
-                </div>
               </div>
             </div>
           </Card>
         </div>
       </div>
+
+      {/* Floating Error Toast */}
+      <ErrorToast message={error} onDismiss={() => setError(null)} />
     </>
   );
 }

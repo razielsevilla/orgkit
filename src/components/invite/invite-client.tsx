@@ -7,6 +7,7 @@ import { signInWithGoogle, useGoogleSignIn } from "@/src/lib/use-google-sign-in"
 import { GoogleLogo } from "@/src/components/auth/google-logo";
 import { LogOut, ArrowRight } from "lucide-react";
 import { clearInviteCookie } from "@/src/app/invite/actions";
+import { ErrorToast } from "@/src/components/error-toast";
 import { ROUTES, invitePath, inviteStartPath, workspacePath } from "@/src/lib/routes";
 
 /**
@@ -43,24 +44,6 @@ export function InviteGuestButton({ token }: InviteGuestButtonProps) {
 
   return (
     <div style={{ width: "100%", textAlign: "center" }}>
-      {error && (
-        <div
-          role="alert"
-          style={{
-            marginBottom: 16,
-            padding: "10px 14px",
-            borderRadius: 12,
-            backgroundColor: "var(--color-danger-soft)",
-            border: "1px solid var(--color-danger-line)",
-            color: "var(--color-danger)",
-            fontSize: 13,
-            lineHeight: 1.4,
-          }}
-        >
-          {error}
-        </div>
-      )}
-
       <button
         type="button"
         onClick={handleGoogleSignIn}
@@ -93,6 +76,9 @@ export function InviteGuestButton({ token }: InviteGuestButtonProps) {
         <GoogleLogo size={20} />
         <span>{loading ? "Redirecting to Google…" : "Continue with Google"}</span>
       </button>
+
+      {/* Floating Error Toast */}
+      <ErrorToast message={error} />
     </div>
   );
 }
@@ -196,4 +182,3 @@ export function GoToWorkspaceButton({ orgId }: GoToWorkspaceButtonProps) {
     </button>
   );
 }
-
