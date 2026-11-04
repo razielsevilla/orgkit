@@ -8,6 +8,7 @@ import React, {
   createContext,
   useContext,
 } from "react";
+import { createPortal } from "react-dom";
 import { AlertCircle, X } from "lucide-react";
 
 export type ErrorToastPosition = "bottom-right" | "bottom-left";
@@ -19,7 +20,7 @@ export interface ErrorToastProps {
   onDismiss?: () => void;
   /** Toast placement on the screen. Defaults to "bottom-right". */
   position?: ErrorToastPosition;
-  /** Milliseconds before auto-dismissing. Set to 0 to disable auto-dismiss. Default is 5000ms. */
+  /** Milliseconds before auto-dismissing. Set to 0 to disable auto-dismiss. Default is 2000ms (2 seconds). */
   autoDismissMs?: number;
   /** Whether to trigger a subtle screen shake when an error appears. Default is true. */
   shake?: boolean;
@@ -50,21 +51,27 @@ function triggerScreenShake() {
 
 /**
  * Floating Error Toast Card.
- * Renders in the bottom corner of the viewport without pushing or distorting component layouts.
- * Features a subtle screen shake upon triggering and curved modern corners.
+ * Portalled directly to document.body so it ALWAYS renders at the very bottom right
+ * of the viewport, immune to parent CSS transforms, filters, and component layouts.
+ * Features a subtle screen shake upon triggering and disappears after 2 seconds.
  */
 export function ErrorToast({
   message,
   onDismiss,
   position = "bottom-right",
-  autoDismissMs = 5000,
+  autoDismissMs = 2000,
   shake = true,
   title,
 }: ErrorToastProps) {
+  const [mounted, setMounted] = useState(false);
   const [visibleMessage, setVisibleMessage] = useState<string | null>(message || null);
   const [isExiting, setIsExiting] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const prevMessageRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -115,11 +122,11 @@ export function ErrorToast({
     return () => clearTimer();
   }, [visibleMessage, startTimer, clearTimer]);
 
-  if (!visibleMessage) return null;
+  if (!mounted || !visibleMessage) return null;
 
   const isBottomLeft = position === "bottom-left";
 
-  return (
+  return createPortal(
     <>
       <style>{`
         @keyframes orgkitScreenShake {
@@ -162,11 +169,11 @@ export function ErrorToast({
         }
 
         .orgkit-error-toast-enter {
-          animation: orgkitToastSlideUp 0.28s cubic-bezier(0.16, 1.25, 0.38, 1) both;
+          animation: orgkitToastSlideUp 0.24s cubic-bezier(0.16, 1.25, 0.38, 1) both;
         }
 
         .orgkit-error-toast-exit {
-          animation: orgkitToastSlideDown 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+          animation: orgkitToastSlideDown 0.18s cubic-bezier(0.4, 0, 1, 1) both;
         }
 
         @media (prefers-reduced-motion: reduce) {
@@ -190,7 +197,7 @@ export function ErrorToast({
           position: "fixed",
           bottom: 24,
           ...(isBottomLeft ? { left: 24 } : { right: 24 }),
-          zIndex: 99999,
+          zIndex: 999999,
           width: "calc(100vw - 48px)",
           maxWidth: 420,
           backgroundColor: "var(--color-surface)",
@@ -284,7 +291,8 @@ export function ErrorToast({
           <X size={15} strokeWidth={2} />
         </button>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
@@ -330,4 +338,3 @@ export function useErrorToast() {
   }
   return context;
 }
-

@@ -191,20 +191,6 @@ export function ActiveOfficersSection({
                       Joined {formatDate(officer.joinedAt)}
                     </span>
                   )}
-
-                  {/* Last Admin warning hint */}
-                  {isSoleAdmin && data.canManageRoles && (
-                    <span
-                      style={{
-                        display: "block",
-                        fontSize: 12,
-                        color: "var(--color-warning)",
-                        marginTop: 4,
-                      }}
-                    >
-                      {LAST_ADMIN_MESSAGE}
-                    </span>
-                  )}
                 </div>
               </div>
 
