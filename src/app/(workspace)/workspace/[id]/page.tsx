@@ -1,0 +1,51 @@
+import { connection } from "next/server";
+import { Suspense } from "react";
+import {
+  getOrganizationById,
+  getOfficerDefaultWorkspace,
+  getCurrentOfficer,
+} from "@/src/app/(workspace)/actions";
+import { isUuid } from "@/src/lib/validation";
+import { WorkspaceHome } from "@/src/components/workspace/home/workspace-home";
+import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
+import { officerLandingPath } from "@/src/lib/routes";
+import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
+
+async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string }> }) {
+  await connection();
+  const { id } = await params;
+
+  // Org details come only from the server, which returns them to members only.
+  // Nothing from the URL is ever shown. A malformed ID can't be an org, so it
+  // gets the same screen as an org the officer doesn't belong to. The sidebar
+  // frame around this screen comes from the workspace layout.
+  const org = isUuid(id) ? await getOrganizationById(id) : null;
+
+  if (!org) {
+    const [officer, workspace] = await Promise.all([
+      getCurrentOfficer(),
+      getOfficerDefaultWorkspace(),
+    ]);
+    return (
+      <WorkspaceNotFound
+        officer={officer}
+        workspaceHref={officerLandingPath({ orgId: workspace?.orgId })}
+      />
+    );
+  }
+
+  return (
+    <PageReveal>
+      <WorkspaceHome orgName={org.name} schoolName={org.school?.trim() || null} />
+    </PageReveal>
+  );
+}
+
+export default function WorkspaceDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense fallback={<WorkspaceContentLoader />}>
+      <WorkspaceDetailContent params={params} />
+    </Suspense>
+  );
+}

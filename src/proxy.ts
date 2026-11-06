@@ -1,23 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isSessionExpired, SESSION_MAX_SECONDS } from "@/src/lib/session-config";
-import { INVITE_COOKIE_NAME } from "@/src/lib/session-invite";
-import { isValidInviteToken } from "@/src/lib/tokens";
-
-// Pages a signed-out visitor may open. Everything else needs a session.
-const PUBLIC_PATHS = ["/", "/signin", "/register", "/privacy", "/terms"];
-
-function isPublic(pathname: string) {
-  return (
-    PUBLIC_PATHS.includes(pathname) ||
-    pathname === "/auth" ||
-    pathname.startsWith("/auth/") ||
-    // Member join links (A4): students open these with no account
-    pathname.startsWith("/join/") ||
-    pathname === "/invite" ||
-    pathname.startsWith("/invite/")
-  );
-}
+import { isSessionExpired } from "@/src/lib/auth/session-config";
+import { INVITE_COOKIE_NAME } from "@/src/lib/auth/session-invite";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/src/lib/supabase/env";
+import { SESSION_COOKIE_OPTIONS, withSessionDefaults } from "@/src/lib/supabase/cookie-options";
+import { getLatestOrgId } from "@/src/lib/orgs/memberships";
+import { isValidInviteToken } from "@/src/lib/invites/tokens";
+import { ROUTES, isPublicPath, officerLandingPath, signInPath } from "@/src/lib/routes";
 
 function rawPendingInviteCookie(request: NextRequest) {
   return request.cookies.has(INVITE_COOKIE_NAME);
@@ -26,34 +15,21 @@ function rawPendingInviteCookie(request: NextRequest) {
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
-    {
-      cookieOptions: {
-        maxAge: SESSION_MAX_SECONDS,
-        sameSite: "lax",
-        path: "/",
+  const supabase = createServerClient(getSupabaseUrl(), getSupabaseAnonKey(), {
+    cookieOptions: SESSION_COOKIE_OPTIONS,
+    cookies: {
+      getAll() {
+        return request.cookies.getAll();
       },
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, {
-              ...options,
-              maxAge: options?.maxAge ?? SESSION_MAX_SECONDS,
-              sameSite: (options?.sameSite as "lax" | "strict" | "none") ?? "lax",
-              path: options?.path ?? "/",
-            })
-          );
-        },
+      setAll(cookiesToSet) {
+        cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+        response = NextResponse.next({ request });
+        cookiesToSet.forEach(({ name, value, options }) =>
+          response.cookies.set(name, value, withSessionDefaults(options))
+        );
       },
-    }
-  );
+    },
+  });
 
   // Validates the session with Supabase and refreshes it when needed
   const {
@@ -69,7 +45,7 @@ export async function proxy(request: NextRequest) {
 
   if (user && isSessionExpired(user.last_sign_in_at)) {
     await supabase.auth.signOut();
-    return redirectTo("/signin?error=session_expired");
+    return redirectTo(signInPath("session_expired"));
   }
 
   // If user is authenticated, enforce workspace assignment & 1 officer -> 1 org policy
@@ -81,38 +57,27 @@ export async function proxy(request: NextRequest) {
     // Entry and create-workspace screens: an officer who already has an org goes
     // to it (one org per officer in v0.2); one without goes to the create screen.
     const isEntryOrCreate =
-      pathname === "/" ||
-      pathname === "/signin" ||
-      pathname === "/register" ||
-      pathname === "/orgs/new";
+      pathname === ROUTES.home ||
+      pathname === ROUTES.signIn ||
+      pathname === ROUTES.register ||
+      pathname === ROUTES.newWorkspace;
 
     if (isEntryOrCreate) {
       // As the signed-in officer, so row level security applies
-      const { data: membership } = await supabase
-        .from("org_officers")
-        .select("org_id")
-        .eq("officer_id", user.id)
-        .order("joined_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const orgId = await getLatestOrgId(supabase, user.id);
 
-      if (membership?.org_id) {
-        return redirectTo(`/workspace/${membership.org_id}`);
-      }
+      // Ticket Conflict 5: An invitee has no org yet, so the invite must take
+      // priority over the create screen (officerLandingPath orders them)
+      const destination = officerLandingPath({ orgId, pendingInvite });
 
-      // Ticket Conflict 5: An invitee has no org yet, so the invite must take priority over /orgs/new
-      if (pendingInvite) {
-        return redirectTo(`/invite/${pendingInvite}`);
-      }
-
-      if (pathname !== "/orgs/new") {
-        return redirectTo("/orgs/new");
+      if (destination !== pathname) {
+        return redirectTo(destination);
       }
     }
   }
 
-  if (!user && !isPublic(request.nextUrl.pathname)) {
-    return redirectTo("/signin");
+  if (!user && !isPublicPath(request.nextUrl.pathname)) {
+    return redirectTo(ROUTES.signIn);
   }
 
   // Once an officer is inside a workspace, the invite flow is over. Pages cannot

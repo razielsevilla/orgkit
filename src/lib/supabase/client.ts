@@ -1,5 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { SESSION_MAX_SECONDS } from "@/src/lib/session-config";
+import { SESSION_MAX_SECONDS } from "@/src/lib/auth/session-config";
 
 function getSupabaseUrl(): string {
   let url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();

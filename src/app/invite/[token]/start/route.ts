@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { setPendingInviteCookie } from "@/src/lib/session-invite";
-import { isValidInviteToken } from "@/src/lib/tokens";
+import { setPendingInviteCookie } from "@/src/lib/auth/session-invite";
+import { isValidInviteToken } from "@/src/lib/invites/tokens";
+import { ROUTES } from "@/src/lib/routes";
 
 interface RouteContext {
   params: Promise<{ token: string }>;
@@ -31,9 +32,9 @@ export async function GET(request: Request, { params }: RouteContext) {
   const requestUrl = new URL(request.url);
 
   if (!isValidInviteToken(token)) {
-    return NextResponse.redirect(new URL("/signin", requestUrl.origin));
+    return NextResponse.redirect(new URL(ROUTES.signIn, requestUrl.origin));
   }
 
   await setPendingInviteCookie(token);
-  return NextResponse.redirect(new URL("/consent", requestUrl.origin));
+  return NextResponse.redirect(new URL(ROUTES.consent, requestUrl.origin));
 }

@@ -1,26 +1,24 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/src/lib/supabase/server";
+import { getSessionUser } from "@/src/lib/auth/session-user";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
-import { getFullName, getGoogleSub } from "@/src/lib/google-sub";
-import { CONSENT_VERSION } from "@/src/lib/consent-config";
-import { getPendingInviteCookie } from "@/src/lib/session-invite";
+import { getFullName, getGoogleSub } from "@/src/lib/auth/google-sub";
+import { CONSENT_VERSION } from "@/src/lib/auth/consent-config";
+import { getPendingInviteCookie } from "@/src/lib/auth/session-invite";
+import { ROUTES, officerLandingPath, signInPath } from "@/src/lib/routes";
 
 /** The officer ticked "I agree": create the account and store the agreement. */
 export async function acceptConsent(formData: FormData) {
-  if (formData.get("agree") !== "on") redirect("/consent");
+  if (formData.get("agree") !== "on") redirect(ROUTES.consent);
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/signin");
+  const { supabase, user } = await getSessionUser();
+  if (!user) redirect(ROUTES.signIn);
 
   const googleSub = getGoogleSub(user);
   if (!googleSub) {
     await supabase.auth.signOut();
-    redirect("/signin?error=google_error");
+    redirect(signInPath("google_error"));
   }
 
   const now = new Date().toISOString();
@@ -39,23 +37,16 @@ export async function acceptConsent(formData: FormData) {
   if (error && error.code !== "23505") {
     console.error("Error creating officer:", error);
     await supabase.auth.signOut();
-    redirect("/signin?error=google_error");
+    redirect(signInPath("google_error"));
   }
 
-  const pendingToken = await getPendingInviteCookie();
-  if (pendingToken) {
-    redirect(`/invite/${pendingToken}`);
-  }
-
-  redirect("/orgs/new");
+  // A pending invite comes first, then the create screen
+  redirect(officerLandingPath({ pendingInvite: await getPendingInviteCookie() }));
 }
 
 /** The officer chose not to agree: no account is kept. */
 export async function declineConsent() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await getSessionUser();
 
   if (user) {
     const admin = createAdminClient();
@@ -72,5 +63,5 @@ export async function declineConsent() {
   }
 
   await supabase.auth.signOut();
-  redirect("/signin");
+  redirect(ROUTES.signIn);
 }

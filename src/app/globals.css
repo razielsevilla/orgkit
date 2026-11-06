@@ -1,13 +1,40 @@
 @import "tailwindcss";
 
+/*
+ * OrgKit design tokens (see docs/palette.md). Components read them with
+ * var(--color-…) in inline styles, so the palette lives in one place.
+ * Tailwind is not wired into the build here (there is no PostCSS config), so
+ * these are plain CSS variables and the few utility classes below are
+ * hand-written; only the classes defined in this file exist.
+ */
 :root {
+  /* Core palette */
   --color-base: #f4f4f5;
+  --color-base-soft: #fafafa;
   --color-surface: #ffffff;
+  --color-on-accent: #ffffff;
   --color-ink: #18181b;
+  --color-ink-soft: #3f3f46;
+  --color-muted-strong: #52525b;
   --color-muted: #71717a;
+  --color-muted-soft: #a1a1aa;
   --color-line: #e4e4e7;
+  --color-line-strong: #d4d4d8;
+
+  /* Accent (the only brand color) */
   --color-accent: #059669;
   --color-accent-strong: #047857;
+  --color-accent-bright: #10b981;
+  --color-accent-soft: #d1fae5;
+
+  /* Status */
+  --color-danger: #dc2626;
+  --color-danger-strong: #b91c1c;
+  --color-danger-soft: #fef2f2;
+  --color-danger-line: #fca5a5;
+  --color-warning: #b45309;
+  --color-warning-soft: #fef3c7;
+  --color-warning-line: #fde68a;
 }
 
 .bg-base { background-color: var(--color-base); }
@@ -27,4 +54,238 @@ body {
   background-color: var(--color-base);
   color: var(--color-ink);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Shared animations: define once here, never inside a component */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Entrance and ambient animations shared by the join and workspace pages */
+@keyframes cardPopout {
+  0% { opacity: 0; transform: scale(0.92) translateY(12px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@keyframes burstTL {
+  0% { opacity: 0; transform: translate(140px, 90px) scale(0.2) rotate(0deg); }
+  65% { opacity: 1; transform: translate(-4px, -4px) scale(1.08) rotate(-9deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(-7deg); }
+}
+
+@keyframes burstFL {
+  0% { opacity: 0; transform: translate(170px, 0) scale(0.2) rotate(0deg); }
+  65% { opacity: 1; transform: translate(-5px, 0) scale(1.08) rotate(-7deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(-5deg); }
+}
+
+@keyframes burstBL {
+  0% { opacity: 0; transform: translate(140px, -90px) scale(0.2) rotate(0deg); }
+  65% { opacity: 1; transform: translate(-4px, 4px) scale(1.08) rotate(9deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(7deg); }
+}
+
+@keyframes burstTR {
+  0% { opacity: 0; transform: translate(-140px, 90px) scale(0.2) rotate(0deg); }
+  65% { opacity: 1; transform: translate(4px, -4px) scale(1.08) rotate(9deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(7deg); }
+}
+
+@keyframes burstFR {
+  0% { opacity: 0; transform: translate(-170px, 0) scale(0.2) rotate(0deg); }
+  65% { opacity: 1; transform: translate(5px, 0) scale(1.08) rotate(7deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(5deg); }
+}
+
+@keyframes burstBR {
+  0% { opacity: 0; transform: translate(-150px, -90px) scale(0.2) rotate(0deg); }
+  65% { opacity: 1; transform: translate(5px, 4px) scale(1.08) rotate(-7.5deg); }
+  100% { opacity: 1; transform: translate(0, 0) scale(1) rotate(-6deg); }
+}
+
+@keyframes burstDot {
+  0% { opacity: 0; transform: scale(0); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes ambientFloatA {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes ambientFloatB {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(4px); }
+}
+
+.orgkit-burst-tl { animation: burstTL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.04s both; }
+.orgkit-burst-fl { animation: burstFL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.08s both; }
+.orgkit-burst-bl { animation: burstBL 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.12s both; }
+.orgkit-burst-tr { animation: burstTR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.06s both; }
+.orgkit-burst-fr { animation: burstFR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.1s both; }
+.orgkit-burst-br { animation: burstBR 0.52s cubic-bezier(0.16, 1.25, 0.38, 1) 0.14s both; }
+.orgkit-burst-dot { animation: burstDot 0.4s ease 0.2s both; }
+.orgkit-float-a { animation: ambientFloatA 3.4s ease-in-out infinite; }
+.orgkit-float-b { animation: ambientFloatB 3.8s ease-in-out infinite; }
+
+/*
+ * Loading animation for the workspace canvas (the sidebar never animates). The
+ * OrgKit mark sits in a soft emerald disc. An emerald arc is anchored at the top
+ * of the ring and its other end travels clockwise round it until the two ends
+ * meet; rings spread out like the concentric circles that frame the backdrop.
+ * The arc's length is set from script (WorkspaceContentLoader, loader-timing.ts),
+ * which is why it has no keyframes here. The component sets --loader-offset so
+ * every copy carries on from where the last one stopped. It fades in after a
+ * short delay so quick page changes never flash it.
+ */
+@keyframes loaderIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes loaderRing {
+  0% { transform: scale(1); opacity: 0; }
+  18% { opacity: 0.6; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+@keyframes loaderMark {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.07); }
+}
+
+.orgkit-loader { animation: loaderIn 0.25s ease calc(0.15s + var(--loader-offset, 0s)) both; }
+.orgkit-loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-accent);
+  opacity: 0;
+  animation: loaderRing 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  animation-delay: var(--loader-offset, 0s);
+}
+.orgkit-loader-ring:nth-child(2) { animation-delay: calc(0.8s + var(--loader-offset, 0s)); }
+.orgkit-loader-ring:nth-child(3) { animation-delay: calc(1.6s + var(--loader-offset, 0s)); }
+.orgkit-loader-mark { animation: loaderMark 2.4s ease-in-out infinite; animation-delay: var(--loader-offset, 0s); }
+
+/* The page is ready: the rings stop while the arc closes the circle */
+.orgkit-loader.is-finishing .orgkit-loader-ring { animation: none; opacity: 0; }
+
+/*
+ * Reduced motion: the rings and the pulse stop. The travelling arc stays: it is
+ * the signal that something is loading, and it moves round the ring once, in a
+ * small area, rather than spinning.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .orgkit-loader-ring { animation: none; opacity: 0; }
+  .orgkit-loader-mark { animation: none; }
+}
+
+/*
+ * The "flow" loader (see loader-variant.ts): the OrgKit logo as a faint ghost,
+ * with emerald flowing up through its shape. Each layer is the logo's own
+ * silhouette (orgkit-logo-mask.png) used as a mask, so the color can only show
+ * inside the logo. The band is a tall strip of gradient that slides up by one
+ * period per cycle; because the gradient repeats every 200px, the loop has no
+ * seam. Only transforms and opacity move.
+ *
+ * Sizes: the stage keeps the mask's 480:351 shape (156 x 114); the strip's
+ * period (200px) is well over the logo's height (114px), so the logo really
+ * empties between passes: the bottom fills while the top is clear, the color
+ * reaches the top as the bottom empties, and it goes round again. Change
+ * --flow-duration to change the speed.
+ */
+@keyframes flowUp {
+  from { transform: translateY(0); }
+  to { transform: translateY(-200px); }
+}
+
+@keyframes flowGlow {
+  0%, 100% { transform: scale(1); opacity: 0.65; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+.orgkit-flow { --flow-duration: 1.5s; }
+.orgkit-flow-stage { position: relative; width: 156px; height: 114px; }
+
+.orgkit-flow-glow {
+  position: absolute;
+  inset: -64px -80px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--color-accent) 17%, transparent), transparent);
+  animation: flowGlow 2.8s ease-in-out infinite;
+  animation-delay: var(--loader-offset, 0s);
+}
+
+.orgkit-flow-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  -webkit-mask: url(/orgkit-logo-mask.png) center / 100% 100% no-repeat;
+  mask: url(/orgkit-logo-mask.png) center / 100% 100% no-repeat;
+}
+
+.orgkit-flow-ghost { background-color: color-mix(in srgb, var(--color-accent) 13%, transparent); }
+
+.orgkit-flow-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: calc(114px + 200px);
+  /* Top to bottom: clear, a bright leading edge, the body, then a soft fade. It moves up, so the bright edge arrives first. */
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 12px,
+    color-mix(in srgb, var(--color-accent-bright) 55%, white) 30px,
+    var(--color-accent-bright) 42px,
+    var(--color-accent) 82px,
+    color-mix(in srgb, var(--color-accent-strong) 55%, transparent) 114px,
+    transparent 134px,
+    transparent 200px
+  );
+  animation: flowUp var(--flow-duration) linear infinite;
+  animation-delay: var(--loader-offset, 0s);
+  will-change: transform;
+}
+
+/* The page is ready: the whole logo fills in */
+.orgkit-flow-solid {
+  background: linear-gradient(to top, var(--color-accent-strong), var(--color-accent) 55%, var(--color-accent-bright));
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.orgkit-flow.is-finishing .orgkit-flow-solid { opacity: 1; }
+
+/* Reduced motion: the glow stops pulsing. The flow stays: it is the loading signal. */
+@media (prefers-reduced-motion: reduce) {
+  .orgkit-flow-glow { animation: none; opacity: 1; }
+}
+
+/* Safety net for the reveal gate: if scripts never run, show the page after 6s anyway */
+@keyframes revealContentSafety { to { visibility: visible; opacity: 1; } }
+@keyframes revealOverlaySafety { to { opacity: 0; visibility: hidden; } }
+.orgkit-reveal-content { animation: revealContentSafety 0s linear 6s forwards; }
+.orgkit-reveal-overlay { animation: revealOverlaySafety 0s linear 6s forwards; }
+
+@media (max-width: 639px) {
+  .orgkit-floating-decor {
+    display: none !important;
+  }
+}
+
+/* Visually hidden, still read by screen readers (used for live regions) */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
