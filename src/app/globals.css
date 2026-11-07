@@ -132,59 +132,19 @@ body {
 
 /*
  * Loading animation for the workspace canvas (the sidebar never animates). The
- * OrgKit mark sits in a soft emerald disc. An emerald arc is anchored at the top
- * of the ring and its other end travels clockwise round it until the two ends
- * meet; rings spread out like the concentric circles that frame the backdrop.
- * The arc's length is set from script (WorkspaceContentLoader, loader-timing.ts),
- * which is why it has no keyframes here. The component sets --loader-offset so
- * every copy carries on from where the last one stopped. It fades in after a
- * short delay so quick page changes never flash it.
+ * component sets --loader-offset so every copy carries on from where the last
+ * one stopped. It fades in after a short delay so quick page changes never
+ * flash it.
  */
 @keyframes loaderIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 
-@keyframes loaderRing {
-  0% { transform: scale(1); opacity: 0; }
-  18% { opacity: 0.6; }
-  100% { transform: scale(2.6); opacity: 0; }
-}
-
-@keyframes loaderMark {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.07); }
-}
-
 .orgkit-loader { animation: loaderIn 0.25s ease calc(0.15s + var(--loader-offset, 0s)) both; }
-.orgkit-loader-ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1.5px solid var(--color-accent);
-  opacity: 0;
-  animation: loaderRing 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
-  animation-delay: var(--loader-offset, 0s);
-}
-.orgkit-loader-ring:nth-child(2) { animation-delay: calc(0.8s + var(--loader-offset, 0s)); }
-.orgkit-loader-ring:nth-child(3) { animation-delay: calc(1.6s + var(--loader-offset, 0s)); }
-.orgkit-loader-mark { animation: loaderMark 2.4s ease-in-out infinite; animation-delay: var(--loader-offset, 0s); }
-
-/* The page is ready: the rings stop while the arc closes the circle */
-.orgkit-loader.is-finishing .orgkit-loader-ring { animation: none; opacity: 0; }
 
 /*
- * Reduced motion: the rings and the pulse stop. The travelling arc stays: it is
- * the signal that something is loading, and it moves round the ring once, in a
- * small area, rather than spinning.
- */
-@media (prefers-reduced-motion: reduce) {
-  .orgkit-loader-ring { animation: none; opacity: 0; }
-  .orgkit-loader-mark { animation: none; }
-}
-
-/*
- * The "flow" loader (see loader-variant.ts): the OrgKit logo as a faint ghost,
+ * The "flow" loader: the OrgKit logo as a faint ghost,
  * with emerald flowing up through its shape. Each layer is the logo's own
  * silhouette (orgkit-logo-mask.png) used as a mask, so the color can only show
  * inside the logo. The band is a tall strip of gradient that slides up by one

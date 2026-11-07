@@ -1,9 +1,8 @@
 /**
  * Consent text a student agrees to when joining an org (A4).
  *
- * PLACEHOLDER WORDING: the final D4 text, the privacy contact and a
- * native-speaker check of the Filipino text are still open (ticket open
- * question 6). Do not turn the join link on for a real org until they are in.
+ * Both the English and Filipino wording are approved. The privacy contact comes
+ * from PRIVACY_CONTACT_EMAIL, and the join page stays closed while it is unset.
  *
  * Never edit a published version. Change the wording by adding a new version
  * and pointing CURRENT_MEMBER_CONSENT at it, so every stored record still maps

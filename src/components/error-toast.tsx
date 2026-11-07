@@ -5,11 +5,10 @@ import React, {
   useState,
   useRef,
   useCallback,
-  createContext,
-  useContext,
 } from "react";
 import { createPortal } from "react-dom";
 import { AlertCircle, X } from "lucide-react";
+import { useMounted } from "@/src/lib/use-mounted";
 
 export type ErrorToastPosition = "bottom-right" | "bottom-left";
 
@@ -63,15 +62,11 @@ export function ErrorToast({
   shake = true,
   title,
 }: ErrorToastProps) {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useMounted();
   const [visibleMessage, setVisibleMessage] = useState<string | null>(message || null);
   const [isExiting, setIsExiting] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const prevMessageRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -99,18 +94,23 @@ export function ErrorToast({
     }
   }, [autoDismissMs, clearTimer, handleDismiss, visibleMessage]);
 
+  // A new message from the parent shows right away. This is state adjusted
+  // while rendering, not in an effect, so there is no extra render pass.
+  const [shownFor, setShownFor] = useState(message);
+  if (message !== shownFor) {
+    setShownFor(message);
+    setVisibleMessage(message || null);
+    setIsExiting(false);
+  }
+
   useEffect(() => {
     if (message) {
-      setVisibleMessage(message);
-      setIsExiting(false);
-
       // Trigger slight screen shake if it's a new or updated error
       if (shake && message !== prevMessageRef.current) {
         triggerScreenShake();
       }
       prevMessageRef.current = message;
     } else {
-      setVisibleMessage(null);
       prevMessageRef.current = null;
     }
   }, [message, shake]);
@@ -294,47 +294,4 @@ export function ErrorToast({
     </>,
     document.body
   );
-}
-
-// ─── Optional Context & Hook for Imperative Error Toasts ───────────────────
-
-interface ErrorToastContextType {
-  showError: (message: string, options?: Partial<ErrorToastProps>) => void;
-  clearError: () => void;
-}
-
-const ErrorToastContext = createContext<ErrorToastContextType | null>(null);
-
-export function ErrorToastProvider({ children }: { children: React.ReactNode }) {
-  const [toastState, setToastState] = useState<{
-    message: string | null;
-    options?: Partial<ErrorToastProps>;
-  }>({ message: null });
-
-  const showError = useCallback((message: string, options?: Partial<ErrorToastProps>) => {
-    setToastState({ message, options });
-  }, []);
-
-  const clearError = useCallback(() => {
-    setToastState((prev) => (prev.message ? { ...prev, message: null } : prev));
-  }, []);
-
-  return (
-    <ErrorToastContext.Provider value={{ showError, clearError }}>
-      {children}
-      <ErrorToast
-        message={toastState.message}
-        onDismiss={clearError}
-        {...toastState.options}
-      />
-    </ErrorToastContext.Provider>
-  );
-}
-
-export function useErrorToast() {
-  const context = useContext(ErrorToastContext);
-  if (!context) {
-    throw new Error("useErrorToast must be used within an ErrorToastProvider");
-  }
-  return context;
 }

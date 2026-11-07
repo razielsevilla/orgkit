@@ -2,8 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { plusJakarta } from "@/src/lib/fonts";
 import { ROUTES } from "@/src/lib/routes";
+import { parseContactEmail } from "@/src/lib/members/member-join";
 
 export default function PrivacyPage() {
+  const contactEmail = parseContactEmail(process.env.PRIVACY_CONTACT_EMAIL);
+
   return (
     <main
       className={plusJakarta.className}
@@ -77,7 +80,7 @@ export default function PrivacyPage() {
               marginBottom: 0,
             }}
           >
-            Last updated: November 1, 2026
+            Last updated: November 7, 2026
           </p>
         </div>
 
@@ -198,6 +201,85 @@ export default function PrivacyPage() {
             </ul>
           </div>
 
+          {/* Section: Members (students who join an org through its link or QR) */}
+          <div id="members" style={{ marginBottom: 28, scrollMarginTop: 24 }}>
+            <h2
+              style={{
+                fontSize: "clamp(16px, 1.25vw, 18px)",
+                fontWeight: 700,
+                color: "var(--color-ink)",
+                marginTop: 0,
+                marginBottom: 14,
+              }}
+            >
+              If you join an org as a member
+            </h2>
+            <p
+              style={{
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "var(--color-ink-soft)",
+                marginTop: 0,
+                marginBottom: 12,
+              }}
+            >
+              Students join a student organization through a link or QR code that its officers share.
+              You do not create an OrgKit account. This section explains what happens to the details
+              you give when you do. It is in addition to the consent text you see when you join.
+            </p>
+            <ul
+              style={{
+                listStyleType: "disc",
+                paddingLeft: 22,
+                margin: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 12,
+                fontSize: "clamp(14px, 1vw, 15px)",
+                lineHeight: 1.6,
+                color: "var(--color-ink-soft)",
+              }}
+            >
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>What we collect.</strong> Your full name and
+                email address. We also record which consent wording you saw, in which language, and when you
+                agreed, and that you confirmed you are 18 or older. We do not collect anything else when you join.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Why.</strong> So the org can manage its
+                membership, attendance and dues. Your details are not used for advertising and are never sold.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Who can see it.</strong> Only the officers of the
+                org you joined. Another org&apos;s officers cannot see it, and neither can other members.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Pending until confirmed.</strong> A new join
+                is marked as pending until an officer of the org confirms you.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>How long we keep it.</strong> For as long as you
+                stay on the org&apos;s list, and until you ask us to delete it.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Your rights.</strong> Under the Philippine Data
+                Privacy Act you can ask to see, correct or delete your details, and withdraw your consent.
+                {contactEmail ? (
+                  <>
+                    {" "}
+                    Write to <a href={`mailto:${contactEmail}`} style={{ color: "var(--color-accent)" }}>{contactEmail}</a>.
+                  </>
+                ) : (
+                  <> Ask the officers of your org, who can reach us on your behalf.</>
+                )}
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Under 18.</strong> Joining is for members aged 18
+                or over. If you are younger, please do not join.
+              </li>
+            </ul>
+          </div>
+
           {/* Section: Your rights */}
           <div style={{ marginBottom: 32 }}>
             <h2
@@ -230,6 +312,13 @@ export default function PrivacyPage() {
               <li>
                 You can request deletion of your officer record through your student organization administrator
                 or by contacting OrgKit support.
+                {contactEmail ? (
+                  <>
+                    {" "}
+                    Privacy questions and requests:{" "}
+                    <a href={`mailto:${contactEmail}`} style={{ color: "var(--color-accent)" }}>{contactEmail}</a>.
+                  </>
+                ) : null}
               </li>
             </ul>
           </div>

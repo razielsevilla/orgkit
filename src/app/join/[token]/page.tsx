@@ -6,7 +6,7 @@ import { plusJakarta } from "@/src/lib/fonts";
 import { Link2Off } from "lucide-react";
 import { Card, CardBadge, CardTitle, CardDescription } from "@/src/components/ui/card";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
-import { JOIN_MESSAGES } from "@/src/lib/members/member-join";
+import { JOIN_MESSAGES, parseContactEmail } from "@/src/lib/members/member-join";
 import { getJoinOrgName } from "@/src/lib/members/member-join-server";
 import { JoinForm } from "@/src/components/join/join-form";
 import { JoinBackdrop } from "@/src/components/join/join-backdrop";
@@ -81,9 +81,15 @@ function JoinLoadingCard() {
 async function JoinContent({ params }: { params: Promise<{ token: string }> }) {
   await connection();
   const { token } = await params;
-  const orgName = await getJoinOrgName(token);
 
-  if (!orgName) {
+  // The consent text promises a privacy contact. Without one the page must not
+  // collect anything, so it looks the same as an inactive link.
+  const contactEmail = parseContactEmail(process.env.PRIVACY_CONTACT_EMAIL);
+  if (!contactEmail) console.error("PRIVACY_CONTACT_EMAIL is not set: the join page is closed.");
+
+  const orgName = contactEmail ? await getJoinOrgName(token) : null;
+
+  if (!orgName || !contactEmail) {
     return (
       <Card maxWidth={460} padding="clamp(32px, 4vw, 44px) clamp(24px, 3vw, 36px)">
         <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -120,7 +126,7 @@ async function JoinContent({ params }: { params: Promise<{ token: string }> }) {
     <JoinForm
       token={token}
       orgName={orgName}
-      contactEmail={process.env.PRIVACY_CONTACT_EMAIL?.trim() || "[privacy contact email]"}
+      contactEmail={contactEmail}
     />
   );
 }

@@ -23,10 +23,3 @@ export function WorkspaceLoadingSkeleton() {
     </div>
   );
 }
-
-/**
- * Canvas loading animation for smooth route transitions within the workspace.
- */
-export function WorkspaceCanvasSkeleton() {
-  return <FlowLoader />;
-}

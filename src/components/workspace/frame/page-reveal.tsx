@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { takeLoaderElapsed } from "./loader-clock";
-import { ARC_FINISH_MS, REVEAL_FADE_MS, remainingLoaderMs } from "./loader-timing";
+import { FINISH_MS, REVEAL_FADE_MS, remainingLoaderMs } from "./loader-timing";
 import { WorkspaceContentLoader } from "./workspace-content-loader";
 
 type Phase = "covering" | "finishing" | "revealing" | "done";
@@ -10,7 +10,7 @@ type Phase = "covering" | "finishing" | "revealing" | "done";
 /**
  * Wraps a workspace screen's content. When the content arrives it is held back
  * behind the loading animation until the animation has shown for its minimum
- * time (see loader-timing.ts), then the arc closes into a full circle and the
+ * time (see loader-timing.ts), then the logo fills in solid and the
  * content fades in. The animation carries on from the loader that was showing
  * while the data loaded, so it doesn't restart.
  *
@@ -28,8 +28,8 @@ export function PageReveal({ children }: { children: React.ReactNode }) {
       setTimeout(() => {
         const wait = remainingLoaderMs(takeLoaderElapsed());
         timers.push(setTimeout(() => setPhase("finishing"), wait));
-        timers.push(setTimeout(() => setPhase("revealing"), wait + ARC_FINISH_MS));
-        timers.push(setTimeout(() => setPhase("done"), wait + ARC_FINISH_MS + REVEAL_FADE_MS));
+        timers.push(setTimeout(() => setPhase("revealing"), wait + FINISH_MS));
+        timers.push(setTimeout(() => setPhase("done"), wait + FINISH_MS + REVEAL_FADE_MS));
       }, 0)
     );
 
