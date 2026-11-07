@@ -125,6 +125,22 @@ describe("confirm_member security definer function", () => {
     assert.equal(res.rows[0].confirm_member, "ok");
   });
 
+  it("refuses an officer of org A when attempting to confirm a member of org B", async () => {
+    const err = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        getDb().query(`select public.confirm_member($1)`, [memberB])
+      )
+    );
+    assert.ok(err);
+    assert.match(err, /Not permitted/);
+
+    const check = await getDb().query<{ status: string }>(
+      `select status from public.members where id = $1`,
+      [memberB]
+    );
+    assert.equal(check.rows[0].status, "pending");
+  });
+
   it("refuses an officer from another org and leaves the member unchanged", async () => {
     const err = await errorOf(() =>
       as("authenticated", adminB, () =>
