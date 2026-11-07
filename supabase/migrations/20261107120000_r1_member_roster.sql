@@ -101,7 +101,7 @@ begin
     into active_token
     from public.org_join_links
    where org_id = target_org
-     and is_active = true
+     and active = true
    limit 1;
 
   return active_token;
