@@ -1,13 +1,16 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { isUuid } from "@/src/lib/validation";
+import { getWorkspaceMembers } from "@/src/app/(workspace)/members-actions";
+import { MembersClient } from "@/src/components/workspace/members/members-client";
+import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import {
   getOrganizationById,
-  getOfficerDefaultWorkspace,
   getCurrentOfficer,
+  getOfficerDefaultWorkspace,
 } from "@/src/app/(workspace)/actions";
-import { isUuid } from "@/src/lib/validation";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
-import { officerLandingPath } from "@/src/lib/routes";
 import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
 import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
 
@@ -17,11 +20,43 @@ interface MembersPageProps {
 
 async function MembersContent({ params }: MembersPageProps) {
   await connection();
-  const { id } = await params;
+  const { id: rawId } = await params;
 
-  const org = isUuid(id) ? await getOrganizationById(id) : null;
+  // A malformed ID can't be an org
+  if (!rawId || !isUuid(rawId)) {
+    const [officer, workspace] = await Promise.all([
+      getCurrentOfficer(),
+      getOfficerDefaultWorkspace(),
+    ]);
+    return (
+      <WorkspaceNotFound
+        officer={officer}
+        workspaceHref={officerLandingPath({ orgId: workspace?.orgId })}
+      />
+    );
+  }
 
+  // Check caller belongs to this org
+  const org = await getOrganizationById(rawId);
   if (!org) {
+    const [officer, workspace] = await Promise.all([
+      getCurrentOfficer(),
+      getOfficerDefaultWorkspace(),
+    ]);
+    return (
+      <WorkspaceNotFound
+        officer={officer}
+        workspaceHref={officerLandingPath({ orgId: workspace?.orgId })}
+      />
+    );
+  }
+
+  const membersRes = await getWorkspaceMembers(rawId);
+
+  if (!membersRes.success || !membersRes.data) {
+    if (membersRes.error === "not_authenticated") {
+      redirect(ROUTES.signIn);
+    }
     const [officer, workspace] = await Promise.all([
       getCurrentOfficer(),
       getOfficerDefaultWorkspace(),
@@ -36,17 +71,15 @@ async function MembersContent({ params }: MembersPageProps) {
 
   return (
     <PageReveal>
-      <div style={{ padding: "32px 24px" }}>
-        <h1 style={{ fontSize: "20px", fontWeight: 700, color: "var(--color-foreground)" }}>Members</h1>
-      </div>
+      <MembersClient rawId={rawId} initialData={membersRes.data} />
     </PageReveal>
   );
 }
 
-export default function MembersPage({ params }: MembersPageProps) {
+export default function MembersPage(props: MembersPageProps) {
   return (
     <Suspense fallback={<WorkspaceContentLoader />}>
-      <MembersContent params={params} />
+      <MembersContent {...props} />
     </Suspense>
   );
 }
