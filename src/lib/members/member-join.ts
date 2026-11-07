@@ -24,6 +24,16 @@ export function isValidEmail(email: string): boolean {
   return email.length <= 254 && EMAIL_PATTERN.test(email);
 }
 
+/**
+ * The privacy contact shown in the consent text and the privacy notice, from
+ * PRIVACY_CONTACT_EMAIL. Null when it is missing or doesn't look like an email,
+ * so callers can refuse to collect member data instead of showing a placeholder.
+ */
+export function parseContactEmail(raw: string | undefined | null): string | null {
+  const email = (raw ?? "").trim();
+  return isValidEmail(email) ? email : null;
+}
+
 /** Tokens are two UUIDs without dashes. Anything else can't be a real link. */
 export function looksLikeToken(token: string): boolean {
   return /^[0-9a-f]{64}$/.test(token);

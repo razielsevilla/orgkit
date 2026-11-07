@@ -123,22 +123,16 @@ describe("workspace loading animation", () => {
     expect(html).not.toContain("orgkit-loader-ring");
   });
 
-  it("keeps the arc animation available", async () => {
-    const html = await renderLoader({ variant: "arc" });
-    expect(html).toContain("orgkit-loader-ring");
-    expect(html).not.toContain("orgkit-flow-strip");
-  });
-
-  it.each(["flow", "arc"])("announces loading and uses no sidebar markup (%s)", async (variant) => {
-    const html = await renderLoader({ variant });
+  it("announces loading and uses no sidebar markup", async () => {
+    const html = await renderLoader();
     expect(html).toContain('role="status"');
     expect(html).toContain("Loading");
     expect(html).not.toContain("<aside");
   });
 
-  it.each(["flow", "arc"])("marks itself finishing when the page is ready (%s)", async (variant) => {
-    expect(await renderLoader({ variant })).not.toContain("is-finishing");
-    expect(await renderLoader({ variant, finishing: true })).toContain("is-finishing");
+  it("marks itself finishing when the page is ready", async () => {
+    expect(await renderLoader()).not.toContain("is-finishing");
+    expect(await renderLoader({ finishing: true })).toContain("is-finishing");
   });
 
   it("shows the same loader beside a still sidebar skeleton on first load", async () => {

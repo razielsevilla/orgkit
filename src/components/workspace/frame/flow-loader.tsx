@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { useLoaderOffset } from "./use-loader-offset";
 
 /**
- * The "flow" loading animation (see loader-variant.ts): the OrgKit logo, drawn
+ * The "flow" loading animation: the OrgKit logo, drawn
  * as a faint ghost, with emerald flowing up through its shape again and again.
  * At any moment the lower part is colored and the top is clear, then the color
  * has travelled to the top and the bottom has emptied, and it carries on. When

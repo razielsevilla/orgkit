@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { isValidInviteToken } from "@/src/lib/invites/tokens";
 
 export const INVITE_COOKIE_NAME = "orgkit_pending_invite";
-export const INVITE_COOKIE_MAX_AGE = 30 * 60; // 30 minutes in seconds
+const INVITE_COOKIE_MAX_AGE = 30 * 60; // 30 minutes in seconds
 
 /**
  * Stores the pending invite token in a short-lived, HttpOnly cookie.

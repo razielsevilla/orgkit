@@ -167,7 +167,7 @@ export function JoinForm({
           {/* Privacy Notice Link */}
           <div>
             <a
-              href={ROUTES.privacy}
+              href={`${ROUTES.privacy}#members`}
               target="_blank"
               rel="noopener"
               className="jf-link"

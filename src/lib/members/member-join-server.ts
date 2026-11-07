@@ -4,14 +4,14 @@ import { looksLikeToken } from "@/src/lib/members/member-join";
 import { allowRequest } from "@/src/lib/rate-limit";
 
 /**
- * Join attempts allowed per device per minute. The ticket asks for 10. A device
- * is an IP address, though, and a whole room can share one campus Wi-Fi or
- * mobile-carrier IP when a QR is shown at an event, so 10 may be too tight
- * there (ticket open question 5 suggests 30). Founders to confirm; set
- * JOIN_ATTEMPTS_PER_MINUTE to change it without a code change.
+ * Join attempts allowed per device per minute. The ticket asked for 10, but a
+ * device is an IP address, and a whole room can share one campus Wi-Fi or
+ * mobile-carrier IP when a QR is shown at an event, so 10 would turn real
+ * students away. The default is 30 (ticket open question 5). Founders to
+ * confirm; set JOIN_ATTEMPTS_PER_MINUTE to change it without a code change.
  */
 export const JOIN_ATTEMPTS_PER_MINUTE =
-  Number(process.env.JOIN_ATTEMPTS_PER_MINUTE) || 10;
+  Number(process.env.JOIN_ATTEMPTS_PER_MINUTE) || 30;
 
 /** The org's name for an active token, or null. Nothing else leaves the server. */
 export async function getJoinOrgName(token: string): Promise<string | null> {

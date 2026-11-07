@@ -1,4 +1,4 @@
-export const btnBase: React.CSSProperties = {
+const btnBase: React.CSSProperties = {
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
