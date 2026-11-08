@@ -60,3 +60,4 @@ export function validateMemberEdit(input: MemberEditInput): MemberEditValidation
     email: cleanedEmail,
   };
 }
+
