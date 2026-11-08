@@ -163,73 +163,60 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
           isRetrying={isLoading || isPending}
         />
 
-        {/* Cards Container with Floating Icons Behind */}
-        <div style={{ position: "relative", width: "100%", marginTop: 8 }}>
-          {/* Floating Icons Decor positioned cleanly around the card boundary */}
-          <MembersFloatingDecor />
+        {/* Filter Toolbar (completely clean, unblocked by any decor) */}
+        {!hasNoOrgMembers && (
+          <MembersSearchFilter
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            pendingCount={data.pendingCount}
+            totalCount={data.totalCount}
+          />
+        )}
 
-          {/* Foreground Content & Cards */}
-          <div
-            style={{
-              position: "relative",
-              zIndex: 2,
-              display: "flex",
-              flexDirection: "column",
-              gap: 20,
-              width: "100%",
-            }}
-          >
-            {/* Filter Toolbar (hidden only when the org has 0 members and no filters active) */}
-            {!hasNoOrgMembers && (
-              <MembersSearchFilter
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                statusFilter={statusFilter}
-                onStatusChange={setStatusFilter}
-                pendingCount={data.pendingCount}
-                totalCount={data.totalCount}
-              />
-            )}
+        {/* Main Content Area framed by Dynamic Floating Decor */}
+        {isLoading || isPending ? (
+          <MemberSkeleton rowCount={Math.min(data.members.length || 5, 8)} />
+        ) : hasNoOrgMembers ? (
+          <MemberEmptyState
+            type="no-members"
+            joinLinkToken={data.joinLinkToken}
+          />
+        ) : hasNoMatches ? (
+          <MemberEmptyState
+            type="no-matches"
+            onClearFilters={handleClearFilters}
+          />
+        ) : (
+          <div style={{ position: "relative", width: "100%", marginTop: 4 }}>
+            {/* Dynamic Floating Icons adjusting to the card's dimensions */}
+            <MembersFloatingDecor />
 
-            {/* Main Content Area */}
-            {isLoading || isPending ? (
-              <MemberSkeleton rowCount={Math.min(data.members.length || 5, 8)} />
-            ) : hasNoOrgMembers ? (
-              <MemberEmptyState
-                type="no-members"
-                joinLinkToken={data.joinLinkToken}
-              />
-            ) : hasNoMatches ? (
-              <MemberEmptyState
-                type="no-matches"
-                onClearFilters={handleClearFilters}
-              />
-            ) : (
-              <>
-                {/* Desktop Table: visible on screens > 640px */}
-                <div className="orgkit-members-desktop">
-                  <MemberTable
-                    members={data.members}
+            <div style={{ position: "relative", zIndex: 2, width: "100%" }}>
+              {/* Desktop Table: visible on screens > 640px */}
+              <div className="orgkit-members-desktop">
+                <MemberTable
+                  members={data.members}
+                  onConfirm={handleConfirm}
+                  confirmingIds={confirmingIds}
+                />
+              </div>
+
+              {/* Mobile Cards: visible only on mobile screens <= 640px */}
+              <div className="orgkit-members-mobile">
+                {data.members.map((member) => (
+                  <MemberMobileCard
+                    key={member.id}
+                    member={member}
                     onConfirm={handleConfirm}
-                    confirmingIds={confirmingIds}
+                    isConfirming={confirmingIds.has(member.id)}
                   />
-                </div>
-
-                {/* Mobile Cards: visible only on mobile screens <= 640px */}
-                <div className="orgkit-members-mobile">
-                  {data.members.map((member) => (
-                    <MemberMobileCard
-                      key={member.id}
-                      member={member}
-                      onConfirm={handleConfirm}
-                      isConfirming={confirmingIds.has(member.id)}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
