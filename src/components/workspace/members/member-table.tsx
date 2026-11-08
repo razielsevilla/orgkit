@@ -1,12 +1,16 @@
 import React from "react";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import { MemberStatusBadge } from "./member-status-badge";
-import { Check } from "lucide-react";
+import { MemberActions } from "./member-actions";
 
 interface MemberTableProps {
   members: WorkspaceMember[];
   onConfirm: (member: WorkspaceMember) => void;
+  onEdit: (member: WorkspaceMember) => void;
+  onDeactivate: (member: WorkspaceMember) => void;
+  onReactivate: (member: WorkspaceMember) => void;
   confirmingIds: Set<string>;
+  reactivatingIds?: Set<string>;
 }
 
 function formatDate(isoString: string): string {
@@ -33,10 +37,18 @@ function getInitials(name: string): string {
 /**
  * Desktop table for the member roster adhering to docs/design.md:
  * - Columns: Member (avatar, name, email with ellipsis truncation and hover tooltip), Status, Joined Date, Actions.
- * - Confirm button rendered strictly for Pending members with explicit accessible aria-label naming the member.
- * - Fluid row hover transitions and subtle borders.
+ * - Actions include Edit, Deactivate, Reactivate, and Confirm with clear accessibility labels.
+ * - Fluid row hover transitions and subtle zinc borders.
  */
-export function MemberTable({ members, onConfirm, confirmingIds }: MemberTableProps) {
+export function MemberTable({
+  members,
+  onConfirm,
+  onEdit,
+  onDeactivate,
+  onReactivate,
+  confirmingIds,
+  reactivatingIds = new Set(),
+}: MemberTableProps) {
   return (
     <div
       tabIndex={0}
@@ -72,23 +84,24 @@ export function MemberTable({ members, onConfirm, confirmingIds }: MemberTablePr
               textTransform: "uppercase",
             }}
           >
-            <th scope="col" style={{ padding: "14px 24px", width: "42%" }}>
+            <th scope="col" style={{ padding: "14px 24px", width: "36%" }}>
               Member
             </th>
-            <th scope="col" style={{ padding: "14px 20px", width: "18%" }}>
+            <th scope="col" style={{ padding: "14px 20px", width: "16%" }}>
               Status
             </th>
-            <th scope="col" style={{ padding: "14px 20px", width: "20%" }}>
+            <th scope="col" style={{ padding: "14px 20px", width: "18%" }}>
               Joined
             </th>
-            <th scope="col" style={{ padding: "14px 24px", width: "20%", textAlign: "right" }}>
-              Action
+            <th scope="col" style={{ padding: "14px 24px", width: "30%", textAlign: "right" }}>
+              Actions
             </th>
           </tr>
         </thead>
         <tbody style={{ fontSize: 13.5 }}>
           {members.map((member, idx) => {
             const isConfirming = confirmingIds.has(member.id);
+            const isReactivating = reactivatingIds.has(member.id);
             const isPending = member.status === "pending";
 
             return (
@@ -99,6 +112,7 @@ export function MemberTable({ members, onConfirm, confirmingIds }: MemberTablePr
                   borderBottom:
                     idx === members.length - 1 ? "none" : "1px solid var(--color-line)",
                   backgroundColor: "transparent",
+                  transition: "background-color 0.15s ease",
                 }}
               >
                 {/* Member Info: Avatar Initials + Truncated Name & Email */}
@@ -180,38 +194,17 @@ export function MemberTable({ members, onConfirm, confirmingIds }: MemberTablePr
                   {formatDate(member.createdAt)}
                 </td>
 
-                {/* Actions: Confirm button strictly for Pending members */}
+                {/* Actions Cell */}
                 <td style={{ padding: "16px 24px", textAlign: "right" }}>
-                  {isPending ? (
-                    <button
-                      type="button"
-                      onClick={() => onConfirm(member)}
-                      disabled={isConfirming}
-                      aria-label={`Confirm ${member.fullName}`}
-                      className="orgkit-btn-accent"
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                        padding: "7px 18px",
-                        borderRadius: 9999,
-                        backgroundColor: "var(--color-accent)",
-                        color: "var(--color-on-accent)",
-                        border: "none",
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: isConfirming ? "not-allowed" : "pointer",
-                        opacity: isConfirming ? 0.7 : 1,
-                        boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
-                        transition: "all 0.15s ease",
-                      }}
-                    >
-                      <Check size={14} strokeWidth={2.5} />
-                      <span>{isConfirming ? "Confirming..." : "Confirm"}</span>
-                    </button>
-                  ) : (
-                    <span style={{ fontSize: 13, color: "var(--color-muted)" }}>—</span>
-                  )}
+                  <MemberActions
+                    member={member}
+                    onConfirm={onConfirm}
+                    onEdit={onEdit}
+                    onDeactivate={onDeactivate}
+                    onReactivate={onReactivate}
+                    isConfirming={isConfirming}
+                    isReactivating={isReactivating}
+                  />
                 </td>
               </tr>
             );
@@ -221,4 +214,3 @@ export function MemberTable({ members, onConfirm, confirmingIds }: MemberTablePr
     </div>
   );
 }
-
