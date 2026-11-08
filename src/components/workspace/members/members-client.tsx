@@ -182,6 +182,12 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
           members: prev.members.map((m) => (m.id === memberId ? oldMember : m)),
         }));
       }
+
+      if (res.error === "not_found") {
+        setToastError("This member was updated by another officer. Refreshing roster...");
+        fetchMembers();
+      }
+
       return { success: false, errorMessage: res.errorMessage };
     }
 
@@ -222,7 +228,22 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
           ? prev.members.map((m) => (m.id === memberId ? oldMember : m))
           : [...prev.members, oldMember],
       }));
-      setToastError(res.errorMessage || "Could not deactivate member. Please try again.");
+
+      const isStale =
+        res.error === "not_found" ||
+        res.errorMessage?.includes("not found") ||
+        res.errorMessage?.includes("transition");
+
+      setToastError(
+        isStale
+          ? "This member was updated by another officer. Refreshing roster..."
+          : res.errorMessage || "Could not deactivate member. Please try again."
+      );
+
+      if (isStale) {
+        fetchMembers();
+      }
+
       return { success: false, errorMessage: res.errorMessage };
     }
 
@@ -267,7 +288,21 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
               ),
         };
       });
-      setToastError(res.errorMessage || "Could not reactivate member. Please try again.");
+
+      const isStale =
+        res.error === "not_found" ||
+        res.errorMessage?.includes("not found") ||
+        res.errorMessage?.includes("transition");
+
+      setToastError(
+        isStale
+          ? "This member was updated by another officer. Refreshing roster..."
+          : res.errorMessage || "Could not reactivate member. Please try again."
+      );
+
+      if (isStale) {
+        fetchMembers();
+      }
     }
 
     setReactivatingIds((prev) => {
