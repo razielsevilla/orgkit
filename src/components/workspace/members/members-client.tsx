@@ -19,7 +19,7 @@ import { MemberMobileCard } from "./member-mobile-card";
 import { MemberSkeleton } from "./member-skeleton";
 import { MemberEmptyState } from "./member-empty-state";
 import { MembersStyles } from "./members-styles";
-import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
+import { MembersFloatingDecor } from "./members-decor";
 import { ErrorToast } from "@/src/components/error-toast";
 
 interface MembersClientProps {
@@ -165,18 +165,8 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
 
         {/* Cards Container with Floating Icons Behind */}
         <div style={{ position: "relative", width: "100%", marginTop: 8 }}>
-          {/* Floating Icons Decor positioned behind the cards */}
-          <div
-            aria-hidden
-            style={{
-              position: "absolute",
-              inset: 0,
-              pointerEvents: "none",
-              zIndex: 0,
-            }}
-          >
-            <FloatingIconsDecor />
-          </div>
+          {/* Floating Icons Decor positioned cleanly around the card boundary */}
+          <MembersFloatingDecor />
 
           {/* Foreground Content & Cards */}
           <div

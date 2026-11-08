@@ -1,20 +1,20 @@
 export function MembersStyles() {
   return (
     <style>{`
-      /* Floating icons hide below 1200px to avoid overlapping cards */
-      @media (max-width: 1200px) {
+      /* Floating icons only hide on small mobile screens */
+      @media (max-width: 639px) {
         .orgkit-floating-decor {
           display: none !important;
         }
       }
 
-      /* Desktop table is default; mobile cards are hidden on desktop */
+      /* Desktop table is default; mobile cards are strictly hidden on desktop */
       .orgkit-members-desktop {
-        display: block;
+        display: block !important;
         width: 100%;
       }
       .orgkit-members-mobile {
-        display: none;
+        display: none !important;
         width: 100%;
       }
 
@@ -45,31 +45,44 @@ export function MembersStyles() {
         }
       }
 
-      /* Micro-interactions & OrgKit button palette */
-      .orgkit-btn-accent:hover:not(:disabled) {
+      /* Primary accent button - signature emerald with zero black */
+      .orgkit-btn-accent,
+      button.orgkit-btn-accent {
+        background-color: var(--color-accent) !important;
+        color: #FFFFFF !important;
+        border-radius: 9999px !important;
+        border: none !important;
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent) !important;
+        transition: all 0.15s ease !important;
+        cursor: pointer !important;
+      }
+      .orgkit-btn-accent:hover:not(:disabled),
+      button.orgkit-btn-accent:hover:not(:disabled) {
         background-color: var(--color-accent-strong) !important;
         box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 28%, transparent) !important;
-        transform: translateY(-1px);
+        transform: translateY(-1px) !important;
       }
-      .orgkit-btn-accent:active:not(:disabled) {
-        transform: translateY(0.5px) scale(0.995);
+      .orgkit-btn-accent:active:not(:disabled),
+      button.orgkit-btn-accent:active:not(:disabled) {
+        transform: translateY(0.5px) scale(0.995) !important;
         box-shadow: 0 1px 3px color-mix(in srgb, var(--color-accent) 20%, transparent) !important;
       }
-      .orgkit-btn-accent:focus-visible {
-        outline: none;
+      .orgkit-btn-accent:focus-visible,
+      button.orgkit-btn-accent:focus-visible {
+        outline: none !important;
         box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-accent) !important;
       }
 
       .orgkit-btn-secondary:hover:not(:disabled) {
         background-color: var(--color-base-soft) !important;
         border-color: var(--color-line-strong) !important;
-        transform: translateY(-1px);
+        transform: translateY(-1px) !important;
       }
       .orgkit-btn-secondary:active:not(:disabled) {
-        transform: translateY(0.5px) scale(0.995);
+        transform: translateY(0.5px) scale(0.995) !important;
       }
       .orgkit-btn-secondary:focus-visible {
-        outline: none;
+        outline: none !important;
         box-shadow: 0 0 0 2px var(--color-surface), 0 0 0 4px var(--color-accent) !important;
       }
 
@@ -83,4 +96,3 @@ export function MembersStyles() {
     `}</style>
   );
 }
-

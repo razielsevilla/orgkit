@@ -47,22 +47,99 @@ export function MemberEmptyState({
         role="region"
         aria-label="No matching members"
         style={{
+          position: "relative",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          padding: "64px 24px",
+          padding: "clamp(48px, 6vw, 64px) clamp(24px, 4vw, 36px)",
           backgroundColor: "var(--color-surface)",
           borderRadius: 24,
           border: "1px solid var(--color-line)",
           textAlign: "center",
-          boxShadow: "0 4px 20px rgba(24, 24, 27, 0.03)",
+          boxShadow: "0 10px 30px rgba(24, 24, 27, 0.04)",
+          overflow: "hidden",
         }}
       >
+        {/* Decorative Geometric Background Circles */}
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: -50,
+            left: -50,
+            width: 180,
+            height: 180,
+            borderRadius: "50%",
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 4%, transparent)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            bottom: -60,
+            right: -60,
+            width: 200,
+            height: 200,
+            borderRadius: "50%",
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 5%, transparent)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Floating Accent Badges around Card */}
+        <div
+          aria-hidden="true"
+          className="orgkit-float-a"
+          style={{
+            position: "absolute",
+            top: 24,
+            left: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 10%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)",
+            color: "var(--color-accent)",
+            boxShadow: "0 8px 20px rgba(5, 150, 105, 0.08)",
+            transform: "rotate(-6deg)",
+          }}
+        >
+          <Users size={20} strokeWidth={2} />
+        </div>
+
+        <div
+          aria-hidden="true"
+          className="orgkit-float-b"
+          style={{
+            position: "absolute",
+            bottom: 24,
+            right: 28,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-line)",
+            color: "var(--color-accent)",
+            boxShadow: "0 10px 25px rgba(24, 24, 27, 0.06)",
+            transform: "rotate(8deg)",
+          }}
+        >
+          <QrCode size={20} strokeWidth={2} />
+        </div>
+
         <div
           style={{
-            width: 52,
-            height: 52,
+            width: 56,
+            height: 56,
             borderRadius: "50%",
             backgroundColor: "color-mix(in srgb, var(--color-line) 60%, transparent)",
             display: "flex",
@@ -72,11 +149,11 @@ export function MemberEmptyState({
             marginBottom: 16,
           }}
         >
-          <SearchX size={24} strokeWidth={1.8} />
+          <SearchX size={26} strokeWidth={1.8} />
         </div>
         <h3
           style={{
-            fontSize: 18,
+            fontSize: 19,
             fontWeight: 700,
             color: "var(--color-ink)",
             marginBottom: 6,
@@ -88,9 +165,9 @@ export function MemberEmptyState({
           style={{
             fontSize: 14,
             color: "var(--color-muted)",
-            maxWidth: 360,
+            maxWidth: 380,
             lineHeight: 1.5,
-            marginBottom: 20,
+            marginBottom: 24,
           }}
         >
           We couldn&apos;t find any roster entries matching your current search query or status filter.
@@ -107,7 +184,7 @@ export function MemberEmptyState({
               padding: "10px 24px",
               borderRadius: 9999,
               backgroundColor: "var(--color-accent)",
-              color: "var(--color-on-accent)",
+              color: "#FFFFFF",
               fontSize: 13.5,
               fontWeight: 600,
               border: "none",
