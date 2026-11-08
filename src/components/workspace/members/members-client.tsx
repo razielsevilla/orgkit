@@ -8,6 +8,8 @@ import type {
 import {
   getWorkspaceMembers,
   confirmMemberAction,
+  updateMemberAction,
+  setMemberStatusAction,
 } from "@/src/app/(workspace)/members-actions";
 import { MembersHeader } from "./members-header";
 import {
@@ -20,6 +22,8 @@ import { MemberSkeleton } from "./member-skeleton";
 import { MemberEmptyState } from "./member-empty-state";
 import { MembersStyles } from "./members-styles";
 import { MembersFloatingDecor } from "./members-decor";
+import { MemberEditDialog } from "./member-edit-dialog";
+import { MemberDeactivateDialog } from "./member-deactivate-dialog";
 import { ErrorToast } from "@/src/components/error-toast";
 
 interface MembersClientProps {
@@ -37,7 +41,11 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError);
   const [toastError, setToastError] = useState<string | null>(null);
+
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
+  const [reactivatingIds, setReactivatingIds] = useState<Set<string>>(new Set());
+  const [editTarget, setEditTarget] = useState<WorkspaceMember | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<WorkspaceMember | null>(null);
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -120,7 +128,6 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
     setConfirmingIds((prev) => new Set(prev).add(targetMember.id));
 
     // Optimistic update
-
     setData((prev) => ({
       ...prev,
       pendingCount: Math.max(0, prev.pendingCount - 1),
@@ -144,6 +151,126 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
     }
 
     setConfirmingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(targetMember.id);
+      return next;
+    });
+  };
+
+  // Optimistic edit without page reload
+  const handleSaveEdit = async (
+    memberId: string,
+    updates: { fullName: string; email: string }
+  ) => {
+    const oldMember = data.members.find((m) => m.id === memberId);
+
+    // Optimistically update
+    setData((prev) => ({
+      ...prev,
+      members: prev.members.map((m) =>
+        m.id === memberId ? { ...m, fullName: updates.fullName, email: updates.email } : m
+      ),
+    }));
+
+    const res = await updateMemberAction(rawId, memberId, updates);
+
+    if (!res.success) {
+      // Rollback to original values
+      if (oldMember) {
+        setData((prev) => ({
+          ...prev,
+          members: prev.members.map((m) => (m.id === memberId ? oldMember : m)),
+        }));
+      }
+      return { success: false, errorMessage: res.errorMessage };
+    }
+
+    return { success: true };
+  };
+
+  // Optimistic deactivation
+  const handleConfirmDeactivate = async (memberId: string) => {
+    const oldMember = data.members.find((m) => m.id === memberId);
+    if (!oldMember) return { success: false, errorMessage: "Member not found." };
+
+    const wasPending = oldMember.status === "pending";
+
+    // Optimistic update
+    setData((prev) => {
+      const isViewingInactive = statusFilter === "inactive";
+      return {
+        ...prev,
+        pendingCount: wasPending ? Math.max(0, prev.pendingCount - 1) : prev.pendingCount,
+        totalCount: Math.max(0, prev.totalCount - 1),
+        matchingCount: isViewingInactive ? prev.matchingCount : Math.max(0, prev.matchingCount - 1),
+        members: isViewingInactive
+          ? prev.members.map((m) => (m.id === memberId ? { ...m, status: "inactive" as const } : m))
+          : prev.members.filter((m) => m.id !== memberId),
+      };
+    });
+
+    const res = await setMemberStatusAction(rawId, memberId, "inactive");
+
+    if (!res.success) {
+      // Rollback
+      setData((prev) => ({
+        ...prev,
+        pendingCount: wasPending ? prev.pendingCount + 1 : prev.pendingCount,
+        totalCount: prev.totalCount + 1,
+        matchingCount: prev.matchingCount + 1,
+        members: prev.members.some((m) => m.id === memberId)
+          ? prev.members.map((m) => (m.id === memberId ? oldMember : m))
+          : [...prev.members, oldMember],
+      }));
+      setToastError(res.errorMessage || "Could not deactivate member. Please try again.");
+      return { success: false, errorMessage: res.errorMessage };
+    }
+
+    return { success: true };
+  };
+
+  // Optimistic reactivation
+  const handleReactivate = async (targetMember: WorkspaceMember) => {
+    if (reactivatingIds.has(targetMember.id)) return;
+
+    setReactivatingIds((prev) => new Set(prev).add(targetMember.id));
+
+    // Optimistic update
+    setData((prev) => {
+      const isViewingInactive = statusFilter === "inactive";
+      return {
+        ...prev,
+        totalCount: prev.totalCount + 1,
+        matchingCount: isViewingInactive ? Math.max(0, prev.matchingCount - 1) : prev.matchingCount,
+        members: isViewingInactive
+          ? prev.members.filter((m) => m.id !== targetMember.id)
+          : prev.members.map((m) =>
+              m.id === targetMember.id ? { ...m, status: "active" as const } : m
+            ),
+      };
+    });
+
+    const res = await setMemberStatusAction(rawId, targetMember.id, "active");
+
+    if (!res.success) {
+      // Rollback
+      setData((prev) => {
+        const isViewingInactive = statusFilter === "inactive";
+        return {
+          ...prev,
+          totalCount: Math.max(0, prev.totalCount - 1),
+          matchingCount: isViewingInactive ? prev.matchingCount + 1 : prev.matchingCount,
+          members: isViewingInactive
+            ? [...prev.members, targetMember]
+            : prev.members.map((m) =>
+                m.id === targetMember.id ? { ...m, status: "inactive" as const } : m
+              ),
+        };
+      });
+      setToastError(res.errorMessage || "Could not reactivate member. Please try again.");
+    }
+
+    setReactivatingIds((prev) => {
       const next = new Set(prev);
       next.delete(targetMember.id);
       return next;
@@ -188,6 +315,22 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
 
         {/* Toast notification for inline mutation failures */}
         <ErrorToast message={toastError} onDismiss={() => setToastError(null)} />
+
+        {/* Member Edit Dialog Modal */}
+        <MemberEditDialog
+          member={editTarget}
+          isOpen={Boolean(editTarget)}
+          onClose={() => setEditTarget(null)}
+          onSave={handleSaveEdit}
+        />
+
+        {/* Member Deactivate Dialog Modal */}
+        <MemberDeactivateDialog
+          member={deactivateTarget}
+          isOpen={Boolean(deactivateTarget)}
+          onClose={() => setDeactivateTarget(null)}
+          onConfirm={handleConfirmDeactivate}
+        />
 
         {/* Header with Title, Dynamic Counters, and Retry Banner */}
         <MembersHeader
@@ -236,7 +379,11 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
                 <MemberTable
                   members={data.members}
                   onConfirm={handleConfirm}
+                  onEdit={(m) => setEditTarget(m)}
+                  onDeactivate={(m) => setDeactivateTarget(m)}
+                  onReactivate={handleReactivate}
                   confirmingIds={confirmingIds}
+                  reactivatingIds={reactivatingIds}
                 />
               </div>
 
@@ -247,7 +394,11 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
                     key={member.id}
                     member={member}
                     onConfirm={handleConfirm}
+                    onEdit={(m) => setEditTarget(m)}
+                    onDeactivate={(m) => setDeactivateTarget(m)}
+                    onReactivate={handleReactivate}
                     isConfirming={confirmingIds.has(member.id)}
+                    isReactivating={reactivatingIds.has(member.id)}
                   />
                 ))}
               </div>
@@ -283,4 +434,3 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
     </div>
   );
 }
-
