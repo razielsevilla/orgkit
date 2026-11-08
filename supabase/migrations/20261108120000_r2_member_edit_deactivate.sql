@@ -162,3 +162,4 @@ $$;
 
 revoke all on function public.set_member_status(uuid, text) from public, anon;
 grant execute on function public.set_member_status(uuid, text) to authenticated;
+
