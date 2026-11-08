@@ -18,7 +18,6 @@ let tokenA: string;
 
 let memberPending: string;
 let memberActive: string;
-let memberSecond: string;
 let memberOrgB: string;
 
 before(async () => {
@@ -55,13 +54,11 @@ before(async () => {
   );
   memberActive = m2.rows[0].id;
 
-  const m3 = await db.query<{ id: string }>(
+  await db.query(
     `insert into public.members (org_id, full_name, email, email_key, consent_version, consent_language, consent_at, status, created_at)
-     values ($1, 'Second Student', 'second.student@school.edu', 'second.student@school.edu', 'd4-2026-10-31', 'en', '2026-11-03 14:00:00+00', 'active', now() - interval '1 day')
-     returning id`,
+     values ($1, 'Second Student', 'second.student@school.edu', 'second.student@school.edu', 'd4-2026-10-31', 'en', '2026-11-03 14:00:00+00', 'active', now() - interval '1 day')`,
     [orgA]
   );
-  memberSecond = m3.rows[0].id;
 
   // Insert member in Org B
   const mb = await db.query<{ id: string }>(
@@ -243,7 +240,7 @@ describe("update_member function", () => {
   });
 
   it("refuses direct database updates without through function (RLS write policy guard)", async () => {
-    const err = await errorOf(() =>
+    await errorOf(() =>
       as("authenticated", officerA, () =>
         getDb().query(
           `update public.members set full_name = 'Direct Bypass' where id = $1`,
