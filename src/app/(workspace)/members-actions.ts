@@ -6,6 +6,10 @@ import { accessFailure, getCallerOrgMembership } from "@/src/lib/orgs/org-access
 import { membersPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
 import { MEMBERS_PAGE_SIZE, buildMemberSearchFilter } from "@/src/lib/members/member-search";
+import {
+  validateMemberEdit,
+  MEMBER_EDIT_MESSAGES,
+} from "@/src/lib/members/member-edit";
 
 export type MemberStatus = "pending" | "active" | "inactive";
 
@@ -16,6 +20,7 @@ export interface WorkspaceMember {
   email: string;
   status: MemberStatus;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WorkspaceMembersData {
@@ -32,6 +37,7 @@ export type MembersActionError =
   | "access_revoked"
   | "not_found"
   | "invalid_request"
+  | "duplicate_email"
   | "failed";
 
 export async function getWorkspaceMembers(
@@ -75,7 +81,7 @@ export async function getWorkspaceMembers(
     // 3. Query members with search and status filtering
     let query = supabase
       .from("members")
-      .select("id, org_id, full_name, email, status, created_at, is_pending", { count: "exact" })
+      .select("id, org_id, full_name, email, status, created_at, updated_at, is_pending", { count: "exact" })
       .eq("org_id", orgId);
 
     const statusFilter = options?.status?.toLowerCase().trim();
@@ -115,6 +121,7 @@ export async function getWorkspaceMembers(
       email: row.email,
       status: row.status as MemberStatus,
       createdAt: row.created_at,
+      updatedAt: row.updated_at,
     }));
 
     // If org has no members yet, fetch the active join link token for the empty state
@@ -167,6 +174,61 @@ export async function confirmMemberAction(
     return ok();
   } catch {
     return fail("failed", "Could not confirm member. Please try again.");
+  }
+}
+
+export async function updateMemberAction(
+  orgId: string,
+  memberId: string,
+  data: { fullName: string; email: string }
+): Promise<ActionResult<{ fullName: string; email: string }, MembersActionError>> {
+  if (!isUuid(orgId) || !isUuid(memberId)) {
+    return fail("invalid_request", "Invalid request parameters.");
+  }
+
+  const validation = validateMemberEdit(data);
+  if (!validation.valid) {
+    return fail("invalid_request", validation.error || "Invalid member details.");
+  }
+
+  const access = await getCallerOrgMembership(orgId);
+  if (!access.ok) {
+    return accessFailure(access.error);
+  }
+
+  const { supabase } = access.caller;
+
+  try {
+    const { error: rpcErr } = await supabase.rpc("update_member", {
+      target_member: memberId,
+      new_name: validation.fullName,
+      new_email: validation.email,
+    });
+
+    if (rpcErr) {
+      const msg = rpcErr.message || "";
+      if (msg.includes("duplicate_email")) {
+        return fail("duplicate_email", MEMBER_EDIT_MESSAGES.duplicateEmail);
+      }
+      if (msg.includes("invalid_name")) {
+        return fail("invalid_request", MEMBER_EDIT_MESSAGES.nameInvalid);
+      }
+      if (msg.includes("invalid_email")) {
+        return fail("invalid_request", MEMBER_EDIT_MESSAGES.emailInvalid);
+      }
+      if (msg.includes("not_permitted")) {
+        return fail("access_revoked", MEMBER_EDIT_MESSAGES.notPermitted);
+      }
+      if (msg.includes("member_not_found")) {
+        return fail("not_found", MEMBER_EDIT_MESSAGES.notFound);
+      }
+      return fail("failed", MEMBER_EDIT_MESSAGES.saveFailed);
+    }
+
+    revalidatePath(membersPath(orgId));
+    return ok({ fullName: validation.fullName, email: validation.email });
+  } catch {
+    return fail("failed", MEMBER_EDIT_MESSAGES.saveFailed);
   }
 }
 
