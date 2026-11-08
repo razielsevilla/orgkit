@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
-import { accessFailure, getCallerOrgMembership } from "@/src/lib/orgs/org-access";
+import { accessFailure, getCallerOrgMembership, withOrgPermission } from "@/src/lib/orgs/org-access";
 import { membersPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
 import { MEMBERS_PAGE_SIZE, buildMemberSearchFilter } from "@/src/lib/members/member-search";
@@ -170,3 +170,43 @@ export async function confirmMemberAction(
   }
 }
 
+
+/**
+ * How many members an export with these statuses would contain. Admin only,
+ * the same rule as the export itself. Reads a count, never member data.
+ */
+export async function getExportCount(
+  orgId: string,
+  statuses: string[]
+): Promise<ActionResult<{ count: number }, MembersActionError | "not_authorized">> {
+  if (!isUuid(orgId) || !Array.isArray(statuses)) {
+    return fail("invalid_request", "Invalid request parameters.");
+  }
+  const valid = statuses.filter((s): s is MemberStatus =>
+    s === "pending" || s === "active" || s === "inactive"
+  );
+  if (valid.length !== statuses.length) {
+    return fail("invalid_request", "Invalid request parameters.");
+  }
+  // No statuses chosen: nothing would be exported, so skip the query
+  if (valid.length === 0) return ok({ count: 0 });
+
+  return withOrgPermission(
+    orgId,
+    "members:export",
+    {
+      name: "getExportCount",
+      denied: "Only admins can export members.",
+      unexpected: "We couldn't count your members. Try again.",
+    },
+    async ({ supabase }) => {
+      const { count, error } = await supabase
+        .from("members")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .in("status", valid);
+      if (error) return fail("failed", "We couldn't count your members. Try again.");
+      return ok({ count: count ?? 0 });
+    }
+  );
+}

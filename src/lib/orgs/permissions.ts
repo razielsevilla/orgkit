@@ -17,6 +17,7 @@ export type OfficerAction =
   | "officer:remove"
   | "officer:view_emails"
   | "officer:view_list"
+  | "members:export"
   | "workspace:manage";
 
 const ROLE_PERMISSIONS: Record<OfficerRole, readonly OfficerAction[]> = {
@@ -28,6 +29,7 @@ const ROLE_PERMISSIONS: Record<OfficerRole, readonly OfficerAction[]> = {
     "officer:remove",
     "officer:view_emails",
     "officer:view_list",
+    "members:export",
     "workspace:manage",
   ],
   finance: [
