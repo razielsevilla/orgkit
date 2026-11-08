@@ -9,6 +9,8 @@ interface MembersHeaderProps {
   errorMessage?: string | null;
   onRetry?: () => void;
   isRetrying?: boolean;
+  /** Buttons shown beside the title, such as Import (admins only) */
+  actions?: React.ReactNode;
 }
 
 export function MembersHeader({
@@ -19,6 +21,7 @@ export function MembersHeader({
   errorMessage,
   onRetry,
   isRetrying = false,
+  actions,
 }: MembersHeaderProps) {
   // Summary text format: "X members match • Y pending to review" or "X members • Y pending to review"
   let summaryText = "";
@@ -100,6 +103,7 @@ export function MembersHeader({
             )}
           </div>
         </div>
+        {actions}
       </div>
 
       {/* Error Banner with Retry button if fetch failed */}

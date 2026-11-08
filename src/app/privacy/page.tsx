@@ -258,6 +258,13 @@ export default function PrivacyPage() {
                 is marked as pending until an officer of the org confirms you.
               </li>
               <li>
+                <strong style={{ color: "var(--color-ink)" }}>If an officer invited you first.</strong> An
+                admin may upload a list of people to invite. That stores your email, and your name if the
+                list has one, for up to 60 days so we can link it to you if you join. You are not a member,
+                and nothing else is kept, unless you open the org&apos;s join link and agree. After 60 days
+                the stored email and name are deleted.
+              </li>
+              <li>
                 <strong style={{ color: "var(--color-ink)" }}>How long we keep it.</strong> For as long as you
                 stay on the org&apos;s list, and until you ask us to delete it.
               </li>

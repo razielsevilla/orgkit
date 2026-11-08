@@ -2,7 +2,8 @@
  * Centralized Role-Based Access Control (RBAC) permissions.
  *
  * Rules:
- * - admin: everything, including invites, roles, removing officers, and viewing email addresses.
+ * - admin: everything, including invites, roles, removing officers, importing a member list
+ *   as invitations, and viewing email addresses.
  * - finance: view the roster and verify payments (cannot manage invites, roles, or view emails).
  * - officer: view the roster and run check-in (cannot manage invites, roles, or view emails).
  */
@@ -13,6 +14,7 @@ export type OfficerAction =
   | "invite:create"
   | "invite:revoke"
   | "invite:recreate"
+  | "member:import"
   | "officer:change_role"
   | "officer:remove"
   | "officer:view_emails"
@@ -24,6 +26,7 @@ const ROLE_PERMISSIONS: Record<OfficerRole, readonly OfficerAction[]> = {
     "invite:create",
     "invite:revoke",
     "invite:recreate",
+    "member:import",
     "officer:change_role",
     "officer:remove",
     "officer:view_emails",

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useTransition, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Upload } from "lucide-react";
 import type {
   WorkspaceMember,
   WorkspaceMembersData,
@@ -21,6 +23,10 @@ import { MemberEmptyState } from "./member-empty-state";
 import { MembersStyles } from "./members-styles";
 import { MembersFloatingDecor } from "./members-decor";
 import { ErrorToast } from "@/src/components/error-toast";
+import { getMemberInvites, type MemberInvitesData } from "@/src/app/(workspace)/member-invites-actions";
+import { ROUTES } from "@/src/lib/routes";
+import { ImportDialog } from "./import/import-dialog";
+import { InvitedView } from "./invited-view";
 
 interface MembersClientProps {
   rawId: string;
@@ -40,6 +46,16 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  // R3: admins can import a member list as invitations and see them in the Invited view
+  const router = useRouter();
+  const [view, setView] = useState<"members" | "invited">("members");
+  const [importOpen, setImportOpen] = useState(false);
+  const [invites, setInvites] = useState<MemberInvitesData | null>(null);
+  const [invitesLoading, setInvitesLoading] = useState(false);
+  const [invitesLoadingMore, setInvitesLoadingMore] = useState(false);
+  const [invitesError, setInvitesError] = useState<string | null>(null);
+  const invitesRequest = useRef(0);
 
   const [isPending, startTransition] = useTransition();
   // Skip the refetch on mount only when the server already gave us data
@@ -150,6 +166,52 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
     });
   };
 
+  const loadInvites = useCallback(async () => {
+    const myRequest = ++invitesRequest.current;
+    setInvitesLoading(true);
+    setInvitesError(null);
+    const res = await getMemberInvites(rawId);
+    if (myRequest !== invitesRequest.current) return;
+    if (res.success && res.data) {
+      setInvites(res.data);
+    } else if (res.error === "not_authenticated") {
+      router.push(ROUTES.signIn);
+      return;
+    } else {
+      setInvitesError(res.errorMessage || "We couldn't load the invitations. Try again.");
+    }
+    setInvitesLoading(false);
+  }, [rawId, router]);
+
+  const handleLoadMoreInvites = async () => {
+    if (!invites || invitesLoadingMore || !invites.hasMore) return;
+    const myRequest = ++invitesRequest.current;
+    setInvitesLoadingMore(true);
+    const res = await getMemberInvites(rawId, { offset: invites.invites.length });
+    if (myRequest !== invitesRequest.current) return;
+    if (res.success && res.data) {
+      const next = res.data;
+      setInvites((prev) => {
+        const seen = new Set((prev?.invites ?? []).map((i) => i.id));
+        return { ...next, invites: [...(prev?.invites ?? []), ...next.invites.filter((i) => !seen.has(i.id))] };
+      });
+    } else {
+      setToastError(res.errorMessage || "We couldn't load more invitations. Try again.");
+    }
+    setInvitesLoadingMore(false);
+  };
+
+  const showInvited = () => {
+    setView("invited");
+    if (!invites) loadInvites();
+  };
+
+  const handleImportFinished = () => {
+    setImportOpen(false);
+    setView("invited");
+    loadInvites();
+  };
+
   const handleClearFilters = () => {
     setSearchQuery("");
     setDebouncedSearch("");
@@ -198,10 +260,122 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
           errorMessage={errorMessage}
           onRetry={fetchMembers}
           isRetrying={isLoading || isPending}
+          actions={
+            data.canImport ? (
+              <button
+                type="button"
+                onClick={() => setImportOpen(true)}
+                className="orgkit-btn-accent"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  minHeight: 42,
+                  padding: "10px 20px",
+                  borderRadius: 9999,
+                  backgroundColor: "var(--color-accent)",
+                  color: "#FFFFFF",
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Upload size={15} aria-hidden="true" />
+                <span>Import</span>
+              </button>
+            ) : null
+          }
         />
 
+        {/* Members | Invited switch: admins only, because invitations hold email addresses */}
+        {data.canImport && (
+          <div
+            role="tablist"
+            aria-label="Members or invited people"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: 3,
+              margin: "4px 0 12px 0",
+              backgroundColor: "color-mix(in srgb, var(--color-line) 50%, transparent)",
+              borderRadius: 9999,
+              gap: 2,
+            }}
+          >
+            {(
+              [
+                { id: "members", label: "Members", badge: undefined },
+                { id: "invited", label: "Invited", badge: invites?.pendingCount },
+              ] as const
+            ).map((tab) => {
+              const isActive = view === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  role="tab"
+                  type="button"
+                  aria-selected={isActive}
+                  onClick={() => (tab.id === "invited" ? showInvited() : setView("members"))}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "6px 16px",
+                    borderRadius: 9999,
+                    border: "none",
+                    backgroundColor: isActive ? "var(--color-surface)" : "transparent",
+                    color: isActive ? "var(--color-ink)" : "var(--color-muted)",
+                    fontWeight: isActive ? 600 : 500,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    boxShadow: isActive ? "0 2px 8px color-mix(in srgb, var(--color-ink) 8%, transparent)" : "none",
+                  }}
+                >
+                  <span>{tab.label}</span>
+                  {typeof tab.badge === "number" && tab.badge > 0 && (
+                    <span
+                      style={{
+                        padding: "1px 6px",
+                        borderRadius: 9999,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        backgroundColor: "color-mix(in srgb, var(--color-line) 80%, transparent)",
+                        color: "var(--color-ink)",
+                      }}
+                    >
+                      {tab.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {importOpen && (
+          <ImportDialog
+            orgId={rawId}
+            onClose={() => setImportOpen(false)}
+            onFinished={handleImportFinished}
+            onSignedOut={() => router.push(ROUTES.signIn)}
+          />
+        )}
+
+        {view === "invited" && data.canImport && (
+          <InvitedView
+            data={invites}
+            isLoading={invitesLoading}
+            isLoadingMore={invitesLoadingMore}
+            error={invitesError}
+            onRetry={loadInvites}
+            onLoadMore={handleLoadMoreInvites}
+            onImport={() => setImportOpen(true)}
+          />
+        )}
+
         {/* Filter Toolbar (completely clean, unblocked by any decor) */}
-        {!hasNoOrgMembers && (
+        {view === "members" && !hasNoOrgMembers && (
           <MembersSearchFilter
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
@@ -213,7 +387,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         )}
 
         {/* Main Content Area framed by Dynamic Floating Decor */}
-        {isLoading || isPending ? (
+        {view === "invited" && data.canImport ? null : isLoading || isPending ? (
           <MemberSkeleton rowCount={Math.min(data.members.length || 5, 8)} />
         ) : hasLoadError ? null : hasNoOrgMembers ? (
           <MemberEmptyState

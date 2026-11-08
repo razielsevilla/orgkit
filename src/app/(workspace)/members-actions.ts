@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
 import { accessFailure, getCallerOrgMembership } from "@/src/lib/orgs/org-access";
+import { can } from "@/src/lib/orgs/permissions";
 import { membersPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
 import { MEMBERS_PAGE_SIZE, buildMemberSearchFilter } from "@/src/lib/members/member-search";
@@ -25,6 +26,8 @@ export interface WorkspaceMembersData {
   hasMore: boolean;
   pendingCount: number;
   joinLinkToken: string | null;
+  /** Admins can import a member list and see invitations */
+  canImport: boolean;
 }
 
 export type MembersActionError =
@@ -133,6 +136,7 @@ export async function getWorkspaceMembers(
       hasMore: offset + members.length < (matchingCount ?? members.length),
       pendingCount: pendingCount ?? 0,
       joinLinkToken,
+      canImport: can(access.caller.role, "member:import"),
     });
   } catch {
     return fail("failed", "We couldn't load your members. Try again.");
