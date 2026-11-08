@@ -16,7 +16,7 @@ interface MemberEditDialogProps {
   onSave: (
     memberId: string,
     updates: { fullName: string; email: string }
-  ) => Promise<{ success: boolean; errorMessage?: string }>;
+  ) => Promise<{ success: boolean; errorMessage?: string; stale?: boolean }>;
 }
 
 interface MemberEditFormProps {
@@ -25,7 +25,7 @@ interface MemberEditFormProps {
   onSave: (
     memberId: string,
     updates: { fullName: string; email: string }
-  ) => Promise<{ success: boolean; errorMessage?: string }>;
+  ) => Promise<{ success: boolean; errorMessage?: string; stale?: boolean }>;
 }
 
 function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
@@ -57,7 +57,7 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
     // No-change save check: if values are identical, return cleanly without error
     if (
       validation.fullName === member.fullName.trim() &&
-      validation.email.toLowerCase() === member.email.trim().toLowerCase()
+      validation.email === member.email.trim()
     ) {
       onClose();
       return;
@@ -70,7 +70,8 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
         email: validation.email,
       });
 
-      if (res.success) {
+      if (res.success || res.stale) {
+        // Stale: the roster toast explains and the row is refreshed behind the dialog
         onClose();
       } else {
         const errorMsg = res.errorMessage || MEMBER_EDIT_MESSAGES.saveFailed;

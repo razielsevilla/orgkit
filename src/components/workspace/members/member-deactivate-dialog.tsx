@@ -10,7 +10,9 @@ interface MemberDeactivateDialogProps {
   member: WorkspaceMember | null;
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: (memberId: string) => Promise<{ success: boolean; errorMessage?: string }>;
+  onConfirm: (
+    memberId: string
+  ) => Promise<{ success: boolean; errorMessage?: string; stale?: boolean }>;
 }
 
 export function MemberDeactivateDialog({
@@ -19,17 +21,31 @@ export function MemberDeactivateDialog({
   onClose,
   onConfirm,
 }: MemberDeactivateDialogProps) {
+  if (!isOpen || !member) return null;
+
+  // Keyed so error and saving state start fresh every time the prompt opens
+  return <DeactivatePrompt key={member.id} member={member} onClose={onClose} onConfirm={onConfirm} />;
+}
+
+function DeactivatePrompt({
+  member,
+  onClose,
+  onConfirm,
+}: {
+  member: WorkspaceMember;
+  onClose: () => void;
+  onConfirm: MemberDeactivateDialogProps["onConfirm"];
+}) {
   const [isDeactivating, setIsDeactivating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  if (!isOpen || !member) return null;
 
   const handleDeactivate = async () => {
     setIsDeactivating(true);
     setError(null);
     try {
       const res = await onConfirm(member.id);
-      if (res.success) {
+      if (res.success || res.stale) {
+        // Stale: the roster toast explains and the row is refreshed behind the prompt
         onClose();
       } else {
         setError(res.errorMessage || MEMBER_EDIT_MESSAGES.statusChangeFailed);

@@ -58,6 +58,7 @@ export function MemberMobileCard({
   return (
     <div
       role="article"
+      data-member-row={member.id}
       aria-label={`Member: ${member.fullName}`}
       style={{
         backgroundColor: "var(--color-surface)",

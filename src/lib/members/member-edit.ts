@@ -7,6 +7,7 @@ export const MEMBER_EDIT_MESSAGES = {
   saveFailed: "We couldn't save your changes. Please try again.",
   statusChangeFailed: "Could not update member status. Please try again.",
   notFound: "Member not found.",
+  stale: "This member was changed by another officer. The roster has been refreshed.",
   notPermitted: "You don't have permission to edit members of this organization.",
   deactivatePrompt: (name: string) =>
     `Deactivate ${name}? They'll move to Inactive. You can reactivate them later.`,

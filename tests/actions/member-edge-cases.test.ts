@@ -346,6 +346,42 @@ describe("Ticket R2: Member Deactivate and Reactivate Edge Cases", () => {
     });
   });
 
+  it("passes the status the officer saw so a concurrent change can be detected", async () => {
+    await setMemberStatusAction(ORG_A, MEMBER_ACTIVE, "inactive", "active");
+    await updateMemberAction(
+      ORG_A,
+      MEMBER_ACTIVE,
+      { fullName: "Bob Jones", email: "bob.new@example.com" },
+      "active"
+    );
+    const calls = state.rpcCalls;
+    expect(calls[0].args).toEqual({
+      target_member: MEMBER_ACTIVE,
+      new_status: "inactive",
+      expected_status: "active",
+    });
+    expect(calls[1].args).toMatchObject({ expected_status: "active" });
+  });
+
+  it("reports a clear stale error when another officer already changed the member", async () => {
+    state.rpcResult = { data: null, error: { message: "stale_member" } };
+
+    const status = await setMemberStatusAction(ORG_A, MEMBER_ACTIVE, "inactive", "active");
+    expect(status.success).toBe(false);
+    expect(status.error).toBe("stale");
+    expect(status.errorMessage).toBe(MEMBER_EDIT_MESSAGES.stale);
+
+    const edit = await updateMemberAction(
+      ORG_A,
+      MEMBER_ACTIVE,
+      { fullName: "Bob Jones", email: "bob.new@example.com" },
+      "active"
+    );
+    expect(edit.success).toBe(false);
+    expect(edit.error).toBe("stale");
+    expect(edit.errorMessage).toBe(MEMBER_EDIT_MESSAGES.stale);
+  });
+
   it("gracefully catches invalid status transition from concurrent state changes", async () => {
     state.rpcResult = { data: null, error: { message: "invalid_status_transition" } };
     const res = await setMemberStatusAction(ORG_A, MEMBER_ACTIVE, "inactive");

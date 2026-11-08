@@ -107,6 +107,7 @@ export function MemberTable({
             return (
               <tr
                 key={member.id}
+                data-member-row={member.id}
                 className="orgkit-member-row"
                 style={{
                   borderBottom:

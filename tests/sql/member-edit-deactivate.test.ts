@@ -388,3 +388,101 @@ describe("inactive member rejoining org through public link", () => {
     assert.equal(check.rows[0].status, "inactive");
   });
 });
+
+describe("stale-state guard (expected_status)", () => {
+  async function freshMember(status: string, tag: string): Promise<string> {
+    const r = await getDb().query<{ id: string }>(
+      `insert into public.members (org_id, full_name, email, email_key, consent_version, consent_language, status)
+       values ($1, $2, $3, $3, 'd4-2026-10-31', 'en', $4)
+       returning id`,
+      [orgA, `Stale ${tag}`, `stale.${tag}@school.edu`, status]
+    );
+    return r.rows[0].id;
+  }
+
+  it("refuses a deactivate when the member is already inactive and the caller expected active", async () => {
+    const id = await freshMember("inactive", "deact");
+    const err = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        getDb().query(`select public.set_member_status($1, 'inactive', 'active')`, [id])
+      )
+    );
+    assert.ok(err);
+    assert.match(err, /stale_member/);
+  });
+
+  it("refuses a reactivate when the member is already active and the caller expected inactive", async () => {
+    const id = await freshMember("active", "react");
+    const err = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        getDb().query(`select public.set_member_status($1, 'active', 'inactive')`, [id])
+      )
+    );
+    assert.ok(err);
+    assert.match(err, /stale_member/);
+  });
+
+  it("allows a status change when the expected status still matches", async () => {
+    const id = await freshMember("active", "match");
+    const res = await as("authenticated", officerA, () =>
+      getDb().query<{ set_member_status: string }>(
+        `select public.set_member_status($1, 'inactive', 'active')`,
+        [id]
+      )
+    );
+    assert.equal(res.rows[0].set_member_status, "ok");
+    const check = await getDb().query<{ status: string }>(
+      `select status from public.members where id = $1`,
+      [id]
+    );
+    assert.equal(check.rows[0].status, "inactive");
+  });
+
+  it("refuses an edit of a member another officer has deactivated, and changes nothing", async () => {
+    const id = await freshMember("inactive", "edit");
+    const err = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        getDb().query(`select public.update_member($1, 'Renamed Person', 'renamed.person@school.edu', 'active')`, [id])
+      )
+    );
+    assert.ok(err);
+    assert.match(err, /stale_member/);
+    const check = await getDb().query<{ full_name: string }>(
+      `select full_name from public.members where id = $1`,
+      [id]
+    );
+    assert.equal(check.rows[0].full_name, "Stale edit");
+  });
+
+  it("allows an edit when the expected status still matches", async () => {
+    const id = await freshMember("active", "editok");
+    const res = await as("authenticated", officerA, () =>
+      getDb().query<{ update_member: string }>(
+        `select public.update_member($1, 'Edited Person', 'edited.person@school.edu', 'active')`,
+        [id]
+      )
+    );
+    assert.equal(res.rows[0].update_member, "ok");
+  });
+
+  it("keeps the old behaviour when no expected status is given", async () => {
+    const id = await freshMember("inactive", "legacy");
+    const res = await as("authenticated", officerA, () =>
+      getDb().query<{ set_member_status: string }>(
+        `select public.set_member_status($1, 'inactive')`,
+        [id]
+      )
+    );
+    assert.equal(res.rows[0].set_member_status, "ok");
+  });
+
+  it("still enforces org isolation when expected_status is passed", async () => {
+    const err = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        getDb().query(`select public.set_member_status($1, 'inactive', 'active')`, [memberOrgB])
+      )
+    );
+    assert.ok(err);
+    assert.match(err, /not_permitted/);
+  });
+});

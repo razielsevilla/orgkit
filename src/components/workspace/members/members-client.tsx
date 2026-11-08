@@ -25,6 +25,7 @@ import { MembersFloatingDecor } from "./members-decor";
 import { MemberEditDialog } from "./member-edit-dialog";
 import { MemberDeactivateDialog } from "./member-deactivate-dialog";
 import { ErrorToast } from "@/src/components/error-toast";
+import { MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
 
 interface MembersClientProps {
   rawId: string;
@@ -157,6 +158,60 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
     });
   };
 
+  // Keyboard focus: after a prompt closes, land back on the member's row. If the
+  // row is gone (deactivated), land on its neighbour, then on the page heading.
+  const pendingFocus = useRef<string[] | null>(null);
+
+  const queueFocus = (memberId: string) => {
+    const idx = data.members.findIndex((m) => m.id === memberId);
+    const ids = [memberId];
+    if (idx >= 0) {
+      if (data.members[idx + 1]) ids.push(data.members[idx + 1].id);
+      if (data.members[idx - 1]) ids.push(data.members[idx - 1].id);
+    }
+    pendingFocus.current = ids;
+  };
+
+  useEffect(() => {
+    if (!pendingFocus.current || editTarget || deactivateTarget || isLoading || isPending) return;
+    const ids = pendingFocus.current;
+    pendingFocus.current = null;
+
+    const visible = (el: Element) => (el as HTMLElement).getClientRects().length > 0;
+    const rowFor = (id: string) =>
+      Array.from(document.querySelectorAll(`[data-member-row="${id}"]`)).find(visible);
+
+    // The dialog already returned focus to its opener when that button still exists
+    const ownRow = rowFor(ids[0]);
+    if (ownRow && ownRow.contains(document.activeElement)) return;
+
+    for (const id of ids) {
+      const row = rowFor(id);
+      const button = row?.querySelector<HTMLElement>("button:not([disabled])");
+      if (button) {
+        button.focus();
+        return;
+      }
+    }
+    document.querySelector<HTMLElement>("[data-members-heading]")?.focus();
+  }, [editTarget, deactivateTarget, data.members, isLoading, isPending]);
+
+  const closeEdit = () => {
+    if (editTarget) queueFocus(editTarget.id);
+    setEditTarget(null);
+  };
+
+  const closeDeactivate = () => {
+    if (deactivateTarget) queueFocus(deactivateTarget.id);
+    setDeactivateTarget(null);
+  };
+
+  // Another officer changed this member first: undo our change, explain, refresh
+  const handleStale = (message?: string) => {
+    setToastError(message || MEMBER_EDIT_MESSAGES.stale);
+    fetchMembers();
+  };
+
   // Optimistic edit without page reload
   const handleSaveEdit = async (
     memberId: string,
@@ -172,7 +227,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
       ),
     }));
 
-    const res = await updateMemberAction(rawId, memberId, updates);
+    const res = await updateMemberAction(rawId, memberId, updates, oldMember?.status);
 
     if (!res.success) {
       // Rollback to original values
@@ -183,9 +238,9 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         }));
       }
 
-      if (res.error === "not_found") {
-        setToastError("This member was updated by another officer. Refreshing roster...");
-        fetchMembers();
+      if (res.error === "stale" || res.error === "not_found") {
+        handleStale(res.errorMessage);
+        return { success: false, errorMessage: res.errorMessage, stale: true };
       }
 
       return { success: false, errorMessage: res.errorMessage };
@@ -196,7 +251,8 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
 
   // Optimistic deactivation
   const handleConfirmDeactivate = async (memberId: string) => {
-    const oldMember = data.members.find((m) => m.id === memberId);
+    const oldIndex = data.members.findIndex((m) => m.id === memberId);
+    const oldMember = data.members[oldIndex];
     if (!oldMember) return { success: false, errorMessage: "Member not found." };
 
     const wasPending = oldMember.status === "pending";
@@ -216,36 +272,35 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
       };
     });
 
-    const res = await setMemberStatusAction(rawId, memberId, "inactive");
+    const res = await setMemberStatusAction(rawId, memberId, "inactive", oldMember.status);
 
     if (!res.success) {
-      // Rollback
-      setData((prev) => ({
-        ...prev,
-        pendingCount: wasPending ? prev.pendingCount + 1 : prev.pendingCount,
-        totalCount: prev.totalCount + 1,
-        inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
-        matchingCount: prev.matchingCount + 1,
-        members: prev.members.some((m) => m.id === memberId)
+      // Rollback, putting the member back where they were
+      setData((prev) => {
+        const present = prev.members.some((m) => m.id === memberId);
+        const members = present
           ? prev.members.map((m) => (m.id === memberId ? oldMember : m))
-          : [...prev.members, oldMember],
-      }));
+          : [
+              ...prev.members.slice(0, oldIndex),
+              oldMember,
+              ...prev.members.slice(oldIndex),
+            ];
+        return {
+          ...prev,
+          pendingCount: wasPending ? prev.pendingCount + 1 : prev.pendingCount,
+          totalCount: prev.totalCount + 1,
+          inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
+          matchingCount: prev.matchingCount + 1,
+          members,
+        };
+      });
 
-      const isStale =
-        res.error === "not_found" ||
-        res.errorMessage?.includes("not found") ||
-        res.errorMessage?.includes("transition");
-
-      setToastError(
-        isStale
-          ? "This member was updated by another officer. Refreshing roster..."
-          : res.errorMessage || "Could not deactivate member. Please try again."
-      );
-
-      if (isStale) {
-        fetchMembers();
+      if (res.error === "stale" || res.error === "not_found") {
+        handleStale(res.errorMessage);
+        return { success: false, errorMessage: res.errorMessage, stale: true };
       }
 
+      setToastError(res.errorMessage || "Could not deactivate member. Please try again.");
       return { success: false, errorMessage: res.errorMessage };
     }
 
@@ -274,7 +329,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
       };
     });
 
-    const res = await setMemberStatusAction(rawId, targetMember.id, "active");
+    const res = await setMemberStatusAction(rawId, targetMember.id, "active", targetMember.status);
 
     if (!res.success) {
       // Rollback
@@ -293,19 +348,10 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         };
       });
 
-      const isStale =
-        res.error === "not_found" ||
-        res.errorMessage?.includes("not found") ||
-        res.errorMessage?.includes("transition");
-
-      setToastError(
-        isStale
-          ? "This member was updated by another officer. Refreshing roster..."
-          : res.errorMessage || "Could not reactivate member. Please try again."
-      );
-
-      if (isStale) {
-        fetchMembers();
+      if (res.error === "stale" || res.error === "not_found") {
+        handleStale(res.errorMessage);
+      } else {
+        setToastError(res.errorMessage || "Could not reactivate member. Please try again.");
       }
     }
 
@@ -371,7 +417,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         <MemberEditDialog
           member={editTarget}
           isOpen={Boolean(editTarget)}
-          onClose={() => setEditTarget(null)}
+          onClose={closeEdit}
           onSave={handleSaveEdit}
         />
 
@@ -379,7 +425,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         <MemberDeactivateDialog
           member={deactivateTarget}
           isOpen={Boolean(deactivateTarget)}
-          onClose={() => setDeactivateTarget(null)}
+          onClose={closeDeactivate}
           onConfirm={handleConfirmDeactivate}
         />
 

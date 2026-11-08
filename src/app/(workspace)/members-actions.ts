@@ -39,6 +39,7 @@ export type MembersActionError =
   | "not_found"
   | "invalid_request"
   | "duplicate_email"
+  | "stale"
   | "failed";
 
 export async function getWorkspaceMembers(
@@ -199,7 +200,8 @@ export async function confirmMemberAction(
 export async function updateMemberAction(
   orgId: string,
   memberId: string,
-  data: { fullName: string; email: string }
+  data: { fullName: string; email: string },
+  expectedStatus?: MemberStatus
 ): Promise<ActionResult<{ fullName: string; email: string }, MembersActionError>> {
   if (!isUuid(orgId) || !isUuid(memberId)) {
     return fail("invalid_request", "Invalid request parameters.");
@@ -222,10 +224,14 @@ export async function updateMemberAction(
       target_member: memberId,
       new_name: validation.fullName,
       new_email: validation.email,
+      ...(expectedStatus ? { expected_status: expectedStatus } : {}),
     });
 
     if (rpcErr) {
       const msg = rpcErr.message || "";
+      if (msg.includes("stale_member")) {
+        return fail("stale", MEMBER_EDIT_MESSAGES.stale);
+      }
       if (msg.includes("duplicate_email")) {
         return fail("duplicate_email", MEMBER_EDIT_MESSAGES.duplicateEmail);
       }
@@ -254,7 +260,8 @@ export async function updateMemberAction(
 export async function setMemberStatusAction(
   orgId: string,
   memberId: string,
-  newStatus: "active" | "inactive"
+  newStatus: "active" | "inactive",
+  expectedStatus?: MemberStatus
 ): Promise<ActionResult<void, MembersActionError>> {
   if (!isUuid(orgId) || !isUuid(memberId)) {
     return fail("invalid_request", "Invalid request parameters.");
@@ -275,10 +282,14 @@ export async function setMemberStatusAction(
     const { error: rpcErr } = await supabase.rpc("set_member_status", {
       target_member: memberId,
       new_status: newStatus,
+      ...(expectedStatus ? { expected_status: expectedStatus } : {}),
     });
 
     if (rpcErr) {
       const msg = rpcErr.message || "";
+      if (msg.includes("stale_member")) {
+        return fail("stale", MEMBER_EDIT_MESSAGES.stale);
+      }
       if (msg.includes("not_permitted")) {
         return fail("access_revoked", MEMBER_EDIT_MESSAGES.notPermitted);
       }
