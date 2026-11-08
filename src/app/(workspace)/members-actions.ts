@@ -29,6 +29,7 @@ export interface WorkspaceMembersData {
   matchingCount: number;
   hasMore: boolean;
   pendingCount: number;
+  inactiveCount: number;
   joinLinkToken: string | null;
 }
 
@@ -79,7 +80,18 @@ export async function getWorkspaceMembers(
       return fail("failed", "We couldn't load your members. Try again.");
     }
 
-    // 3. Query members with search and status filtering
+    // 3. Inactive members count for this org
+    const { count: inactiveCount, error: inactiveCountErr } = await supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("status", "inactive");
+
+    if (inactiveCountErr) {
+      return fail("failed", "We couldn't load your members. Try again.");
+    }
+
+    // 4. Query members with search and status filtering
     let query = supabase
       .from("members")
       .select("id, org_id, full_name, email, status, created_at, updated_at, is_pending", { count: "exact" })
@@ -130,9 +142,9 @@ export async function getWorkspaceMembers(
       updatedAt: row.updated_at,
     }));
 
-    // If org has no members yet, fetch the active join link token for the empty state
+    // If org has no members yet (zero active, pending, or inactive), fetch join link
     let joinLinkToken: string | null = null;
-    if ((totalCount ?? 0) === 0 && offset === 0) {
+    if ((totalCount ?? 0) === 0 && (inactiveCount ?? 0) === 0 && offset === 0) {
       const { data: linkToken } = await supabase.rpc("get_org_join_link", {
         target_org: orgId,
       });
@@ -145,6 +157,7 @@ export async function getWorkspaceMembers(
       matchingCount: matchingCount ?? members.length,
       hasMore: offset + members.length < (matchingCount ?? members.length),
       pendingCount: pendingCount ?? 0,
+      inactiveCount: inactiveCount ?? 0,
       joinLinkToken,
     });
   } catch {

@@ -5,9 +5,11 @@ import { Users, Link2, Copy, Check, SearchX, QrCode } from "lucide-react";
 import { joinLinkPath } from "@/src/lib/routes";
 
 interface MemberEmptyStateProps {
-  type: "no-members" | "no-matches";
+  type: "no-members" | "no-matches" | "no-active-members";
   joinLinkToken?: string | null;
+  inactiveCount?: number;
   onClearFilters?: () => void;
+  onViewInactive?: () => void;
 }
 
 /**
@@ -15,11 +17,14 @@ interface MemberEmptyStateProps {
  * - Floating icon cards around the container for a minimalist, aesthetic look.
  * - Displays public join link with one-click copy when the link is active.
  * - Accessible "No members match" reset trigger.
+ * - Informative "No active members" view when all org members are currently inactive.
  */
 export function MemberEmptyState({
   type,
   joinLinkToken,
+  inactiveCount,
   onClearFilters,
+  onViewInactive,
 }: MemberEmptyStateProps) {
   const [copied, setCopied] = useState(false);
 
@@ -40,6 +45,94 @@ export function MemberEmptyState({
       // Fallback if clipboard API is blocked
     }
   };
+
+  if (type === "no-active-members") {
+    return (
+      <div
+        role="region"
+        aria-label="No active members"
+        style={{
+          position: "relative",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "clamp(48px, 6vw, 64px) clamp(24px, 4vw, 36px)",
+          backgroundColor: "var(--color-surface)",
+          borderRadius: 24,
+          border: "1px solid var(--color-line)",
+          textAlign: "center",
+          boxShadow: "0 10px 30px rgba(24, 24, 27, 0.04)",
+          overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            backgroundColor: "color-mix(in srgb, var(--color-line) 60%, transparent)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--color-muted)",
+            marginBottom: 16,
+          }}
+        >
+          <Users size={26} strokeWidth={1.8} />
+        </div>
+        <h3
+          style={{
+            fontSize: 19,
+            fontWeight: 700,
+            color: "var(--color-ink)",
+            marginBottom: 6,
+          }}
+        >
+          No active members
+        </h3>
+        <p
+          style={{
+            fontSize: 14,
+            color: "var(--color-muted)",
+            maxWidth: 420,
+            lineHeight: 1.5,
+            marginBottom: 24,
+          }}
+        >
+          {inactiveCount && inactiveCount > 0
+            ? `All members in this org are currently inactive (${inactiveCount}). You can review and reactivate them at any time.`
+            : "There are currently no active or pending members on the roster."}
+        </p>
+        {onViewInactive && (
+          <button
+            type="button"
+            onClick={onViewInactive}
+            className="orgkit-btn-accent"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 24px",
+              borderRadius: 9999,
+              backgroundColor: "var(--color-accent)",
+              color: "#FFFFFF",
+              fontSize: 13.5,
+              fontWeight: 600,
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
+              transition: "all 0.15s ease",
+            }}
+          >
+            View inactive members {inactiveCount ? `(${inactiveCount})` : ""}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   if (type === "no-matches") {
     return (

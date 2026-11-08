@@ -208,6 +208,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         ...prev,
         pendingCount: wasPending ? Math.max(0, prev.pendingCount - 1) : prev.pendingCount,
         totalCount: Math.max(0, prev.totalCount - 1),
+        inactiveCount: (prev.inactiveCount ?? 0) + 1,
         matchingCount: isViewingInactive ? prev.matchingCount : Math.max(0, prev.matchingCount - 1),
         members: isViewingInactive
           ? prev.members.map((m) => (m.id === memberId ? { ...m, status: "inactive" as const } : m))
@@ -223,6 +224,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         ...prev,
         pendingCount: wasPending ? prev.pendingCount + 1 : prev.pendingCount,
         totalCount: prev.totalCount + 1,
+        inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
         matchingCount: prev.matchingCount + 1,
         members: prev.members.some((m) => m.id === memberId)
           ? prev.members.map((m) => (m.id === memberId ? oldMember : m))
@@ -262,6 +264,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
       return {
         ...prev,
         totalCount: prev.totalCount + 1,
+        inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
         matchingCount: isViewingInactive ? Math.max(0, prev.matchingCount - 1) : prev.matchingCount,
         members: isViewingInactive
           ? prev.members.filter((m) => m.id !== targetMember.id)
@@ -280,6 +283,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
         return {
           ...prev,
           totalCount: Math.max(0, prev.totalCount - 1),
+          inactiveCount: (prev.inactiveCount ?? 0) + 1,
           matchingCount: isViewingInactive ? prev.matchingCount + 1 : prev.matchingCount,
           members: isViewingInactive
             ? [...prev.members, targetMember]
@@ -319,9 +323,21 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
   };
 
   const isFiltered = debouncedSearch.trim().length > 0 || statusFilter !== "all";
-  const hasNoOrgMembers = data.totalCount === 0 && !isFiltered && !errorMessage;
+  const hasZeroOrgMembers = data.totalCount === 0 && (data.inactiveCount ?? 0) === 0;
+  const hasNoOrgMembers = hasZeroOrgMembers && !isFiltered && !errorMessage;
   const hasLoadError = Boolean(errorMessage) && data.members.length === 0;
-  const hasNoMatches = data.members.length === 0 && isFiltered && !errorMessage;
+  const hasNoActiveMembers =
+    data.members.length === 0 &&
+    data.totalCount === 0 &&
+    (data.inactiveCount ?? 0) > 0 &&
+    statusFilter === "all" &&
+    debouncedSearch.trim().length === 0 &&
+    !errorMessage;
+  const hasNoMatches =
+    data.members.length === 0 &&
+    !hasNoActiveMembers &&
+    (isFiltered || (data.inactiveCount ?? 0) > 0) &&
+    !errorMessage;
 
   return (
     <div
@@ -387,6 +403,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
             onStatusChange={setStatusFilter}
             pendingCount={data.pendingCount}
             totalCount={data.totalCount}
+            inactiveCount={data.inactiveCount}
           />
         )}
 
@@ -397,6 +414,12 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
           <MemberEmptyState
             type="no-members"
             joinLinkToken={data.joinLinkToken}
+          />
+        ) : hasNoActiveMembers ? (
+          <MemberEmptyState
+            type="no-active-members"
+            inactiveCount={data.inactiveCount}
+            onViewInactive={() => setStatusFilter("inactive")}
           />
         ) : hasNoMatches ? (
           <MemberEmptyState
