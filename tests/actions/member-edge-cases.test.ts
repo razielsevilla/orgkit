@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
 
 interface FakeMember {
   id: string;
@@ -91,6 +92,12 @@ function query(table: string) {
           error: null,
         };
       }
+      if (table === "members") {
+        return {
+          data: filtered[0] ? { ...filtered[0] } : null,
+          error: null,
+        };
+      }
       return { data: null, error: null };
     },
     then: (resolve: (v: unknown) => unknown) =>
@@ -119,9 +126,12 @@ const fakeClient = {
 vi.mock("@/src/lib/supabase/server", () => ({ createClient: async () => fakeClient }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { getWorkspaceMembers, confirmMemberAction } = await import(
-  "@/src/app/(workspace)/members-actions"
-);
+const {
+  getWorkspaceMembers,
+  confirmMemberAction,
+  updateMemberAction,
+  setMemberStatusAction,
+} = await import("@/src/app/(workspace)/members-actions");
 const { buildMemberSearchFilter } = await import("@/src/lib/members/member-search");
 
 const ORG_A = "11111111-1111-4111-8111-111111111111";
@@ -250,5 +260,145 @@ describe("Ticket R1: Member Roster Edge Cases", () => {
     );
     expect(buildMemberSearchFilter("100%_(a)")).toContain('"%100\\\\%\\\\_(a)%"');
     expect(buildMemberSearchFilter('a"b')).toContain('"%a\\"b%"');
+  });
+});
+
+describe("Ticket R2: Member Edit Edge Cases", () => {
+  it("handles concurrent edits by multiple officers where later save calls RPC cleanly", async () => {
+    const [res1, res2] = await Promise.all([
+      updateMemberAction(ORG_A, MEMBER_ACTIVE, {
+        fullName: "Bob Jones Jr.",
+        email: "bobjr@example.com",
+      }),
+      updateMemberAction(ORG_A, MEMBER_ACTIVE, {
+        fullName: "Robert Jones III",
+        email: "robert.jones@example.com",
+      }),
+    ]);
+    expect(res1.success).toBe(true);
+    expect(res2.success).toBe(true);
+    const updateCalls = state.rpcCalls.filter((c) => c.fn === "update_member");
+    expect(updateCalls).toHaveLength(2);
+    expect(updateCalls[0].args).toEqual({
+      target_member: MEMBER_ACTIVE,
+      new_name: "Bob Jones Jr.",
+      new_email: "bobjr@example.com",
+    });
+    expect(updateCalls[1].args).toEqual({
+      target_member: MEMBER_ACTIVE,
+      new_name: "Robert Jones III",
+      new_email: "robert.jones@example.com",
+    });
+  });
+
+  it("handles duplicate email collision during save with appropriate error copy", async () => {
+    state.rpcResult = { data: null, error: { message: "duplicate_email" } };
+    const res = await updateMemberAction(ORG_A, MEMBER_ACTIVE, {
+      fullName: "Bob New",
+      email: LONG_EMAIL,
+    });
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("duplicate_email");
+    expect(res.errorMessage).toBe("Someone in this org already uses that email.");
+  });
+
+  it("validates inputs before calling database or role check", async () => {
+    const invalidShortName = await updateMemberAction(ORG_A, MEMBER_ACTIVE, {
+      fullName: "A",
+      email: "valid@example.com",
+    });
+    expect(invalidShortName.success).toBe(false);
+    expect(invalidShortName.error).toBe("invalid_request");
+    expect(invalidShortName.errorMessage).toBe(MEMBER_EDIT_MESSAGES.nameInvalid);
+    expect(state.rpcCalls.filter((c) => c.fn === "update_member")).toHaveLength(0);
+
+    const invalidEmail = await updateMemberAction(ORG_A, MEMBER_ACTIVE, {
+      fullName: "Valid Name",
+      email: "invalid-email-address",
+    });
+    expect(invalidEmail.success).toBe(false);
+    expect(invalidEmail.error).toBe("invalid_request");
+    expect(invalidEmail.errorMessage).toBe(MEMBER_EDIT_MESSAGES.emailInvalid);
+    expect(state.rpcCalls.filter((c) => c.fn === "update_member")).toHaveLength(0);
+  });
+});
+
+describe("Ticket R2: Member Deactivate and Reactivate Edge Cases", () => {
+  it("deactivates pending member and changes status to inactive", async () => {
+    const res = await setMemberStatusAction(ORG_A, MEMBER_PENDING, "inactive");
+    expect(res.success).toBe(true);
+    const statusCalls = state.rpcCalls.filter((c) => c.fn === "set_member_status");
+    expect(statusCalls).toHaveLength(1);
+    expect(statusCalls[0].args).toEqual({
+      target_member: MEMBER_PENDING,
+      new_status: "inactive",
+    });
+  });
+
+  it("reactivates inactive member to active", async () => {
+    const res = await setMemberStatusAction(ORG_A, MEMBER_ACTIVE, "active");
+    expect(res.success).toBe(true);
+    const statusCalls = state.rpcCalls.filter((c) => c.fn === "set_member_status");
+    expect(statusCalls).toHaveLength(1);
+    expect(statusCalls[0].args).toEqual({
+      target_member: MEMBER_ACTIVE,
+      new_status: "active",
+    });
+  });
+
+  it("gracefully catches invalid status transition from concurrent state changes", async () => {
+    state.rpcResult = { data: null, error: { message: "invalid_status_transition" } };
+    const res = await setMemberStatusAction(ORG_A, MEMBER_ACTIVE, "inactive");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("failed");
+    expect(res.errorMessage).toBe(MEMBER_EDIT_MESSAGES.statusChangeFailed);
+  });
+
+  it("gracefully catches member_not_found if member was deleted or inaccessible", async () => {
+    state.rpcResult = { data: null, error: { message: "member_not_found" } };
+    const res = await setMemberStatusAction(ORG_A, "99999999-9999-4999-8999-999999999999", "inactive");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("not_found");
+    expect(res.errorMessage).toBe(MEMBER_EDIT_MESSAGES.notFound);
+  });
+
+  it("excludes inactive members from the default active roster query", async () => {
+    state.members = [
+      {
+        id: "1",
+        org_id: ORG_A,
+        full_name: "Active Member",
+        email: "active@example.com",
+        status: "active",
+        created_at: "2026-11-01T00:00:00Z",
+        is_pending: false,
+      },
+      {
+        id: "2",
+        org_id: ORG_A,
+        full_name: "Pending Member",
+        email: "pending@example.com",
+        status: "pending",
+        created_at: "2026-11-02T00:00:00Z",
+        is_pending: true,
+      },
+      {
+        id: "3",
+        org_id: ORG_A,
+        full_name: "Inactive Member",
+        email: "inactive@example.com",
+        status: "inactive",
+        created_at: "2026-11-03T00:00:00Z",
+        is_pending: false,
+      },
+    ];
+
+    const defaultRoster = await getWorkspaceMembers(ORG_A);
+    expect(defaultRoster.success).toBe(true);
+    expect(defaultRoster.data?.members.map((m) => m.id)).toEqual(["1", "2"]);
+
+    const inactiveRoster = await getWorkspaceMembers(ORG_A, { status: "inactive" });
+    expect(inactiveRoster.success).toBe(true);
+    expect(inactiveRoster.data?.members.map((m) => m.id)).toEqual(["3"]);
   });
 });
