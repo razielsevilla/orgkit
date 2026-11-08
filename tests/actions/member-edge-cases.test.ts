@@ -45,6 +45,12 @@ function query(table: string) {
                   .filter((m) => (m as unknown as Record<string, unknown>)[f2] === v2).length;
                 return Promise.resolve({ count, error: null });
               },
+              neq: (f2: string, v2: unknown) => {
+                count = filtered
+                  .filter((m) => (m as unknown as Record<string, unknown>)[field] === val)
+                  .filter((m) => (m as unknown as Record<string, unknown>)[f2] !== v2).length;
+                return Promise.resolve({ count, error: null });
+              },
               then: (res: (v: unknown) => unknown) => Promise.resolve({ count, error: null }).then(res),
             };
             return sub;
@@ -55,6 +61,10 @@ function query(table: string) {
     },
     eq: (field: string, val: unknown) => {
       filtered = filtered.filter((m) => (m as unknown as Record<string, unknown>)[field] === val);
+      return builder;
+    },
+    neq: (field: string, val: unknown) => {
+      filtered = filtered.filter((m) => (m as unknown as Record<string, unknown>)[field] !== val);
       return builder;
     },
     or: (condition: string) => {
