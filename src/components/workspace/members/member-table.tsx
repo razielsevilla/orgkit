@@ -45,9 +45,9 @@ export function MemberTable({ members, onConfirm, confirmingIds }: MemberTablePr
       style={{
         width: "100%",
         backgroundColor: "var(--color-surface)",
-        borderRadius: 20,
+        borderRadius: 22,
         border: "1px solid var(--color-line)",
-        boxShadow: "0 4px 20px rgba(24, 24, 27, 0.03)",
+        boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
         overflow: "hidden",
         boxSizing: "border-box",
       }}
@@ -94,18 +94,11 @@ export function MemberTable({ members, onConfirm, confirmingIds }: MemberTablePr
             return (
               <tr
                 key={member.id}
+                className="orgkit-member-row"
                 style={{
                   borderBottom:
                     idx === members.length - 1 ? "none" : "1px solid var(--color-line)",
-                  transition: "background-color 0.15s ease",
                   backgroundColor: "transparent",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor =
-                    "color-mix(in srgb, var(--color-base) 45%, transparent)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "transparent";
                 }}
               >
                 {/* Member Info: Avatar Initials + Truncated Name & Email */}
@@ -195,33 +188,22 @@ export function MemberTable({ members, onConfirm, confirmingIds }: MemberTablePr
                       onClick={() => onConfirm(member)}
                       disabled={isConfirming}
                       aria-label={`Confirm ${member.fullName}`}
+                      className="orgkit-btn-accent"
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 6,
-                        padding: "7px 16px",
+                        padding: "7px 18px",
                         borderRadius: 9999,
                         backgroundColor: "var(--color-accent)",
-                        color: "#FFFFFF",
+                        color: "var(--color-on-accent)",
                         border: "none",
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: isConfirming ? "not-allowed" : "pointer",
                         opacity: isConfirming ? 0.7 : 1,
-                        boxShadow: "0 1px 3px rgba(5, 150, 105, 0.2)",
+                        boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
                         transition: "all 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isConfirming) {
-                          e.currentTarget.style.backgroundColor = "var(--color-accent-strong)";
-                          e.currentTarget.style.transform = "translateY(-1px)";
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isConfirming) {
-                          e.currentTarget.style.backgroundColor = "var(--color-accent)";
-                          e.currentTarget.style.transform = "none";
-                        }
                       }}
                     >
                       <Check size={14} strokeWidth={2.5} />

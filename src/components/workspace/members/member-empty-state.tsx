@@ -99,18 +99,20 @@ export function MemberEmptyState({
           <button
             type="button"
             onClick={onClearFilters}
+            className="orgkit-btn-accent"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 8,
-              padding: "9px 20px",
+              padding: "10px 24px",
               borderRadius: 9999,
-              backgroundColor: "var(--color-ink)",
-              color: "#FFFFFF",
+              backgroundColor: "var(--color-accent)",
+              color: "var(--color-on-accent)",
               fontSize: 13.5,
               fontWeight: 600,
               border: "none",
               cursor: "pointer",
+              boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
               transition: "all 0.15s ease",
             }}
           >
@@ -292,20 +294,23 @@ export function MemberEmptyState({
             type="button"
             onClick={handleCopyLink}
             aria-label="Copy public join link"
+            className={copied ? "orgkit-btn-accent" : "orgkit-btn-secondary"}
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 6,
-              padding: "7px 14px",
-              borderRadius: 10,
+              padding: "7px 16px",
+              borderRadius: 9999,
               backgroundColor: copied ? "var(--color-accent)" : "var(--color-surface)",
-              color: copied ? "#FFFFFF" : "var(--color-ink)",
+              color: copied ? "var(--color-on-accent)" : "var(--color-ink)",
               border: copied ? "1px solid var(--color-accent)" : "1px solid var(--color-line)",
               fontSize: 12.5,
               fontWeight: 600,
               cursor: "pointer",
               transition: "all 0.15s ease",
-              boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+              boxShadow: copied
+                ? "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)"
+                : "0 1px 3px rgba(24, 24, 27, 0.04)",
               flexShrink: 0,
             }}
           >

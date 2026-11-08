@@ -52,10 +52,10 @@ export function MemberMobileCard({
       aria-label={`Member: ${member.fullName}`}
       style={{
         backgroundColor: "var(--color-surface)",
-        borderRadius: 18,
+        borderRadius: 20,
         border: "1px solid var(--color-line)",
         padding: "16px",
-        boxShadow: "0 2px 8px rgba(24, 24, 27, 0.03)",
+        boxShadow: "0 2px 10px color-mix(in srgb, var(--color-ink) 3%, transparent)",
         display: "flex",
         flexDirection: "column",
         gap: 12,
@@ -188,22 +188,23 @@ export function MemberMobileCard({
           onClick={() => onConfirm(member)}
           disabled={isConfirming}
           aria-label={`Confirm ${member.fullName}`}
+          className="orgkit-btn-accent"
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: 6,
             width: "100%",
-            height: 38,
+            height: 40,
             borderRadius: 9999,
             backgroundColor: "var(--color-accent)",
-            color: "#FFFFFF",
+            color: "var(--color-on-accent)",
             border: "none",
             fontSize: 13,
             fontWeight: 600,
             cursor: isConfirming ? "not-allowed" : "pointer",
             opacity: isConfirming ? 0.7 : 1,
-            boxShadow: "0 1px 3px rgba(5, 150, 105, 0.2)",
+            boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
             marginTop: 4,
             transition: "all 0.15s ease",
           }}

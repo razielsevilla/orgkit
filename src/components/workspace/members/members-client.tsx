@@ -18,6 +18,8 @@ import { MemberTable } from "./member-table";
 import { MemberMobileCard } from "./member-mobile-card";
 import { MemberSkeleton } from "./member-skeleton";
 import { MemberEmptyState } from "./member-empty-state";
+import { MembersStyles } from "./members-styles";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { ErrorToast } from "@/src/components/error-toast";
 
 interface MembersClientProps {
@@ -125,79 +127,120 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
   return (
     <div
       style={{
+        height: "100%",
+        overflowY: "auto",
+        padding: "36px clamp(16px, 4vw, 36px) 60px clamp(16px, 4vw, 36px)",
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
-        gap: 20,
+        alignItems: "center",
         width: "100%",
-        maxWidth: 1100,
-        margin: "0 auto",
-        padding: "clamp(24px, 3vw, 40px) clamp(16px, 2.5vw, 32px)",
-        boxSizing: "border-box",
       }}
     >
-      {/* Toast notification for inline mutation failures */}
-      <ErrorToast message={toastError} onDismiss={() => setToastError(null)} />
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 960,
+          margin: "0 auto",
+          position: "relative",
+          animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
+        }}
+      >
+        {/* Responsive CSS & Theme Styles */}
+        <MembersStyles />
 
-      {/* Header with Title, Dynamic Counters, and Retry Banner */}
-      <MembersHeader
-        totalCount={data.totalCount}
-        matchingCount={data.matchingCount}
-        pendingCount={data.pendingCount}
-        isFiltered={isFiltered}
-        errorMessage={errorMessage}
-        onRetry={fetchMembers}
-        isRetrying={isLoading || isPending}
-      />
+        {/* Toast notification for inline mutation failures */}
+        <ErrorToast message={toastError} onDismiss={() => setToastError(null)} />
 
-      {/* Filter Toolbar (hidden only when the org has 0 members and no filters active) */}
-      {!hasNoOrgMembers && (
-        <MembersSearchFilter
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusChange={setStatusFilter}
-          pendingCount={data.pendingCount}
+        {/* Header with Title, Dynamic Counters, and Retry Banner */}
+        <MembersHeader
           totalCount={data.totalCount}
+          matchingCount={data.matchingCount}
+          pendingCount={data.pendingCount}
+          isFiltered={isFiltered}
+          errorMessage={errorMessage}
+          onRetry={fetchMembers}
+          isRetrying={isLoading || isPending}
         />
-      )}
 
-      {/* Main Content Area */}
-      {isLoading || isPending ? (
-        <MemberSkeleton rowCount={Math.min(data.members.length || 5, 8)} />
-      ) : hasNoOrgMembers ? (
-        <MemberEmptyState
-          type="no-members"
-          joinLinkToken={data.joinLinkToken}
-        />
-      ) : hasNoMatches ? (
-        <MemberEmptyState
-          type="no-matches"
-          onClearFilters={handleClearFilters}
-        />
-      ) : (
-        <>
-          {/* Desktop Table: visible on md (768px) and wider */}
-          <div className="hidden md:block">
-            <MemberTable
-              members={data.members}
-              onConfirm={handleConfirm}
-              confirmingIds={confirmingIds}
-            />
+        {/* Cards Container with Floating Icons Behind */}
+        <div style={{ position: "relative", width: "100%", marginTop: 8 }}>
+          {/* Floating Icons Decor positioned behind the cards */}
+          <div
+            aria-hidden
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 0,
+            }}
+          >
+            <FloatingIconsDecor />
           </div>
 
-          {/* Mobile Cards: visible on mobile < 768px, optimized for 360px phones */}
-          <div className="flex flex-col gap-3 md:hidden">
-            {data.members.map((member) => (
-              <MemberMobileCard
-                key={member.id}
-                member={member}
-                onConfirm={handleConfirm}
-                isConfirming={confirmingIds.has(member.id)}
+          {/* Foreground Content & Cards */}
+          <div
+            style={{
+              position: "relative",
+              zIndex: 2,
+              display: "flex",
+              flexDirection: "column",
+              gap: 20,
+              width: "100%",
+            }}
+          >
+            {/* Filter Toolbar (hidden only when the org has 0 members and no filters active) */}
+            {!hasNoOrgMembers && (
+              <MembersSearchFilter
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                statusFilter={statusFilter}
+                onStatusChange={setStatusFilter}
+                pendingCount={data.pendingCount}
+                totalCount={data.totalCount}
               />
-            ))}
+            )}
+
+            {/* Main Content Area */}
+            {isLoading || isPending ? (
+              <MemberSkeleton rowCount={Math.min(data.members.length || 5, 8)} />
+            ) : hasNoOrgMembers ? (
+              <MemberEmptyState
+                type="no-members"
+                joinLinkToken={data.joinLinkToken}
+              />
+            ) : hasNoMatches ? (
+              <MemberEmptyState
+                type="no-matches"
+                onClearFilters={handleClearFilters}
+              />
+            ) : (
+              <>
+                {/* Desktop Table: visible on screens > 640px */}
+                <div className="orgkit-members-desktop">
+                  <MemberTable
+                    members={data.members}
+                    onConfirm={handleConfirm}
+                    confirmingIds={confirmingIds}
+                  />
+                </div>
+
+                {/* Mobile Cards: visible only on mobile screens <= 640px */}
+                <div className="orgkit-members-mobile">
+                  {data.members.map((member) => (
+                    <MemberMobileCard
+                      key={member.id}
+                      member={member}
+                      onConfirm={handleConfirm}
+                      isConfirming={confirmingIds.has(member.id)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-        </>
-      )}
+        </div>
+      </div>
     </div>
   );
 }

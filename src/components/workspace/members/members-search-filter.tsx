@@ -37,6 +37,7 @@ export function MembersSearchFilter({
       }}
     >
       <div
+        className="orgkit-search-filter-row"
         style={{
           display: "flex",
           alignItems: "center",
@@ -47,6 +48,7 @@ export function MembersSearchFilter({
       >
         {/* Search Bar Input */}
         <div
+          className="orgkit-search-bar"
           style={{
             position: "relative",
             flex: "1 1 280px",
@@ -125,6 +127,7 @@ export function MembersSearchFilter({
         <div
           role="tablist"
           aria-label="Filter members by status"
+          className="orgkit-status-tabs"
           style={{
             display: "inline-flex",
             alignItems: "center",
