@@ -232,3 +232,47 @@ export async function updateMemberAction(
   }
 }
 
+export async function setMemberStatusAction(
+  orgId: string,
+  memberId: string,
+  newStatus: "active" | "inactive"
+): Promise<ActionResult<void, MembersActionError>> {
+  if (!isUuid(orgId) || !isUuid(memberId)) {
+    return fail("invalid_request", "Invalid request parameters.");
+  }
+
+  if (newStatus !== "active" && newStatus !== "inactive") {
+    return fail("invalid_request", "Invalid member status.");
+  }
+
+  const access = await getCallerOrgMembership(orgId);
+  if (!access.ok) {
+    return accessFailure(access.error);
+  }
+
+  const { supabase } = access.caller;
+
+  try {
+    const { error: rpcErr } = await supabase.rpc("set_member_status", {
+      target_member: memberId,
+      new_status: newStatus,
+    });
+
+    if (rpcErr) {
+      const msg = rpcErr.message || "";
+      if (msg.includes("not_permitted")) {
+        return fail("access_revoked", MEMBER_EDIT_MESSAGES.notPermitted);
+      }
+      if (msg.includes("member_not_found")) {
+        return fail("not_found", MEMBER_EDIT_MESSAGES.notFound);
+      }
+      return fail("failed", MEMBER_EDIT_MESSAGES.statusChangeFailed);
+    }
+
+    revalidatePath(membersPath(orgId));
+    return ok();
+  } catch {
+    return fail("failed", MEMBER_EDIT_MESSAGES.statusChangeFailed);
+  }
+}
+
