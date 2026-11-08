@@ -57,11 +57,12 @@ export async function getWorkspaceMembers(
   const { supabase } = access.caller;
 
   try {
-    // 1. Total members count for this org
+    // 1. Total working members count (active + pending) for this org
     const { count: totalCount, error: totalCountErr } = await supabase
       .from("members")
       .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId);
+      .eq("org_id", orgId)
+      .neq("status", "inactive");
 
     if (totalCountErr) {
       return fail("failed", "We couldn't load your members. Try again.");
@@ -85,10 +86,15 @@ export async function getWorkspaceMembers(
       .eq("org_id", orgId);
 
     const statusFilter = options?.status?.toLowerCase().trim();
-    if (statusFilter && statusFilter !== "all") {
-      if (statusFilter === "pending" || statusFilter === "active" || statusFilter === "inactive") {
-        query = query.eq("status", statusFilter);
-      }
+    if (statusFilter === "inactive") {
+      query = query.eq("status", "inactive");
+    } else if (statusFilter === "pending") {
+      query = query.eq("status", "pending");
+    } else if (statusFilter === "active") {
+      query = query.eq("status", "active");
+    } else {
+      // Default / "all": Shows the working roster (active + pending), keeping inactive members out of main view
+      query = query.neq("status", "inactive");
     }
 
     const searchFilter = buildMemberSearchFilter(options?.search ?? "");
