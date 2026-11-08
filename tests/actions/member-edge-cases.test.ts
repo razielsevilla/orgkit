@@ -30,6 +30,7 @@ const state: FakeState = {
 
 function query(table: string) {
   let filtered = [...state.members];
+  let window: [number, number] | null = null;
 
   const builder: Record<string, unknown> = {
     select: (_cols: string, opts?: { count?: string; head?: boolean }) => {
@@ -69,6 +70,10 @@ function query(table: string) {
       return builder;
     },
     order: () => builder,
+    range: (from: number, to: number) => {
+      window = [from, to];
+      return builder;
+    },
     maybeSingle: async () => {
       if (table === "org_officers") {
         return {
@@ -80,7 +85,7 @@ function query(table: string) {
     },
     then: (resolve: (v: unknown) => unknown) =>
       Promise.resolve({
-        data: filtered,
+        data: window ? filtered.slice(window[0], window[1] + 1) : filtered,
         count: filtered.length,
         error: null,
       }).then(resolve),
@@ -107,6 +112,7 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 const { getWorkspaceMembers, confirmMemberAction } = await import(
   "@/src/app/(workspace)/members-actions"
 );
+const { buildMemberSearchFilter } = await import("@/src/lib/members/member-search");
 
 const ORG_A = "11111111-1111-4111-8111-111111111111";
 const ME = "22222222-2222-4222-8222-222222222222";
@@ -206,5 +212,33 @@ describe("Ticket R1: Member Roster Edge Cases", () => {
     expect(res.success).toBe(false);
     expect(res.errorMessage).toBe("Could not confirm member. Please try again.");
   });
-});
 
+  it("pages the roster 50 at a time and reports hasMore", async () => {
+    state.members = Array.from({ length: 120 }, (_, i) => ({
+      id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
+      org_id: ORG_A,
+      full_name: `Person ${i}`,
+      email: `p${i}@example.com`,
+      status: "active",
+      created_at: "2026-10-10T10:00:00Z",
+      is_pending: false,
+    }));
+    const p1 = await getWorkspaceMembers(ORG_A);
+    expect(p1.data?.members).toHaveLength(50);
+    expect(p1.data?.matchingCount).toBe(120);
+    expect(p1.data?.hasMore).toBe(true);
+
+    const p3 = await getWorkspaceMembers(ORG_A, { offset: 100 });
+    expect(p3.data?.members).toHaveLength(20);
+    expect(p3.data?.hasMore).toBe(false);
+  });
+
+  it("builds a search filter that survives commas, parentheses and wildcards", () => {
+    expect(buildMemberSearchFilter("   ")).toBeNull();
+    expect(buildMemberSearchFilter("  Smith,   John ")).toBe(
+      'full_name.ilike."%Smith, John%",email.ilike."%Smith, John%"'
+    );
+    expect(buildMemberSearchFilter("100%_(a)")).toContain('"%100\\\\%\\\\_(a)%"');
+    expect(buildMemberSearchFilter('a"b')).toContain('"%a\\"b%"');
+  });
+});

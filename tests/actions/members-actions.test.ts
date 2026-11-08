@@ -30,6 +30,7 @@ const state: FakeState = {
 
 function query(table: string) {
   let filtered = [...state.members];
+  let window: [number, number] | null = null;
 
   const builder: Record<string, unknown> = {
     select: (_cols: string, opts?: { count?: string; head?: boolean }) => {
@@ -70,6 +71,10 @@ function query(table: string) {
       return builder;
     },
     order: () => builder,
+    range: (from: number, to: number) => {
+      window = [from, to];
+      return builder;
+    },
     maybeSingle: async () => {
       if (table === "org_officers") {
         return {
@@ -81,7 +86,7 @@ function query(table: string) {
     },
     then: (resolve: (v: unknown) => unknown) =>
       Promise.resolve({
-        data: filtered,
+        data: window ? filtered.slice(window[0], window[1] + 1) : filtered,
         count: filtered.length,
         error: null,
       }).then(resolve),

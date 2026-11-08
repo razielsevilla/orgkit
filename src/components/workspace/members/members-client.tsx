@@ -25,21 +25,27 @@ import { ErrorToast } from "@/src/components/error-toast";
 interface MembersClientProps {
   rawId: string;
   initialData: WorkspaceMembersData;
+  initialError?: string | null;
 }
 
-export function MembersClient({ rawId, initialData }: MembersClientProps) {
+export function MembersClient({ rawId, initialData, initialError = null }: MembersClientProps) {
   const [data, setData] = useState<WorkspaceMembersData>(initialData);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilterOption>("all");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(initialError);
   const [toastError, setToastError] = useState<string | null>(null);
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
 
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   const [isPending, startTransition] = useTransition();
-  const isFirstRender = useRef(true);
+  // Skip the refetch on mount only when the server already gave us data
+  const isFirstRender = useRef(!initialError);
+  // Only the latest request may write results (guards out-of-order responses)
+  const requestId = useRef(0);
 
   // Debounce search input by 250ms to keep page responsive past 500 members
   useEffect(() => {
@@ -51,6 +57,7 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
 
   // Fetch updated list when debounced search or status filter changes
   const fetchMembers = useCallback(async () => {
+    const myRequest = ++requestId.current;
     setIsLoading(true);
     setErrorMessage(null);
 
@@ -58,6 +65,7 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
       search: debouncedSearch,
       status: statusFilter,
     });
+    if (myRequest !== requestId.current) return;
 
     if (res.success && res.data) {
       setData(res.data);
@@ -65,7 +73,35 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
       setErrorMessage(res.errorMessage || "We couldn't load your members. Try again.");
     }
     setIsLoading(false);
+    setIsLoadingMore(false);
   }, [rawId, debouncedSearch, statusFilter]);
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || isLoading || !data.hasMore) return;
+    const myRequest = ++requestId.current;
+    setIsLoadingMore(true);
+
+    const res = await getWorkspaceMembers(rawId, {
+      search: debouncedSearch,
+      status: statusFilter,
+      offset: data.members.length,
+    });
+    if (myRequest !== requestId.current) return;
+
+    if (res.success && res.data) {
+      const next = res.data;
+      setData((prev) => {
+        const seen = new Set(prev.members.map((m) => m.id));
+        return {
+          ...next,
+          members: [...prev.members, ...next.members.filter((m) => !seen.has(m.id))],
+        };
+      });
+    } else {
+      setToastError(res.errorMessage || "We couldn't load more members. Try again.");
+    }
+    setIsLoadingMore(false);
+  };
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -84,8 +120,6 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
     setConfirmingIds((prev) => new Set(prev).add(targetMember.id));
 
     // Optimistic update
-    const previousMembers = data.members;
-    const previousPendingCount = data.pendingCount;
 
     setData((prev) => ({
       ...prev,
@@ -98,11 +132,13 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
     const res = await confirmMemberAction(rawId, targetMember.id);
 
     if (!res.success) {
-      // Rollback on failure
+      // Roll back only this member so other in-flight confirms are untouched
       setData((prev) => ({
         ...prev,
-        pendingCount: previousPendingCount,
-        members: previousMembers,
+        pendingCount: prev.pendingCount + 1,
+        members: prev.members.map((m) =>
+          m.id === targetMember.id ? { ...m, status: "pending" as const } : m
+        ),
       }));
       setToastError(res.errorMessage || "Could not confirm member. Please try again.");
     }
@@ -121,8 +157,9 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
   };
 
   const isFiltered = debouncedSearch.trim().length > 0 || statusFilter !== "all";
-  const hasNoOrgMembers = data.totalCount === 0 && !isFiltered;
-  const hasNoMatches = data.members.length === 0 && isFiltered;
+  const hasNoOrgMembers = data.totalCount === 0 && !isFiltered && !errorMessage;
+  const hasLoadError = Boolean(errorMessage) && data.members.length === 0;
+  const hasNoMatches = data.members.length === 0 && isFiltered && !errorMessage;
 
   return (
     <div
@@ -178,7 +215,7 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
         {/* Main Content Area framed by Dynamic Floating Decor */}
         {isLoading || isPending ? (
           <MemberSkeleton rowCount={Math.min(data.members.length || 5, 8)} />
-        ) : hasNoOrgMembers ? (
+        ) : hasLoadError ? null : hasNoOrgMembers ? (
           <MemberEmptyState
             type="no-members"
             joinLinkToken={data.joinLinkToken}
@@ -214,6 +251,31 @@ export function MembersClient({ rawId, initialData }: MembersClientProps) {
                   />
                 ))}
               </div>
+
+              {data.hasMore && (
+                <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
+                  <button
+                    type="button"
+                    onClick={handleLoadMore}
+                    disabled={isLoadingMore}
+                    style={{
+                      padding: "10px 22px",
+                      borderRadius: 999,
+                      border: "1px solid var(--color-line)",
+                      backgroundColor: "var(--color-surface)",
+                      color: "var(--color-ink)",
+                      fontWeight: 600,
+                      fontSize: 14,
+                      cursor: isLoadingMore ? "not-allowed" : "pointer",
+                      opacity: isLoadingMore ? 0.7 : 1,
+                    }}
+                  >
+                    {isLoadingMore
+                      ? "Loading..."
+                      : `Load more (${data.members.length} of ${data.matchingCount})`}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

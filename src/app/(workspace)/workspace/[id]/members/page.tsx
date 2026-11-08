@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { isUuid } from "@/src/lib/validation";
 import { getWorkspaceMembers } from "@/src/app/(workspace)/members-actions";
 import { MembersClient } from "@/src/components/workspace/members/members-client";
+import { EMPTY_MEMBERS_DATA } from "@/src/components/workspace/members/members-empty-data";
 import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import {
   getOrganizationById,
@@ -56,6 +57,18 @@ async function MembersContent({ params }: MembersPageProps) {
   if (!membersRes.success || !membersRes.data) {
     if (membersRes.error === "not_authenticated") {
       redirect(ROUTES.signIn);
+    }
+    // A transient failure is not a missing page: show the retry banner instead
+    if (membersRes.error === "failed") {
+      return (
+        <PageReveal>
+          <MembersClient
+            rawId={rawId}
+            initialData={EMPTY_MEMBERS_DATA}
+            initialError={membersRes.errorMessage ?? "We couldn't load your members. Try again."}
+          />
+        </PageReveal>
+      );
     }
     const [officer, workspace] = await Promise.all([
       getCurrentOfficer(),

@@ -5,6 +5,7 @@ import { fail, ok, type ActionResult } from "@/src/lib/action-result";
 import { accessFailure, getCallerOrgMembership } from "@/src/lib/orgs/org-access";
 import { membersPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
+import { MEMBERS_PAGE_SIZE, buildMemberSearchFilter } from "@/src/lib/members/member-search";
 
 export type MemberStatus = "pending" | "active" | "inactive";
 
@@ -21,6 +22,7 @@ export interface WorkspaceMembersData {
   members: WorkspaceMember[];
   totalCount: number;
   matchingCount: number;
+  hasMore: boolean;
   pendingCount: number;
   joinLinkToken: string | null;
 }
@@ -37,6 +39,8 @@ export async function getWorkspaceMembers(
   options?: {
     search?: string;
     status?: string;
+    offset?: number;
+    limit?: number;
   }
 ): Promise<ActionResult<WorkspaceMembersData, MembersActionError>> {
   const access = await getCallerOrgMembership(orgId);
@@ -81,14 +85,22 @@ export async function getWorkspaceMembers(
       }
     }
 
-    const searchTerm = options?.search?.trim();
-    if (searchTerm) {
-      const cleaned = searchTerm.replace(/\s+/g, " ");
-      query = query.or(`full_name.ilike.%${cleaned}%,email.ilike.%${cleaned}%`);
+    const searchFilter = buildMemberSearchFilter(options?.search ?? "");
+    if (searchFilter) {
+      query = query.or(searchFilter);
     }
 
-    // Order pending members first, then newest joins first within groups
-    query = query.order("is_pending", { ascending: false }).order("created_at", { ascending: false });
+    const rawLimit = Number.isFinite(options?.limit) ? Math.trunc(options!.limit!) : MEMBERS_PAGE_SIZE;
+    const rawOffset = Number.isFinite(options?.offset) ? Math.trunc(options!.offset!) : 0;
+    const limit = Math.min(Math.max(rawLimit, 1), 100);
+    const offset = Math.max(rawOffset, 0);
+
+    // Pending first, then newest joins first; id keeps pages stable on ties
+    query = query
+      .order("is_pending", { ascending: false })
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false })
+      .range(offset, offset + limit - 1);
 
     const { data: rawMembers, count: matchingCount, error: fetchErr } = await query;
 
@@ -107,7 +119,7 @@ export async function getWorkspaceMembers(
 
     // If org has no members yet, fetch the active join link token for the empty state
     let joinLinkToken: string | null = null;
-    if ((totalCount ?? 0) === 0) {
+    if ((totalCount ?? 0) === 0 && offset === 0) {
       const { data: linkToken } = await supabase.rpc("get_org_join_link", {
         target_org: orgId,
       });
@@ -118,6 +130,7 @@ export async function getWorkspaceMembers(
       members,
       totalCount: totalCount ?? 0,
       matchingCount: matchingCount ?? members.length,
+      hasMore: offset + members.length < (matchingCount ?? members.length),
       pendingCount: pendingCount ?? 0,
       joinLinkToken,
     });
