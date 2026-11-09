@@ -18,6 +18,14 @@ describe("Permissions Matrix (can)", () => {
     assert.equal(can("admin", "officer:view_emails"), true);
     assert.equal(can("admin", "officer:view_list"), true);
     assert.equal(can("admin", "workspace:manage"), true);
+    assert.equal(can("admin", "member:import"), true);
+  });
+
+  it("lets only admins import a member list", () => {
+    assert.equal(can("finance", "member:import"), false);
+    assert.equal(can("officer", "member:import"), false);
+    assert.equal(can(null, "member:import"), false);
+    assert.equal(can("someone-else", "member:import"), false);
   });
 
   it("restricts finance officers to viewing the roster only", () => {

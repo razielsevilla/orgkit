@@ -9,6 +9,8 @@ interface MembersHeaderProps {
   errorMessage?: string | null;
   onRetry?: () => void;
   isRetrying?: boolean;
+  /** Buttons shown beside the title, such as Import (admins only) */
+  actions?: React.ReactNode;
   /** Admins only: shows the Export button */
   onExport?: () => void;
 }
@@ -21,6 +23,7 @@ export function MembersHeader({
   errorMessage,
   onRetry,
   isRetrying = false,
+  actions,
   onExport,
 }: MembersHeaderProps) {
   // Summary text format: "X members match • Y pending to review" or "X members • Y pending to review"
@@ -103,6 +106,7 @@ export function MembersHeader({
             )}
           </div>
         </div>
+        {actions}
 
         {onExport && totalCount > 0 && (
           <button

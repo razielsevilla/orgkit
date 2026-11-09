@@ -47,7 +47,7 @@ layout but is not part of the URL.
 |---|---|---|---|
 | `/workspace/new` | Any officer | Create your org's workspace | `(workspace)/workspace/new/page.tsx` |
 | `/workspace/:id` | Officer of that org | **Home**: workspace landing | `(workspace)/workspace/[id]/page.tsx` |
-| `/workspace/:id/members` | Officer of that org | **Members**: view and search roster | `(workspace)/workspace/[id]/members/page.tsx` |
+| `/workspace/:id/members` | Officer of that org | **Members**: view and search roster. Admins also get **Import** (a CSV of people to invite, R3) and an **Invited** view. These are a dialog and a tab on this page, not separate URLs; the CSV upload goes through a Server Action, so `experimental.serverActions.bodySizeLimit` is set in `next.config.ts` | `(workspace)/workspace/[id]/members/page.tsx` |
 | `/workspace/:id/officers` | Officer of that org | **Invite**: officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
 | `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | **Join**: manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
 | `/workspace/:id/members/export` | **Admin** of that org (others get 403) | **Export**: `POST` streams the roster as a CSV download | `(workspace)/workspace/[id]/members/export/route.ts` |
@@ -219,6 +219,8 @@ Not URLs, but how pages change data.
 | `consent/actions.ts` | `acceptConsent`, `declineConsent` |
 | `(workspace)/actions.ts` | `createWorkspace`, plus readers `getOrganizationById`, `getOfficerDefaultWorkspace`, `getCurrentOfficer`, `isOrgAdmin` |
 | `(workspace)/officers-actions.ts` | `getWorkspaceOfficers`, `createOfficerInvite`, `revokeOfficerInvite`, `updateOfficerRole`, `removeWorkspaceOfficer` |
+| `(workspace)/members-actions.ts` | `getWorkspaceMembers`, `confirmMemberAction` |
+| `(workspace)/member-invites-actions.ts` | R3, admin only: `parseRosterCsv`, `previewMemberInvites`, `importMemberInvites`, `getMemberInvites` |
 | `(workspace)/workspace/[id]/members/join/actions.ts` | `setJoinLink` |
 | `invite/actions.ts` | `clearInviteCookie` |
 | `join/[token]/actions.ts` | `submitJoin` |
