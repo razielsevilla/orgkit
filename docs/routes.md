@@ -50,6 +50,7 @@ layout but is not part of the URL.
 | `/workspace/:id/members` | Officer of that org | **Members**: view and search roster | `(workspace)/workspace/[id]/members/page.tsx` |
 | `/workspace/:id/officers` | Officer of that org | **Invite**: officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
 | `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | **Join**: manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
+| `/workspace/:id/members/export` | **Admin** of that org (others get 403) | **Export**: `POST` streams the roster as a CSV download | `(workspace)/workspace/[id]/members/export/route.ts` |
 
 `:id` is an org UUID. `:token` is a secret token. A malformed value is handled
 as "not found" without a database query. `/workspace/new` is a fixed path, so

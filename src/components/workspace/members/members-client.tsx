@@ -21,14 +21,17 @@ import { MemberEmptyState } from "./member-empty-state";
 import { MembersStyles } from "./members-styles";
 import { MembersFloatingDecor } from "./members-decor";
 import { ErrorToast } from "@/src/components/error-toast";
+import { ExportDialog } from "./export/export-dialog";
 
 interface MembersClientProps {
   rawId: string;
   initialData: WorkspaceMembersData;
   initialError?: string | null;
+  /** Admins only: shows the Export button and dialog */
+  canExport?: boolean;
 }
 
-export function MembersClient({ rawId, initialData, initialError = null }: MembersClientProps) {
+export function MembersClient({ rawId, initialData, initialError = null, canExport = false }: MembersClientProps) {
   const [data, setData] = useState<WorkspaceMembersData>(initialData);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -40,6 +43,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   const [isPending, startTransition] = useTransition();
   // Skip the refetch on mount only when the server already gave us data
@@ -198,7 +202,12 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
           errorMessage={errorMessage}
           onRetry={fetchMembers}
           isRetrying={isLoading || isPending}
+          onExport={canExport ? () => setExportOpen(true) : undefined}
         />
+
+        {canExport && exportOpen && (
+          <ExportDialog orgId={rawId} onClose={() => setExportOpen(false)} />
+        )}
 
         {/* Filter Toolbar (completely clean, unblocked by any decor) */}
         {!hasNoOrgMembers && (
