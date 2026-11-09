@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
     agentFeedback: true,
+    // The member-list import (R3) uploads a CSV of up to 1 MB through a Server
+    // Action. The default 1 MB cap, which also counts the multipart overhead,
+    // would refuse a file at the limit before our code could show a clear
+    // message. So allow a little more here and enforce the real limit
+    // (MAX_CSV_BYTES) in the action.
+    serverActions: {
+      bodySizeLimit: "1300kb",
+    },
   },
   cacheComponents: true,
   partialPrefetching: true,

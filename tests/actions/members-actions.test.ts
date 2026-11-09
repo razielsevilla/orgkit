@@ -236,6 +236,18 @@ describe("getWorkspaceMembers", () => {
     expect(resEmail.data?.members[0].fullName).toBe("Bob Jones");
   });
 
+  it("tells the page whether the caller may import a member list (admins only)", async () => {
+    for (const [role, expected] of [
+      ["admin", true],
+      ["officer", false],
+      ["finance", false],
+    ] as const) {
+      state.callerRole = role;
+      const res = await getWorkspaceMembers(ORG);
+      expect(res.data?.canImport, role).toBe(expected);
+    }
+  });
+
   it("returns joinLinkToken when org has no members yet", async () => {
     state.members = [];
     const res = await getWorkspaceMembers(ORG);

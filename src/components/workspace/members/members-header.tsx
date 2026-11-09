@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, Download, RefreshCw } from "lucide-react";
 
 interface MembersHeaderProps {
   totalCount: number;
@@ -9,6 +9,10 @@ interface MembersHeaderProps {
   errorMessage?: string | null;
   onRetry?: () => void;
   isRetrying?: boolean;
+  /** Buttons shown beside the title, such as Import (admins only) */
+  actions?: React.ReactNode;
+  /** Admins only: shows the Export button */
+  onExport?: () => void;
 }
 
 export function MembersHeader({
@@ -19,6 +23,8 @@ export function MembersHeader({
   errorMessage,
   onRetry,
   isRetrying = false,
+  actions,
+  onExport,
 }: MembersHeaderProps) {
   // Summary text format: "X members match • Y pending to review" or "X members • Y pending to review"
   let summaryText = "";
@@ -103,6 +109,30 @@ export function MembersHeader({
             )}
           </div>
         </div>
+        {actions}
+
+        {onExport && totalCount > 0 && (
+          <button
+            type="button"
+            onClick={onExport}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "9px 18px",
+              borderRadius: 999,
+              border: "1px solid var(--color-line)",
+              backgroundColor: "var(--color-surface)",
+              color: "var(--color-ink)",
+              fontWeight: 600,
+              fontSize: 14,
+              cursor: "pointer",
+            }}
+          >
+            <Download size={15} aria-hidden="true" />
+            <span>Export</span>
+          </button>
+        )}
       </div>
 
       {/* Error Banner with Retry button if fetch failed */}
