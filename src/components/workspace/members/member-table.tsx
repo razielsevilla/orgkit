@@ -111,7 +111,6 @@ export function MemberTable({
           {members.map((member, idx) => {
             const isConfirming = confirmingIds.has(member.id);
             const isReactivating = reactivatingIds.has(member.id);
-            const isPending = member.status === "pending";
 
             return (
               <tr
