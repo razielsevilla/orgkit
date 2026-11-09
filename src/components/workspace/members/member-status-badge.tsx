@@ -26,17 +26,17 @@ export function MemberStatusBadge({ status, size = "md" }: MemberStatusBadgeProp
   let dotColor = "var(--color-muted)";
 
   if (isPending) {
-    bg = "color-mix(in srgb, var(--color-accent) 8%, transparent)";
+    bg = "color-mix(in srgb, var(--color-accent) 10%, transparent)";
     border = "1px solid color-mix(in srgb, var(--color-accent) 28%, transparent)";
     textColor = "var(--color-accent-strong)";
     label = "Pending";
     dotColor = "var(--color-accent)";
   } else if (isActive) {
-    bg = "color-mix(in srgb, var(--color-base) 80%, transparent)";
-    border = "1px solid var(--color-line)";
-    textColor = "var(--color-ink)";
+    bg = "color-mix(in srgb, var(--color-accent) 12%, transparent)";
+    border = "1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)";
+    textColor = "var(--color-accent-strong)";
     label = "Active";
-    dotColor = "#10B981";
+    dotColor = "var(--color-accent)";
   }
 
   return (

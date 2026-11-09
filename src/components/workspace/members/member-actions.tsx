@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Check, Edit2, UserMinus, UserCheck, Loader2 } from "lucide-react";
+import { Check, Edit2, Trash2, UserCheck, Loader2 } from "lucide-react";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 
 interface MemberActionsProps {
@@ -77,20 +77,18 @@ export function MemberActions({
       className="orgkit-btn-deactivate"
       style={{
         ...buttonBaseStyle,
-        backgroundColor: "transparent",
-        border: "1px solid var(--color-line)",
-        color: "var(--color-muted)",
+        backgroundColor: "#FEF2F2",
+        border: "1px solid #FEE2E2",
+        color: "#DC2626",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.color = "var(--color-ink)";
-        e.currentTarget.style.borderColor = "color-mix(in srgb, var(--color-ink) 25%, transparent)";
+        e.currentTarget.style.backgroundColor = "#FEE2E2";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.color = "var(--color-muted)";
-        e.currentTarget.style.borderColor = "var(--color-line)";
+        e.currentTarget.style.backgroundColor = "#FEF2F2";
       }}
     >
-      <UserMinus size={13} strokeWidth={2} />
+      <Trash2 size={13} strokeWidth={1.8} />
       <span>Deactivate</span>
     </button>
   );

@@ -1,4 +1,5 @@
 import React from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import { MemberStatusBadge } from "./member-status-badge";
 import { MemberActions } from "./member-actions";
@@ -11,6 +12,10 @@ interface MemberTableProps {
   onReactivate: (member: WorkspaceMember) => void;
   confirmingIds: Set<string>;
   reactivatingIds?: Set<string>;
+  matchingCount?: number;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  isLoadingMore?: boolean;
 }
 
 function formatDate(isoString: string): string {
@@ -48,6 +53,10 @@ export function MemberTable({
   onReactivate,
   confirmingIds,
   reactivatingIds = new Set(),
+  matchingCount,
+  hasMore = false,
+  onLoadMore,
+  isLoadingMore = false,
 }: MemberTableProps) {
   return (
     <div
@@ -122,19 +131,15 @@ export function MemberTable({
                     <div
                       aria-hidden="true"
                       style={{
-                        width: 36,
-                        height: 36,
+                        width: 38,
+                        height: 38,
                         borderRadius: "50%",
-                        backgroundColor: isPending
-                          ? "color-mix(in srgb, var(--color-accent) 12%, transparent)"
-                          : "color-mix(in srgb, var(--color-line) 80%, transparent)",
-                        color: isPending
-                          ? "var(--color-accent-strong)"
-                          : "var(--color-ink)",
+                        backgroundColor: "color-mix(in srgb, var(--color-accent) 18%, transparent)",
+                        color: "var(--color-accent-strong)",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 12.5,
+                        fontSize: 13,
                         fontWeight: 700,
                         flexShrink: 0,
                         userSelect: "none",
@@ -212,6 +217,86 @@ export function MemberTable({
           })}
         </tbody>
       </table>
+
+      {/* Table Footer with Showing count & pagination controls matching design */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "14px 24px",
+          borderTop: "1px solid var(--color-line)",
+          backgroundColor: "var(--color-surface)",
+          fontSize: 13,
+          color: "var(--color-muted)",
+        }}
+      >
+        <div>
+          Showing {members.length} of {matchingCount ?? members.length}{" "}
+          {(matchingCount ?? members.length) === 1 ? "member" : "members"}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <button
+            type="button"
+            disabled={true}
+            aria-label="Previous page"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              border: "1px solid var(--color-line)",
+              backgroundColor: "var(--color-surface)",
+              color: "var(--color-muted)",
+              cursor: "not-allowed",
+              opacity: 0.5,
+            }}
+          >
+            <ChevronLeft size={16} strokeWidth={2} />
+          </button>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              backgroundColor: "var(--color-accent)",
+              color: "#FFFFFF",
+              fontWeight: 700,
+              fontSize: 13,
+              userSelect: "none",
+            }}
+          >
+            1
+          </span>
+          <button
+            type="button"
+            onClick={onLoadMore}
+            disabled={!hasMore || isLoadingMore}
+            aria-label="Next page"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              border: "1px solid var(--color-line)",
+              backgroundColor: "var(--color-surface)",
+              color: hasMore ? "var(--color-ink)" : "var(--color-muted)",
+              cursor: hasMore && !isLoadingMore ? "pointer" : "not-allowed",
+              opacity: hasMore ? 1 : 0.5,
+              transition: "all 0.15s ease",
+            }}
+          >
+            <ChevronRight size={16} strokeWidth={2} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

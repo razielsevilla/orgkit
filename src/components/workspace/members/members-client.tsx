@@ -541,11 +541,11 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
             style={{
               display: "inline-flex",
               alignItems: "center",
-              padding: 3,
-              margin: "4px 0 12px 0",
-              backgroundColor: "color-mix(in srgb, var(--color-line) 50%, transparent)",
+              padding: 2,
+              margin: "6px 0 14px 0",
+              backgroundColor: "transparent",
               borderRadius: 9999,
-              gap: 2,
+              gap: 4,
             }}
           >
             {(
@@ -566,27 +566,32 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 6,
-                    padding: "6px 16px",
+                    padding: "7px 18px",
                     borderRadius: 9999,
                     border: "none",
-                    backgroundColor: isActive ? "var(--color-surface)" : "transparent",
-                    color: isActive ? "var(--color-ink)" : "var(--color-muted)",
+                    backgroundColor: isActive ? "var(--color-accent)" : "transparent",
+                    color: isActive ? "#FFFFFF" : "var(--color-muted)",
                     fontWeight: isActive ? 600 : 500,
-                    fontSize: 13,
+                    fontSize: 13.5,
                     cursor: "pointer",
-                    boxShadow: isActive ? "0 2px 8px color-mix(in srgb, var(--color-ink) 8%, transparent)" : "none",
+                    boxShadow: isActive
+                      ? "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)"
+                      : "none",
+                    transition: "all 0.15s ease",
                   }}
                 >
                   <span>{tab.label}</span>
                   {typeof tab.badge === "number" && tab.badge > 0 && (
                     <span
                       style={{
-                        padding: "1px 6px",
+                        padding: "1px 7px",
                         borderRadius: 9999,
                         fontSize: 11,
                         fontWeight: 700,
-                        backgroundColor: "color-mix(in srgb, var(--color-line) 80%, transparent)",
-                        color: "var(--color-ink)",
+                        backgroundColor: isActive
+                          ? "color-mix(in srgb, #FFFFFF 25%, transparent)"
+                          : "color-mix(in srgb, var(--color-line) 80%, transparent)",
+                        color: isActive ? "#FFFFFF" : "var(--color-ink)",
                       }}
                     >
                       {tab.badge}
@@ -671,6 +676,10 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
                   onReactivate={handleReactivate}
                   confirmingIds={confirmingIds}
                   reactivatingIds={reactivatingIds}
+                  matchingCount={data.matchingCount}
+                  hasMore={data.hasMore}
+                  onLoadMore={handleLoadMore}
+                  isLoadingMore={isLoadingMore}
                 />
               </div>
 
@@ -688,32 +697,32 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
                     isReactivating={reactivatingIds.has(member.id)}
                   />
                 ))}
-              </div>
 
-              {data.hasMore && (
-                <div style={{ display: "flex", justifyContent: "center", marginTop: 16 }}>
-                  <button
-                    type="button"
-                    onClick={handleLoadMore}
-                    disabled={isLoadingMore}
-                    style={{
-                      padding: "10px 22px",
-                      borderRadius: 999,
-                      border: "1px solid var(--color-line)",
-                      backgroundColor: "var(--color-surface)",
-                      color: "var(--color-ink)",
-                      fontWeight: 600,
-                      fontSize: 14,
-                      cursor: isLoadingMore ? "not-allowed" : "pointer",
-                      opacity: isLoadingMore ? 0.7 : 1,
-                    }}
-                  >
-                    {isLoadingMore
-                      ? "Loading..."
-                      : `Load more (${data.members.length} of ${data.matchingCount})`}
-                  </button>
-                </div>
-              )}
+                {data.hasMore && (
+                  <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
+                    <button
+                      type="button"
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      style={{
+                        padding: "10px 22px",
+                        borderRadius: 999,
+                        border: "1px solid var(--color-line)",
+                        backgroundColor: "var(--color-surface)",
+                        color: "var(--color-ink)",
+                        fontWeight: 600,
+                        fontSize: 14,
+                        cursor: isLoadingMore ? "not-allowed" : "pointer",
+                        opacity: isLoadingMore ? 0.7 : 1,
+                      }}
+                    >
+                      {isLoadingMore
+                        ? "Loading..."
+                        : `Load more (${data.members.length} of ${data.matchingCount})`}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
