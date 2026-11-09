@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, X, ChevronDown } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 export type StatusFilterOption = "all" | "pending" | "active" | "inactive";
 
@@ -169,16 +169,6 @@ export function MembersSearchFilter({
                 }}
               >
                 <span>{tab.label}</span>
-                {tab.id === "all" && (
-                  <ChevronDown
-                    size={14}
-                    strokeWidth={2.2}
-                    aria-hidden="true"
-                    style={{
-                      color: isActive ? "var(--color-accent-strong)" : "var(--color-muted)",
-                    }}
-                  />
-                )}
                 {typeof tab.badge === "number" && tab.badge > 0 && tab.id !== "all" && (
                   <span
                     style={{
