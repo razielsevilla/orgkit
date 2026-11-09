@@ -27,14 +27,17 @@ import { getMemberInvites, type MemberInvitesData } from "@/src/app/(workspace)/
 import { ROUTES } from "@/src/lib/routes";
 import { ImportDialog } from "./import/import-dialog";
 import { InvitedView } from "./invited-view";
+import { ExportDialog } from "./export/export-dialog";
 
 interface MembersClientProps {
   rawId: string;
   initialData: WorkspaceMembersData;
   initialError?: string | null;
+  /** Admins only: shows the Export button and dialog */
+  canExport?: boolean;
 }
 
-export function MembersClient({ rawId, initialData, initialError = null }: MembersClientProps) {
+export function MembersClient({ rawId, initialData, initialError = null, canExport = false }: MembersClientProps) {
   const [data, setData] = useState<WorkspaceMembersData>(initialData);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -46,6 +49,7 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   // R3: admins can import a member list as invitations and see them in the Invited view
   const router = useRouter();
@@ -372,6 +376,11 @@ export function MembersClient({ rawId, initialData, initialError = null }: Membe
             onLoadMore={handleLoadMoreInvites}
             onImport={() => setImportOpen(true)}
           />
+          onExport={canExport ? () => setExportOpen(true) : undefined}
+        />
+
+        {canExport && exportOpen && (
+          <ExportDialog orgId={rawId} onClose={() => setExportOpen(false)} />
         )}
 
         {/* Filter Toolbar (completely clean, unblocked by any decor) */}
