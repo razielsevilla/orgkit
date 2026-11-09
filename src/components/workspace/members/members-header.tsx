@@ -59,7 +59,10 @@ export function MembersHeader({
       >
         <div>
           <h1
+            tabIndex={-1}
+            data-members-heading
             style={{
+              outline: "none",
               fontSize: "clamp(24px, 2.4vw, 32px)",
               fontWeight: 800,
               color: "var(--color-ink)",

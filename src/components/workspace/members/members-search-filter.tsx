@@ -10,6 +10,7 @@ interface MembersSearchFilterProps {
   onStatusChange: (status: StatusFilterOption) => void;
   pendingCount: number;
   totalCount: number;
+  inactiveCount?: number;
 }
 
 export function MembersSearchFilter({
@@ -19,12 +20,13 @@ export function MembersSearchFilter({
   onStatusChange,
   pendingCount,
   totalCount,
+  inactiveCount,
 }: MembersSearchFilterProps) {
   const filterTabs: { id: StatusFilterOption; label: string; badge?: number }[] = [
     { id: "all", label: "All", badge: totalCount },
     { id: "pending", label: "Pending", badge: pendingCount },
     { id: "active", label: "Active" },
-    { id: "inactive", label: "Inactive" },
+    { id: "inactive", label: "Inactive", badge: inactiveCount },
   ];
 
   return (

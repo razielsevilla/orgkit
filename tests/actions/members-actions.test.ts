@@ -45,6 +45,12 @@ function query(table: string) {
                   .filter((m) => (m as unknown as Record<string, unknown>)[f2] === v2).length;
                 return Promise.resolve({ count, error: null });
               },
+              neq: (f2: string, v2: unknown) => {
+                count = filtered
+                  .filter((m) => (m as unknown as Record<string, unknown>)[field] === val)
+                  .filter((m) => (m as unknown as Record<string, unknown>)[f2] !== v2).length;
+                return Promise.resolve({ count, error: null });
+              },
               then: (res: (v: unknown) => unknown) => Promise.resolve({ count, error: null }).then(res),
             };
             return sub;
@@ -55,6 +61,10 @@ function query(table: string) {
     },
     eq: (field: string, val: unknown) => {
       filtered = filtered.filter((m) => (m as unknown as Record<string, unknown>)[field] === val);
+      return builder;
+    },
+    neq: (field: string, val: unknown) => {
+      filtered = filtered.filter((m) => (m as unknown as Record<string, unknown>)[field] !== val);
       return builder;
     },
     or: (condition: string) => {
@@ -169,6 +179,42 @@ describe("getWorkspaceMembers", () => {
     expect(res.data?.totalCount).toBe(2);
     expect(res.data?.pendingCount).toBe(1);
     expect(res.data?.matchingCount).toBe(2);
+  });
+
+  it("excludes inactive members from the default roster view", async () => {
+    state.members.push({
+      id: "55555555-5555-5555-5555-555555555555",
+      org_id: ORG,
+      full_name: "Inactive Student",
+      email: "inactive@example.com",
+      status: "inactive",
+      created_at: "2026-09-01T00:00:00Z",
+      is_pending: false,
+    });
+
+    const res = await getWorkspaceMembers(ORG);
+    expect(res.success).toBe(true);
+    // Should only contain the 2 active/pending members, NOT the inactive one
+    expect(res.data?.members.length).toBe(2);
+    expect(res.data?.members.some((m) => m.status === "inactive")).toBe(false);
+  });
+
+  it("returns inactive members when the inactive status filter is explicitly selected", async () => {
+    state.members.push({
+      id: "55555555-5555-5555-5555-555555555555",
+      org_id: ORG,
+      full_name: "Inactive Student",
+      email: "inactive@example.com",
+      status: "inactive",
+      created_at: "2026-09-01T00:00:00Z",
+      is_pending: false,
+    });
+
+    const res = await getWorkspaceMembers(ORG, { status: "inactive" });
+    expect(res.success).toBe(true);
+    expect(res.data?.members.length).toBe(1);
+    expect(res.data?.members[0].fullName).toBe("Inactive Student");
+    expect(res.data?.members[0].status).toBe("inactive");
   });
 
   it("filters by status", async () => {

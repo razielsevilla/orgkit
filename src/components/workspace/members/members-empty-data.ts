@@ -7,6 +7,7 @@ export const EMPTY_MEMBERS_DATA: WorkspaceMembersData = {
   matchingCount: 0,
   hasMore: false,
   pendingCount: 0,
+  inactiveCount: 0,
   joinLinkToken: null,
   canImport: false,
 };

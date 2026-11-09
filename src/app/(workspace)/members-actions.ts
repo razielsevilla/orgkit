@@ -7,6 +7,10 @@ import { can } from "@/src/lib/orgs/permissions";
 import { membersPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
 import { MEMBERS_PAGE_SIZE, buildMemberSearchFilter } from "@/src/lib/members/member-search";
+import {
+  validateMemberEdit,
+  MEMBER_EDIT_MESSAGES,
+} from "@/src/lib/members/member-edit";
 
 export type MemberStatus = "pending" | "active" | "inactive";
 
@@ -17,6 +21,7 @@ export interface WorkspaceMember {
   email: string;
   status: MemberStatus;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WorkspaceMembersData {
@@ -25,6 +30,7 @@ export interface WorkspaceMembersData {
   matchingCount: number;
   hasMore: boolean;
   pendingCount: number;
+  inactiveCount: number;
   joinLinkToken: string | null;
   /** Admins can import a member list and see invitations */
   canImport: boolean;
@@ -35,6 +41,8 @@ export type MembersActionError =
   | "access_revoked"
   | "not_found"
   | "invalid_request"
+  | "duplicate_email"
+  | "stale"
   | "failed";
 
 export async function getWorkspaceMembers(
@@ -54,11 +62,12 @@ export async function getWorkspaceMembers(
   const { supabase } = access.caller;
 
   try {
-    // 1. Total members count for this org
+    // 1. Total working members count (active + pending) for this org
     const { count: totalCount, error: totalCountErr } = await supabase
       .from("members")
       .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId);
+      .eq("org_id", orgId)
+      .neq("status", "inactive");
 
     if (totalCountErr) {
       return fail("failed", "We couldn't load your members. Try again.");
@@ -75,17 +84,33 @@ export async function getWorkspaceMembers(
       return fail("failed", "We couldn't load your members. Try again.");
     }
 
-    // 3. Query members with search and status filtering
+    // 3. Inactive members count for this org
+    const { count: inactiveCount, error: inactiveCountErr } = await supabase
+      .from("members")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .eq("status", "inactive");
+
+    if (inactiveCountErr) {
+      return fail("failed", "We couldn't load your members. Try again.");
+    }
+
+    // 4. Query members with search and status filtering
     let query = supabase
       .from("members")
-      .select("id, org_id, full_name, email, status, created_at, is_pending", { count: "exact" })
+      .select("id, org_id, full_name, email, status, created_at, updated_at, is_pending", { count: "exact" })
       .eq("org_id", orgId);
 
     const statusFilter = options?.status?.toLowerCase().trim();
-    if (statusFilter && statusFilter !== "all") {
-      if (statusFilter === "pending" || statusFilter === "active" || statusFilter === "inactive") {
-        query = query.eq("status", statusFilter);
-      }
+    if (statusFilter === "inactive") {
+      query = query.eq("status", "inactive");
+    } else if (statusFilter === "pending") {
+      query = query.eq("status", "pending");
+    } else if (statusFilter === "active") {
+      query = query.eq("status", "active");
+    } else {
+      // Default / "all": Shows the working roster (active + pending), keeping inactive members out of main view
+      query = query.neq("status", "inactive");
     }
 
     const searchFilter = buildMemberSearchFilter(options?.search ?? "");
@@ -118,11 +143,12 @@ export async function getWorkspaceMembers(
       email: row.email,
       status: row.status as MemberStatus,
       createdAt: row.created_at,
+      updatedAt: row.updated_at,
     }));
 
-    // If org has no members yet, fetch the active join link token for the empty state
+    // If org has no members yet (zero active, pending, or inactive), fetch join link
     let joinLinkToken: string | null = null;
-    if ((totalCount ?? 0) === 0 && offset === 0) {
+    if ((totalCount ?? 0) === 0 && (inactiveCount ?? 0) === 0 && offset === 0) {
       const { data: linkToken } = await supabase.rpc("get_org_join_link", {
         target_org: orgId,
       });
@@ -135,6 +161,7 @@ export async function getWorkspaceMembers(
       matchingCount: matchingCount ?? members.length,
       hasMore: offset + members.length < (matchingCount ?? members.length),
       pendingCount: pendingCount ?? 0,
+      inactiveCount: inactiveCount ?? 0,
       joinLinkToken,
       canImport: can(access.caller.role, "member:import"),
     });
@@ -174,6 +201,114 @@ export async function confirmMemberAction(
   }
 }
 
+export async function updateMemberAction(
+  orgId: string,
+  memberId: string,
+  data: { fullName: string; email: string },
+  expectedStatus?: MemberStatus
+): Promise<ActionResult<{ fullName: string; email: string }, MembersActionError>> {
+  if (!isUuid(orgId) || !isUuid(memberId)) {
+    return fail("invalid_request", "Invalid request parameters.");
+  }
+
+  const validation = validateMemberEdit(data);
+  if (!validation.valid) {
+    return fail("invalid_request", validation.error || "Invalid member details.");
+  }
+
+  const access = await getCallerOrgMembership(orgId);
+  if (!access.ok) {
+    return accessFailure(access.error);
+  }
+
+  const { supabase } = access.caller;
+
+  try {
+    const { error: rpcErr } = await supabase.rpc("update_member", {
+      target_member: memberId,
+      new_name: validation.fullName,
+      new_email: validation.email,
+      ...(expectedStatus ? { expected_status: expectedStatus } : {}),
+    });
+
+    if (rpcErr) {
+      const msg = rpcErr.message || "";
+      if (msg.includes("stale_member")) {
+        return fail("stale", MEMBER_EDIT_MESSAGES.stale);
+      }
+      if (msg.includes("duplicate_email")) {
+        return fail("duplicate_email", MEMBER_EDIT_MESSAGES.duplicateEmail);
+      }
+      if (msg.includes("invalid_name")) {
+        return fail("invalid_request", MEMBER_EDIT_MESSAGES.nameInvalid);
+      }
+      if (msg.includes("invalid_email")) {
+        return fail("invalid_request", MEMBER_EDIT_MESSAGES.emailInvalid);
+      }
+      if (msg.includes("not_permitted")) {
+        return fail("access_revoked", MEMBER_EDIT_MESSAGES.notPermitted);
+      }
+      if (msg.includes("member_not_found")) {
+        return fail("not_found", MEMBER_EDIT_MESSAGES.notFound);
+      }
+      return fail("failed", MEMBER_EDIT_MESSAGES.saveFailed);
+    }
+
+    revalidatePath(membersPath(orgId));
+    return ok({ fullName: validation.fullName, email: validation.email });
+  } catch {
+    return fail("failed", MEMBER_EDIT_MESSAGES.saveFailed);
+  }
+}
+
+export async function setMemberStatusAction(
+  orgId: string,
+  memberId: string,
+  newStatus: "active" | "inactive",
+  expectedStatus?: MemberStatus
+): Promise<ActionResult<void, MembersActionError>> {
+  if (!isUuid(orgId) || !isUuid(memberId)) {
+    return fail("invalid_request", "Invalid request parameters.");
+  }
+
+  if (newStatus !== "active" && newStatus !== "inactive") {
+    return fail("invalid_request", "Invalid member status.");
+  }
+
+  const access = await getCallerOrgMembership(orgId);
+  if (!access.ok) {
+    return accessFailure(access.error);
+  }
+
+  const { supabase } = access.caller;
+
+  try {
+    const { error: rpcErr } = await supabase.rpc("set_member_status", {
+      target_member: memberId,
+      new_status: newStatus,
+      ...(expectedStatus ? { expected_status: expectedStatus } : {}),
+    });
+
+    if (rpcErr) {
+      const msg = rpcErr.message || "";
+      if (msg.includes("stale_member")) {
+        return fail("stale", MEMBER_EDIT_MESSAGES.stale);
+      }
+      if (msg.includes("not_permitted")) {
+        return fail("access_revoked", MEMBER_EDIT_MESSAGES.notPermitted);
+      }
+      if (msg.includes("member_not_found")) {
+        return fail("not_found", MEMBER_EDIT_MESSAGES.notFound);
+      }
+      return fail("failed", MEMBER_EDIT_MESSAGES.statusChangeFailed);
+    }
+
+    revalidatePath(membersPath(orgId));
+    return ok();
+  } catch {
+    return fail("failed", MEMBER_EDIT_MESSAGES.statusChangeFailed);
+  }
+}
 
 /**
  * How many members an export with these statuses would contain. Admin only,

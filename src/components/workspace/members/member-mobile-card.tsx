@@ -3,12 +3,17 @@
 import React, { useState } from "react";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import { MemberStatusBadge } from "./member-status-badge";
-import { Check, ChevronDown, ChevronUp } from "lucide-react";
+import { MemberActions } from "./member-actions";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface MemberMobileCardProps {
   member: WorkspaceMember;
   onConfirm: (member: WorkspaceMember) => void;
+  onEdit: (member: WorkspaceMember) => void;
+  onDeactivate: (member: WorkspaceMember) => void;
+  onReactivate: (member: WorkspaceMember) => void;
   isConfirming: boolean;
+  isReactivating?: boolean;
 }
 
 function formatDate(isoString: string): string {
@@ -36,12 +41,16 @@ function getInitials(name: string): string {
  * Mobile card view adhering to docs/design.md:
  * - Optimized for 360px viewports with zero horizontal scrolling.
  * - Tap-to-expand reveals full name and email for very long strings.
- * - Accessible Confirm button naming the member.
+ * - Context-aware actions (Edit, Deactivate, Reactivate, Confirm) with touch-friendly 40px+ buttons.
  */
 export function MemberMobileCard({
   member,
   onConfirm,
+  onEdit,
+  onDeactivate,
+  onReactivate,
   isConfirming,
+  isReactivating = false,
 }: MemberMobileCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const isPending = member.status === "pending";
@@ -49,6 +58,7 @@ export function MemberMobileCard({
   return (
     <div
       role="article"
+      data-member-row={member.id}
       aria-label={`Member: ${member.fullName}`}
       style={{
         backgroundColor: "var(--color-surface)",
@@ -111,7 +121,7 @@ export function MemberMobileCard({
               flexDirection: "column",
               gap: 2,
               minWidth: 0,
-              flex: 1,
+              overflow: "hidden",
             }}
           >
             <span
@@ -142,10 +152,13 @@ export function MemberMobileCard({
           </div>
         </div>
 
-        <MemberStatusBadge status={member.status} size="sm" />
+        {/* Status Badge */}
+        <div style={{ flexShrink: 0 }}>
+          <MemberStatusBadge status={member.status} />
+        </div>
       </div>
 
-      {/* Expanded details toggle */}
+      {/* Date & Expand Toggle */}
       <div
         style={{
           display: "flex",
@@ -181,39 +194,19 @@ export function MemberMobileCard({
         </button>
       </div>
 
-      {/* Action button strictly for Pending members */}
-      {isPending && (
-        <button
-          type="button"
-          onClick={() => onConfirm(member)}
-          disabled={isConfirming}
-          aria-label={`Confirm ${member.fullName}`}
-          className="orgkit-btn-accent"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 6,
-            width: "100%",
-            height: 40,
-            borderRadius: 9999,
-            backgroundColor: "var(--color-accent)",
-            color: "var(--color-on-accent)",
-            border: "none",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: isConfirming ? "not-allowed" : "pointer",
-            opacity: isConfirming ? 0.7 : 1,
-            boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
-            marginTop: 4,
-            transition: "all 0.15s ease",
-          }}
-        >
-          <Check size={14} strokeWidth={2.5} />
-          <span>{isConfirming ? "Confirming..." : "Confirm"}</span>
-        </button>
-      )}
+      {/* Action Controls for all member states */}
+      <div style={{ marginTop: 4, width: "100%" }}>
+        <MemberActions
+          member={member}
+          onConfirm={onConfirm}
+          onEdit={onEdit}
+          onDeactivate={onDeactivate}
+          onReactivate={onReactivate}
+          isConfirming={isConfirming}
+          isReactivating={isReactivating}
+          isMobile={true}
+        />
+      </div>
     </div>
   );
 }
-

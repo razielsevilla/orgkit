@@ -10,6 +10,8 @@ import type {
 import {
   getWorkspaceMembers,
   confirmMemberAction,
+  updateMemberAction,
+  setMemberStatusAction,
 } from "@/src/app/(workspace)/members-actions";
 import { MembersHeader } from "./members-header";
 import {
@@ -22,7 +24,10 @@ import { MemberSkeleton } from "./member-skeleton";
 import { MemberEmptyState } from "./member-empty-state";
 import { MembersStyles } from "./members-styles";
 import { MembersFloatingDecor } from "./members-decor";
+import { MemberEditDialog } from "./member-edit-dialog";
+import { MemberDeactivateDialog } from "./member-deactivate-dialog";
 import { ErrorToast } from "@/src/components/error-toast";
+import { MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
 import { getMemberInvites, type MemberInvitesData } from "@/src/app/(workspace)/member-invites-actions";
 import { ROUTES } from "@/src/lib/routes";
 import { ImportDialog } from "./import/import-dialog";
@@ -46,7 +51,11 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(initialError);
   const [toastError, setToastError] = useState<string | null>(null);
+
   const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
+  const [reactivatingIds, setReactivatingIds] = useState<Set<string>>(new Set());
+  const [editTarget, setEditTarget] = useState<WorkspaceMember | null>(null);
+  const [deactivateTarget, setDeactivateTarget] = useState<WorkspaceMember | null>(null);
 
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
@@ -140,7 +149,6 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
     setConfirmingIds((prev) => new Set(prev).add(targetMember.id));
 
     // Optimistic update
-
     setData((prev) => ({
       ...prev,
       pendingCount: Math.max(0, prev.pendingCount - 1),
@@ -164,6 +172,210 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
     }
 
     setConfirmingIds((prev) => {
+      const next = new Set(prev);
+      next.delete(targetMember.id);
+      return next;
+    });
+  };
+
+  // Keyboard focus: after a prompt closes, land back on the member's row. If the
+  // row is gone (deactivated), land on its neighbour, then on the page heading.
+  const pendingFocus = useRef<string[] | null>(null);
+
+  const queueFocus = (memberId: string) => {
+    const idx = data.members.findIndex((m) => m.id === memberId);
+    const ids = [memberId];
+    if (idx >= 0) {
+      if (data.members[idx + 1]) ids.push(data.members[idx + 1].id);
+      if (data.members[idx - 1]) ids.push(data.members[idx - 1].id);
+    }
+    pendingFocus.current = ids;
+  };
+
+  useEffect(() => {
+    if (!pendingFocus.current || editTarget || deactivateTarget || isLoading || isPending) return;
+    const ids = pendingFocus.current;
+    pendingFocus.current = null;
+
+    const visible = (el: Element) => (el as HTMLElement).getClientRects().length > 0;
+    const rowFor = (id: string) =>
+      Array.from(document.querySelectorAll(`[data-member-row="${id}"]`)).find(visible);
+
+    // The dialog already returned focus to its opener when that button still exists
+    const ownRow = rowFor(ids[0]);
+    if (ownRow && ownRow.contains(document.activeElement)) return;
+
+    for (const id of ids) {
+      const row = rowFor(id);
+      const button = row?.querySelector<HTMLElement>("button:not([disabled])");
+      if (button) {
+        button.focus();
+        return;
+      }
+    }
+    document.querySelector<HTMLElement>("[data-members-heading]")?.focus();
+  }, [editTarget, deactivateTarget, data.members, isLoading, isPending]);
+
+  const closeEdit = () => {
+    if (editTarget) queueFocus(editTarget.id);
+    setEditTarget(null);
+  };
+
+  const closeDeactivate = () => {
+    if (deactivateTarget) queueFocus(deactivateTarget.id);
+    setDeactivateTarget(null);
+  };
+
+  // Another officer changed this member first: undo our change, explain, refresh
+  const handleStale = (message?: string) => {
+    setToastError(message || MEMBER_EDIT_MESSAGES.stale);
+    fetchMembers();
+  };
+
+  // Optimistic edit without page reload
+  const handleSaveEdit = async (
+    memberId: string,
+    updates: { fullName: string; email: string }
+  ) => {
+    const oldMember = data.members.find((m) => m.id === memberId);
+
+    // Optimistically update
+    setData((prev) => ({
+      ...prev,
+      members: prev.members.map((m) =>
+        m.id === memberId ? { ...m, fullName: updates.fullName, email: updates.email } : m
+      ),
+    }));
+
+    const res = await updateMemberAction(rawId, memberId, updates, oldMember?.status);
+
+    if (!res.success) {
+      // Rollback to original values
+      if (oldMember) {
+        setData((prev) => ({
+          ...prev,
+          members: prev.members.map((m) => (m.id === memberId ? oldMember : m)),
+        }));
+      }
+
+      if (res.error === "stale" || res.error === "not_found") {
+        handleStale(res.errorMessage);
+        return { success: false, errorMessage: res.errorMessage, stale: true };
+      }
+
+      return { success: false, errorMessage: res.errorMessage };
+    }
+
+    return { success: true };
+  };
+
+  // Optimistic deactivation
+  const handleConfirmDeactivate = async (memberId: string) => {
+    const oldIndex = data.members.findIndex((m) => m.id === memberId);
+    const oldMember = data.members[oldIndex];
+    if (!oldMember) return { success: false, errorMessage: "Member not found." };
+
+    const wasPending = oldMember.status === "pending";
+
+    // Optimistic update
+    setData((prev) => {
+      const isViewingInactive = statusFilter === "inactive";
+      return {
+        ...prev,
+        pendingCount: wasPending ? Math.max(0, prev.pendingCount - 1) : prev.pendingCount,
+        totalCount: Math.max(0, prev.totalCount - 1),
+        inactiveCount: (prev.inactiveCount ?? 0) + 1,
+        matchingCount: isViewingInactive ? prev.matchingCount : Math.max(0, prev.matchingCount - 1),
+        members: isViewingInactive
+          ? prev.members.map((m) => (m.id === memberId ? { ...m, status: "inactive" as const } : m))
+          : prev.members.filter((m) => m.id !== memberId),
+      };
+    });
+
+    const res = await setMemberStatusAction(rawId, memberId, "inactive", oldMember.status);
+
+    if (!res.success) {
+      // Rollback, putting the member back where they were
+      setData((prev) => {
+        const present = prev.members.some((m) => m.id === memberId);
+        const members = present
+          ? prev.members.map((m) => (m.id === memberId ? oldMember : m))
+          : [
+              ...prev.members.slice(0, oldIndex),
+              oldMember,
+              ...prev.members.slice(oldIndex),
+            ];
+        return {
+          ...prev,
+          pendingCount: wasPending ? prev.pendingCount + 1 : prev.pendingCount,
+          totalCount: prev.totalCount + 1,
+          inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
+          matchingCount: prev.matchingCount + 1,
+          members,
+        };
+      });
+
+      if (res.error === "stale" || res.error === "not_found") {
+        handleStale(res.errorMessage);
+        return { success: false, errorMessage: res.errorMessage, stale: true };
+      }
+
+      setToastError(res.errorMessage || "Could not deactivate member. Please try again.");
+      return { success: false, errorMessage: res.errorMessage };
+    }
+
+    return { success: true };
+  };
+
+  // Optimistic reactivation
+  const handleReactivate = async (targetMember: WorkspaceMember) => {
+    if (reactivatingIds.has(targetMember.id)) return;
+
+    setReactivatingIds((prev) => new Set(prev).add(targetMember.id));
+
+    // Optimistic update
+    setData((prev) => {
+      const isViewingInactive = statusFilter === "inactive";
+      return {
+        ...prev,
+        totalCount: prev.totalCount + 1,
+        inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
+        matchingCount: isViewingInactive ? Math.max(0, prev.matchingCount - 1) : prev.matchingCount,
+        members: isViewingInactive
+          ? prev.members.filter((m) => m.id !== targetMember.id)
+          : prev.members.map((m) =>
+              m.id === targetMember.id ? { ...m, status: "active" as const } : m
+            ),
+      };
+    });
+
+    const res = await setMemberStatusAction(rawId, targetMember.id, "active", targetMember.status);
+
+    if (!res.success) {
+      // Rollback
+      setData((prev) => {
+        const isViewingInactive = statusFilter === "inactive";
+        return {
+          ...prev,
+          totalCount: Math.max(0, prev.totalCount - 1),
+          inactiveCount: (prev.inactiveCount ?? 0) + 1,
+          matchingCount: isViewingInactive ? prev.matchingCount + 1 : prev.matchingCount,
+          members: isViewingInactive
+            ? [...prev.members, targetMember]
+            : prev.members.map((m) =>
+                m.id === targetMember.id ? { ...m, status: "inactive" as const } : m
+              ),
+        };
+      });
+
+      if (res.error === "stale" || res.error === "not_found") {
+        handleStale(res.errorMessage);
+      } else {
+        setToastError(res.errorMessage || "Could not reactivate member. Please try again.");
+      }
+    }
+
+    setReactivatingIds((prev) => {
       const next = new Set(prev);
       next.delete(targetMember.id);
       return next;
@@ -223,9 +435,21 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
   };
 
   const isFiltered = debouncedSearch.trim().length > 0 || statusFilter !== "all";
-  const hasNoOrgMembers = data.totalCount === 0 && !isFiltered && !errorMessage;
+  const hasZeroOrgMembers = data.totalCount === 0 && (data.inactiveCount ?? 0) === 0;
+  const hasNoOrgMembers = hasZeroOrgMembers && !isFiltered && !errorMessage;
   const hasLoadError = Boolean(errorMessage) && data.members.length === 0;
-  const hasNoMatches = data.members.length === 0 && isFiltered && !errorMessage;
+  const hasNoActiveMembers =
+    data.members.length === 0 &&
+    data.totalCount === 0 &&
+    (data.inactiveCount ?? 0) > 0 &&
+    statusFilter === "all" &&
+    debouncedSearch.trim().length === 0 &&
+    !errorMessage;
+  const hasNoMatches =
+    data.members.length === 0 &&
+    !hasNoActiveMembers &&
+    (isFiltered || (data.inactiveCount ?? 0) > 0) &&
+    !errorMessage;
 
   return (
     <div
@@ -254,6 +478,22 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
 
         {/* Toast notification for inline mutation failures */}
         <ErrorToast message={toastError} onDismiss={() => setToastError(null)} />
+
+        {/* Member Edit Dialog Modal */}
+        <MemberEditDialog
+          member={editTarget}
+          isOpen={Boolean(editTarget)}
+          onClose={closeEdit}
+          onSave={handleSaveEdit}
+        />
+
+        {/* Member Deactivate Dialog Modal */}
+        <MemberDeactivateDialog
+          member={deactivateTarget}
+          isOpen={Boolean(deactivateTarget)}
+          onClose={closeDeactivate}
+          onConfirm={handleConfirmDeactivate}
+        />
 
         {/* Header with Title, Dynamic Counters, and Retry Banner */}
         <MembersHeader
@@ -392,6 +632,7 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
             onStatusChange={setStatusFilter}
             pendingCount={data.pendingCount}
             totalCount={data.totalCount}
+            inactiveCount={data.inactiveCount}
           />
         )}
 
@@ -402,6 +643,12 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
           <MemberEmptyState
             type="no-members"
             joinLinkToken={data.joinLinkToken}
+          />
+        ) : hasNoActiveMembers ? (
+          <MemberEmptyState
+            type="no-active-members"
+            inactiveCount={data.inactiveCount}
+            onViewInactive={() => setStatusFilter("inactive")}
           />
         ) : hasNoMatches ? (
           <MemberEmptyState
@@ -419,7 +666,11 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
                 <MemberTable
                   members={data.members}
                   onConfirm={handleConfirm}
+                  onEdit={(m) => setEditTarget(m)}
+                  onDeactivate={(m) => setDeactivateTarget(m)}
+                  onReactivate={handleReactivate}
                   confirmingIds={confirmingIds}
+                  reactivatingIds={reactivatingIds}
                 />
               </div>
 
@@ -430,7 +681,11 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
                     key={member.id}
                     member={member}
                     onConfirm={handleConfirm}
+                    onEdit={(m) => setEditTarget(m)}
+                    onDeactivate={(m) => setDeactivateTarget(m)}
+                    onReactivate={handleReactivate}
                     isConfirming={confirmingIds.has(member.id)}
+                    isReactivating={reactivatingIds.has(member.id)}
                   />
                 ))}
               </div>
@@ -466,4 +721,3 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
     </div>
   );
 }
-
