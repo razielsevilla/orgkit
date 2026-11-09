@@ -290,6 +290,7 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
               </button>
             ) : null
           }
+          onExport={canExport ? () => setExportOpen(true) : undefined}
         />
 
         {/* Members | Invited switch: admins only, because invitations hold email addresses */}
@@ -376,8 +377,7 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
             onLoadMore={handleLoadMoreInvites}
             onImport={() => setImportOpen(true)}
           />
-          onExport={canExport ? () => setExportOpen(true) : undefined}
-        />
+        )}
 
         {canExport && exportOpen && (
           <ExportDialog orgId={rawId} onClose={() => setExportOpen(false)} />

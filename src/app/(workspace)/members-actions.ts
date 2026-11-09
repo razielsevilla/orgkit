@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
 import { accessFailure, getCallerOrgMembership, withOrgPermission } from "@/src/lib/orgs/org-access";
+import { can } from "@/src/lib/orgs/permissions";
 import { membersPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
 import { MEMBERS_PAGE_SIZE, buildMemberSearchFilter } from "@/src/lib/members/member-search";
