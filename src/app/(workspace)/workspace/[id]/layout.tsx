@@ -11,7 +11,8 @@ import {
   WorkspaceFrame,
   type WorkspaceFrameData,
 } from "@/src/components/workspace/frame/workspace-frame";
-import { FlowLoader } from "@/src/components/workspace/frame/flow-loader";
+import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import { WorkspaceBackdrop } from "@/src/components/workspace/frame/workspace-backdrop";
 
 async function loadFrameData(id: string): Promise<WorkspaceFrameData | null> {
   await connection();
@@ -53,7 +54,7 @@ async function WorkspaceFrameLoader({
   const { id } = await params;
   return (
     <WorkspaceFrame data={loadFrameData(id)}>
-      <Suspense fallback={<FlowLoader />}>
+      <Suspense fallback={<WorkspaceContentLoader />}>
         {children}
       </Suspense>
     </WorkspaceFrame>
@@ -67,13 +68,18 @@ function WorkspaceFullLoading() {
         height: "100vh",
         maxHeight: "100vh",
         width: "100vw",
+        overflow: "hidden",
         backgroundColor: "var(--color-base)",
+        position: "relative",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <FlowLoader />
+      <WorkspaceBackdrop />
+      <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
+        <WorkspaceContentLoader />
+      </div>
     </div>
   );
 }
