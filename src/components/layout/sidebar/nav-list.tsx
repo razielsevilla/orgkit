@@ -1,4 +1,8 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
 import { Home, QrCode, UserPlus, Users } from "lucide-react";
 import { joinPanelPath, membersPath, officersPath, workspacePath } from "@/src/lib/routes";
@@ -22,10 +26,14 @@ function NavLinkItem({
   isActive,
   isCollapsed,
 }: NavLinkItemProps) {
+  const router = useRouter();
+
   return (
     <Link
       href={href}
       prefetch={true}
+      onMouseEnter={() => router.prefetch(href)}
+      onTouchStart={() => router.prefetch(href)}
       className={`orgkit-nav-item ${isActive ? "active" : ""}`}
       title={title}
       style={{
@@ -60,6 +68,28 @@ interface NavListProps {
 }
 
 export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListProps) {
+  const router = useRouter();
+
+  // Background idle-prewarm for 0ms transitions across core workspace routes
+  useEffect(() => {
+    const prewarm = () => {
+      router.prefetch(workspacePath(rawId));
+      router.prefetch(membersPath(rawId));
+      router.prefetch(officersPath(rawId));
+      if (isAdmin) {
+        router.prefetch(joinPanelPath(rawId));
+      }
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const handle = window.requestIdleCallback(prewarm, { timeout: 1500 });
+      return () => window.cancelIdleCallback(handle);
+    } else {
+      const timer = setTimeout(prewarm, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [rawId, isAdmin, router]);
+
   return (
     <nav
       style={{

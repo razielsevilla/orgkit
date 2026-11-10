@@ -26,10 +26,9 @@ async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }
   await requireOfficer();
   const supabase = await createClient();
 
-  const { data: isAdmin } = await supabase.rpc("is_org_admin", { target_org: id });
-  if (isAdmin !== true) notFound();
-
-  const [{ data: org }, { data: link }] = await Promise.all([
+  // Execute admin check, org details, and active join link in parallel
+  const [{ data: isAdmin }, { data: org }, { data: link }] = await Promise.all([
+    supabase.rpc("is_org_admin", { target_org: id }),
     supabase.from("orgs").select("name, school").eq("id", id).maybeSingle(),
     supabase
       .from("org_join_links")
@@ -38,7 +37,8 @@ async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }
       .eq("active", true)
       .maybeSingle(),
   ]);
-  if (!org) notFound();
+
+  if (isAdmin !== true || !org) notFound();
 
   // Links are built from the configured address, never from the request, so a
   // link copied on a preview deployment can't point somewhere else.

@@ -24,15 +24,30 @@ import { MemberSkeleton } from "./member-skeleton";
 import { MemberEmptyState } from "./member-empty-state";
 import { MembersStyles } from "./members-styles";
 import { MembersFloatingDecor } from "./members-decor";
-import { MemberEditDialog } from "./member-edit-dialog";
-import { MemberDeactivateDialog } from "./member-deactivate-dialog";
 import { ErrorToast } from "@/src/components/error-toast";
 import { MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
 import { getMemberInvites, type MemberInvitesData } from "@/src/app/(workspace)/member-invites-actions";
 import { ROUTES } from "@/src/lib/routes";
-import { ImportDialog } from "./import/import-dialog";
 import { InvitedView } from "./invited-view";
-import { ExportDialog } from "./export/export-dialog";
+import dynamic from "next/dynamic";
+
+// Off-screen modals lazy-loaded on demand to keep critical bundle minimal
+const MemberEditDialog = dynamic(
+  () => import("./member-edit-dialog").then((m) => m.MemberEditDialog),
+  { ssr: false }
+);
+const MemberDeactivateDialog = dynamic(
+  () => import("./member-deactivate-dialog").then((m) => m.MemberDeactivateDialog),
+  { ssr: false }
+);
+const ExportDialog = dynamic(
+  () => import("./export/export-dialog").then((m) => m.ExportDialog),
+  { ssr: false }
+);
+const ImportDialog = dynamic(
+  () => import("./import/import-dialog").then((m) => m.ImportDialog),
+  { ssr: false }
+);
 
 interface MembersClientProps {
   rawId: string;
