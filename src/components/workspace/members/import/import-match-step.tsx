@@ -9,20 +9,13 @@ import {
   exceedsRowLimit,
   type ParsedRoster,
 } from "@/src/lib/members/csv-import";
-import { StepHeading } from "./step-heading";
-import {
-  bodyText,
-  buttonRow,
-  errorBox,
-  fieldLabel,
-  noteBox,
-  primaryButton,
-  secondaryButton,
-  selectField,
-  wrapText,
-} from "./import-styles";
+import { DialogButton } from "@/src/components/ui/dialog";
+import { ImportStepLayout } from "./import-step-layout";
+import { bodyText, errorBox, fieldLabel, noteBox, selectField, spinnerStyle, tabular, wrapText } from "./import-styles";
 
 interface ImportMatchStepProps {
+  /** The steps indicator, placed at the top of the body */
+  indicator?: React.ReactNode;
   fileName: string;
   roster: ParsedRoster;
   hasHeader: boolean;
@@ -37,7 +30,9 @@ interface ImportMatchStepProps {
   onContinue: () => void;
 }
 
+/** Renders the step's body and footer, to sit directly inside the Dialog after its header */
 export function ImportMatchStep({
+  indicator,
   fileName,
   roster,
   hasHeader,
@@ -67,17 +62,40 @@ export function ImportMatchStep({
   const sampleRows = buildInviteRows(records, hasHeader, emailColumn ?? 0, nameColumn).slice(0, 3);
   const canContinue = emailColumn !== null && !tooMany && dataRows > 0 && !isBusy;
 
+  const footer = (
+    <>
+      <DialogButton onClick={onBack} disabled={isBusy}>
+        Back
+      </DialogButton>
+      <DialogButton variant="primary" onClick={onContinue} disabled={!canContinue}>
+        {isBusy ? (
+          <>
+            <Loader2 size={16} aria-hidden="true" style={spinnerStyle} />
+            <span>Checking…</span>
+          </>
+        ) : (
+          "Continue"
+        )}
+      </DialogButton>
+    </>
+  );
+
   return (
-    <div>
-      <StepHeading>Match columns</StepHeading>
+    <ImportStepLayout indicator={indicator} footer={footer}>
       <p style={{ ...bodyText, ...wrapText }}>
-        <strong style={{ color: "var(--color-ink)" }}>{fileName}</strong> has {dataRows.toLocaleString("en-US")}{" "}
-        {dataRows === 1 ? "row" : "rows"}. Tell us which column is the email address. The name is optional.
+        <strong style={{ color: "var(--color-ink)" }}>{fileName}</strong> has{" "}
+        <span style={tabular}>{dataRows.toLocaleString("en-US")}</span> {dataRows === 1 ? "row" : "rows"}. Tell us
+        which column is the email address. The name is optional.
       </p>
 
       {(error || tooMany) && (
         <div role="alert" style={errorBox}>
-          <AlertCircle size={18} color="#DC2626" style={{ flexShrink: 0, marginTop: 1 }} aria-hidden="true" />
+          <AlertCircle
+            size={16}
+            color="var(--color-danger)"
+            style={{ flexShrink: 0, marginTop: 2 }}
+            aria-hidden="true"
+          />
           <span>{tooMany ? CSV_ERROR_MESSAGES.too_many_rows : error}</span>
         </div>
       )}
@@ -86,8 +104,8 @@ export function ImportMatchStep({
         style={{
           display: "flex",
           alignItems: "flex-start",
-          gap: 10,
-          fontSize: 13.5,
+          gap: 12,
+          fontSize: 14,
           color: "var(--color-ink)",
           marginBottom: 16,
           cursor: "pointer",
@@ -97,11 +115,11 @@ export function ImportMatchStep({
           type="checkbox"
           checked={hasHeader}
           onChange={(e) => onHasHeaderChange(e.target.checked)}
-          style={{ marginTop: 3, width: 16, height: 16, accentColor: "var(--color-accent)", flexShrink: 0 }}
+          style={{ marginTop: 2, width: 16, height: 16, accentColor: "var(--color-accent)", flexShrink: 0 }}
         />
         <span>
           The first row is column headings, not a person
-          <span style={{ display: "block", fontSize: 12.5, color: "var(--color-muted)" }}>
+          <span style={{ display: "block", fontSize: 13, color: "var(--color-muted)" }}>
             {hasHeader
               ? "It looks like headings, so those are used as the column names."
               : "Untick this only if your first row is a real person."}
@@ -109,7 +127,7 @@ export function ImportMatchStep({
         </span>
       </label>
 
-      <div style={{ display: "grid", gap: 14, marginBottom: 16 }}>
+      <div style={{ display: "grid", gap: 16, marginBottom: 16 }}>
         <div>
           <label htmlFor="orgkit-import-email-col" style={fieldLabel}>
             Email column (required)
@@ -150,7 +168,7 @@ export function ImportMatchStep({
       </div>
 
       {emailColumn !== null && sampleRows.length > 0 && (
-        <div style={noteBox}>
+        <div style={{ ...noteBox, margin: 0 }}>
           <div style={{ fontWeight: 600, marginBottom: 4 }}>First rows as we read them</div>
           <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "grid", gap: 4 }}>
             {sampleRows.map((r) => (
@@ -163,28 +181,6 @@ export function ImportMatchStep({
           </ul>
         </div>
       )}
-
-      <div style={buttonRow}>
-        <button type="button" onClick={onBack} disabled={isBusy} style={secondaryButton}>
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={onContinue}
-          disabled={!canContinue}
-          className="orgkit-btn-accent"
-          style={{ ...primaryButton, opacity: canContinue ? 1 : 0.6, cursor: canContinue ? "pointer" : "not-allowed" }}
-        >
-          {isBusy ? (
-            <>
-              <Loader2 size={16} aria-hidden="true" style={{ animation: "spin 1s linear infinite" }} />
-              <span>Checking…</span>
-            </>
-          ) : (
-            "Continue"
-          )}
-        </button>
-      </div>
-    </div>
+    </ImportStepLayout>
   );
 }

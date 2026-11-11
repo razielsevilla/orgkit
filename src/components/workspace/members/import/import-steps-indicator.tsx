@@ -18,11 +18,11 @@ export function ImportStepsIndicator({ current }: { current: ImportStep }) {
       style={{
         display: "flex",
         flexWrap: "wrap",
-        gap: "6px 14px",
+        gap: "8px 16px",
         listStyle: "none",
-        margin: "0 0 18px 0",
+        margin: "0 0 20px 0",
         padding: 0,
-        fontSize: 12.5,
+        fontSize: 13,
       }}
     >
       {STEPS.map((step, i) => {
@@ -35,7 +35,7 @@ export function ImportStepsIndicator({ current }: { current: ImportStep }) {
             style={{
               display: "inline-flex",
               alignItems: "center",
-              gap: 6,
+              gap: 8,
               fontWeight: isCurrent ? 700 : 500,
               color: isCurrent ? "var(--color-ink)" : "var(--color-muted)",
             }}

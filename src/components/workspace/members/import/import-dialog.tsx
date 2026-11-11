@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useState } from "react";
-import { Dialog } from "@/src/components/ui/dialog";
+import React, { useEffect, useRef, useState } from "react";
+import { Dialog, DialogHeader } from "@/src/components/ui/dialog";
 import {
   buildInviteRows,
   guessEmailColumn,
@@ -33,7 +33,15 @@ interface ImportDialogProps {
   onSignedOut: () => void;
 }
 
-type Busy = "reading" | "previewing" | "importing" | null;
+/** The one quiet line under the title: what this step is for */
+const STEP_DESCRIPTIONS: Record<ImportStep, string> = {
+  upload: "Upload your member list",
+  match: "Match columns",
+  review: "Review",
+  done: "Import finished",
+};
+
+type Busy ="reading" | "previewing" | "importing" | null;
 
 /**
  * Upload, Match columns, Review, Done. Nothing is saved until the admin presses
@@ -58,6 +66,21 @@ export function ImportDialog({ orgId, onClose, onFinished, onSignedOut }: Import
 
   // A ref, not state: a second click in the same tick must not start a second import
   const importStarted = useRef(false);
+
+  // The title lives in the dialog header, so move focus to it when the step changes:
+  // a keyboard or screen reader user starts at the top of each new step.
+  const firstStep = useRef(true);
+  useEffect(() => {
+    if (firstStep.current) {
+      firstStep.current = false;
+      return;
+    }
+    const title = document.getElementById(IMPORT_TITLE_ID);
+    if (!title) return;
+    title.tabIndex = -1;
+    title.style.outline = "none";
+    title.focus();
+  }, [step]);
 
   const goTo = (next: ImportStep) => {
     setError(null);
@@ -160,23 +183,37 @@ export function ImportDialog({ orgId, onClose, onFinished, onSignedOut }: Import
     else onClose();
   };
 
+  const indicator = <ImportStepsIndicator current={step} />;
+
   return (
     <Dialog
       labelledBy={IMPORT_TITLE_ID}
       onDismiss={busy === "importing" ? undefined : handleDismiss}
       dismissOnBackdrop={false}
       maxWidth={600}
-      padding="22px clamp(16px, 4vw, 28px) 24px"
-      cardStyle={{ maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
     >
-      <ImportStepsIndicator current={step} />
+      <DialogHeader
+        titleId={IMPORT_TITLE_ID}
+        title="Import members"
+        description={STEP_DESCRIPTIONS[step]}
+        onClose={handleDismiss}
+        closeDisabled={busy === "importing"}
+        closeLabel="Close"
+      />
 
       {step === "upload" && (
-        <ImportUploadStep isReading={busy === "reading"} error={error} onFile={handleFile} onCancel={onClose} />
+        <ImportUploadStep
+          indicator={indicator}
+          isReading={busy === "reading"}
+          error={error}
+          onFile={handleFile}
+          onCancel={onClose}
+        />
       )}
 
       {step === "match" && roster && (
         <ImportMatchStep
+          indicator={indicator}
           fileName={fileName}
           roster={roster}
           hasHeader={hasHeader}
@@ -194,6 +231,7 @@ export function ImportDialog({ orgId, onClose, onFinished, onSignedOut }: Import
 
       {step === "review" && preview && (
         <ImportReviewStep
+          indicator={indicator}
           preview={preview}
           isImporting={busy === "importing"}
           error={error}
@@ -203,7 +241,9 @@ export function ImportDialog({ orgId, onClose, onFinished, onSignedOut }: Import
         />
       )}
 
-      {step === "done" && done && <ImportDoneStep orgId={orgId} result={done} onDone={onFinished} />}
+      {step === "done" && done && (
+        <ImportDoneStep indicator={indicator} orgId={orgId} result={done} onDone={onFinished} />
+      )}
     </Dialog>
   );
 }

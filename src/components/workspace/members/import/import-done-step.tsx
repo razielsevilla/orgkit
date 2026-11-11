@@ -4,16 +4,20 @@ import React, { useState } from "react";
 import { AlertTriangle, Check, Copy } from "lucide-react";
 import { joinLinkPath, joinPanelPath } from "@/src/lib/routes";
 import type { ImportDone } from "@/src/app/(workspace)/member-invites-actions";
-import { StepHeading } from "./step-heading";
-import { bodyText, buttonRow, noteBox, primaryButton, secondaryButton, wrapText } from "./import-styles";
+import { DialogButton } from "@/src/components/ui/dialog";
+import { ImportStepLayout } from "./import-step-layout";
+import { bodyText, noteBox, tabular, warningBox, wrapText } from "./import-styles";
 
 interface ImportDoneStepProps {
+  /** The steps indicator, placed at the top of the body */
+  indicator?: React.ReactNode;
   orgId: string;
   result: ImportDone;
   onDone: () => void;
 }
 
-export function ImportDoneStep({ orgId, result, onDone }: ImportDoneStepProps) {
+/** Renders the step's body and footer, to sit directly inside the Dialog after its header */
+export function ImportDoneStep({ indicator, orgId, result, onDone }: ImportDoneStepProps) {
   const [copied, setCopied] = useState(false);
 
   const joinUrl = result.joinLinkToken
@@ -32,16 +36,21 @@ export function ImportDoneStep({ orgId, result, onDone }: ImportDoneStepProps) {
 
   const n = (value: number) => value.toLocaleString("en-US");
 
+  const footer = (
+    <DialogButton variant="primary" onClick={onDone} data-autofocus>
+      View invited people
+    </DialogButton>
+  );
+
   return (
-    <div>
-      <StepHeading>Import finished</StepHeading>
+    <ImportStepLayout indicator={indicator} footer={footer}>
       <p
         role="status"
-        style={{ ...bodyText, color: "var(--color-ink)", fontWeight: 700, fontSize: 16, margin: "0 0 4px 0" }}
+        style={{ ...bodyText, ...tabular, color: "var(--color-ink)", fontWeight: 700, fontSize: 16, margin: "0 0 4px 0" }}
       >
         {n(result.invited)} invited, {n(result.duplicates)} already here, {n(result.invalid)} skipped
       </p>
-      <p style={{ ...bodyText, fontSize: 13, margin: "0 0 16px 0" }}>
+      <p style={{ ...bodyText, ...tabular, fontSize: 13, margin: "0 0 16px 0" }}>
         {n(result.duplicates)} skipped as duplicates, {n(result.invalid)} skipped as invalid.
       </p>
 
@@ -54,7 +63,7 @@ export function ImportDoneStep({ orgId, result, onDone }: ImportDoneStepProps) {
         <div style={{ margin: "0 0 12px 0" }}>
           <label
             htmlFor="orgkit-import-join-link"
-            style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--color-ink)", marginBottom: 6 }}
+            style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--color-ink)", marginBottom: 8 }}
           >
             Join link
           </label>
@@ -67,9 +76,9 @@ export function ImportDoneStep({ orgId, result, onDone }: ImportDoneStepProps) {
               style={{
                 flex: "1 1 200px",
                 minWidth: 0,
-                minHeight: 42,
-                padding: "9px 12px",
-                borderRadius: 12,
+                minHeight: 44,
+                padding: "8px 12px",
+                borderRadius: 10,
                 border: "1px solid var(--color-line)",
                 backgroundColor: "var(--color-surface)",
                 color: "var(--color-ink)",
@@ -77,10 +86,10 @@ export function ImportDoneStep({ orgId, result, onDone }: ImportDoneStepProps) {
                 boxSizing: "border-box",
               }}
             />
-            <button type="button" onClick={copy} style={secondaryButton}>
+            <DialogButton onClick={copy}>
               {copied ? <Check size={16} aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
               <span>{copied ? "Copied" : "Copy link"}</span>
-            </button>
+            </DialogButton>
           </div>
           <span role="status" className="sr-only">
             {copied ? "Join link copied" : ""}
@@ -89,18 +98,13 @@ export function ImportDoneStep({ orgId, result, onDone }: ImportDoneStepProps) {
       )}
 
       {result.joinLinkStatus === "off" && (
-        <div
-          role="alert"
-          style={{
-            ...noteBox,
-            display: "flex",
-            gap: 10,
-            alignItems: "flex-start",
-            borderColor: "#FCD34D",
-            backgroundColor: "#FFFBEB",
-          }}
-        >
-          <AlertTriangle size={18} color="#B45309" aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+        <div role="alert" style={warningBox}>
+          <AlertTriangle
+            size={16}
+            color="var(--color-warning)"
+            aria-hidden="true"
+            style={{ flexShrink: 0, marginTop: 2 }}
+          />
           <span style={wrapText}>
             The join link is off, so invitees cannot join until the link is turned on.{" "}
             <a href={joinPanelPath(orgId)} style={{ color: "var(--color-accent-strong)", fontWeight: 600 }}>
@@ -119,12 +123,6 @@ export function ImportDoneStep({ orgId, result, onDone }: ImportDoneStepProps) {
           to copy it or turn it on.
         </div>
       )}
-
-      <div style={buttonRow}>
-        <button type="button" onClick={onDone} data-autofocus className="orgkit-btn-accent" style={primaryButton}>
-          View invited people
-        </button>
-      </div>
-    </div>
+    </ImportStepLayout>
   );
 }
