@@ -5,6 +5,12 @@ import { renderToReadableStream } from "react-dom/server";
 // The real dialog mounts in a portal after hydration; render its children inline.
 vi.mock("@/src/components/ui/dialog", () => ({
   Dialog: ({ children }: { children: ReactNode }) => createElement("div", { role: "dialog" }, children),
+  DialogHeader: ({ titleId, title }: { titleId: string; title: string }) =>
+    createElement("h2", { id: titleId }, title),
+  DialogBody: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  DialogFooter: ({ children }: { children: ReactNode }) => createElement("div", null, children),
+  DialogButton: ({ children, ...props }: { children: ReactNode }) =>
+    createElement("button", { type: "button", ...props }, children),
 }));
 vi.mock("@/src/app/(workspace)/members-actions", () => ({
   getExportCount: vi.fn(async () => ({ success: true, data: { count: 128 } })),
