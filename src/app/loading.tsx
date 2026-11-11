@@ -1,4 +1,5 @@
-import { FlowLoader } from "@/src/components/workspace/frame/flow-loader";
+import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import { WorkspaceBackdrop } from "@/src/components/workspace/frame/workspace-backdrop";
 
 export default function RootLoading() {
   return (
@@ -6,13 +7,18 @@ export default function RootLoading() {
       style={{
         minHeight: "100vh",
         width: "100%",
+        position: "relative",
+        overflow: "hidden",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "var(--color-base)",
       }}
     >
-      <FlowLoader />
+      <WorkspaceBackdrop />
+      <div style={{ position: "relative", zIndex: 1, width: "100%" }}>
+        <WorkspaceContentLoader />
+      </div>
     </div>
   );
 }

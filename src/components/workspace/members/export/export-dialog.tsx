@@ -2,7 +2,7 @@
 
 import React from "react";
 import { AlertCircle, Download, Loader2 } from "lucide-react";
-import { Dialog } from "@/src/components/ui/dialog";
+import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
 import {
   EXPORT_FIELDS,
   EXPORT_STATUSES,
@@ -27,7 +27,7 @@ const checkRow: React.CSSProperties = {
   alignItems: "flex-start",
   gap: 10,
   padding: "8px 0",
-  fontSize: 14.5,
+  fontSize: 14,
   color: "var(--color-ink)",
   cursor: "pointer",
 };
@@ -43,10 +43,8 @@ const checkbox: React.CSSProperties = {
 
 const legend: React.CSSProperties = {
   fontSize: 13,
-  fontWeight: 700,
-  letterSpacing: "0.02em",
-  textTransform: "uppercase",
-  color: "var(--color-muted)",
+  fontWeight: 500,
+  color: "var(--color-ink-soft)",
   padding: 0,
   marginBottom: 4,
 };
@@ -75,14 +73,15 @@ export function ExportDialog({ orgId, onClose }: ExportDialogProps) {
       labelledBy="export-dialog-title"
       onDismiss={ex.isExporting ? undefined : onClose}
       maxWidth={460}
-      cardStyle={{ maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
     >
-      <h2
-        id="export-dialog-title"
-        style={{ margin: "0 0 16px", fontSize: 22, fontWeight: 700, color: "var(--color-ink)" }}
-      >
-        Export members
-      </h2>
+      <DialogHeader
+        titleId="export-dialog-title"
+        title="Export members"
+        onClose={onClose}
+        closeDisabled={ex.isExporting}
+        closeLabel="Close export dialog"
+      />
+      <DialogBody>
 
       <fieldset style={fieldset}>
         <legend style={legend}>Fields</legend>
@@ -155,74 +154,33 @@ export function ExportDialog({ orgId, onClose }: ExportDialogProps) {
             alignItems: "center",
             gap: 8,
             marginTop: 12,
-            padding: "10px 14px",
-            backgroundColor: "#FEF2F2",
-            border: "1px solid #FCA5A5",
-            borderRadius: 12,
-            color: "#991B1B",
+            padding: "8px 12px",
+            backgroundColor: "var(--color-danger-soft)",
+            border: "1px solid var(--color-danger-line)",
+            borderRadius: 10,
+            color: "var(--color-danger-strong)",
             fontSize: 13.5,
           }}
         >
-          <AlertCircle size={16} color="#DC2626" style={{ flexShrink: 0 }} />
+          <AlertCircle size={16} aria-hidden="true" style={{ flexShrink: 0 }} />
           <span>{ex.error}</span>
         </div>
       )}
 
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "flex-end",
-          gap: 10,
-          marginTop: 20,
-        }}
-      >
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={ex.isExporting}
-          style={{
-            padding: "10px 20px",
-            borderRadius: 999,
-            border: "1px solid var(--color-line)",
-            backgroundColor: "var(--color-surface)",
-            color: "var(--color-ink)",
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: ex.isExporting ? "not-allowed" : "pointer",
-          }}
-        >
+      </DialogBody>
+      <DialogFooter>
+        <DialogButton onClick={onClose} disabled={ex.isExporting}>
           Cancel
-        </button>
-        <button
-          type="button"
-          onClick={ex.download}
-          disabled={!ex.canDownload}
-          aria-describedby="export-count"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            padding: "10px 22px",
-            borderRadius: 999,
-            border: "1px solid transparent",
-            backgroundColor: "var(--color-ink)",
-            color: "#FFFFFF",
-            fontWeight: 600,
-            fontSize: 14,
-            cursor: ex.canDownload ? "pointer" : "not-allowed",
-            opacity: ex.canDownload ? 1 : 0.5,
-          }}
-        >
+        </DialogButton>
+        <DialogButton variant="primary" onClick={ex.download} disabled={!ex.canDownload} aria-describedby="export-count">
           {ex.isExporting ? (
             <Loader2 size={16} aria-hidden="true" style={{ animation: "spin 1s linear infinite" }} />
           ) : (
             <Download size={16} aria-hidden="true" />
           )}
           <span>{ex.isExporting ? "Preparing…" : ex.error ? "Try again" : "Download CSV"}</span>
-        </button>
-      </div>
+        </DialogButton>
+      </DialogFooter>
     </Dialog>
   );
 }

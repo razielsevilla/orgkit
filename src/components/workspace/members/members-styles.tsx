@@ -18,6 +18,37 @@ export function MembersStyles() {
         width: 100%;
       }
 
+      /*
+       * Desktop: the page fits the window and only the table's rows scroll, so the
+       * title, tabs and search stay in view. The shell is as tall as the page; the
+       * list takes whatever is left (never less than 320px). A short roster makes
+       * a short card, a long one stops at the list's height and scrolls inside.
+       * On phones none of this applies and the cards scroll with the page.
+       */
+      @media (min-width: 641px) {
+        .orgkit-members-shell {
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .orgkit-members-shell > * {
+          flex-shrink: 0;
+        }
+        .orgkit-members-shell > .orgkit-members-list {
+          flex: 1 1 auto;
+          flex-shrink: 1;
+          min-height: 320px;
+        }
+        .orgkit-members-list,
+        .orgkit-members-list-body,
+        .orgkit-members-desktop {
+          height: 100%;
+        }
+        .orgkit-members-table-card {
+          max-height: 100%;
+        }
+      }
+
       /* Mobile layout <= 640px (optimized for 360px phones) */
       @media (max-width: 640px) {
         .orgkit-members-desktop {

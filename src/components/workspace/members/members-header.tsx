@@ -54,7 +54,7 @@ export function MembersHeader({
           alignItems: "flex-start",
           justifyContent: "space-between",
           flexWrap: "wrap",
-          gap: 12,
+          gap: 16,
         }}
       >
         <div>
@@ -63,76 +63,92 @@ export function MembersHeader({
             data-members-heading
             style={{
               outline: "none",
-              fontSize: "clamp(24px, 2.4vw, 32px)",
+              fontSize: "clamp(26px, 2.6vw, 34px)",
               fontWeight: 800,
               color: "var(--color-ink)",
-              letterSpacing: "-0.02em",
-              margin: "0 0 6px 0",
+              letterSpacing: "-0.025em",
+              margin: 0,
               lineHeight: 1.15,
             }}
           >
             Members
           </h1>
-          <div
+          <p
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
+              margin: "6px 0 0 0",
               fontSize: 14,
               color: "var(--color-muted)",
+              lineHeight: 1.4,
             }}
           >
-            <span>{summaryText}</span>
+            Manage your organization&apos;s members and their access levels.
             {pendingCount > 0 && (
-              <>
-                <span aria-hidden="true">•</span>
+              <span
+                style={{
+                  marginLeft: 8,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  color: "var(--color-accent-strong)",
+                  fontWeight: 600,
+                }}
+              >
                 <span
+                  aria-hidden="true"
                   style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    color: "var(--color-accent-strong)",
-                    fontWeight: 600,
+                    width: 6,
+                    height: 6,
+                    borderRadius: "50%",
+                    backgroundColor: "var(--color-accent)",
                   }}
-                >
-                  <span
-                    style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: "50%",
-                      backgroundColor: "var(--color-accent)",
-                    }}
-                  />
-                  {pendingCount} pending to review
-                </span>
-              </>
+                />
+                {pendingCount} pending to review
+              </span>
             )}
-          </div>
+          </p>
+          <span className="sr-only" aria-live="polite">
+            {summaryText}
+          </span>
         </div>
-        {actions}
 
-        {onExport && totalCount > 0 && (
-          <button
-            type="button"
-            onClick={onExport}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "9px 18px",
-              borderRadius: 999,
-              border: "1px solid var(--color-line)",
-              backgroundColor: "var(--color-surface)",
-              color: "var(--color-ink)",
-              fontWeight: 600,
-              fontSize: 14,
-              cursor: "pointer",
-            }}
-          >
-            <Download size={15} aria-hidden="true" />
-            <span>Export</span>
-          </button>
-        )}
+        {/* Action Buttons: Import & Export */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+          }}
+        >
+          {actions}
+
+          {onExport && (
+            <button
+              type="button"
+              onClick={onExport}
+              className="orgkit-btn-export"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                height: 42,
+                padding: "0 20px",
+                borderRadius: 9999,
+                border: "1px solid var(--color-line)",
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-ink)",
+                fontWeight: 600,
+                fontSize: 13.5,
+                cursor: "pointer",
+                boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <Download size={15} strokeWidth={2} aria-hidden="true" />
+              <span>Export</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Error Banner with Retry button if fetch failed */}
@@ -149,11 +165,12 @@ export function MembersHeader({
             borderRadius: 14,
             color: "#991B1B",
             fontSize: 13.5,
-            boxShadow: "0 1px 3px rgba(220, 38, 38, 0.05)",
+            fontWeight: 500,
+            marginTop: 4,
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <AlertCircle size={18} color="#DC2626" style={{ flexShrink: 0 }} />
+            <AlertCircle size={18} aria-hidden="true" />
             <span>{errorMessage}</span>
           </div>
           {onRetry && (
@@ -166,15 +183,14 @@ export function MembersHeader({
                 alignItems: "center",
                 gap: 6,
                 padding: "6px 12px",
-                borderRadius: 9999,
+                borderRadius: 999,
+                border: "1px solid #F87171",
                 backgroundColor: "#FFFFFF",
-                border: "1px solid #FCA5A5",
                 color: "#991B1B",
-                fontWeight: 600,
                 fontSize: 12.5,
+                fontWeight: 600,
                 cursor: isRetrying ? "not-allowed" : "pointer",
-                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
-                transition: "all 0.15s ease",
+                opacity: isRetrying ? 0.6 : 1,
               }}
             >
               <RefreshCw
@@ -183,7 +199,7 @@ export function MembersHeader({
                   animation: isRetrying ? "spin 1s linear infinite" : "none",
                 }}
               />
-              <span>{isRetrying ? "Retrying..." : "Try again"}</span>
+              <span>Try again</span>
             </button>
           )}
         </div>

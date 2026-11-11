@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Loader2 } from "lucide-react";
-import { Dialog } from "@/src/components/ui/dialog";
+import { Loader2 } from "lucide-react";
+import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
+import { FieldError } from "@/src/components/ui/field-error";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import {
   validateMemberEdit,
@@ -92,89 +93,61 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
     }
   };
 
+  const inputStyle = (hasError: boolean): React.CSSProperties => ({
+    width: "100%",
+    height: 40,
+    padding: "0 12px",
+    borderRadius: 10,
+    border: hasError ? "1px solid var(--color-danger-strong)" : "1px solid var(--color-line-strong)",
+    backgroundColor: "var(--color-base)",
+    color: "var(--color-ink)",
+    fontSize: 14,
+    outline: "none",
+    boxSizing: "border-box",
+  });
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "var(--color-ink-soft)",
+    marginBottom: 8,
+  };
+
   return (
-    <div style={{ position: "relative", width: "100%" }}>
-      {/* Close Button */}
-      <button
-        type="button"
-        onClick={onClose}
-        disabled={isSaving}
-        aria-label="Close edit dialog"
-        style={{
-          position: "absolute",
-          top: -4,
-          right: -4,
-          width: 36,
-          height: 36,
-          borderRadius: 8,
-          border: "none",
-          backgroundColor: "transparent",
-          color: "var(--color-muted)",
-          cursor: isSaving ? "not-allowed" : "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: "color 0.15s ease",
-        }}
-      >
-        <X size={18} />
-      </button>
-
-      {/* Title */}
-      <h2
-        id="edit-member-title"
-        style={{
-          margin: "0 0 6px 0",
-          fontSize: 18,
-          fontWeight: 700,
-          color: "var(--color-ink)",
-          letterSpacing: "-0.01em",
-        }}
-      >
-        Edit member details
-      </h2>
-      <p
-        style={{
-          margin: "0 0 20px 0",
-          fontSize: 13.5,
-          color: "var(--color-muted)",
-          lineHeight: 1.45,
-        }}
-      >
-        Update their name or email address. Their consent record remains untouched.
-      </p>
-
-      {/* Form Error Banner */}
-      {formError && (
-        <div
-          role="alert"
-          style={{
-            padding: "10px 14px",
-            borderRadius: 10,
-            backgroundColor: "color-mix(in srgb, var(--color-danger, #ef4444) 10%, transparent)",
-            color: "var(--color-danger, #ef4444)",
-            fontSize: 13,
-            fontWeight: 500,
-            marginBottom: 16,
-          }}
-        >
-          {formError}
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} noValidate>
-        {/* Full Name Input */}
-        <div style={{ marginBottom: 16 }}>
-          <label
-            htmlFor="edit-member-name"
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      style={{ display: "flex", flexDirection: "column", flex: "1 1 auto", minHeight: 0 }}
+    >
+      <DialogHeader
+        titleId="edit-member-title"
+        title="Edit member details"
+        description="Update their name or email address. Their consent record remains untouched."
+        onClose={onClose}
+        closeDisabled={isSaving}
+        closeLabel="Close edit dialog"
+      />
+      <DialogBody>
+        {formError && (
+          <div
+            role="alert"
             style={{
-              display: "block",
+              padding: "8px 12px",
+              borderRadius: 10,
+              backgroundColor: "var(--color-danger-soft)",
+              border: "1px solid var(--color-danger-line)",
+              color: "var(--color-danger-strong)",
               fontSize: 13,
-              fontWeight: 600,
-              color: "var(--color-ink)",
-              marginBottom: 6,
+              fontWeight: 500,
+              marginBottom: 16,
             }}
           >
+            {formError}
+          </div>
+        )}
+
+        <div style={{ marginBottom: 16 }}>
+          <label htmlFor="edit-member-name" style={labelStyle}>
             Full name
           </label>
           <input
@@ -189,50 +162,13 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
             disabled={isSaving}
             aria-invalid={Boolean(nameError)}
             aria-describedby={nameError ? "edit-member-name-error" : undefined}
-            style={{
-              width: "100%",
-              height: 42,
-              padding: "0 14px",
-              borderRadius: 10,
-              border: nameError
-                ? "1px solid var(--color-danger, #ef4444)"
-                : "1px solid var(--color-line)",
-              backgroundColor: "var(--color-base)",
-              color: "var(--color-ink)",
-              fontSize: 14,
-              outline: "none",
-              boxSizing: "border-box",
-              transition: "all 0.15s ease",
-            }}
+            style={inputStyle(Boolean(nameError))}
           />
-          {nameError && (
-            <p
-              id="edit-member-name-error"
-              role="alert"
-              style={{
-                margin: "6px 0 0 0",
-                fontSize: 12.5,
-                color: "var(--color-danger, #ef4444)",
-                fontWeight: 500,
-              }}
-            >
-              {nameError}
-            </p>
-          )}
+          {nameError && <FieldError id="edit-member-name-error">{nameError}</FieldError>}
         </div>
 
-        {/* Email Input */}
-        <div style={{ marginBottom: 24 }}>
-          <label
-            htmlFor="edit-member-email"
-            style={{
-              display: "block",
-              fontSize: 13,
-              fontWeight: 600,
-              color: "var(--color-ink)",
-              marginBottom: 6,
-            }}
-          >
+        <div>
+          <label htmlFor="edit-member-email" style={labelStyle}>
             Email address
           </label>
           <input
@@ -246,99 +182,21 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
             disabled={isSaving}
             aria-invalid={Boolean(emailError)}
             aria-describedby={emailError ? "edit-member-email-error" : undefined}
-            style={{
-              width: "100%",
-              height: 42,
-              padding: "0 14px",
-              borderRadius: 10,
-              border: emailError
-                ? "1px solid var(--color-danger, #ef4444)"
-                : "1px solid var(--color-line)",
-              backgroundColor: "var(--color-base)",
-              color: "var(--color-ink)",
-              fontSize: 14,
-              outline: "none",
-              boxSizing: "border-box",
-              transition: "all 0.15s ease",
-            }}
+            style={inputStyle(Boolean(emailError))}
           />
-          {emailError && (
-            <p
-              id="edit-member-email-error"
-              role="alert"
-              style={{
-                margin: "6px 0 0 0",
-                fontSize: 12.5,
-                color: "var(--color-danger, #ef4444)",
-                fontWeight: 500,
-              }}
-            >
-              {emailError}
-            </p>
-          )}
+          {emailError && <FieldError id="edit-member-email-error">{emailError}</FieldError>}
         </div>
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: 10,
-          }}
-        >
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSaving}
-            style={{
-              minHeight: 44,
-              padding: "0 16px",
-              borderRadius: 10,
-              border: "1px solid var(--color-line)",
-              backgroundColor: "transparent",
-              color: "var(--color-ink)",
-              fontSize: 13.5,
-              fontWeight: 600,
-              cursor: isSaving ? "not-allowed" : "pointer",
-              opacity: isSaving ? 0.6 : 1,
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isSaving}
-            style={{
-              minHeight: 44,
-              padding: "0 20px",
-              borderRadius: 10,
-              border: "none",
-              backgroundColor: "var(--color-accent)",
-              color: "var(--color-on-accent)",
-              fontSize: 13.5,
-              fontWeight: 600,
-              cursor: isSaving ? "not-allowed" : "pointer",
-              opacity: isSaving ? 0.75 : 1,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
-            }}
-          >
-            {isSaving && (
-              <Loader2
-                size={15}
-                className="animate-spin"
-                style={{ animation: "spin 1s linear infinite" }}
-              />
-            )}
-            <span>{isSaving ? "Saving..." : "Save changes"}</span>
-          </button>
-        </div>
-      </form>
-    </div>
+      </DialogBody>
+      <DialogFooter>
+        <DialogButton onClick={onClose} disabled={isSaving}>
+          Cancel
+        </DialogButton>
+        <DialogButton type="submit" variant="primary" disabled={isSaving}>
+          {isSaving && <Loader2 size={16} aria-hidden="true" style={{ animation: "spin 1s linear infinite" }} />}
+          <span>{isSaving ? "Saving..." : "Save changes"}</span>
+        </DialogButton>
+      </DialogFooter>
+    </form>
   );
 }
 
@@ -355,7 +213,6 @@ export function MemberEditDialog({
       labelledBy="edit-member-title"
       onDismiss={onClose}
       maxWidth={460}
-      padding="24px"
     >
       <MemberEditForm
         key={member.id}

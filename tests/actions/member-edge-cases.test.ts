@@ -233,7 +233,7 @@ describe("Ticket R1: Member Roster Edge Cases", () => {
     expect(res.errorMessage).toBe("Could not confirm member. Please try again.");
   });
 
-  it("pages the roster 50 at a time and reports hasMore", async () => {
+  it("pages the roster 20 at a time and reports hasMore", async () => {
     state.members = Array.from({ length: 120 }, (_, i) => ({
       id: `00000000-0000-4000-8000-${String(i).padStart(12, "0")}`,
       org_id: ORG_A,
@@ -244,13 +244,19 @@ describe("Ticket R1: Member Roster Edge Cases", () => {
       is_pending: false,
     }));
     const p1 = await getWorkspaceMembers(ORG_A);
-    expect(p1.data?.members).toHaveLength(50);
+    expect(p1.data?.members).toHaveLength(20);
     expect(p1.data?.matchingCount).toBe(120);
     expect(p1.data?.hasMore).toBe(true);
 
-    const p3 = await getWorkspaceMembers(ORG_A, { offset: 100 });
-    expect(p3.data?.members).toHaveLength(20);
-    expect(p3.data?.hasMore).toBe(false);
+    // The second page starts where the first ended
+    const p2 = await getWorkspaceMembers(ORG_A, { offset: 20 });
+    expect(p2.data?.members).toHaveLength(20);
+    expect(p2.data?.hasMore).toBe(true);
+    expect(p2.data?.members.map((m) => m.id)).not.toContain(p1.data?.members[0].id);
+
+    const p6 = await getWorkspaceMembers(ORG_A, { offset: 100 });
+    expect(p6.data?.members).toHaveLength(20);
+    expect(p6.data?.hasMore).toBe(false);
   });
 
   it("builds a search filter that survives commas, parentheses and wildcards", () => {

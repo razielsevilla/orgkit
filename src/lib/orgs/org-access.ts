@@ -50,21 +50,47 @@ export function accessFailure(error: "not_authenticated" | "access_revoked") {
   );
 }
 
-interface PermissionMessages {
+interface ActionNames {
   /** Action name for the log line when something unexpected is thrown */
   name: string;
-  /** Shown when the caller's role may not do this */
-  denied: string;
   /** Shown when something unexpected is thrown */
   unexpected: string;
 }
 
+interface PermissionMessages extends ActionNames {
+  /** Shown when the caller's role may not do this */
+  denied: string;
+}
+
+/** What `withOrgCaller` can answer on its own, before `run` has a say */
+export type OrgCallerError = "not_authenticated" | "access_revoked" | "failed";
+
 /**
- * Runs an org action for a signed-in officer whose current role allows it:
- * looks the caller up, checks the permission, then calls `run`. Anything
- * thrown becomes a generic failure, so an action never leaks a stack trace.
- * The database function behind each action checks the role again; this check
- * only saves a round trip and gives a clear message.
+ * Runs an org action for a signed-in member of the org: looks the caller up,
+ * then calls `run`. Anything thrown becomes a generic failure, so an action
+ * never leaks a stack trace. For actions that need a specific role, use
+ * `withOrgPermission`.
+ */
+export async function withOrgCaller<T, E extends string>(
+  orgId: string,
+  messages: ActionNames,
+  run: (caller: OrgCaller) => Promise<ActionResult<T, E>>
+): Promise<ActionResult<T, E | OrgCallerError>> {
+  try {
+    const lookup = await getCallerOrgMembership(orgId);
+    if (!lookup.ok) return accessFailure(lookup.error);
+
+    return await run(lookup.caller);
+  } catch (err) {
+    console.error(`Unexpected error in ${messages.name}:`, err);
+    return fail("failed", messages.unexpected);
+  }
+}
+
+/**
+ * `withOrgCaller` for an officer whose current role allows `permission`. The
+ * database function behind each action checks the role again; this check only
+ * saves a round trip and gives a clear message.
  */
 export async function withOrgPermission<T, E extends string>(
   orgId: string,
@@ -72,17 +98,7 @@ export async function withOrgPermission<T, E extends string>(
   messages: PermissionMessages,
   run: (caller: OrgCaller) => Promise<ActionResult<T, E>>
 ): Promise<ActionResult<T, E | OrgAccessError>> {
-  try {
-    const lookup = await getCallerOrgMembership(orgId);
-    if (!lookup.ok) return accessFailure(lookup.error);
-
-    if (!can(lookup.caller.role, permission)) {
-      return fail("not_authorized", messages.denied);
-    }
-
-    return await run(lookup.caller);
-  } catch (err) {
-    console.error(`Unexpected error in ${messages.name}:`, err);
-    return fail("failed", messages.unexpected);
-  }
+  return withOrgCaller<T, E | "not_authorized">(orgId, messages, async (caller) =>
+    can(caller.role, permission) ? run(caller) : fail("not_authorized", messages.denied)
+  );
 }

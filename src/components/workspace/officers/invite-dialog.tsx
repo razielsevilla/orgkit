@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertCircle, X } from "lucide-react";
+import { FieldError } from "@/src/components/ui/field-error";
 import { OfficerRole } from "@/src/lib/orgs/permissions";
 import { createOfficerInvite } from "@/src/app/(workspace)/officers-actions";
-import { Dialog } from "@/src/components/ui/dialog";
+import { Dialog, DialogBody, DialogButton, DialogFooter, DialogHeader } from "@/src/components/ui/dialog";
 import { ErrorToast } from "@/src/components/error-toast";
 import { InviteRolePicker } from "./invite-role-picker";
 
@@ -71,173 +71,86 @@ export function InviteDialog({
         onDismiss={loading ? undefined : onClose}
         maxWidth={480}
       >
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={loading}
-          aria-label="Close modal"
-          style={{
-            position: "absolute",
-            top: 20,
-            right: 20,
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: "none",
-            backgroundColor: "transparent",
-            color: "var(--color-muted)",
-            cursor: loading ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "all 0.15s ease",
-          }}
-          onMouseEnter={(e) => {
-            if (!loading) e.currentTarget.style.backgroundColor = "var(--color-base)";
-          }}
-          onMouseLeave={(e) => {
-            if (!loading) e.currentTarget.style.backgroundColor = "transparent";
-          }}
+        <DialogHeader
+          titleId="invite-modal-title"
+          title="Invite an officer"
+          description="Create a single-use invite link. It works once and expires in 7 days."
+          onClose={onClose}
+          closeDisabled={loading}
+          closeLabel="Close modal"
+        />
+
+        <form
+          onSubmit={handleSubmit}
+          style={{ display: "flex", flexDirection: "column", minHeight: 0, flex: "1 1 auto" }}
         >
-          <X size={18} />
-        </button>
-
-        {/* Modal Header */}
-        <div style={{ marginBottom: 20 }}>
-          <h2
-            id="invite-modal-title"
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: "var(--color-ink)",
-              margin: "0 0 6px 0",
-              letterSpacing: "-0.015em",
-            }}
-          >
-            Invite an officer
-          </h2>
-          <p style={{ fontSize: 13, color: "var(--color-muted)", margin: 0, lineHeight: 1.4 }}>
-            Create a single-use invite link. It works once and expires in 7 days.
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          {/* Email Input */}
-          <div style={{ marginBottom: 20 }}>
-            <label
-              htmlFor="invite-email"
-              style={{
-                display: "block",
-                fontSize: 12.5,
-                fontWeight: 600,
-                color: "var(--color-ink)",
-                marginBottom: 6,
-              }}
-            >
-              Email address
-            </label>
-            <input
-              id="invite-email"
-              type="email"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                if (fieldError) setFieldError(null);
-              }}
-              placeholder="officer@school.edu"
-              disabled={loading}
-              autoFocus
-              style={{
-                width: "100%",
-                padding: "11px 14px",
-                borderRadius: 12,
-                border: fieldError ? "1.5px solid var(--color-danger)" : "1px solid var(--color-line)",
-                backgroundColor: "var(--color-surface)",
-                fontSize: 14,
-                color: "var(--color-ink)",
-                outline: "none",
-                boxSizing: "border-box",
-                transition: "border-color 0.15s ease, box-shadow 0.15s ease",
-              }}
-              onFocus={(e) => {
-                if (!fieldError) {
-                  e.currentTarget.style.borderColor = "var(--color-accent)";
-                  e.currentTarget.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--color-accent) 12%, transparent)";
-                }
-              }}
-              onBlur={(e) => {
-                if (!fieldError) {
-                  e.currentTarget.style.borderColor = "var(--color-line)";
-                  e.currentTarget.style.boxShadow = "none";
-                }
-              }}
-            />
-            {fieldError && (
-              <div
+          <DialogBody>
+            <div style={{ marginBottom: 20 }}>
+              <label
+                htmlFor="invite-email"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  marginTop: 6,
-                  color: "var(--color-danger)",
-                  fontSize: 12,
+                  display: "block",
+                  fontSize: 13,
                   fontWeight: 500,
+                  color: "var(--color-ink-soft)",
+                  marginBottom: 6,
                 }}
               >
-                <AlertCircle size={13} />
-                <span>{fieldError}</span>
-              </div>
-            )}
-          </div>
+                Email address
+              </label>
+              <input
+                id="invite-email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldError) setFieldError(null);
+                }}
+                placeholder="officer@school.edu"
+                disabled={loading}
+                autoFocus
+                aria-invalid={fieldError ? true : undefined}
+                aria-describedby={fieldError ? "invite-email-error" : undefined}
+                style={{
+                  width: "100%",
+                  height: 40,
+                  padding: "0 12px",
+                  borderRadius: 10,
+                  border: fieldError ? "1px solid var(--color-danger)" : "1px solid var(--color-line-strong)",
+                  backgroundColor: "var(--color-surface)",
+                  fontSize: 14,
+                  color: "var(--color-ink)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+                }}
+                onFocus={(e) => {
+                  if (!fieldError) {
+                    e.currentTarget.style.borderColor = "var(--color-accent)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent)";
+                  }
+                }}
+                onBlur={(e) => {
+                  if (!fieldError) {
+                    e.currentTarget.style.borderColor = "var(--color-line-strong)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }
+                }}
+              />
+              {fieldError && <FieldError id="invite-email-error">{fieldError}</FieldError>}
+            </div>
 
-          <InviteRolePicker role={role} setRole={setRole} loading={loading} />
+            <InviteRolePicker role={role} setRole={setRole} loading={loading} />
+          </DialogBody>
 
-          {/* Action Buttons */}
-          <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={loading}
-              style={{
-                padding: "10px 18px",
-                borderRadius: 9999,
-                border: "1px solid var(--color-line)",
-                backgroundColor: "var(--color-surface)",
-                color: "var(--color-muted-strong)",
-                fontSize: 13.5,
-                fontWeight: 600,
-                cursor: loading ? "not-allowed" : "pointer",
-              }}
-            >
+          <DialogFooter>
+            <DialogButton onClick={onClose} disabled={loading}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                padding: "10px 22px",
-                borderRadius: 9999,
-                border: "none",
-                backgroundColor: "var(--color-accent)",
-                color: "var(--color-on-accent)",
-                fontSize: 13.5,
-                fontWeight: 600,
-                cursor: loading ? "not-allowed" : "pointer",
-                boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
-                opacity: loading ? 0.75 : 1,
-                transition: "all 0.15s ease",
-              }}
-              onMouseEnter={(e) => {
-                if (!loading) e.currentTarget.style.backgroundColor = "var(--color-accent-strong)";
-              }}
-              onMouseLeave={(e) => {
-                if (!loading) e.currentTarget.style.backgroundColor = "var(--color-accent)";
-              }}
-            >
+            </DialogButton>
+            <DialogButton type="submit" variant="primary" disabled={loading}>
               {loading ? "Creating…" : "Create invite"}
-            </button>
-          </div>
+            </DialogButton>
+          </DialogFooter>
         </form>
       </Dialog>
 

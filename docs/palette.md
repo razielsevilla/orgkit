@@ -21,6 +21,8 @@ The accent is the only color in the palette. Everything else is a neutral, so gr
 | ------------- | ------------------------ | ----------------- | ------------------------------------------------------------ |
 | Accent strong | `#047857`                | Emerald 700       | Button hover/pressed state, accent text on light backgrounds |
 | Accent tint   | `#059669` at 10% opacity | Emerald 600 / 10% | Soft badge or success-banner background                      |
+| Brand deep    | `#054A38`                | n/a               | The wordmark's green: titles in branded headers (dialogs)    |
+| Brand tint    | Accent 8% over white     | n/a               | The faint wash behind branded headers                        |
 
 ## Tailwind v4 setup
 

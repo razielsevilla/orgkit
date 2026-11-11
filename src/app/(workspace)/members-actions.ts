@@ -2,17 +2,22 @@
 
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
-import { accessFailure, getCallerOrgMembership, withOrgPermission } from "@/src/lib/orgs/org-access";
+import {
+  withOrgCaller,
+  withOrgPermission,
+  type OrgCaller,
+  type OrgCallerError,
+} from "@/src/lib/orgs/org-access";
 import { can } from "@/src/lib/orgs/permissions";
+import { normalizeLimit, normalizeOffset } from "@/src/lib/pagination";
+import { rpcFailure, type ErrorRule } from "@/src/lib/rpc-errors";
 import { membersPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
 import { MEMBERS_PAGE_SIZE, buildMemberSearchFilter } from "@/src/lib/members/member-search";
-import {
-  validateMemberEdit,
-  MEMBER_EDIT_MESSAGES,
-} from "@/src/lib/members/member-edit";
+import { validateMemberEdit, MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
 
-export type MemberStatus = "pending" | "active" | "inactive";
+const MEMBER_STATUSES = ["pending", "active", "inactive"] as const;
+export type MemberStatus = (typeof MEMBER_STATUSES)[number];
 
 export interface WorkspaceMember {
   id: string;
@@ -37,13 +42,72 @@ export interface WorkspaceMembersData {
 }
 
 export type MembersActionError =
-  | "not_authenticated"
-  | "access_revoked"
+  | OrgCallerError
   | "not_found"
   | "invalid_request"
   | "duplicate_email"
-  | "stale"
-  | "failed";
+  | "stale";
+
+const MAX_PAGE_SIZE = 100;
+const LOAD_FAILED = "We couldn't load your members. Try again.";
+const INVALID_REQUEST = "Invalid request parameters.";
+
+function isMemberStatus(value: unknown): value is MemberStatus {
+  return (MEMBER_STATUSES as readonly unknown[]).includes(value);
+}
+
+/**
+ * Which members a query covers: exactly one status, or everyone except one.
+ * "All" in the UI means the working roster, so inactive members stay out of it.
+ */
+type StatusScope = { status: MemberStatus } | { excluding: MemberStatus };
+
+const WORKING_ROSTER: StatusScope = { excluding: "inactive" };
+
+function toStatusScope(filter: string | undefined): StatusScope {
+  const status = filter?.toLowerCase().trim();
+  return isMemberStatus(status) ? { status } : WORKING_ROSTER;
+}
+
+/** How many of the org's members are in `scope`, or null if the read failed. */
+async function countMembers(
+  { supabase }: OrgCaller,
+  orgId: string,
+  scope: StatusScope
+): Promise<number | null> {
+  const query = supabase
+    .from("members")
+    .select("id", { count: "exact", head: true })
+    .eq("org_id", orgId);
+
+  const { count, error } = await ("status" in scope
+    ? query.eq("status", scope.status)
+    : query.neq("status", scope.excluding));
+
+  return error ? null : (count ?? 0);
+}
+
+interface MemberRow {
+  id: string;
+  org_id: string;
+  full_name: string;
+  email: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+function toWorkspaceMember(row: MemberRow): WorkspaceMember {
+  return {
+    id: row.id,
+    orgId: row.org_id,
+    fullName: row.full_name,
+    email: row.email,
+    status: row.status as MemberStatus,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
 
 export async function getWorkspaceMembers(
   orgId: string,
@@ -54,151 +118,110 @@ export async function getWorkspaceMembers(
     limit?: number;
   }
 ): Promise<ActionResult<WorkspaceMembersData, MembersActionError>> {
-  const access = await getCallerOrgMembership(orgId);
-  if (!access.ok) {
-    return accessFailure(access.error);
-  }
+  return withOrgCaller<WorkspaceMembersData, MembersActionError>(
+    orgId,
+    { name: "getWorkspaceMembers", unexpected: LOAD_FAILED },
+    async (caller) => {
+      const { supabase } = caller;
 
-  const { supabase } = access.caller;
+      // The three counts don't depend on each other, so they run together
+      const [totalCount, pendingCount, inactiveCount] = await Promise.all([
+        countMembers(caller, orgId, WORKING_ROSTER),
+        countMembers(caller, orgId, { status: "pending" }),
+        countMembers(caller, orgId, { status: "inactive" }),
+      ]);
+      if (totalCount === null || pendingCount === null || inactiveCount === null) {
+        return fail("failed", LOAD_FAILED);
+      }
 
-  try {
-    // 1. Total working members count (active + pending) for this org
-    const { count: totalCount, error: totalCountErr } = await supabase
-      .from("members")
-      .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId)
-      .neq("status", "inactive");
+      const offset = normalizeOffset(options?.offset);
+      const limit = normalizeLimit(options?.limit, MEMBERS_PAGE_SIZE, MAX_PAGE_SIZE);
 
-    if (totalCountErr) {
-      return fail("failed", "We couldn't load your members. Try again.");
-    }
+      let query = supabase
+        .from("members")
+        .select("id, org_id, full_name, email, status, created_at, updated_at, is_pending", {
+          count: "exact",
+        })
+        .eq("org_id", orgId);
 
-    // 2. Pending members count for this org
-    const { count: pendingCount, error: pendingCountErr } = await supabase
-      .from("members")
-      .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId)
-      .eq("status", "pending");
+      const scope = toStatusScope(options?.status);
+      query = "status" in scope ? query.eq("status", scope.status) : query.neq("status", scope.excluding);
 
-    if (pendingCountErr) {
-      return fail("failed", "We couldn't load your members. Try again.");
-    }
+      const searchFilter = buildMemberSearchFilter(options?.search ?? "");
+      if (searchFilter) query = query.or(searchFilter);
 
-    // 3. Inactive members count for this org
-    const { count: inactiveCount, error: inactiveCountErr } = await supabase
-      .from("members")
-      .select("id", { count: "exact", head: true })
-      .eq("org_id", orgId)
-      .eq("status", "inactive");
+      // Pending first, then newest joins first; id keeps pages stable on ties
+      const { data: rows, count, error } = await query
+        .order("is_pending", { ascending: false })
+        .order("created_at", { ascending: false })
+        .order("id", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-    if (inactiveCountErr) {
-      return fail("failed", "We couldn't load your members. Try again.");
-    }
+      if (error || !rows) return fail("failed", LOAD_FAILED);
 
-    // 4. Query members with search and status filtering
-    let query = supabase
-      .from("members")
-      .select("id, org_id, full_name, email, status, created_at, updated_at, is_pending", { count: "exact" })
-      .eq("org_id", orgId);
+      const members = rows.map(toWorkspaceMember);
+      const matchingCount = count ?? members.length;
 
-    const statusFilter = options?.status?.toLowerCase().trim();
-    if (statusFilter === "inactive") {
-      query = query.eq("status", "inactive");
-    } else if (statusFilter === "pending") {
-      query = query.eq("status", "pending");
-    } else if (statusFilter === "active") {
-      query = query.eq("status", "active");
-    } else {
-      // Default / "all": Shows the working roster (active + pending), keeping inactive members out of main view
-      query = query.neq("status", "inactive");
-    }
+      // An org with no members at all (not even inactive ones) is shown its join link
+      let joinLinkToken: string | null = null;
+      if (totalCount === 0 && inactiveCount === 0 && offset === 0) {
+        const { data: token } = await supabase.rpc("get_org_join_link", { target_org: orgId });
+        joinLinkToken = token || null;
+      }
 
-    const searchFilter = buildMemberSearchFilter(options?.search ?? "");
-    if (searchFilter) {
-      query = query.or(searchFilter);
-    }
-
-    const rawLimit = Number.isFinite(options?.limit) ? Math.trunc(options!.limit!) : MEMBERS_PAGE_SIZE;
-    const rawOffset = Number.isFinite(options?.offset) ? Math.trunc(options!.offset!) : 0;
-    const limit = Math.min(Math.max(rawLimit, 1), 100);
-    const offset = Math.max(rawOffset, 0);
-
-    // Pending first, then newest joins first; id keeps pages stable on ties
-    query = query
-      .order("is_pending", { ascending: false })
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    const { data: rawMembers, count: matchingCount, error: fetchErr } = await query;
-
-    if (fetchErr || !rawMembers) {
-      return fail("failed", "We couldn't load your members. Try again.");
-    }
-
-    const members: WorkspaceMember[] = rawMembers.map((row) => ({
-      id: row.id,
-      orgId: row.org_id,
-      fullName: row.full_name,
-      email: row.email,
-      status: row.status as MemberStatus,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    }));
-
-    // If org has no members yet (zero active, pending, or inactive), fetch join link
-    let joinLinkToken: string | null = null;
-    if ((totalCount ?? 0) === 0 && (inactiveCount ?? 0) === 0 && offset === 0) {
-      const { data: linkToken } = await supabase.rpc("get_org_join_link", {
-        target_org: orgId,
+      return ok({
+        members,
+        totalCount,
+        matchingCount,
+        hasMore: offset + members.length < matchingCount,
+        pendingCount,
+        inactiveCount,
+        joinLinkToken,
+        canImport: can(caller.role, "member:import"),
       });
-      joinLinkToken = linkToken || null;
     }
+  );
+}
 
-    return ok({
-      members,
-      totalCount: totalCount ?? 0,
-      matchingCount: matchingCount ?? members.length,
-      hasMore: offset + members.length < (matchingCount ?? members.length),
-      pendingCount: pendingCount ?? 0,
-      inactiveCount: inactiveCount ?? 0,
-      joinLinkToken,
-      canImport: can(access.caller.role, "member:import"),
-    });
-  } catch {
-    return fail("failed", "We couldn't load your members. Try again.");
-  }
+/** What the database says when a member can't be changed, shared by every member write */
+const MEMBER_WRITE_ERRORS: ErrorRule<MembersActionError>[] = [
+  { match: "stale_member", error: "stale", message: MEMBER_EDIT_MESSAGES.stale },
+  { match: "not_permitted", error: "access_revoked", message: MEMBER_EDIT_MESSAGES.notPermitted },
+  { match: "member_not_found", error: "not_found", message: MEMBER_EDIT_MESSAGES.notFound },
+];
+
+const UPDATE_MEMBER_ERRORS: ErrorRule<MembersActionError>[] = [
+  MEMBER_WRITE_ERRORS[0],
+  { match: "duplicate_email", error: "duplicate_email", message: MEMBER_EDIT_MESSAGES.duplicateEmail },
+  { match: "invalid_name", error: "invalid_request", message: MEMBER_EDIT_MESSAGES.nameInvalid },
+  { match: "invalid_email", error: "invalid_request", message: MEMBER_EDIT_MESSAGES.emailInvalid },
+  ...MEMBER_WRITE_ERRORS.slice(1),
+];
+
+/** The optional "only if still in this status" guard that makes a write fail as stale */
+function expectedStatusArg(expectedStatus: MemberStatus | undefined) {
+  return expectedStatus ? { expected_status: expectedStatus } : {};
 }
 
 export async function confirmMemberAction(
   orgId: string,
   memberId: string
 ): Promise<ActionResult<void, MembersActionError>> {
-  if (!isUuid(orgId) || !isUuid(memberId)) {
-    return fail("invalid_request", "Invalid request parameters.");
-  }
+  if (!isUuid(orgId) || !isUuid(memberId)) return fail("invalid_request", INVALID_REQUEST);
 
-  const access = await getCallerOrgMembership(orgId);
-  if (!access.ok) {
-    return accessFailure(access.error);
-  }
+  const failedMessage = "Could not confirm member. Please try again.";
 
-  const { supabase } = access.caller;
+  return withOrgCaller<void, MembersActionError>(
+    orgId,
+    { name: "confirmMemberAction", unexpected: failedMessage },
+    async ({ supabase }) => {
+      const { error } = await supabase.rpc("confirm_member", { target_member: memberId });
+      if (error) return rpcFailure("confirm_member", error, [], failedMessage);
 
-  try {
-    const { error: rpcErr } = await supabase.rpc("confirm_member", {
-      target_member: memberId,
-    });
-
-    if (rpcErr) {
-      return fail("failed", "Could not confirm member. Please try again.");
+      revalidatePath(membersPath(orgId));
+      return ok();
     }
-
-    revalidatePath(membersPath(orgId));
-    return ok();
-  } catch {
-    return fail("failed", "Could not confirm member. Please try again.");
-  }
+  );
 }
 
 export async function updateMemberAction(
@@ -207,58 +230,31 @@ export async function updateMemberAction(
   data: { fullName: string; email: string },
   expectedStatus?: MemberStatus
 ): Promise<ActionResult<{ fullName: string; email: string }, MembersActionError>> {
-  if (!isUuid(orgId) || !isUuid(memberId)) {
-    return fail("invalid_request", "Invalid request parameters.");
-  }
+  if (!isUuid(orgId) || !isUuid(memberId)) return fail("invalid_request", INVALID_REQUEST);
 
   const validation = validateMemberEdit(data);
   if (!validation.valid) {
     return fail("invalid_request", validation.error || "Invalid member details.");
   }
 
-  const access = await getCallerOrgMembership(orgId);
-  if (!access.ok) {
-    return accessFailure(access.error);
-  }
+  return withOrgCaller<{ fullName: string; email: string }, MembersActionError>(
+    orgId,
+    { name: "updateMemberAction", unexpected: MEMBER_EDIT_MESSAGES.saveFailed },
+    async ({ supabase }) => {
+      const { error } = await supabase.rpc("update_member", {
+        target_member: memberId,
+        new_name: validation.fullName,
+        new_email: validation.email,
+        ...expectedStatusArg(expectedStatus),
+      });
+      if (error) {
+        return rpcFailure("update_member", error, UPDATE_MEMBER_ERRORS, MEMBER_EDIT_MESSAGES.saveFailed);
+      }
 
-  const { supabase } = access.caller;
-
-  try {
-    const { error: rpcErr } = await supabase.rpc("update_member", {
-      target_member: memberId,
-      new_name: validation.fullName,
-      new_email: validation.email,
-      ...(expectedStatus ? { expected_status: expectedStatus } : {}),
-    });
-
-    if (rpcErr) {
-      const msg = rpcErr.message || "";
-      if (msg.includes("stale_member")) {
-        return fail("stale", MEMBER_EDIT_MESSAGES.stale);
-      }
-      if (msg.includes("duplicate_email")) {
-        return fail("duplicate_email", MEMBER_EDIT_MESSAGES.duplicateEmail);
-      }
-      if (msg.includes("invalid_name")) {
-        return fail("invalid_request", MEMBER_EDIT_MESSAGES.nameInvalid);
-      }
-      if (msg.includes("invalid_email")) {
-        return fail("invalid_request", MEMBER_EDIT_MESSAGES.emailInvalid);
-      }
-      if (msg.includes("not_permitted")) {
-        return fail("access_revoked", MEMBER_EDIT_MESSAGES.notPermitted);
-      }
-      if (msg.includes("member_not_found")) {
-        return fail("not_found", MEMBER_EDIT_MESSAGES.notFound);
-      }
-      return fail("failed", MEMBER_EDIT_MESSAGES.saveFailed);
+      revalidatePath(membersPath(orgId));
+      return ok({ fullName: validation.fullName, email: validation.email });
     }
-
-    revalidatePath(membersPath(orgId));
-    return ok({ fullName: validation.fullName, email: validation.email });
-  } catch {
-    return fail("failed", MEMBER_EDIT_MESSAGES.saveFailed);
-  }
+  );
 }
 
 export async function setMemberStatusAction(
@@ -267,47 +263,33 @@ export async function setMemberStatusAction(
   newStatus: "active" | "inactive",
   expectedStatus?: MemberStatus
 ): Promise<ActionResult<void, MembersActionError>> {
-  if (!isUuid(orgId) || !isUuid(memberId)) {
-    return fail("invalid_request", "Invalid request parameters.");
-  }
-
+  if (!isUuid(orgId) || !isUuid(memberId)) return fail("invalid_request", INVALID_REQUEST);
   if (newStatus !== "active" && newStatus !== "inactive") {
     return fail("invalid_request", "Invalid member status.");
   }
 
-  const access = await getCallerOrgMembership(orgId);
-  if (!access.ok) {
-    return accessFailure(access.error);
-  }
-
-  const { supabase } = access.caller;
-
-  try {
-    const { error: rpcErr } = await supabase.rpc("set_member_status", {
-      target_member: memberId,
-      new_status: newStatus,
-      ...(expectedStatus ? { expected_status: expectedStatus } : {}),
-    });
-
-    if (rpcErr) {
-      const msg = rpcErr.message || "";
-      if (msg.includes("stale_member")) {
-        return fail("stale", MEMBER_EDIT_MESSAGES.stale);
+  return withOrgCaller<void, MembersActionError>(
+    orgId,
+    { name: "setMemberStatusAction", unexpected: MEMBER_EDIT_MESSAGES.statusChangeFailed },
+    async ({ supabase }) => {
+      const { error } = await supabase.rpc("set_member_status", {
+        target_member: memberId,
+        new_status: newStatus,
+        ...expectedStatusArg(expectedStatus),
+      });
+      if (error) {
+        return rpcFailure(
+          "set_member_status",
+          error,
+          MEMBER_WRITE_ERRORS,
+          MEMBER_EDIT_MESSAGES.statusChangeFailed
+        );
       }
-      if (msg.includes("not_permitted")) {
-        return fail("access_revoked", MEMBER_EDIT_MESSAGES.notPermitted);
-      }
-      if (msg.includes("member_not_found")) {
-        return fail("not_found", MEMBER_EDIT_MESSAGES.notFound);
-      }
-      return fail("failed", MEMBER_EDIT_MESSAGES.statusChangeFailed);
+
+      revalidatePath(membersPath(orgId));
+      return ok();
     }
-
-    revalidatePath(membersPath(orgId));
-    return ok();
-  } catch {
-    return fail("failed", MEMBER_EDIT_MESSAGES.statusChangeFailed);
-  }
+  );
 }
 
 /**
@@ -318,33 +300,25 @@ export async function getExportCount(
   orgId: string,
   statuses: string[]
 ): Promise<ActionResult<{ count: number }, MembersActionError | "not_authorized">> {
-  if (!isUuid(orgId) || !Array.isArray(statuses)) {
-    return fail("invalid_request", "Invalid request parameters.");
-  }
-  const valid = statuses.filter((s): s is MemberStatus =>
-    s === "pending" || s === "active" || s === "inactive"
-  );
-  if (valid.length !== statuses.length) {
-    return fail("invalid_request", "Invalid request parameters.");
+  if (!isUuid(orgId) || !Array.isArray(statuses) || !statuses.every(isMemberStatus)) {
+    return fail("invalid_request", INVALID_REQUEST);
   }
   // No statuses chosen: nothing would be exported, so skip the query
-  if (valid.length === 0) return ok({ count: 0 });
+  if (statuses.length === 0) return ok({ count: 0 });
+
+  const failedMessage = "We couldn't count your members. Try again.";
 
   return withOrgPermission(
     orgId,
     "members:export",
-    {
-      name: "getExportCount",
-      denied: "Only admins can export members.",
-      unexpected: "We couldn't count your members. Try again.",
-    },
+    { name: "getExportCount", denied: "Only admins can export members.", unexpected: failedMessage },
     async ({ supabase }) => {
       const { count, error } = await supabase
         .from("members")
         .select("id", { count: "exact", head: true })
         .eq("org_id", orgId)
-        .in("status", valid);
-      if (error) return fail("failed", "We couldn't count your members. Try again.");
+        .in("status", statuses);
+      if (error) return fail("failed", failedMessage);
       return ok({ count: count ?? 0 });
     }
   );

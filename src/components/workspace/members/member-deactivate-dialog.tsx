@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Loader2, UserMinus } from "lucide-react";
-import { Dialog } from "@/src/components/ui/dialog";
+import { AlertCircle, Loader2 } from "lucide-react";
+import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
+import { MemberStatusBadge } from "./member-status-badge";
+import { getInitials } from "@/src/components/workspace/officers/officers-helpers";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import { MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
 
@@ -63,159 +65,112 @@ function DeactivatePrompt({
       labelledBy="deactivate-dialog-title"
       onDismiss={isDeactivating ? undefined : onClose}
       maxWidth={440}
-      padding="24px"
     >
-      <div style={{ position: "relative", width: "100%", textAlign: "left" }}>
-        {/* Close Button */}
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={isDeactivating}
-          aria-label="Close confirmation dialog"
-          style={{
-            position: "absolute",
-            top: -4,
-            right: -4,
-            width: 36,
-            height: 36,
-            borderRadius: 8,
-            border: "none",
-            backgroundColor: "transparent",
-            color: "var(--color-muted)",
-            cursor: isDeactivating ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transition: "color 0.15s ease",
-          }}
-        >
-          <X size={18} />
-        </button>
-
-        {/* Quiet Icon Header */}
+      <DialogHeader
+        titleId="deactivate-dialog-title"
+        title="Deactivate member"
+        description="Review who you are deactivating."
+        onClose={onClose}
+        closeDisabled={isDeactivating}
+        closeLabel="Close confirmation dialog"
+      />
+      <DialogBody>
         <div
           style={{
-            width: 44,
-            height: 44,
-            borderRadius: 12,
-            backgroundColor: "color-mix(in srgb, var(--color-ink) 7%, transparent)",
-            color: "var(--color-ink)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 16,
+            gap: 12,
+            padding: "12px 14px",
+            borderRadius: 12,
+            backgroundColor: "var(--color-base)",
+            border: "1px solid var(--color-line)",
           }}
         >
-          <UserMinus size={22} strokeWidth={2} />
+          <span
+            aria-hidden="true"
+            style={{
+              width: 38,
+              height: 38,
+              flexShrink: 0,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "var(--color-accent-strong)",
+              backgroundColor: "color-mix(in srgb, var(--color-accent) 18%, transparent)",
+            }}
+          >
+            {getInitials(member.fullName)}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              title={member.fullName}
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "var(--color-ink)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {member.fullName}
+            </div>
+            <div
+              title={member.email}
+              style={{
+                fontSize: 12.5,
+                color: "var(--color-muted-strong)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {member.email}
+            </div>
+          </div>
+          <MemberStatusBadge status={member.status} size="sm" />
         </div>
 
-        {/* Title */}
-        <h2
-          id="deactivate-dialog-title"
-          style={{
-            margin: "0 0 8px 0",
-            fontSize: 18,
-            fontWeight: 700,
-            color: "var(--color-ink)",
-            letterSpacing: "-0.01em",
-          }}
-        >
-          Deactivate {member.fullName}?
-        </h2>
-
-        {/* Prompt description */}
-        <p
-          style={{
-            margin: "0 0 20px 0",
-            fontSize: 13.5,
-            color: "var(--color-muted)",
-            lineHeight: 1.5,
-          }}
-        >
-          They’ll move to Inactive. You can reactivate them later.
+        <p style={{ margin: "16px 0 0", fontSize: 14, lineHeight: 1.5, color: "var(--color-muted-strong)" }}>
+          They move to Inactive and leave the main roster. Their record stays, and you can reactivate them at any
+          time.
         </p>
 
-        {/* Error message */}
         {error && (
           <div
             role="alert"
             style={{
-              padding: "10px 14px",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
+              marginTop: 16,
+              padding: "10px 12px",
               borderRadius: 10,
-              backgroundColor: "color-mix(in srgb, var(--color-danger, #ef4444) 10%, transparent)",
-              color: "var(--color-danger, #ef4444)",
+              backgroundColor: "var(--color-danger-soft)",
+              border: "1px solid var(--color-danger-line)",
+              color: "var(--color-danger-strong)",
               fontSize: 13,
               fontWeight: 500,
-              marginBottom: 16,
+              lineHeight: 1.45,
             }}
           >
-            {error}
+            <AlertCircle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{error}</span>
           </div>
         )}
-
-        {/* Actions - Quiet, calm buttons adhering to design guidelines */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: 10,
-          }}
-        >
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isDeactivating}
-            style={{
-              minHeight: 44,
-              padding: "0 16px",
-              borderRadius: 10,
-              border: "1px solid var(--color-line)",
-              backgroundColor: "transparent",
-              color: "var(--color-ink)",
-              fontSize: 13.5,
-              fontWeight: 600,
-              cursor: isDeactivating ? "not-allowed" : "pointer",
-              opacity: isDeactivating ? 0.6 : 1,
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            data-autofocus
-            onClick={handleDeactivate}
-            disabled={isDeactivating}
-            style={{
-              minHeight: 44,
-              padding: "0 20px",
-              borderRadius: 10,
-              border: "1px solid color-mix(in srgb, var(--color-ink) 20%, transparent)",
-              backgroundColor: "color-mix(in srgb, var(--color-ink) 9%, transparent)",
-              color: "var(--color-ink)",
-              fontSize: 13.5,
-              fontWeight: 600,
-              cursor: isDeactivating ? "not-allowed" : "pointer",
-              opacity: isDeactivating ? 0.75 : 1,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              transition: "all 0.15s ease",
-            }}
-          >
-            {isDeactivating && (
-              <Loader2
-                size={15}
-                className="animate-spin"
-                style={{ animation: "spin 1s linear infinite" }}
-              />
-            )}
-            <span>{isDeactivating ? "Deactivating..." : "Deactivate"}</span>
-          </button>
-        </div>
-      </div>
+      </DialogBody>
+      <DialogFooter>
+        <DialogButton onClick={onClose} disabled={isDeactivating}>
+          Cancel
+        </DialogButton>
+        <DialogButton variant="danger" data-autofocus onClick={handleDeactivate} disabled={isDeactivating}>
+          {isDeactivating && <Loader2 size={16} aria-hidden="true" style={{ animation: "spin 1s linear infinite" }} />}
+          <span>{isDeactivating ? "Deactivating..." : "Deactivate"}</span>
+        </DialogButton>
+      </DialogFooter>
     </Dialog>
   );
 }
-

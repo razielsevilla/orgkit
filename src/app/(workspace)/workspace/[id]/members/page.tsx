@@ -2,7 +2,6 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { isUuid } from "@/src/lib/validation";
-import { getSessionUser } from "@/src/lib/auth/session-user";
 import { getWorkspaceMembers } from "@/src/app/(workspace)/members-actions";
 import { MembersClient } from "@/src/components/workspace/members/members-client";
 import { EMPTY_MEMBERS_DATA } from "@/src/components/workspace/members/members-empty-data";
@@ -11,6 +10,7 @@ import {
   getOrganizationById,
   getCurrentOfficer,
   getOfficerDefaultWorkspace,
+  isOrgAdmin,
 } from "@/src/app/(workspace)/actions";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
 import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
@@ -38,8 +38,13 @@ async function MembersContent({ params }: MembersPageProps) {
     );
   }
 
-  // Check caller belongs to this org
-  const org = await getOrganizationById(rawId);
+  // Fire org verification, role check, and member data retrieval concurrently in parallel
+  const [org, isAdmin, membersRes] = await Promise.all([
+    getOrganizationById(rawId),
+    isOrgAdmin(rawId),
+    getWorkspaceMembers(rawId),
+  ]);
+
   if (!org) {
     const [officer, workspace] = await Promise.all([
       getCurrentOfficer(),
@@ -53,12 +58,6 @@ async function MembersContent({ params }: MembersPageProps) {
     );
   }
 
-  // Only an admin sees Export. The route and the database check the role again.
-  const [membersRes, { supabase }] = await Promise.all([
-    getWorkspaceMembers(rawId),
-    getSessionUser(),
-  ]);
-  const { data: isAdmin } = await supabase.rpc("is_org_admin", { target_org: rawId });
   const canExport = isAdmin === true;
 
   if (!membersRes.success || !membersRes.data) {

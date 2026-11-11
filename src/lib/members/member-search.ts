@@ -1,4 +1,4 @@
-export const MEMBERS_PAGE_SIZE = 50;
+export const MEMBERS_PAGE_SIZE = 20;
 
 /** Collapse runs of whitespace and trim. Case is handled by `ilike`. */
 export function normalizeSearchTerm(raw: string): string {
