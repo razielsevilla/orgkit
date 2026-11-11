@@ -1,47 +1,72 @@
-# OrgKit Design System & Style Guide (`design.md`)
+# OrgKit Design System (`design.md`) — v2, bryl-minimal restyle
 
-This document is the official design specification for **OrgKit**, extracted directly from the production `/register` and `/signin` experiences. All subsequent pages, dashboards, components, and user flows should reference and adhere to these guidelines to ensure visual consistency, accessibility, and brand coherence.
+This is the single source of truth for OrgKit's UI. Every page, component, and layout must follow it. v2 keeps OrgKit's **color palette, geometric SVG background layer, campus photo, and floating icons**, and adopts the **bryl-minimal** typography, type scale, spacing, radii, shadows, and motion.
 
----
-
-## 1. Brand Identity & Design Philosophy
-
-OrgKit is a modern, reliable, and approachable platform built for student organization officers and members.
-
-- **Purposeful Minimalism:** Clear hierarchy, ample negative space, and zero unnecessary visual clutter.
-- **Single-Accent Discipline:** A signature emerald green accent (`#059669`) is the *only* semantic hue on neutral canvases. When something is green, it communicates action, growth, vitality, or success.
-- **Friendly Geometry:** Generously rounded corners (`rounded-3xl`, `rounded-full`), soft elevated drop shadows, and subtle border lines create an inviting, polished modern aesthetic.
-- **Responsive Fluidity:** Uses fluid CSS `clamp(...)` scaling for typography, padding, card dimensions, and icon sizes across standard desktop, laptop, and mobile viewports.
+The goal: a quiet, precise, editorial UI that feels designed by a person, not generated. If a screen feels empty, that is usually correct.
 
 ---
 
-## 2. Color Palette & Design Tokens
+## 0. What changed from v1
 
-OrgKit uses a clean zinc neutral scale paired with an emerald accent and an explicit destructive red for validation errors.
+| Area | v1 | v2 |
+| :--- | :--- | :--- |
+| Font | Plus Jakarta Sans, weights up to 800 | **Geist** (UI), **Geist Mono** (labels), **Geist Pixel** (page titles); max weight 600 |
+| Type scale | Large fluid `clamp()` everywhere | Compact fixed scale (15px base). `clamp()` kept **only** for the auth/marketing hero |
+| Corners | Pills + 28px cards | Radius ladder 16 / 12 / 8 / 6; pills only for badges and tags |
+| Borders | 2px outlines, 1px at 60% | 1px hairlines everywhere, `#E4E4E7` |
+| Shadows | `0 20px 50px / 8%` | Soft ground-contact shadows with negative spread |
+| Hierarchy | Size + weight + green | Font role, casing, tracking, hairlines, numbered labels |
+| Motion | 0.22s card fade | Staggered fade-up entrance, 200ms micro-interactions |
+| Kept as is | Palette, emerald accent, SVG geometric layer, campus photo, floating icons, Lucide icons | Same (see §7) |
 
-### 2.1 Core Palette Table
+**Deliberate conflicts resolved (do not "fix" these back):**
+1. bryl-minimal has *no* accent color. OrgKit keeps **one** accent, emerald `#059669`, reserved for success, active, primary actions. Everything else is neutral. Never add a second hue.
+2. bryl-minimal uses pure white `#fff` as the page background. OrgKit keeps `#F4F4F5` as the canvas and `#FFFFFF` for surfaces.
+3. bryl-minimal's lightest text gray (`#A3A3A3`) fails WCAG on white. OrgKit rule: **gray 400 is for decorative labels only; anything the user must read is `#71717A` or darker.**
+4. bryl-minimal micro-labels go down to 9px. OrgKit minimum is **10px** (decorative) and **11px** (anything functional).
 
-| Token Name | Hex Code | Tailwind / CSS Variable | Description / Usage |
+---
+
+## 1. Philosophy
+
+1. **One accent, used sparingly.** Emphasis comes first from typography (switching to the pixel or mono font), inversion (ink chip on light surface), and hairlines. Emerald is the only hue and means *success, active, go*.
+2. **Type does the talking.** Three font roles carry the hierarchy. Sizes stay modest; contrast comes from *which* font, its casing, and its tracking.
+3. **Whitespace is structure.** Narrow measure, generous vertical rhythm. Sections are separated by hairline rules and numbered labels, not boxes or background tints.
+4. **Texture over decoration.** Geometric SVG shapes and the campus photo supply atmosphere on entry screens only. Inside the app, screens are calm and flat.
+
+---
+
+## 2. Color tokens
+
+Same palette as v1, mapped onto bryl-minimal's role names.
+
+| Role | Token | Hex | Usage |
 | :--- | :--- | :--- | :--- |
-| **Base** | `#F4F4F5` | `var(--color-base)` / `zinc-100` | Full-screen page background, global canvas |
-| **Surface** | `#FFFFFF` | `var(--color-surface)` / `white` | Cards, modals, elevated surfaces, Google button |
-| **Ink** | `#18181B` | `var(--color-ink)` / `zinc-900` | Primary headings, button labels, main body text |
-| **Ink Secondary** | `#3F3F46` | `zinc-700` | Feature list items, secondary labels |
-| **Ink Muted** | `#52525B` | `zinc-600` | Disclaimers, footer notes, terms paragraphs |
-| **Muted** | `#71717A` | `var(--color-muted)` / `zinc-500` | Subtitles, placeholders, captions, meta info |
-| **Line** | `#E4E4E7` | `var(--color-line)` / `zinc-200` | Card borders, inputs, dividers, button outlines |
-| **Line Subtle** | `rgba(228, 228, 231, 0.6)` | `border-line/60` | Floating card outer borders |
-| **Divider Line** | `rgba(161, 161, 170, 0.6)` | `zinc-400/60` | Vertical feature item dividers |
-| **Accent** | `#059669` | `var(--color-accent)` / `emerald-600` | Primary brand accent, punch words, active badges |
-| **Accent Strong** | `#047857` | `var(--color-accent-strong)` / `emerald-700` | Hover states, high-contrast link text |
-| **Accent Light** | `#10B981` | `emerald-500` | Radial gradient highlights and stop colors |
-| **Accent Tint (6%)** | `rgba(5, 150, 105, 0.06)` | `emerald-600/6` | Background geometric rings and circles |
-| **Accent Tint (10%)** | `rgba(5, 150, 105, 0.10)` | `emerald-600/10` / `bg-emerald-50` | Soft badges, outer decorative rings |
-| **Error / Destructive**| `#DC2626` | `red-600` | Form validation errors, error borders (`data-error`) |
+| Canvas | `--color-base` | `#F4F4F5` | Page background |
+| Surface | `--color-surface` | `#FFFFFF` | Cards, modals, inputs, sidebar |
+| Gray 50 | `--color-gray-50` | `#FAFAFA` | Faint fills, card gradient start, hover fill |
+| Gray 100 | `--color-gray-100` | `#F4F4F5` | Subtle fills, pressed state |
+| Line (Gray 200) | `--color-line` | `#E4E4E7` | All borders and hairline dividers |
+| Gray 300 | `--color-gray-300` | `#D4D4D8` | Strong borders, tag outlines, scrollbar thumb |
+| Gray 400 | `--color-gray-400` | `#A1A1AA` | **Decorative only**: numbered section labels, disabled |
+| Muted (Gray 500) | `--color-muted` | `#71717A` | Secondary text, captions, mono labels (readable minimum) |
+| Gray 600 | `--color-gray-600` | `#52525B` | Legal text, helper text |
+| Gray 700 | `--color-gray-700` | `#3F3F46` | Feature labels, table body |
+| Ink | `--color-ink` | `#18181B` | Headings, body, inverted-chip fill |
+| Accent | `--color-accent` | `#059669` | Primary buttons, active badges, success, key word in hero |
+| Accent strong | `--color-accent-strong` | `#047857` | Accent hover, accent text on white |
+| Accent tint | — | `rgba(5,150,105,0.06)` / `0.10` | SVG background shapes, soft badges |
+| Error | `--color-error` | `#DC2626` | Validation only |
 
-### 2.2 Tailwind CSS Configuration (v4)
+Rules:
+- Body text is ink. Secondary text is muted. Never use gray 400 for text a user needs to read.
+- Borders are always 1px `--color-line`. Dividers are hairlines, used generously.
+- Filled surfaces are rare. If a card needs depth, use a gradient from gray 50 to surface.
+- Allowed "loud" element: **one inverted chip per view** (ink fill, white text), e.g. a "Featured" or role badge.
+- Text selection: ink background, white text.
+- Accent is never used for large fills inside the app. A primary button, an active badge, a success state, a focus ring: that's it.
 
-Theme tokens are defined in `src/app/globals.css`:
+### `src/app/globals.css` (Tailwind v4)
 
 ```css
 @import "tailwindcss";
@@ -49,228 +74,313 @@ Theme tokens are defined in `src/app/globals.css`:
 :root {
   --color-base: #f4f4f5;
   --color-surface: #ffffff;
-  --color-ink: #18181b;
-  --color-muted: #71717a;
+  --color-gray-50: #fafafa;
+  --color-gray-100: #f4f4f5;
   --color-line: #e4e4e7;
+  --color-gray-300: #d4d4d8;
+  --color-gray-400: #a1a1aa;
+  --color-muted: #71717a;
+  --color-gray-600: #52525b;
+  --color-gray-700: #3f3f46;
+  --color-ink: #18181b;
   --color-accent: #059669;
   --color-accent-strong: #047857;
+  --color-error: #dc2626;
+
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+  --shadow-card: 0 8px 22px -14px rgba(0, 0, 0, 0.25);
+  --shadow-card-hover: 0 18px 36px -20px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 40px 90px -20px rgba(0, 0, 0, 0.35);
 }
 
-.bg-base { background-color: var(--color-base); }
-.bg-surface { background-color: var(--color-surface); }
-.text-ink { color: var(--color-ink); }
-.text-muted { color: var(--color-muted); }
-.border-line { border-color: var(--color-line); }
-.bg-accent { background-color: var(--color-accent); }
-.bg-accent-strong { background-color: var(--color-accent-strong); }
-.text-accent { color: var(--color-accent); }
-.text-accent-strong { color: var(--color-accent-strong); }
+@theme inline {
+  --color-base: var(--color-base);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-muted: var(--color-muted);
+  --color-line: var(--color-line);
+  --color-accent: var(--color-accent);
+  --color-accent-strong: var(--color-accent-strong);
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-pixel: var(--font-geist-pixel), var(--font-geist-mono), monospace;
+}
+
+html { color-scheme: light; background: var(--color-base); }
+body { font-family: var(--font-sans); font-size: 15px; color: var(--color-ink); }
+::selection { background: var(--color-ink); color: #fff; }
+
+/* slim scrollbars */
+* { scrollbar-width: thin; scrollbar-color: var(--color-gray-300) transparent; }
 ```
 
 ---
 
-## 3. Typography Hierarchy
+## 3. Typography
 
-### 3.1 Font Family
-- **Primary:** `Plus Jakarta Sans` via `next/font/google` (`subsets: ["latin"]`, weights: `400`, `500`, `600`, `700`, `800`).
-- **System Fallback:** `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif`.
+### 3.1 Font roles
 
-### 3.2 Typography Scale
+| Role | Font | Fallbacks | Used for |
+| :--- | :--- | :--- | :--- |
+| UI / body | **Geist** | system-ui, sans-serif | Paragraphs, nav, card titles, buttons, inputs, headings |
+| Technical | **Geist Mono** | ui-monospace, monospace | Micro-labels, tags, timestamps, reference numbers, table meta |
+| Display | **Geist Pixel (Square)** | Geist Mono, monospace | Page titles, numbered section labels, big stat values |
 
-| Level | Size (Fluid / Responsive) | Weight | Line Height | Letter Spacing | Color | Notes / Usage |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Display H1** | `clamp(38px, 3.83vw, 64px)` | 800 | 1.05 | `-0.025em` | `#18181B` (Accent `#059669` for lead word) | Hero headings ("Organize. Collaborate. Lead.") |
-| **Card H2** | `clamp(26px, 2.39vw, 40px)` | 700 | 1.15 | `-0.015em` | `#18181B` | Auth card titles ("Welcome back", "Create Your Account") |
-| **Section H3** | `clamp(20px, 1.8vw, 28px)` | 700 | 1.25 | `-0.01em` | `#18181B` | Modal titles, section headers |
-| **Hero Subtitle** | `clamp(16px, 1.44vw, 24px)` | 400 | 1.25 | normal | `#71717A` | Marketing subcopy under H1 |
-| **Card Subtitle** | `clamp(14px, 1.26vw, 21px)` | 400 | 1.38 | normal | `#71717A` | Explanatory copy under Card H2 (max-width: 440px) |
-| **Button Label** | `clamp(17px, 1.44vw, 24px)` | 500 | 1.2 | normal | `#18181B` | Google Auth Button label |
-| **Standard CTA** | `14px - 16px` | 600 | 1.2 | normal | `#FFFFFF` | Standard action button text |
-| **Feature Item** | `clamp(13px, 0.93vw, 15.5px)` | 500 | 1.2 | normal | `#3F3F46` | Marketing feature labels |
-| **Caption / Legal**| `clamp(13px, 0.95vw, 15px)` | 400 | 1.5 | normal | `#52525B` | Terms, privacy notice, sublinks |
-| **Text Link** | `13px - 15px` | 600 / 700 | 1.5 | normal | `#059669` (hover: `#047857`) | Underline on hover, focus ring |
+Loading (Next.js):
+- Geist and Geist Mono via `next/font/google` (`display: "swap"`), exposed as `--font-geist` and `--font-geist-mono`.
+- Geist Pixel via `next/font/local` from a self-hosted `.woff2` in `/public/fonts/`, exposed as `--font-geist-pixel`, `display: "swap"`.
+- If Geist Pixel is unavailable, fall back to **Geist Mono, uppercase**. Never substitute any other decorative font.
+- Remove Plus Jakarta Sans entirely.
 
----
+### 3.2 Scale
 
-## 4. Spacing, Sizing & Radii
+Base UI text is **15px**, not 16.
 
-### 4.1 Border Radii
-- **Full / Pill (`rounded-full` / `9999px`):** Primary auth buttons, chips, status pills.
-- **Card Container (`clamp(20px, 1.67vw, 28px)`):** Auth cards, floating modals, main container panels.
-- **Inner Surface (`rounded-2xl` / `16px`):** Notice callouts, info boxes, form groupings.
-- **Component / Input (`rounded-xl` / `12px` or `rounded-lg` / `8px`):** Input fields, interactive controls.
-- **Focus / Inline Elements (`rounded-[2px]`):** Inline hyperlinks with focus outline offset.
+| Level | Font | Size | Weight | Tracking | Case | Color | Usage |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Page title | Pixel | `3rem`, line-height 1 | 400 | normal | lowercase, usually one word | ink | "members", "attendance", "dues", "archive" |
+| Section label | Pixel | `13px` | 400 | `0.02em` | lowercase | gray 400 | "01 — roster", "02 — dues" |
+| H1 (in content) | Geist | `1.6rem` | 600 | `-0.02em` | sentence | ink | Detail page titles |
+| H2 | Geist | `1.3rem` | 600 | `-0.02em` | sentence | ink | Card and modal titles |
+| H3 | Geist | `1.1rem` | 600 | `-0.02em` | sentence | ink | Sub-sections |
+| Body | Geist | `15px`, lh 1.6 | 400 | normal | sentence | ink | Default text |
+| Small | Geist | `13px`, lh 1.5 | 400 | normal | sentence | muted | Helper text, captions |
+| Button text | Geist | `13px`–`14px` | 500 | normal | sentence | per button | All buttons |
+| **Micro-label** | Geist Mono | `11px` (min `10px`, decorative only) | 400 | `+1px` | **UPPERCASE** | muted (gray 400 if decorative) | Tags, timestamps, field captions, table headers, status text |
 
-### 4.2 Elevation & Shadows
-- **Card Floating Shadow:**
-  ```css
-  box-shadow: 0 20px 50px rgba(24, 24, 27, 0.08);
-  ```
-- **Interactive Button (Resting):**
-  ```css
-  box-shadow: 0 1px 3px rgba(24, 24, 27, 0.04);
-  ```
-- **Interactive Button (Hover):**
-  ```css
-  box-shadow: 0 6px 18px rgba(24, 24, 27, 0.08);
-  transform: translateY(-1px);
-  ```
-- **Interactive Button (Active / Pressed):**
-  ```css
-  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.05);
-  transform: translateY(0.5px) scale(0.995);
-  ```
-- **Accessible Focus Ring:**
-  ```css
-  outline: none;
-  box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #059669;
-  ```
+The micro-label is the signature register of the whole UI. Use it for anything small and technical: field captions above inputs, table column headers, "VERIFIED", "PENDING", reference numbers, dates.
+
+Casing rules: page titles and standalone labels are **lowercase**. Only mono micro-labels are UPPERCASE. Headings and buttons are sentence case. No Title Case, no all-caps sans.
+
+Links: underlined with the underline at 25% opacity of the text color, offset 2px, rising to 100% on hover. External links get a trailing `↗`. Link color is ink (or emerald-strong inside body copy where it signals action).
+
+### 3.3 Auth / marketing hero exception
+
+Only `/signin` and `/register` (and any future landing page) may use fluid sizing, because they are zero-scroll viewport layouts:
+
+| Level | Size | Weight | Notes |
+| :--- | :--- | :--- | :--- |
+| Hero headline | `clamp(36px, 3.6vw, 60px)`, lh 1.05, tracking `-0.025em` | **600** | Geist. Lead word in accent `#059669`. Optional: set an eyebrow above it in mono micro-label style |
+| Hero subtitle | `clamp(15px, 1.3vw, 21px)`, lh 1.4 | 400 | muted |
+| Card title (H2) | `clamp(22px, 2vw, 32px)`, tracking `-0.02em` | 600 | "Create your account" |
+| Card subtitle | `clamp(13px, 1.1vw, 17px)`, max-width 440px | 400 | muted |
+| Feature item label | `clamp(12px, 0.9vw, 14px)` | 500 | gray 700 |
+| Legal / caption | `clamp(12px, 0.9vw, 14px)` | 400 | gray 600 |
+
+Everything inside the logged-in app uses the fixed scale in §3.2. No `clamp()`.
 
 ---
 
-## 5. Layout Architecture & Screen Templates
+## 4. Layout & spacing
 
-### 5.1 Split-Pane Layout (Desktop `>= 1024px`)
-- **Viewport Constraints:** Strict `100vw` / `100vh` zero-scroll policy for auth (`overflow: hidden`).
-- **Gutters:**
-  - `padding-left: clamp(32px, 10.5vw, 175px)`
-  - `padding-right: clamp(32px, 10.1vw, 170px)`
-- **Left Pane (Brand & Marketing):**
-  - OrgKit wordmark logo (`/orgkit-text-logo.png`, `clamp(150px, 13vw, 220px)` width).
-  - Bold 3-line headline with accent finish.
-  - Subtitle with high-readability line breaks.
-  - 3-column horizontal feature summary separated by 1.5px subtle dividers:
-    - *Manage Members* (`Users` icon)
-    - *Organize Events* (`CalendarDays` icon)
-    - *Track Activities* (`ChartNoAxesCombined` icon)
-- **Right Pane (Action Container):**
-  - Fluid width floating card: `width: clamp(380px, 33.85vw, 566px)`, `maxWidth: 566px`.
-  - Padding: `clamp(24px, 4.25vh, 40px) clamp(24px, 2.69vw, 45px)`.
+### 4.1 App shell (signed-in screens)
+- **Desktop (≥ 1024px):** fixed left sidebar, **14rem** wide, surface background, 1px right hairline. Content shifts right to clear it.
+- **Below 1024px:** sticky top bar with a hairline bottom border, ~90% opaque canvas background with backdrop blur, and a full-screen overlay menu.
+- Sidebar: org name/switcher at top (Geist 600), nav items in **mono micro-label style** (UPPERCASE, 11px). Groups separated by 1px `--color-line` rules. Active item: ink text with a small leading `→`. Inactive: muted, ink on hover. No filled active pill; the one place emerald may appear in nav is a tiny 6px active dot on the current item.
+- Content column: **42rem** max for reading and forms, **56rem** for pages with multi-column grids. Data tables (members, attendance, dues) may go to **72rem**; this is the only sanctioned deviation.
 
-### 5.2 Background Artistic Treatment
-- **Abstract Geometric Vector Layer (SVG):**
-  - Top-Left: Soft emerald circular backdrops (`fillOpacity="0.06"`), concentric circle outlines (`strokeOpacity="0.35"`), and tiny geometric accent tick (`polygon`).
-  - Top-Right: Deep emerald gradient circle (`radialGradient` `#059669` to `#10B981`) paired with outer 10% opacity ring.
-  - Bottom-Right: Emerald arc strokes and solid accent sweep.
-  - Bottom-Left: Concentric pale mint base circles (`fillOpacity="0.08"`).
-- **Campus Photographic Anchor:**
-  - Grayscale campus building photo (`/campus-building.png`) placed at bottom-left (`objectPosition: "0 100%"`).
-  - Dual directional mask fade:
-    ```css
-    mask-image: linear-gradient(to right, rgba(0,0,0,1) 50%, transparent 100%),
-                linear-gradient(to top, rgba(0,0,0,1) 40%, transparent 100%);
-    mask-composite: intersect;
-    ```
+### 4.2 Spacing
+- Page padding: 1rem mobile, 1.5rem desktop.
+- Card padding: 1.25rem.
+- Vertical rhythm between major sections: **3.5rem**.
+- Gaps inside components: 0.75rem. Between grid cards: 0.75–1.5rem.
+- Grids are modest: 2 columns on small screens, 3 at ≥ 1024px.
+- Stat rows and tables separate cells with **hairline rules on both axes**, not gaps. The dividers are the design.
 
-### 5.3 Mobile Layout (`< 1024px`)
-- Background decorative layer and marketing feature items gracefully hide (`display: none !important`).
-- Body reverts to standard responsive vertical scrolling (`overflow-y: auto !important`).
-- Card expands to fill mobile container up to `440px` with `padding: 32px 16px 48px 16px`.
+### 4.3 Auth split-pane (desktop ≥ 1024px)
+Unchanged from v1 apart from type and radii:
+- Strict `100vw` × `100vh`, `overflow: hidden`.
+- Gutters: `padding-left: clamp(32px, 10.5vw, 175px)`, `padding-right: clamp(32px, 10.1vw, 170px)`.
+- **Left pane:** wordmark (`/orgkit-text-logo.png`, `clamp(150px, 13vw, 220px)`), eyebrow micro-label, hero headline, subtitle, 3-column feature row (Manage Members / Organize Events / Track Activities) divided by 1px hairlines.
+- **Right pane:** floating card, `width: clamp(380px, 33.85vw, 566px)`.
+- **Mobile (< 1024px):** decorative layer, floating icons, and feature row hide; page scrolls normally; card fills up to 440px.
 
 ---
 
-## 6. Component Specs & Patterns
+## 5. Radii, borders, shadows
 
-### 6.1 Authentication Card
-Every auth card follows this exact sequence:
-1. **OrgKit Icon Logo:** Centered top icon (`/orgkit-logo.png`, width `clamp(64px, 5.5vw, 92px)`).
-2. **Title H2:** Primary card heading (`Welcome back` / `Create Your Account`).
-3. **Subtitle:** Centered muted guidance text (`max-width: 440px`).
-4. **Primary Interaction Area:** High-visibility Google OAuth button or form inputs.
-5. **Secondary Information:**
-   - Legal consent string: "By continuing, you agree to our [Terms](/terms) and [Privacy Policy](/privacy)."
-   - Toggle route prompt: "New to OrgKit? [Sign up](/register)" / "Already have an account? [Sign in](/signin)".
+### 5.1 Radius ladder
+| Size | Use |
+| :--- | :--- |
+| **16px** | Large cards, auth card, modal panels |
+| **12px** | Medium cards, floating icon tiles, callouts |
+| **8px** | Buttons, small elements, sidebar items |
+| **6px** | Inputs, minimal elements |
+| **9999px** | Badges, tags, status pills **only** |
+| ~10px | Thumbnails |
 
-### 6.2 Google OAuth Button
-- **Structure:** Pill button (`border-radius: 9999px`), height `clamp(52px, 7.65vh, 72px)`.
-- **Styling:** White surface `#FFFFFF`, 2px solid line `#E4E4E7`, text `#18181B`.
-- **States:**
-  - *Hover:* Background `#FAFAFA`, border `#D4D4D8`, shadow lift `translateY(-1px)`.
-  - *Active:* Background `#F4F4F5`, `scale(0.995)`.
-  - *Focus-Visible:* Dual ring (`2px #FFFFFF`, `4px #059669`).
-  - *Error State (`data-error="true"`):* Border `#DC2626`.
-  - *Loading State:* Spinner icon (`#059669` sweep) with label updating to "Signing in...".
+No `rounded-3xl`, no pill buttons (the Google button is now **8px**, not full-round).
 
-### 6.3 Links & Interactive Text
-- **Class:** `.orgkit-terms-link` / `.orgkit-signin-link`
-- **Color:** `#059669` (Emerald 600)
-- **Weight:** 600 (Terms) or 700 (Sign In / Sign Up switches)
-- **Hover:** Underline, text `#047857` (Emerald 700)
-- **Keyboard Focus:** `outline: 2px solid #059669; outline-offset: 2px;`
+### 5.2 Borders
+1px `--color-line` on everything. An optional inset hairline 5px inside a card's edge may be used as a framing accent on one hero card per page, never more.
 
-### 6.4 Iconography & Micro-interactions
-- **Library:** `lucide-react` with `strokeWidth={1.5}`.
-- **Micro-interaction:** Feature row items have `transition: transform 0.2s ease`.
-  - On hover: Item moves `-1px` on Y axis.
-  - Icon shifts color to `#059669` and scales `scale(1.08)`.
-  - Label shifts from `#3F3F46` to `#18181B`.
+### 5.3 Shadows
+Always black at low alpha with large blur and strong negative spread: ground contact, not elevation.
+
+- Resting card: `0 8px 22px -14px rgba(0,0,0,0.25)`
+- Card hover: `0 18px 36px -20px rgba(0,0,0,0.4)` + lift `translateY(-2px)`
+- Modal panel: `0 40px 90px -20px rgba(0,0,0,0.35)`
+- Buttons: no resting shadow. Hover on primary: darken fill only.
+- Focus ring (kept from v1): `box-shadow: 0 0 0 2px #fff, 0 0 0 4px #059669`
 
 ---
 
-## 7. Motion & Accessibility Standards
+## 6. Components
 
-### 7.1 Animations
-- **Card Entrance:**
-  ```css
-  @keyframes orgkitCardFadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(6px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-  .orgkit-card {
-    animation: orgkitCardFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-  ```
-- **Spinner:**
-  ```css
-  @keyframes orgkitSpin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-  .orgkit-spinner {
-    animation: orgkitSpin 0.75s linear infinite;
-  }
-  ```
+Every component follows one recipe: hairline border, radius from the ladder, white or gray-50 fill, soft shadow, a mono micro-label somewhere.
 
-### 7.2 Accessibility & Reduced Motion
-- **WCAG Compliance:**
-  - Ink (`#18181B`) on Surface (`#FFFFFF`): **17.7:1** (AAA).
-  - Ink (`#18181B`) on Base (`#F4F4F5`): **16.0:1** (AAA).
-  - Muted (`#71717A`) on Surface (`#FFFFFF`): **4.8:1** (AA).
-  - Accent Strong (`#047857`) on Surface (`#FFFFFF`): **5.5:1** (AA).
-- **Reduced Motion:**
+### 6.1 Cards
+Border `1px --color-line`, radius 16 (or 12 for small), surface fill (optionally gradient gray-50 → surface), resting shadow. Hover lift only if the card is clickable. Images inside zoom to `scale(1.04)` over 0.5s on hover.
+
+### 6.2 Buttons
+Understated.
+- **Primary:** accent `#059669` fill, white text, 8px radius, 13–14px / 500, height 40px (44px on auth). Hover `#047857`. No shadow.
+- **Secondary:** surface fill, 1px line border, ink text, 8px radius. Hover fill gray-50.
+- **Tertiary / most actions:** mono micro-label text link with an arrow glyph (`→` / `↗`) that nudges up-and-right 2px on hover.
+- **Destructive:** secondary style with error-colored text; confirm in a modal.
+- **Google sign-in button:** surface, 1px line border, **8px radius**, height `clamp(48px, 7vh, 64px)`, label Geist 500 at `clamp(15px, 1.2vw, 20px)`. Hover: gray-50 fill, border gray 300, `translateY(-1px)`. Active: gray-100, `scale(0.995)`. Loading: spinner in accent, label "Signing in…". Error: border `#DC2626`.
+
+### 6.3 Tags, pills, badges
+Fully rounded, 1px gray-300 border, **10–11px uppercase mono**, muted text, padding `2px 8px`.
+- **Active member / verified:** accent text on accent tint 10% background, accent border at 30%. Emerald is permitted here because it is semantic.
+- **Featured / role chip (max one per view):** inverted. Ink fill, white text, no border.
+- **Pending / neutral:** default gray style.
+
+### 6.4 Inputs
+Gray-50 fill, 1px line border, **6px radius**, 13–14px text (mono for reference numbers such as GCash refs). Mono micro-label caption above each field. Focus: border ink + the standard focus ring. Error: border `#DC2626`, helper text in error color at 12px.
+
+### 6.5 Tables
+No zebra, no tinted header. Header row: mono micro-labels in muted. Rows separated by 1px hairlines. Row hover: gray-50. Row actions are mono text links.
+
+### 6.6 Modals
+Full-viewport overlay: ink at 30% opacity + strong backdrop blur. Panel: max-width ~24rem, 16px radius, 1.75rem padding, modal shadow. Fades and scales 95% → 100% over 200ms. Escape closes. Focus is trapped and returned on close.
+
+### 6.7 Icons
+`lucide-react`, `strokeWidth={1.5}`. Default muted; hover ink (accent only when the icon marks an active/success state).
+
+### 6.8 Section headers
+The numbered convention, set in the pixel font at 13px, gray 400: `01 — roster`, `02 — dues`, `03 — handover`. A hairline rule runs under or beside it. Do not put section headers inside boxes.
+
+---
+
+## 7. Background layer, photo, floating icons (kept from v1)
+
+These appear on **entry screens only** (`/signin`, `/register`, optionally `/setup` and landing). Signed-in app screens are flat canvas.
+
+### 7.1 Geometric SVG layer (unchanged)
+- Top-left: soft emerald circles (`fillOpacity 0.06`), concentric outlines (`strokeOpacity 0.35`), small accent tick polygon.
+- Top-right: deep emerald radial gradient circle (`#059669` → `#10B981`) with an outer 10% ring.
+- Bottom-right: emerald arc strokes and a solid accent sweep.
+- Bottom-left: concentric pale mint circles (`fillOpacity 0.08`).
+- Sits behind everything, `pointer-events: none`, `aria-hidden`.
+
+### 7.2 Campus photo (kept, with a bryl-minimal dissolve)
+- Grayscale `/campus-building.png`, bottom-left, `objectPosition: 0 100%`.
+- Keep the dual directional mask fade:
+  ```css
+  mask-image: linear-gradient(to right, #000 50%, transparent 100%),
+              linear-gradient(to top, #000 40%, transparent 100%);
+  mask-composite: intersect;
+  ```
+- **Halftone accent (the one allowed per page):** overlay a monochrome dot field along the photo's fading edges so the building dissolves into dots. 1px-radius dots on a ~9px cell, ink at 90% alpha, faded with a radial mask. Use it here and nowhere else on the page.
+
+### 7.3 Floating icons (kept)
+Small Lucide icons (`Users`, `CalendarDays`, `QrCode`, `Wallet`, `Archive`, `ChartNoAxesCombined`) floating around the hero/card area.
+- Each sits in a **40–48px tile**: surface fill, 1px line border, 12px radius, resting shadow, icon `strokeWidth 1.5` in muted, optional mono micro-label beneath (e.g. `MEMBERS`).
+- Maximum 4–6 tiles, placed asymmetrically; never overlap the card's content.
+- Idle drift: ≤ 6px vertical over 6–8s, ease-in-out, alternating. Disabled under reduced motion. Hidden below 1024px.
+
+---
+
+## 8. Motion
+
+Brief, eased, one-directional. Nothing bounces.
+
+- **Micro-interactions** (color, opacity, small transforms): 200ms.
+- **Card hover:** shadow 350ms, transform 420ms, `cubic-bezier(0.16, 1, 0.3, 1)`.
+- **Page entrance:** elements fade up from **12px** below over **700ms** on that curve, staggered ~70ms down the page (first at 50ms, capped around 330ms). Replaces v1's 0.22s card fade.
+  ```css
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .reveal { animation: fadeUp 700ms var(--ease-out-soft) both; animation-delay: calc(var(--i, 0) * 70ms + 50ms); }
+  ```
+  Set `style={{ "--i": n }}` per element, capping `n` at 4.
+- **Status dots** (e.g. live attendance, pending verification): opacity 1 → 0.25 → 1 on a 1.8s loop.
+- **Spinner:** `0.75s linear infinite` rotation.
+- **Reduced motion:** all of it off. The design must be complete when perfectly still.
   ```css
   @media (prefers-reduced-motion: reduce) {
-    * {
+    *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
-    .orgkit-google-btn:hover,
-    .orgkit-google-btn:active,
-    .orgkit-feature-item:hover {
-      transform: none !important;
-    }
+    .reveal { animation: none; opacity: 1; transform: none; }
   }
   ```
-- **Screen Reader Announcements:** Dynamic states (e.g. "Connecting to Google, please wait...") are enclosed in an `<div className="sr-only" aria-live="polite">` element.
 
 ---
 
-## 8. Checklist for Future OrgKit Pages
+## 9. Dark mode (optional, not required for sprint 2)
 
-When building new views (e.g., dashboard, member directory, event manager):
-1. [ ] **Background:** Keep base canvas at `#F4F4F5`.
-2. [ ] **Cards:** Use `#FFFFFF` surfaces with `rounded-3xl` (or `rounded-2xl` for widgets) and `box-shadow: 0 20px 50px rgba(24, 24, 27, 0.08)`.
-3. [ ] **Borders:** Frame cards with subtle `1px solid rgba(228, 228, 231, 0.6)`.
-4. [ ] **Typography:** Use `Plus Jakarta Sans` with tight negative tracking (`-0.015em` to `-0.025em`) on bold headings.
-5. [ ] **Color Accent:** Limit primary positive calls to `#059669` (hover `#047857`). Never introduce uncoordinated secondary hues.
-6. [ ] **Buttons:** Round interactive action buttons to `rounded-full` with micro-interaction hover lift.
-7. [ ] **Accessibility:** Maintain visible `focus-visible` double rings and screen reader notices.
+If added, it is a **token re-mapping**, not a redesign. Same roles, swapped values, via a `dark` class on `<html>`; support light / dark / system, persist the choice, default to system, crossfade colors 500ms, set `color-scheme` accordingly.
 
+| Token | Dark value |
+| :--- | :--- |
+| Base | `#0C0C0F` |
+| Surface | `#18181B` |
+| Gray 50 | `#1E1E22` |
+| Line | `#2A2A30` |
+| Gray 300 | `#3A3A42` |
+| Gray 400 | `#8A8A92` |
+| Muted | `#A0A0A8` |
+| Ink | `#F4F4F5` |
+| Accent | `#10B981` (emerald 500; passes on dark) |
+| Accent strong | `#34D399` |
+
+Shadows nearly disappear in dark mode; rely on borders. Halftone dots become off-white at ~42% alpha. The SVG geometric layer keeps its tints.
+
+---
+
+## 10. Accessibility
+
+- Semantic landmarks (`nav`, `main`, `header`, `article`) on every screen.
+- Contrast (light theme): ink on surface 17.7:1 (AAA); ink on base 16.0:1 (AAA); muted `#71717A` on surface 4.8:1 (AA); accent-strong `#047857` on surface 5.5:1 (AA).
+- **Accent `#059669` on white is 3.8:1.** Use it for large text, icons, fills, and badges. For small accent-colored text on white, use `#047857`.
+- Gray 400 is decorative only (see §0.3). Mono micro-labels carrying real information use muted or darker, at 11px+.
+- Every overlay closes with Escape; focus is trapped and restored.
+- Visible `focus-visible` double ring on all interactive elements: `0 0 0 2px #fff, 0 0 0 4px #059669`.
+- Honor `prefers-reduced-motion` and set `color-scheme` so native controls match the theme.
+- Dynamic states ("Connecting to Google, please wait…") announced via `<div className="sr-only" aria-live="polite">`.
+
+---
+
+## 11. Anti-patterns: what makes it look generic
+
+Do not:
+- Use gradients on buttons, glassmorphism cards, glowing shadows, or purple/blue anywhere.
+- Put icons in colored circles, or add emoji to UI.
+- Use bold (700+) headings, all-caps sans-serif, or Title Case buttons.
+- Wrap every section in a bordered box. Use hairline rules and whitespace.
+- Add a second accent color, or use emerald as a large background inside the app.
+- Make pill buttons, use `rounded-3xl`, or add heavy `shadow-xl` elevation.
+- Fill empty states with illustrations. Use a short sentence in muted text plus one mono text link.
+- Add decoration to signed-in screens "to make them less empty".
+
+---
+
+## 12. Checklist for new OrgKit pages
+
+1. [ ] Canvas `#F4F4F5`, surfaces `#FFFFFF`, borders 1px `#E4E4E7`.
+2. [ ] Page title in Geist Pixel, lowercase, ~3rem; sections labelled `01 — name`.
+3. [ ] Body Geist 15px; headings weight 600 with `-0.02em`; small functional labels in Geist Mono 11px UPPERCASE.
+4. [ ] Radii from the ladder (16 / 12 / 8 / 6); pills only for tags/badges.
+5. [ ] Shadows from §5.3; no heavy elevation.
+6. [ ] Only one accent (emerald), used for primary action, active, success. At most one inverted chip per view.
+7. [ ] App screens sit in the sidebar shell; content within 42rem / 56rem (tables up to 72rem).
+8. [ ] Entrance stagger applied; everything disabled under reduced motion.
+9. [ ] No background art or floating icons inside the app; no more than one halftone accent per page.
+10. [ ] Focus-visible rings, landmarks, and `aria-live` notices in place.
