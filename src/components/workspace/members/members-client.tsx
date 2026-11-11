@@ -1,35 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useTransition, useCallback } from "react";
+import { useState, type ReactNode } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { Upload } from "lucide-react";
-import type {
-  WorkspaceMember,
-  WorkspaceMembersData,
-} from "@/src/app/(workspace)/members-actions";
-import {
-  getWorkspaceMembers,
-  confirmMemberAction,
-  updateMemberAction,
-  setMemberStatusAction,
-} from "@/src/app/(workspace)/members-actions";
-import { MembersHeader } from "./members-header";
-import {
-  MembersSearchFilter,
-  type StatusFilterOption,
-} from "./members-search-filter";
-import { MemberTable } from "./member-table";
-import { MemberMobileCard } from "./member-mobile-card";
-import { MemberSkeleton } from "./member-skeleton";
-import { MemberEmptyState } from "./member-empty-state";
-import { MembersStyles } from "./members-styles";
-import { MembersFloatingDecor } from "./members-decor";
+import type { WorkspaceMember, WorkspaceMembersData } from "@/src/app/(workspace)/members-actions";
 import { ErrorToast } from "@/src/components/error-toast";
-import { MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
-import { getMemberInvites, type MemberInvitesData } from "@/src/app/(workspace)/member-invites-actions";
+import { rosterEmptyState } from "@/src/lib/members/roster-state";
 import { ROUTES } from "@/src/lib/routes";
 import { InvitedView } from "./invited-view";
-import dynamic from "next/dynamic";
+import { MemberEmptyState } from "./member-empty-state";
+import { MemberList } from "./member-list";
+import { MemberSkeleton } from "./member-skeleton";
+import { MembersHeader } from "./members-header";
+import { MembersImportButton } from "./members-import-button";
+import { MembersSearchFilter } from "./members-search-filter";
+import { MembersStyles } from "./members-styles";
+import { MembersViewTabs, type MembersView } from "./members-view-tabs";
+import { useMemberInvites } from "./use-member-invites";
+import { useMemberRoster } from "./use-member-roster";
+import { useRowFocusRestore } from "./use-row-focus-restore";
 
 // Off-screen modals lazy-loaded on demand to keep critical bundle minimal
 const MemberEditDialog = dynamic(
@@ -57,179 +46,34 @@ interface MembersClientProps {
   canExport?: boolean;
 }
 
-export function MembersClient({ rawId, initialData, initialError = null, canExport = false }: MembersClientProps) {
-  const [data, setData] = useState<WorkspaceMembersData>(initialData);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilterOption>("all");
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(initialError);
+export function MembersClient({
+  rawId,
+  initialData,
+  initialError = null,
+  canExport = false,
+}: MembersClientProps) {
+  const router = useRouter();
   const [toastError, setToastError] = useState<string | null>(null);
 
-  const [confirmingIds, setConfirmingIds] = useState<Set<string>>(new Set());
-  const [reactivatingIds, setReactivatingIds] = useState<Set<string>>(new Set());
+  const roster = useMemberRoster({
+    orgId: rawId,
+    initialData,
+    initialError,
+    notify: setToastError,
+  });
+  const invites = useMemberInvites(rawId, setToastError);
+  const { data } = roster;
+
+  const [view, setView] = useState<MembersView>("members");
   const [editTarget, setEditTarget] = useState<WorkspaceMember | null>(null);
   const [deactivateTarget, setDeactivateTarget] = useState<WorkspaceMember | null>(null);
-
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
-  // R3: admins can import a member list as invitations and see them in the Invited view
-  const router = useRouter();
-  const [view, setView] = useState<"members" | "invited">("members");
-  const [importOpen, setImportOpen] = useState(false);
-  const [invites, setInvites] = useState<MemberInvitesData | null>(null);
-  const [invitesLoading, setInvitesLoading] = useState(false);
-  const [invitesLoadingMore, setInvitesLoadingMore] = useState(false);
-  const [invitesError, setInvitesError] = useState<string | null>(null);
-  const invitesRequest = useRef(0);
-
-  const [isPending, startTransition] = useTransition();
-  // Skip the refetch on mount only when the server already gave us data
-  const isFirstRender = useRef(!initialError);
-  // Only the latest request may write results (guards out-of-order responses)
-  const requestId = useRef(0);
-
-  // Debounce search input by 250ms to keep page responsive past 500 members
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchQuery);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
-
-  // Fetch updated list when debounced search or status filter changes
-  const fetchMembers = useCallback(async () => {
-    const myRequest = ++requestId.current;
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    const res = await getWorkspaceMembers(rawId, {
-      search: debouncedSearch,
-      status: statusFilter,
-    });
-    if (myRequest !== requestId.current) return;
-
-    if (res.success && res.data) {
-      setData(res.data);
-    } else {
-      setErrorMessage(res.errorMessage || "We couldn't load your members. Try again.");
-    }
-    setIsLoading(false);
-    setIsLoadingMore(false);
-  }, [rawId, debouncedSearch, statusFilter]);
-
-  const handleLoadMore = async () => {
-    if (isLoadingMore || isLoading || !data.hasMore) return;
-    const myRequest = ++requestId.current;
-    setIsLoadingMore(true);
-
-    const res = await getWorkspaceMembers(rawId, {
-      search: debouncedSearch,
-      status: statusFilter,
-      offset: data.members.length,
-    });
-    if (myRequest !== requestId.current) return;
-
-    if (res.success && res.data) {
-      const next = res.data;
-      setData((prev) => {
-        const seen = new Set(prev.members.map((m) => m.id));
-        return {
-          ...next,
-          members: [...prev.members, ...next.members.filter((m) => !seen.has(m.id))],
-        };
-      });
-    } else {
-      setToastError(res.errorMessage || "We couldn't load more members. Try again.");
-    }
-    setIsLoadingMore(false);
-  };
-
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    startTransition(() => {
-      fetchMembers();
-    });
-  }, [debouncedSearch, statusFilter, fetchMembers]);
-
-  // Optimistic inline confirmation without page reload
-  const handleConfirm = async (targetMember: WorkspaceMember) => {
-    if (confirmingIds.has(targetMember.id)) return;
-
-    setConfirmingIds((prev) => new Set(prev).add(targetMember.id));
-
-    // Optimistic update
-    setData((prev) => ({
-      ...prev,
-      pendingCount: Math.max(0, prev.pendingCount - 1),
-      members: prev.members.map((m) =>
-        m.id === targetMember.id ? { ...m, status: "active" as const } : m
-      ),
-    }));
-
-    const res = await confirmMemberAction(rawId, targetMember.id);
-
-    if (!res.success) {
-      // Roll back only this member so other in-flight confirms are untouched
-      setData((prev) => ({
-        ...prev,
-        pendingCount: prev.pendingCount + 1,
-        members: prev.members.map((m) =>
-          m.id === targetMember.id ? { ...m, status: "pending" as const } : m
-        ),
-      }));
-      setToastError(res.errorMessage || "Could not confirm member. Please try again.");
-    }
-
-    setConfirmingIds((prev) => {
-      const next = new Set(prev);
-      next.delete(targetMember.id);
-      return next;
-    });
-  };
-
-  // Keyboard focus: after a prompt closes, land back on the member's row. If the
-  // row is gone (deactivated), land on its neighbour, then on the page heading.
-  const pendingFocus = useRef<string[] | null>(null);
-
-  const queueFocus = (memberId: string) => {
-    const idx = data.members.findIndex((m) => m.id === memberId);
-    const ids = [memberId];
-    if (idx >= 0) {
-      if (data.members[idx + 1]) ids.push(data.members[idx + 1].id);
-      if (data.members[idx - 1]) ids.push(data.members[idx - 1].id);
-    }
-    pendingFocus.current = ids;
-  };
-
-  useEffect(() => {
-    if (!pendingFocus.current || editTarget || deactivateTarget || isLoading || isPending) return;
-    const ids = pendingFocus.current;
-    pendingFocus.current = null;
-
-    const visible = (el: Element) => (el as HTMLElement).getClientRects().length > 0;
-    const rowFor = (id: string) =>
-      Array.from(document.querySelectorAll(`[data-member-row="${id}"]`)).find(visible);
-
-    // The dialog already returned focus to its opener when that button still exists
-    const ownRow = rowFor(ids[0]);
-    if (ownRow && ownRow.contains(document.activeElement)) return;
-
-    for (const id of ids) {
-      const row = rowFor(id);
-      const button = row?.querySelector<HTMLElement>("button:not([disabled])");
-      if (button) {
-        button.focus();
-        return;
-      }
-    }
-    document.querySelector<HTMLElement>("[data-members-heading]")?.focus();
-  }, [editTarget, deactivateTarget, data.members, isLoading, isPending]);
+  const queueFocus = useRowFocusRestore(
+    data.members,
+    Boolean(editTarget || deactivateTarget) || roster.isBusy
+  );
 
   const closeEdit = () => {
     if (editTarget) queueFocus(editTarget.id);
@@ -241,230 +85,64 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
     setDeactivateTarget(null);
   };
 
-  // Another officer changed this member first: undo our change, explain, refresh
-  const handleStale = (message?: string) => {
-    setToastError(message || MEMBER_EDIT_MESSAGES.stale);
-    fetchMembers();
-  };
-
-  // Optimistic edit without page reload
-  const handleSaveEdit = async (
-    memberId: string,
-    updates: { fullName: string; email: string }
-  ) => {
-    const oldMember = data.members.find((m) => m.id === memberId);
-
-    // Optimistically update
-    setData((prev) => ({
-      ...prev,
-      members: prev.members.map((m) =>
-        m.id === memberId ? { ...m, fullName: updates.fullName, email: updates.email } : m
-      ),
-    }));
-
-    const res = await updateMemberAction(rawId, memberId, updates, oldMember?.status);
-
-    if (!res.success) {
-      // Rollback to original values
-      if (oldMember) {
-        setData((prev) => ({
-          ...prev,
-          members: prev.members.map((m) => (m.id === memberId ? oldMember : m)),
-        }));
-      }
-
-      if (res.error === "stale" || res.error === "not_found") {
-        handleStale(res.errorMessage);
-        return { success: false, errorMessage: res.errorMessage, stale: true };
-      }
-
-      return { success: false, errorMessage: res.errorMessage };
-    }
-
-    return { success: true };
-  };
-
-  // Optimistic deactivation
-  const handleConfirmDeactivate = async (memberId: string) => {
-    const oldIndex = data.members.findIndex((m) => m.id === memberId);
-    const oldMember = data.members[oldIndex];
-    if (!oldMember) return { success: false, errorMessage: "Member not found." };
-
-    const wasPending = oldMember.status === "pending";
-
-    // Optimistic update
-    setData((prev) => {
-      const isViewingInactive = statusFilter === "inactive";
-      return {
-        ...prev,
-        pendingCount: wasPending ? Math.max(0, prev.pendingCount - 1) : prev.pendingCount,
-        totalCount: Math.max(0, prev.totalCount - 1),
-        inactiveCount: (prev.inactiveCount ?? 0) + 1,
-        matchingCount: isViewingInactive ? prev.matchingCount : Math.max(0, prev.matchingCount - 1),
-        members: isViewingInactive
-          ? prev.members.map((m) => (m.id === memberId ? { ...m, status: "inactive" as const } : m))
-          : prev.members.filter((m) => m.id !== memberId),
-      };
-    });
-
-    const res = await setMemberStatusAction(rawId, memberId, "inactive", oldMember.status);
-
-    if (!res.success) {
-      // Rollback, putting the member back where they were
-      setData((prev) => {
-        const present = prev.members.some((m) => m.id === memberId);
-        const members = present
-          ? prev.members.map((m) => (m.id === memberId ? oldMember : m))
-          : [
-              ...prev.members.slice(0, oldIndex),
-              oldMember,
-              ...prev.members.slice(oldIndex),
-            ];
-        return {
-          ...prev,
-          pendingCount: wasPending ? prev.pendingCount + 1 : prev.pendingCount,
-          totalCount: prev.totalCount + 1,
-          inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
-          matchingCount: prev.matchingCount + 1,
-          members,
-        };
-      });
-
-      if (res.error === "stale" || res.error === "not_found") {
-        handleStale(res.errorMessage);
-        return { success: false, errorMessage: res.errorMessage, stale: true };
-      }
-
-      setToastError(res.errorMessage || "Could not deactivate member. Please try again.");
-      return { success: false, errorMessage: res.errorMessage };
-    }
-
-    return { success: true };
-  };
-
-  // Optimistic reactivation
-  const handleReactivate = async (targetMember: WorkspaceMember) => {
-    if (reactivatingIds.has(targetMember.id)) return;
-
-    setReactivatingIds((prev) => new Set(prev).add(targetMember.id));
-
-    // Optimistic update
-    setData((prev) => {
-      const isViewingInactive = statusFilter === "inactive";
-      return {
-        ...prev,
-        totalCount: prev.totalCount + 1,
-        inactiveCount: Math.max(0, (prev.inactiveCount ?? 0) - 1),
-        matchingCount: isViewingInactive ? Math.max(0, prev.matchingCount - 1) : prev.matchingCount,
-        members: isViewingInactive
-          ? prev.members.filter((m) => m.id !== targetMember.id)
-          : prev.members.map((m) =>
-              m.id === targetMember.id ? { ...m, status: "active" as const } : m
-            ),
-      };
-    });
-
-    const res = await setMemberStatusAction(rawId, targetMember.id, "active", targetMember.status);
-
-    if (!res.success) {
-      // Rollback
-      setData((prev) => {
-        const isViewingInactive = statusFilter === "inactive";
-        return {
-          ...prev,
-          totalCount: Math.max(0, prev.totalCount - 1),
-          inactiveCount: (prev.inactiveCount ?? 0) + 1,
-          matchingCount: isViewingInactive ? prev.matchingCount + 1 : prev.matchingCount,
-          members: isViewingInactive
-            ? [...prev.members, targetMember]
-            : prev.members.map((m) =>
-                m.id === targetMember.id ? { ...m, status: "inactive" as const } : m
-              ),
-        };
-      });
-
-      if (res.error === "stale" || res.error === "not_found") {
-        handleStale(res.errorMessage);
-      } else {
-        setToastError(res.errorMessage || "Could not reactivate member. Please try again.");
-      }
-    }
-
-    setReactivatingIds((prev) => {
-      const next = new Set(prev);
-      next.delete(targetMember.id);
-      return next;
-    });
-  };
-
-  const loadInvites = useCallback(async () => {
-    const myRequest = ++invitesRequest.current;
-    setInvitesLoading(true);
-    setInvitesError(null);
-    const res = await getMemberInvites(rawId);
-    if (myRequest !== invitesRequest.current) return;
-    if (res.success && res.data) {
-      setInvites(res.data);
-    } else if (res.error === "not_authenticated") {
-      router.push(ROUTES.signIn);
-      return;
-    } else {
-      setInvitesError(res.errorMessage || "We couldn't load the invitations. Try again.");
-    }
-    setInvitesLoading(false);
-  }, [rawId, router]);
-
-  const handleLoadMoreInvites = async () => {
-    if (!invites || invitesLoadingMore || !invites.hasMore) return;
-    const myRequest = ++invitesRequest.current;
-    setInvitesLoadingMore(true);
-    const res = await getMemberInvites(rawId, { offset: invites.invites.length });
-    if (myRequest !== invitesRequest.current) return;
-    if (res.success && res.data) {
-      const next = res.data;
-      setInvites((prev) => {
-        const seen = new Set((prev?.invites ?? []).map((i) => i.id));
-        return { ...next, invites: [...(prev?.invites ?? []), ...next.invites.filter((i) => !seen.has(i.id))] };
-      });
-    } else {
-      setToastError(res.errorMessage || "We couldn't load more invitations. Try again.");
-    }
-    setInvitesLoadingMore(false);
-  };
-
-  const showInvited = () => {
-    setView("invited");
-    if (!invites) loadInvites();
+  const showView = (next: MembersView) => {
+    setView(next);
+    if (next === "invited" && !invites.invites) invites.load();
   };
 
   const handleImportFinished = () => {
     setImportOpen(false);
     setView("invited");
-    loadInvites();
+    invites.load();
   };
 
-  const handleClearFilters = () => {
-    setSearchQuery("");
-    setDebouncedSearch("");
-    setStatusFilter("all");
-  };
+  const showingInvited = view === "invited" && data.canImport;
+  const hasLoadError = Boolean(roster.errorMessage) && data.members.length === 0;
+  const emptyState = rosterEmptyState({
+    roster: data,
+    statusFilter: roster.statusFilter,
+    searchTerm: roster.searchTerm,
+    hasError: Boolean(roster.errorMessage),
+  });
 
-  const isFiltered = debouncedSearch.trim().length > 0 || statusFilter !== "all";
-  const hasZeroOrgMembers = data.totalCount === 0 && (data.inactiveCount ?? 0) === 0;
-  const hasNoOrgMembers = hasZeroOrgMembers && !isFiltered && !errorMessage;
-  const hasLoadError = Boolean(errorMessage) && data.members.length === 0;
-  const hasNoActiveMembers =
-    data.members.length === 0 &&
-    data.totalCount === 0 &&
-    (data.inactiveCount ?? 0) > 0 &&
-    statusFilter === "all" &&
-    debouncedSearch.trim().length === 0 &&
-    !errorMessage;
-  const hasNoMatches =
-    data.members.length === 0 &&
-    !hasNoActiveMembers &&
-    (isFiltered || (data.inactiveCount ?? 0) > 0) &&
-    !errorMessage;
+  function renderRoster(): ReactNode {
+    if (showingInvited) return null;
+    // Moving between pages keeps the rows on screen; a new search or tab shows the skeleton
+    if (roster.isBusy && !roster.isPaging) return <MemberSkeleton rowCount={Math.min(data.members.length || 5, 10)} />;
+    if (hasLoadError) return null;
+
+    switch (emptyState) {
+      case "no-members":
+        return <MemberEmptyState type="no-members" joinLinkToken={data.joinLinkToken} />;
+      case "no-active-members":
+        return (
+          <MemberEmptyState
+            type="no-active-members"
+            inactiveCount={data.inactiveCount}
+            onViewInactive={() => roster.setStatusFilter("inactive")}
+          />
+        );
+      case "no-matches":
+        return <MemberEmptyState type="no-matches" onClearFilters={roster.clearFilters} />;
+      default:
+        return (
+          <MemberList
+            members={data.members}
+            matchingCount={data.matchingCount}
+            page={roster.page}
+            pageSize={roster.pageSize}
+            onPageChange={roster.goToPage}
+            isPaging={roster.isPaging}
+            confirmingIds={roster.confirmingIds}
+            reactivatingIds={roster.reactivatingIds}
+            onConfirm={roster.confirm}
+            onEdit={setEditTarget}
+            onDeactivate={setDeactivateTarget}
+            onReactivate={roster.reactivate}
+          />
+        );
+    }
+  }
 
   return (
     <div
@@ -480,6 +158,7 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
       }}
     >
       <div
+        className="orgkit-members-shell"
         style={{
           width: "100%",
           maxWidth: 960,
@@ -488,134 +167,41 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
           animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
         }}
       >
-        {/* Responsive CSS & Theme Styles */}
         <MembersStyles />
 
-        {/* Toast notification for inline mutation failures */}
         <ErrorToast message={toastError} onDismiss={() => setToastError(null)} />
 
-        {/* Member Edit Dialog Modal */}
         <MemberEditDialog
           member={editTarget}
           isOpen={Boolean(editTarget)}
           onClose={closeEdit}
-          onSave={handleSaveEdit}
+          onSave={roster.saveEdit}
         />
-
-        {/* Member Deactivate Dialog Modal */}
         <MemberDeactivateDialog
           member={deactivateTarget}
           isOpen={Boolean(deactivateTarget)}
           onClose={closeDeactivate}
-          onConfirm={handleConfirmDeactivate}
+          onConfirm={roster.deactivate}
         />
 
-        {/* Header with Title, Dynamic Counters, and Retry Banner */}
         <MembersHeader
           totalCount={data.totalCount}
           matchingCount={data.matchingCount}
           pendingCount={data.pendingCount}
-          isFiltered={isFiltered}
-          errorMessage={errorMessage}
-          onRetry={fetchMembers}
-          isRetrying={isLoading || isPending}
-          actions={
-            data.canImport ? (
-              <button
-                type="button"
-                onClick={() => setImportOpen(true)}
-                className="orgkit-btn-accent"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 8,
-                  minHeight: 42,
-                  padding: "10px 20px",
-                  borderRadius: 9999,
-                  backgroundColor: "var(--color-accent)",
-                  color: "#FFFFFF",
-                  fontSize: 13.5,
-                  fontWeight: 600,
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                <Upload size={15} aria-hidden="true" />
-                <span>Import</span>
-              </button>
-            ) : null
-          }
+          isFiltered={roster.isFiltered}
+          errorMessage={roster.errorMessage}
+          onRetry={roster.reload}
+          isRetrying={roster.isBusy}
+          actions={data.canImport ? <MembersImportButton onClick={() => setImportOpen(true)} /> : null}
           onExport={canExport ? () => setExportOpen(true) : undefined}
         />
 
-        {/* Members | Invited switch: admins only, because invitations hold email addresses */}
         {data.canImport && (
-          <div
-            role="tablist"
-            aria-label="Members or invited people"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              padding: 2,
-              margin: "6px 0 14px 0",
-              backgroundColor: "transparent",
-              borderRadius: 9999,
-              gap: 4,
-            }}
-          >
-            {(
-              [
-                { id: "members", label: "Members", badge: undefined },
-                { id: "invited", label: "Invited", badge: invites?.pendingCount },
-              ] as const
-            ).map((tab) => {
-              const isActive = view === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  role="tab"
-                  type="button"
-                  aria-selected={isActive}
-                  onClick={() => (tab.id === "invited" ? showInvited() : setView("members"))}
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 6,
-                    padding: "7px 18px",
-                    borderRadius: 9999,
-                    border: "none",
-                    backgroundColor: isActive ? "var(--color-accent)" : "transparent",
-                    color: isActive ? "#FFFFFF" : "var(--color-muted)",
-                    fontWeight: isActive ? 600 : 500,
-                    fontSize: 13.5,
-                    cursor: "pointer",
-                    boxShadow: isActive
-                      ? "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)"
-                      : "none",
-                    transition: "all 0.15s ease",
-                  }}
-                >
-                  <span>{tab.label}</span>
-                  {typeof tab.badge === "number" && tab.badge > 0 && (
-                    <span
-                      style={{
-                        padding: "1px 7px",
-                        borderRadius: 9999,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        backgroundColor: isActive
-                          ? "color-mix(in srgb, #FFFFFF 25%, transparent)"
-                          : "color-mix(in srgb, var(--color-line) 80%, transparent)",
-                        color: isActive ? "#FFFFFF" : "var(--color-ink)",
-                      }}
-                    >
-                      {tab.badge}
-                    </span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+          <MembersViewTabs
+            view={view}
+            onSelect={showView}
+            pendingInvites={invites.invites?.pendingCount}
+          />
         )}
 
         {importOpen && (
@@ -627,120 +213,33 @@ export function MembersClient({ rawId, initialData, initialError = null, canExpo
           />
         )}
 
-        {view === "invited" && data.canImport && (
+        {showingInvited && (
           <InvitedView
-            data={invites}
-            isLoading={invitesLoading}
-            isLoadingMore={invitesLoadingMore}
-            error={invitesError}
-            onRetry={loadInvites}
-            onLoadMore={handleLoadMoreInvites}
+            data={invites.invites}
+            isLoading={invites.isLoading}
+            isLoadingMore={invites.isLoadingMore}
+            error={invites.error}
+            onRetry={invites.load}
+            onLoadMore={invites.loadMore}
             onImport={() => setImportOpen(true)}
           />
         )}
 
-        {canExport && exportOpen && (
-          <ExportDialog orgId={rawId} onClose={() => setExportOpen(false)} />
-        )}
+        {canExport && exportOpen && <ExportDialog orgId={rawId} onClose={() => setExportOpen(false)} />}
 
-        {/* Filter Toolbar (completely clean, unblocked by any decor) */}
-        {view === "members" && !hasNoOrgMembers && (
+        {view === "members" && emptyState !== "no-members" && (
           <MembersSearchFilter
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            statusFilter={statusFilter}
-            onStatusChange={setStatusFilter}
+            searchQuery={roster.searchQuery}
+            onSearchChange={roster.setSearchQuery}
+            statusFilter={roster.statusFilter}
+            onStatusChange={roster.setStatusFilter}
             pendingCount={data.pendingCount}
             totalCount={data.totalCount}
             inactiveCount={data.inactiveCount}
           />
         )}
 
-        {/* Main Content Area framed by Dynamic Floating Decor */}
-        {view === "invited" && data.canImport ? null : isLoading || isPending ? (
-          <MemberSkeleton rowCount={Math.min(data.members.length || 5, 8)} />
-        ) : hasLoadError ? null : hasNoOrgMembers ? (
-          <MemberEmptyState
-            type="no-members"
-            joinLinkToken={data.joinLinkToken}
-          />
-        ) : hasNoActiveMembers ? (
-          <MemberEmptyState
-            type="no-active-members"
-            inactiveCount={data.inactiveCount}
-            onViewInactive={() => setStatusFilter("inactive")}
-          />
-        ) : hasNoMatches ? (
-          <MemberEmptyState
-            type="no-matches"
-            onClearFilters={handleClearFilters}
-          />
-        ) : (
-          <div style={{ position: "relative", width: "100%", marginTop: 4 }}>
-            {/* Dynamic Floating Icons adjusting to the card's dimensions */}
-            <MembersFloatingDecor />
-
-            <div style={{ position: "relative", zIndex: 2, width: "100%" }}>
-              {/* Desktop Table: visible on screens > 640px */}
-              <div className="orgkit-members-desktop">
-                <MemberTable
-                  members={data.members}
-                  onConfirm={handleConfirm}
-                  onEdit={(m) => setEditTarget(m)}
-                  onDeactivate={(m) => setDeactivateTarget(m)}
-                  onReactivate={handleReactivate}
-                  confirmingIds={confirmingIds}
-                  reactivatingIds={reactivatingIds}
-                  matchingCount={data.matchingCount}
-                  hasMore={data.hasMore}
-                  onLoadMore={handleLoadMore}
-                  isLoadingMore={isLoadingMore}
-                />
-              </div>
-
-              {/* Mobile Cards: visible only on mobile screens <= 640px */}
-              <div className="orgkit-members-mobile">
-                {data.members.map((member) => (
-                  <MemberMobileCard
-                    key={member.id}
-                    member={member}
-                    onConfirm={handleConfirm}
-                    onEdit={(m) => setEditTarget(m)}
-                    onDeactivate={(m) => setDeactivateTarget(m)}
-                    onReactivate={handleReactivate}
-                    isConfirming={confirmingIds.has(member.id)}
-                    isReactivating={reactivatingIds.has(member.id)}
-                  />
-                ))}
-
-                {data.hasMore && (
-                  <div style={{ display: "flex", justifyContent: "center", marginTop: 12 }}>
-                    <button
-                      type="button"
-                      onClick={handleLoadMore}
-                      disabled={isLoadingMore}
-                      style={{
-                        padding: "10px 22px",
-                        borderRadius: 999,
-                        border: "1px solid var(--color-line)",
-                        backgroundColor: "var(--color-surface)",
-                        color: "var(--color-ink)",
-                        fontWeight: 600,
-                        fontSize: 14,
-                        cursor: isLoadingMore ? "not-allowed" : "pointer",
-                        opacity: isLoadingMore ? 0.7 : 1,
-                      }}
-                    >
-                      {isLoadingMore
-                        ? "Loading..."
-                        : `Load more (${data.members.length} of ${data.matchingCount})`}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        {renderRoster()}
       </div>
     </div>
   );

@@ -1,8 +1,17 @@
-import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useEffect, useRef } from "react";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import { MemberStatusBadge } from "./member-status-badge";
 import { MemberActions } from "./member-actions";
+import { MemberPager } from "./member-pager";
+import {
+  HEADER_ROW_STYLE,
+  ROSTER_CELL_PADDING,
+  ROSTER_COLUMNS,
+  ROSTER_FOOTER_STYLE,
+  ROSTER_HEADER_CELL_STYLE,
+  TABLE_CARD_STYLE,
+} from "./member-table-layout";
+import { pageCount } from "@/src/lib/pagination";
 
 interface MemberTableProps {
   members: WorkspaceMember[];
@@ -10,12 +19,16 @@ interface MemberTableProps {
   onEdit: (member: WorkspaceMember) => void;
   onDeactivate: (member: WorkspaceMember) => void;
   onReactivate: (member: WorkspaceMember) => void;
-  confirmingIds: Set<string>;
-  reactivatingIds?: Set<string>;
-  matchingCount?: number;
-  hasMore?: boolean;
-  onLoadMore?: () => void;
-  isLoadingMore?: boolean;
+  confirmingIds: ReadonlySet<string>;
+  reactivatingIds?: ReadonlySet<string>;
+  /** Members matching the search and tab, across all pages */
+  matchingCount: number;
+  /** The page on screen, counted from 1, and how many members a page holds */
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  /** Another page is loading: the rows stay on screen, dimmed */
+  isPaging?: boolean;
 }
 
 function formatDate(isoString: string): string {
@@ -54,57 +67,63 @@ export function MemberTable({
   confirmingIds,
   reactivatingIds = new Set(),
   matchingCount,
-  hasMore = false,
-  onLoadMore,
-  isLoadingMore = false,
+  page,
+  pageSize,
+  onPageChange,
+  isPaging = false,
 }: MemberTableProps) {
+  // A new page starts at its first row
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0 });
+  }, [page]);
+
+  const firstShown = (page - 1) * pageSize + 1;
+  const lastShown = firstShown + members.length - 1;
+
   return (
     <div
-      tabIndex={0}
-      role="region"
-      aria-label="Members roster table"
-      style={{
-        width: "100%",
-        backgroundColor: "var(--color-surface)",
-        borderRadius: 22,
-        border: "1px solid var(--color-line)",
-        boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
-        overflow: "hidden",
-        boxSizing: "border-box",
-      }}
+      className="orgkit-members-table-card"
+      style={{ ...TABLE_CARD_STYLE, display: "flex", flexDirection: "column" }}
     >
+      {/* Only the rows scroll: the header stays put and the footer stays in view */}
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Members roster table"
+        ref={scrollRef}
+        aria-busy={isPaging || undefined}
+        className="orgkit-members-table-scroll"
+        style={{
+          flex: "1 1 auto",
+          minHeight: 0,
+          overflow: "auto",
+          opacity: isPaging ? 0.6 : 1,
+          transition: "opacity 0.15s ease",
+        }}
+      >
       <table
         style={{
           width: "100%",
           borderCollapse: "collapse",
-          textAlign: "left",
           tableLayout: "fixed",
         }}
       >
         <thead>
-          <tr
-            style={{
-              backgroundColor: "color-mix(in srgb, var(--color-base) 60%, transparent)",
-              borderBottom: "1px solid var(--color-line)",
-              fontSize: 12,
-              fontWeight: 600,
-              color: "var(--color-muted)",
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-            }}
-          >
-            <th scope="col" style={{ padding: "14px 24px", width: "36%" }}>
-              Member
-            </th>
-            <th scope="col" style={{ padding: "14px 20px", width: "16%" }}>
-              Status
-            </th>
-            <th scope="col" style={{ padding: "14px 20px", width: "18%" }}>
-              Joined
-            </th>
-            <th scope="col" style={{ padding: "14px 24px", width: "30%", textAlign: "right" }}>
-              Actions
-            </th>
+          <tr style={HEADER_ROW_STYLE}>
+            {ROSTER_COLUMNS.map((column) => (
+              <th
+                key={column.label}
+                scope="col"
+                style={{
+                  ...ROSTER_HEADER_CELL_STYLE,
+                  padding: column.padding,
+                  width: column.width,
+                }}
+              >
+                {column.label}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody style={{ fontSize: 13.5 }}>
@@ -125,7 +144,7 @@ export function MemberTable({
                 }}
               >
                 {/* Member Info: Avatar Initials + Truncated Name & Email */}
-                <td style={{ padding: "16px 24px" }}>
+                <td style={{ padding: ROSTER_CELL_PADDING[0] }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div
                       aria-hidden="true"
@@ -184,14 +203,15 @@ export function MemberTable({
                 </td>
 
                 {/* Status Badge */}
-                <td style={{ padding: "16px 20px" }}>
+                <td style={{ padding: ROSTER_CELL_PADDING[1], textAlign: "center" }}>
                   <MemberStatusBadge status={member.status} />
                 </td>
 
                 {/* Joined Date */}
                 <td
                   style={{
-                    padding: "16px 20px",
+                    padding: ROSTER_CELL_PADDING[2],
+                    textAlign: "center",
                     color: "var(--color-muted)",
                     whiteSpace: "nowrap",
                   }}
@@ -200,7 +220,7 @@ export function MemberTable({
                 </td>
 
                 {/* Actions Cell */}
-                <td style={{ padding: "16px 24px", textAlign: "right" }}>
+                <td style={{ padding: ROSTER_CELL_PADDING[3], textAlign: "center" }}>
                   <MemberActions
                     member={member}
                     onConfirm={onConfirm}
@@ -216,85 +236,19 @@ export function MemberTable({
           })}
         </tbody>
       </table>
+      </div>
 
       {/* Table Footer with Showing count & pagination controls matching design */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "14px 24px",
-          borderTop: "1px solid var(--color-line)",
-          backgroundColor: "var(--color-surface)",
-          fontSize: 13,
-          color: "var(--color-muted)",
-        }}
-      >
+      <div style={ROSTER_FOOTER_STYLE}>
         <div>
-          Showing {members.length} of {matchingCount ?? members.length}{" "}
-          {(matchingCount ?? members.length) === 1 ? "member" : "members"}
+          Showing {firstShown}–{lastShown} of {matchingCount} {matchingCount === 1 ? "member" : "members"}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <button
-            type="button"
-            disabled={true}
-            aria-label="Previous page"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: "1px solid var(--color-line)",
-              backgroundColor: "var(--color-surface)",
-              color: "var(--color-muted)",
-              cursor: "not-allowed",
-              opacity: 0.5,
-            }}
-          >
-            <ChevronLeft size={16} strokeWidth={2} />
-          </button>
-          <span
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              backgroundColor: "var(--color-accent)",
-              color: "#FFFFFF",
-              fontWeight: 700,
-              fontSize: 13,
-              userSelect: "none",
-            }}
-          >
-            1
-          </span>
-          <button
-            type="button"
-            onClick={onLoadMore}
-            disabled={!hasMore || isLoadingMore}
-            aria-label="Next page"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              border: "1px solid var(--color-line)",
-              backgroundColor: "var(--color-surface)",
-              color: hasMore ? "var(--color-ink)" : "var(--color-muted)",
-              cursor: hasMore && !isLoadingMore ? "pointer" : "not-allowed",
-              opacity: hasMore ? 1 : 0.5,
-              transition: "all 0.15s ease",
-            }}
-          >
-            <ChevronRight size={16} strokeWidth={2} />
-          </button>
-        </div>
+        <MemberPager
+          page={page}
+          pageCount={pageCount(matchingCount, pageSize)}
+          onPageChange={onPageChange}
+          disabled={isPaging}
+        />
       </div>
     </div>
   );
