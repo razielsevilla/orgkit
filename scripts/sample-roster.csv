@@ -1,0 +1,21 @@
+Name,Email,Section
+Lara Medina,lara.medina@seed.orgkit.test,BSCS 2
+Tomas Villar,tomas.villar@seed.orgkit.test,BSIT 3
+Pia Gonzales,pia.gonzales@seed.orgkit.test,BSCS 1
+Enzo Ferrer,enzo.ferrer@seed.orgkit.test,BSECE 4
+Hannah Lim,hannah.lim@seed.orgkit.test,BSCS 2
+Dion Chua,dion.chua@seed.orgkit.test,BSIT 1
+Mika Alvarez,mika.alvarez@seed.orgkit.test,BSCS 3
+Rico Valdez,rico.valdez@seed.orgkit.test,BSIT 2
+Sofia Roque,sofia.roque@seed.orgkit.test,BSCS 4
+Noel Abad,noel.abad@seed.orgkit.test,BSECE 2
+Lara Medina,LARA.MEDINA@seed.orgkit.test,BSCS 2
+Tomas Villar,tomas.villar@seed.orgkit.test,BSIT 3
+Angelica Santos,angelica.santos.6@seed.orgkit.test,BSCS 2
+Invitee Example,invitee.1@seed.orgkit.test,BSIT 1
+Missing Email,,BSCS 1
+Bad Address,not-an-email,BSIT 2
+Also Bad,someone@,BSCS 3
+No Domain Dot,someone@localhost,BSIT 4
+Carmen Joaquin,carmen.joaquin@seed.orgkit.test,BSCS 1
+Ignacio Tan,ignacio.tan@seed.orgkit.test,BSIT 3
