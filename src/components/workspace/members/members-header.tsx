@@ -93,8 +93,8 @@ export function MembersHeader({
                   fontWeight: 600,
                 }}
               >
-                •
                 <span
+                  aria-hidden="true"
                   style={{
                     width: 6,
                     height: 6,
