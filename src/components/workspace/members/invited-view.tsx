@@ -5,6 +5,7 @@ import { AlertCircle, RefreshCw, UserPlus, Upload } from "lucide-react";
 import type { MemberInvite, MemberInvitesData } from "@/src/app/(workspace)/member-invites-actions";
 import { INVITE_VALID_DAYS } from "@/src/lib/members/csv-import";
 import { MemberSkeleton } from "./member-skeleton";
+import { INVITE_CELL_PADDING, INVITE_COLUMNS, TABLE_CARD_STYLE } from "./member-table-layout";
 
 interface InvitedViewProps {
   data: MemberInvitesData | null;
@@ -61,7 +62,7 @@ const wrap: React.CSSProperties = { overflowWrap: "anywhere", wordBreak: "break-
  * they join through the join link.
  */
 export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, onLoadMore, onImport }: InvitedViewProps) {
-  if (isLoading && !data) return <MemberSkeleton rowCount={5} />;
+  if (isLoading && !data) return <MemberSkeleton variant="invites" rowCount={5} />;
 
   if (error && (!data || data.invites.length === 0)) {
     return (
@@ -192,15 +193,7 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
           tabIndex={0}
           role="region"
           aria-label="Invited people"
-          style={{
-            width: "100%",
-            backgroundColor: "var(--color-surface)",
-            borderRadius: 22,
-            border: "1px solid var(--color-line)",
-            boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
-            overflow: "hidden",
-            boxSizing: "border-box",
-          }}
+          style={TABLE_CARD_STYLE}
         >
           <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", tableLayout: "fixed" }}>
             <thead>
@@ -215,18 +208,11 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
                   textTransform: "uppercase",
                 }}
               >
-                <th scope="col" style={{ padding: "14px 24px", width: "46%" }}>
-                  Person
-                </th>
-                <th scope="col" style={{ padding: "14px 20px", width: "16%" }}>
-                  Status
-                </th>
-                <th scope="col" style={{ padding: "14px 20px", width: "19%" }}>
-                  Invited
-                </th>
-                <th scope="col" style={{ padding: "14px 20px", width: "19%" }}>
-                  Expires
-                </th>
+                {INVITE_COLUMNS.map((column) => (
+                  <th key={column.label} scope="col" style={{ padding: column.padding, width: column.width }}>
+                    {column.label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody style={{ fontSize: 13.5 }}>
@@ -236,7 +222,7 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
                   className="orgkit-member-row"
                   style={{ borderBottom: idx === data.invites.length - 1 ? "none" : "1px solid var(--color-line)" }}
                 >
-                  <td style={{ padding: "14px 24px" }}>
+                  <td style={{ padding: INVITE_CELL_PADDING[0] }}>
                     <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
                       <span
                         title={invite.email}
@@ -266,13 +252,13 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
                       )}
                     </div>
                   </td>
-                  <td style={{ padding: "14px 20px" }}>
+                  <td style={{ padding: INVITE_CELL_PADDING[1] }}>
                     <InviteStatus invite={invite} />
                   </td>
-                  <td style={{ padding: "14px 20px", color: "var(--color-muted)", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: INVITE_CELL_PADDING[2], color: "var(--color-muted)", whiteSpace: "nowrap" }}>
                     {formatDate(invite.createdAt)}
                   </td>
-                  <td style={{ padding: "14px 20px", color: "var(--color-muted)", whiteSpace: "nowrap" }}>
+                  <td style={{ padding: INVITE_CELL_PADDING[3], color: "var(--color-muted)", whiteSpace: "nowrap" }}>
                     {invite.joinedAt ? "—" : formatDate(invite.expiresAt)}
                   </td>
                 </tr>
