@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
-import { withOrgPermission, type OrgAccessError } from "@/src/lib/orgs/org-access";
+import { withOrgPermission, type OrgAccessError, type OrgCaller } from "@/src/lib/orgs/org-access";
+import { normalizeOffset } from "@/src/lib/pagination";
 import { rpcFailure, type ErrorRule } from "@/src/lib/rpc-errors";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { membersPath } from "@/src/lib/routes";
@@ -139,6 +140,59 @@ function toSummary(data: unknown): ImportSummary | null {
   };
 }
 
+interface ImportRun {
+  /** True for the preview: the database applies every rule but saves nothing */
+  dryRun: boolean;
+  /** Shown when the database refuses for a reason we have no message for */
+  failedMessage: string;
+  /** Shown when the database answers with something that is not a summary */
+  unreadableMessage: string;
+}
+
+/**
+ * Checks the rows and hands them to the database import. The preview and the
+ * real import share this, so they cannot drift apart: the counts an admin sees
+ * are the counts the import produces.
+ */
+async function runImport(
+  { supabase }: OrgCaller,
+  orgId: string,
+  rows: InviteRow[],
+  run: ImportRun
+): Promise<ActionResult<ImportSummary, InviteActionError>> {
+  const clean = cleanRows(rows);
+  if (!clean) return fail("invalid_request", UNEXPECTED);
+  if (clean.length === 0) return fail("no_rows", CSV_ERROR_MESSAGES.no_rows);
+  if (clean.length > MAX_IMPORT_ROWS) return fail("too_many_rows", CSV_ERROR_MESSAGES.too_many_rows);
+
+  const { data, error } = await supabase.rpc("import_member_invites", {
+    target_org: orgId,
+    p_rows: clean,
+    p_dry_run: run.dryRun,
+  });
+  if (error) return rpcFailure("import_member_invites", error, IMPORT_ERRORS, run.failedMessage);
+
+  const summary = toSummary(data);
+  return summary ? ok(summary) : fail("failed", run.unreadableMessage);
+}
+
+/**
+ * Whether members can self-join, read after an import so the result can show
+ * the link. The invitations are already saved, so a failure here only means
+ * the status is "unknown", never that the import failed.
+ */
+async function readJoinLink({ supabase }: OrgCaller, orgId: string) {
+  try {
+    const { data: token, error } = await supabase.rpc("get_org_join_link", { target_org: orgId });
+    if (error) return { joinLinkStatus: "unknown" as const, joinLinkToken: null };
+
+    const joinLinkToken = typeof token === "string" && token ? token : null;
+    return { joinLinkStatus: joinLinkToken ? ("on" as const) : ("off" as const), joinLinkToken };
+  } catch {
+    return { joinLinkStatus: "unknown" as const, joinLinkToken: null };
+  }
+}
+
 /**
  * The preview: runs the real import rules in the database but saves nothing, so
  * the counts the admin sees are exactly what the import will do.
@@ -151,23 +205,12 @@ export async function previewMemberInvites(
     orgId,
     "member:import",
     { name: "previewMemberInvites", denied: NOT_ADMIN, unexpected: "We couldn't build the preview. Please try again." },
-    async ({ supabase }) => {
-      const clean = cleanRows(rows);
-      if (!clean) return fail("invalid_request", UNEXPECTED);
-      if (clean.length === 0) return fail("no_rows", CSV_ERROR_MESSAGES.no_rows);
-      if (clean.length > MAX_IMPORT_ROWS) return fail("too_many_rows", CSV_ERROR_MESSAGES.too_many_rows);
-
-      const { data, error } = await supabase.rpc("import_member_invites", {
-        target_org: orgId,
-        p_rows: clean,
-        p_dry_run: true,
-      });
-      if (error) {
-        return rpcFailure("import_member_invites", error, IMPORT_ERRORS, "We couldn't build the preview. Please try again.");
-      }
-      const summary = toSummary(data);
-      return summary ? ok(summary) : fail("failed", "We couldn't build the preview. Please try again.");
-    }
+    (caller) =>
+      runImport(caller, orgId, rows, {
+        dryRun: true,
+        failedMessage: "We couldn't build the preview. Please try again.",
+        unreadableMessage: "We couldn't build the preview. Please try again.",
+      })
   );
 }
 
@@ -189,39 +232,17 @@ export async function importMemberInvites(
       denied: NOT_ADMIN,
       unexpected: "Nothing was saved. Please try again.",
     },
-    async ({ supabase }) => {
-      const clean = cleanRows(rows);
-      if (!clean) return fail("invalid_request", UNEXPECTED);
-      if (clean.length === 0) return fail("no_rows", CSV_ERROR_MESSAGES.no_rows);
-      if (clean.length > MAX_IMPORT_ROWS) return fail("too_many_rows", CSV_ERROR_MESSAGES.too_many_rows);
-
-      const { data, error } = await supabase.rpc("import_member_invites", {
-        target_org: orgId,
-        p_rows: clean,
-        p_dry_run: false,
+    async (caller) => {
+      const result = await runImport(caller, orgId, rows, {
+        dryRun: false,
+        failedMessage: "Nothing was saved. Please try again.",
+        unreadableMessage: "We couldn't confirm the import. Reload the page to check the Invited view.",
       });
-      if (error) {
-        return rpcFailure("import_member_invites", error, IMPORT_ERRORS, "Nothing was saved. Please try again.");
-      }
-      const summary = toSummary(data);
-      if (!summary) return fail("failed", "We couldn't confirm the import. Reload the page to check the Invited view.");
-
-      let joinLinkStatus: JoinLinkStatus = "unknown";
-      let joinLinkToken: string | null = null;
-      try {
-        const { data: token, error: linkError } = await supabase.rpc("get_org_join_link", {
-          target_org: orgId,
-        });
-        if (!linkError) {
-          joinLinkToken = typeof token === "string" && token ? token : null;
-          joinLinkStatus = joinLinkToken ? "on" : "off";
-        }
-      } catch {
-        // The invitations are saved; the summary just can't say whether the link is on
-      }
+      // A failed import carries no summary; pass its error on as it is
+      if (!result.success || !result.data) return { ...result, data: undefined };
 
       revalidatePath(membersPath(orgId));
-      return ok({ ...summary, joinLinkStatus, joinLinkToken });
+      return ok({ ...result.data, ...(await readJoinLink(caller, orgId)) });
     }
   );
 }
@@ -255,8 +276,7 @@ export async function getMemberInvites(
       }
 
       const nowIso = new Date().toISOString();
-      const rawOffset = Number.isFinite(options?.offset) ? Math.trunc(options!.offset!) : 0;
-      const offset = Math.max(rawOffset, 0);
+      const offset = normalizeOffset(options?.offset);
 
       const { count: pendingCount, error: pendingErr } = await supabase
         .from("member_invites")
