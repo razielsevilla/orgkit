@@ -26,17 +26,43 @@ function withoutMember(roster: Roster, memberId: string): Roster {
 
 // ── Confirming a pending member ────────────────────────────────────────────
 
-export function confirmMember(roster: Roster, memberId: string): Roster {
-  return {
-    ...mapMember(roster, memberId, (m) => ({ ...m, status: "active" })),
+/**
+ * On the pending tab the member leaves the list (it only holds pending
+ * members); on any other tab they turn active in place.
+ */
+export function confirmMember(roster: Roster, memberId: string, viewingPending = false): Roster {
+  const counted: Roster = {
+    ...roster,
     pendingCount: atLeastZero(roster.pendingCount - 1),
+    matchingCount: viewingPending ? atLeastZero(roster.matchingCount - 1) : roster.matchingCount,
   };
+
+  return viewingPending
+    ? withoutMember(counted, memberId)
+    : mapMember(counted, memberId, (m) => ({ ...m, status: "active" }));
 }
 
-export function undoConfirmMember(roster: Roster, memberId: string): Roster {
-  return {
-    ...mapMember(roster, memberId, (m) => ({ ...m, status: "pending" })),
+/**
+ * Undoes `confirmMember`. A member who left the pending tab goes back to the
+ * position they had (`index`).
+ */
+export function undoConfirmMember(
+  roster: Roster,
+  member: WorkspaceMember,
+  index: number,
+  viewingPending = false
+): Roster {
+  const counted: Roster = {
+    ...roster,
     pendingCount: roster.pendingCount + 1,
+    matchingCount: viewingPending ? roster.matchingCount + 1 : roster.matchingCount,
+  };
+
+  if (roster.members.some((m) => m.id === member.id)) return restoreMember(counted, member);
+
+  return {
+    ...counted,
+    members: [...roster.members.slice(0, index), member, ...roster.members.slice(index)],
   };
 }
 

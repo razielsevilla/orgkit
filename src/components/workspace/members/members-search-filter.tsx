@@ -1,5 +1,6 @@
 import React from "react";
 import { Search, X } from "lucide-react";
+import { FIELD_RADIUS } from "./member-table-layout";
 import { ALL_TONE, STATUS_TONES } from "./member-status-tones";
 
 export type StatusFilterOption = "all" | "pending" | "active" | "inactive";
@@ -82,7 +83,7 @@ export function MembersSearchFilter({
               height: 42,
               paddingLeft: 38,
               paddingRight: searchQuery ? 38 : 14,
-              borderRadius: 9999,
+              borderRadius: FIELD_RADIUS,
               backgroundColor: "var(--color-surface)",
               border: "1px solid var(--color-line)",
               color: "var(--color-ink)",

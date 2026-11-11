@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
+import { MemberStatusBadge } from "./member-status-badge";
+import { getInitials } from "@/src/components/workspace/officers/officers-helpers";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import { MEMBER_EDIT_MESSAGES } from "@/src/lib/members/member-edit";
 
@@ -66,7 +68,8 @@ function DeactivatePrompt({
     >
       <DialogHeader
         titleId="deactivate-dialog-title"
-        title={`Deactivate ${member.fullName}?`}
+        title="Deactivate member"
+        description="Review who you are deactivating."
         onClose={onClose}
         closeDisabled={isDeactivating}
         closeLabel="Close confirmation dialog"
@@ -75,35 +78,87 @@ function DeactivatePrompt({
         <div
           style={{
             display: "flex",
-            alignItems: "flex-start",
-            gap: 8,
-            padding: "12px",
-            borderRadius: 10,
-            backgroundColor: "var(--color-danger-soft)",
-            border: "1px solid var(--color-danger-line)",
-            color: "var(--color-danger-strong)",
-            fontSize: 13.5,
-            lineHeight: 1.45,
+            alignItems: "center",
+            gap: 12,
+            padding: "12px 14px",
+            borderRadius: 12,
+            backgroundColor: "var(--color-base)",
+            border: "1px solid var(--color-line)",
           }}
         >
-          <AlertCircle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 2 }} />
-          <span>They’ll move to Inactive. You can reactivate them later.</span>
+          <span
+            aria-hidden="true"
+            style={{
+              width: 38,
+              height: 38,
+              flexShrink: 0,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 13,
+              fontWeight: 700,
+              color: "var(--color-accent-strong)",
+              backgroundColor: "color-mix(in srgb, var(--color-accent) 18%, transparent)",
+            }}
+          >
+            {getInitials(member.fullName)}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              title={member.fullName}
+              style={{
+                fontSize: 14,
+                fontWeight: 600,
+                color: "var(--color-ink)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {member.fullName}
+            </div>
+            <div
+              title={member.email}
+              style={{
+                fontSize: 12.5,
+                color: "var(--color-muted-strong)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {member.email}
+            </div>
+          </div>
+          <MemberStatusBadge status={member.status} size="sm" />
         </div>
+
+        <p style={{ margin: "16px 0 0", fontSize: 14, lineHeight: 1.5, color: "var(--color-muted-strong)" }}>
+          They move to Inactive and leave the main roster. Their record stays, and you can reactivate them at any
+          time.
+        </p>
 
         {error && (
           <div
             role="alert"
             style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 8,
               marginTop: 16,
-              padding: "8px 12px",
+              padding: "10px 12px",
               borderRadius: 10,
               backgroundColor: "var(--color-danger-soft)",
+              border: "1px solid var(--color-danger-line)",
               color: "var(--color-danger-strong)",
               fontSize: 13,
               fontWeight: 500,
+              lineHeight: 1.45,
             }}
           >
-            {error}
+            <AlertCircle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>{error}</span>
           </div>
         )}
       </DialogBody>

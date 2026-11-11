@@ -151,14 +151,21 @@ export function useMemberRoster({ orgId, initialData, initialError, notify }: Op
 
   const viewingInactive = statusFilter === "inactive";
 
+  const viewingPending = statusFilter === "pending";
+
   const confirm = (member: WorkspaceMember) =>
     confirming.track(member.id, async () => {
-      setData((current) => confirmMember(current, member.id));
+      const index = data.members.findIndex((m) => m.id === member.id);
+      setData((current) => confirmMember(current, member.id, viewingPending));
 
       const res = await confirmMemberAction(orgId, member.id);
-      if (!res.success) {
-        // Undo only this member so other in-flight confirms are untouched
-        setData((current) => undoConfirmMember(current, member.id));
+      if (res.success) return;
+
+      // Undo only this member so other in-flight confirms are untouched
+      setData((current) => undoConfirmMember(current, member, Math.max(index, 0), viewingPending));
+      if (isOutOfDate(res.error)) {
+        handleOutOfDate(res.errorMessage);
+      } else {
         notify(res.errorMessage || "Could not confirm member. Please try again.");
       }
     });

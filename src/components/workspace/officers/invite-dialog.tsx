@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertCircle } from "lucide-react";
+import { FieldError } from "@/src/components/ui/field-error";
 import { OfficerRole } from "@/src/lib/orgs/permissions";
 import { createOfficerInvite } from "@/src/app/(workspace)/officers-actions";
 import { Dialog, DialogBody, DialogButton, DialogFooter, DialogHeader } from "@/src/components/ui/dialog";
@@ -110,6 +110,7 @@ export function InviteDialog({
                 disabled={loading}
                 autoFocus
                 aria-invalid={fieldError ? true : undefined}
+                aria-describedby={fieldError ? "invite-email-error" : undefined}
                 style={{
                   width: "100%",
                   height: 40,
@@ -136,26 +137,7 @@ export function InviteDialog({
                   }
                 }}
               />
-              {fieldError && (
-                <div
-                  role="alert"
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginTop: 8,
-                    padding: "8px 12px",
-                    borderRadius: 10,
-                    backgroundColor: "var(--color-danger-soft)",
-                    color: "var(--color-danger-strong)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                  }}
-                >
-                  <AlertCircle size={16} aria-hidden="true" style={{ flexShrink: 0 }} />
-                  <span>{fieldError}</span>
-                </div>
-              )}
+              {fieldError && <FieldError id="invite-email-error">{fieldError}</FieldError>}
             </div>
 
             <InviteRolePicker role={role} setRole={setRole} loading={loading} />

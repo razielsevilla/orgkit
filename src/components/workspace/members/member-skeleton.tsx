@@ -1,12 +1,12 @@
 import React from "react";
+import { RosterColgroup, RosterHeaderBar } from "./roster-table-header";
 import {
   HEADER_ROW_STYLE,
   INVITE_CELL_PADDING,
   INVITE_COLUMNS,
   ROSTER_CELL_PADDING,
-  ROSTER_COLUMNS,
   ROSTER_FOOTER_STYLE,
-  ROSTER_HEADER_CELL_STYLE,
+  ROSTER_TABLE_STYLE,
   TABLE_CARD_STYLE,
   type TableColumn,
 } from "./member-table-layout";
@@ -46,14 +46,15 @@ function Bar({
   );
 }
 
-/** Column headings are real text: they are known before the data arrives */
-function HeaderRow({ columns, centered }: { columns: readonly TableColumn[]; centered: boolean }) {
+/** The Invited table's column headings: real text, known before the data arrives */
+function HeaderRow({ columns }: { columns: readonly TableColumn[] }) {
   return (
     <thead>
       <tr
         style={{
           ...HEADER_ROW_STYLE,
-          ...(centered ? {} : { backgroundColor: "color-mix(in srgb, var(--color-base) 60%, transparent)", borderBottom: "1px solid var(--color-line)" }),
+          backgroundColor: "color-mix(in srgb, var(--color-base) 60%, transparent)",
+          borderBottom: "1px solid var(--color-line)",
         }}
       >
         {columns.map((column) => (
@@ -63,8 +64,7 @@ function HeaderRow({ columns, centered }: { columns: readonly TableColumn[]; cen
             style={{
               padding: column.padding,
               width: column.width,
-              textAlign: centered ? "center" : "left",
-              ...(centered ? ROSTER_HEADER_CELL_STYLE : {}),
+              textAlign: "left",
             }}
           >
             {column.label}
@@ -82,9 +82,10 @@ const rowBorder = (index: number, count: number) =>
 function RosterTableSkeleton({ rowCount }: { rowCount: number }) {
   return (
     <div className="orgkit-members-table-card" style={{ ...TABLE_CARD_STYLE, display: "flex", flexDirection: "column" }}>
-      <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "hidden" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
-          <HeaderRow columns={ROSTER_COLUMNS} centered />
+      <RosterHeaderBar />
+      <div style={{ flex: "1 1 auto", minHeight: 0, overflow: "hidden", scrollbarGutter: "stable" }}>
+        <table style={ROSTER_TABLE_STYLE}>
+          <RosterColgroup />
           <tbody>
             {Array.from({ length: rowCount }).map((_, i) => (
               <tr key={i} style={{ borderBottom: rowBorder(i, rowCount) }}>
@@ -137,7 +138,7 @@ function InvitesTableSkeleton({ rowCount }: { rowCount: number }) {
   return (
     <div style={TABLE_CARD_STYLE}>
       <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed" }}>
-        <HeaderRow columns={INVITE_COLUMNS} centered={false} />
+        <HeaderRow columns={INVITE_COLUMNS} />
         <tbody>
           {Array.from({ length: rowCount }).map((_, i) => (
             <tr key={i} style={{ borderBottom: rowBorder(i, rowCount) }}>

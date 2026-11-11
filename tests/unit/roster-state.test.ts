@@ -50,7 +50,21 @@ describe("confirming a member", () => {
 
   it("is undone exactly", () => {
     const start = roster();
-    assert.deepEqual(undoConfirmMember(confirmMember(start, "a"), "a"), start);
+    assert.deepEqual(undoConfirmMember(confirmMember(start, "a"), start.members[0], 0), start);
+  });
+
+  it("takes them off the pending tab, where only pending members are listed", () => {
+    const start = roster({ members: [member("a", "pending"), member("p", "pending")], matchingCount: 2, pendingCount: 2 });
+    const next = confirmMember(start, "a", true);
+    assert.deepEqual(next.members.map((m) => m.id), ["p"]);
+    assert.equal(next.matchingCount, 1);
+    assert.equal(next.pendingCount, 1);
+  });
+
+  it("puts them back in the same place on the pending tab when the save fails", () => {
+    const start = roster({ members: [member("p", "pending"), member("a", "pending")], matchingCount: 2, pendingCount: 2 });
+    const undone = undoConfirmMember(confirmMember(start, "a", true), start.members[1], 1, true);
+    assert.deepEqual(undone, start);
   });
 
   it("never takes the pending counter below zero", () => {

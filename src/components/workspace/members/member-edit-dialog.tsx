@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
+import { FieldError } from "@/src/components/ui/field-error";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import {
   validateMemberEdit,
@@ -111,15 +112,6 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
     color: "var(--color-ink-soft)",
     marginBottom: 8,
   };
-  const errorTextStyle: React.CSSProperties = {
-    margin: "8px 0 0 0",
-    padding: "4px 8px",
-    borderRadius: 8,
-    fontSize: 13,
-    fontWeight: 500,
-    color: "var(--color-danger-strong)",
-    backgroundColor: "var(--color-danger-soft)",
-  };
 
   return (
     <form
@@ -172,11 +164,7 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
             aria-describedby={nameError ? "edit-member-name-error" : undefined}
             style={inputStyle(Boolean(nameError))}
           />
-          {nameError && (
-            <p id="edit-member-name-error" role="alert" style={errorTextStyle}>
-              {nameError}
-            </p>
-          )}
+          {nameError && <FieldError id="edit-member-name-error">{nameError}</FieldError>}
         </div>
 
         <div>
@@ -196,11 +184,7 @@ function MemberEditForm({ member, onClose, onSave }: MemberEditFormProps) {
             aria-describedby={emailError ? "edit-member-email-error" : undefined}
             style={inputStyle(Boolean(emailError))}
           />
-          {emailError && (
-            <p id="edit-member-email-error" role="alert" style={errorTextStyle}>
-              {emailError}
-            </p>
-          )}
+          {emailError && <FieldError id="edit-member-email-error">{emailError}</FieldError>}
         </div>
       </DialogBody>
       <DialogFooter>

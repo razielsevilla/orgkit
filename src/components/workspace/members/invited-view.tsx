@@ -5,7 +5,7 @@ import { AlertCircle, RefreshCw, UserPlus, Upload } from "lucide-react";
 import type { MemberInvite, MemberInvitesData } from "@/src/app/(workspace)/member-invites-actions";
 import { INVITE_VALID_DAYS } from "@/src/lib/members/csv-import";
 import { MemberSkeleton } from "./member-skeleton";
-import { INVITE_CELL_PADDING, INVITE_COLUMNS, TABLE_CARD_STYLE } from "./member-table-layout";
+import { INVITE_CELL_PADDING, INVITE_COLUMNS, PANEL_RADIUS, TABLE_CARD_STYLE } from "./member-table-layout";
 
 interface InvitedViewProps {
   data: MemberInvitesData | null;
@@ -277,7 +277,7 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
             aria-label={`Invited: ${invite.email}`}
             style={{
               backgroundColor: "var(--color-surface)",
-              borderRadius: 20,
+              borderRadius: PANEL_RADIUS,
               border: "1px solid var(--color-line)",
               padding: 16,
               display: "flex",

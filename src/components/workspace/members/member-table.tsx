@@ -4,13 +4,12 @@ import { MemberStatusBadge } from "./member-status-badge";
 import { MemberActions } from "./member-actions";
 import { MemberPager } from "./member-pager";
 import {
-  HEADER_ROW_STYLE,
   ROSTER_CELL_PADDING,
-  ROSTER_COLUMNS,
   ROSTER_FOOTER_STYLE,
-  ROSTER_HEADER_CELL_STYLE,
+  ROSTER_TABLE_STYLE,
   TABLE_CARD_STYLE,
 } from "./member-table-layout";
+import { RosterColgroup, RosterHeaderBar, RosterScreenReaderHeader } from "./roster-table-header";
 import { pageCount } from "@/src/lib/pagination";
 
 interface MemberTableProps {
@@ -86,7 +85,8 @@ export function MemberTable({
       className="orgkit-members-table-card"
       style={{ ...TABLE_CARD_STYLE, display: "flex", flexDirection: "column" }}
     >
-      {/* Only the rows scroll: the header stays put and the footer stays in view */}
+      {/* Only the rows scroll: the header sits above them, so the scrollbar starts under it */}
+      <RosterHeaderBar />
       <div
         tabIndex={0}
         role="region"
@@ -98,34 +98,14 @@ export function MemberTable({
           flex: "1 1 auto",
           minHeight: 0,
           overflow: "auto",
+          scrollbarGutter: "stable",
           opacity: isPaging ? 0.6 : 1,
           transition: "opacity 0.15s ease",
         }}
       >
-      <table
-        style={{
-          width: "100%",
-          borderCollapse: "collapse",
-          tableLayout: "fixed",
-        }}
-      >
-        <thead>
-          <tr style={HEADER_ROW_STYLE}>
-            {ROSTER_COLUMNS.map((column) => (
-              <th
-                key={column.label}
-                scope="col"
-                style={{
-                  ...ROSTER_HEADER_CELL_STYLE,
-                  padding: column.padding,
-                  width: column.width,
-                }}
-              >
-                {column.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
+      <table style={ROSTER_TABLE_STYLE}>
+        <RosterColgroup />
+        <RosterScreenReaderHeader />
         <tbody style={{ fontSize: 13.5 }}>
           {members.map((member, idx) => {
             const isConfirming = confirmingIds.has(member.id);

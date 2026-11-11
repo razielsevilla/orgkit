@@ -274,7 +274,8 @@ Hover changes color only (no lift). Press is `scale(0.98)`. Disabled is 60% opac
 **Forms inside dialogs**
 - Labels 13px weight 500 in `--color-ink-soft`. Inputs 40px high, 10px radius, `1px solid var(--color-line-strong)`.
 - Focus uses the global emerald ring (`:focus-visible`, see 7.2).
-- An error is a `--color-danger-soft` box with `--color-danger-strong` text and `role="alert"`.
+- A **field error** is the `FieldError` component (`src/components/ui/field-error.tsx`) directly under the input: a 14px `AlertCircle` and one 13px sentence in `--color-danger-strong`, with no box or fill. The input gets a `--color-danger-strong` border, `aria-invalid`, and `aria-describedby` pointing at the message's `id`. Clear it as soon as the user edits the field.
+- A **form error** (the save failed, not one field) is a banner at the top of the body: `--color-danger-soft` fill, 1px `--color-danger-line` border, 10px radius, `--color-danger-strong` text, `role="alert"`.
 
 **Behaviour**
 - Pass `titleId` and `labelledBy` the same id so the dialog is announced by its title.
@@ -319,6 +320,7 @@ Hover changes color only (no lift). Press is `scale(0.98)`. Disabled is 60% opac
   ```
 
 ### 7.2 Accessibility & Reduced Motion
+- **Scrollbars:** set once in `globals.css` for every scroll area. A 12px bar with a clear track, no arrow buttons, and a rounded thumb (`--color-ink` at 22%, inset by a 3px transparent border) that turns emerald on hover and while dragged. Do not style a scrollbar on an individual component.
 - **WCAG Compliance:**
   - Ink (`#18181B`) on Surface (`#FFFFFF`): **17.7:1** (AAA).
   - Ink (`#18181B`) on Base (`#F4F4F5`): **16.0:1** (AAA).

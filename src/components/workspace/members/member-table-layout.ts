@@ -30,11 +30,15 @@ export const INVITE_COLUMNS: readonly TableColumn[] = [
 export const ROSTER_CELL_PADDING = ["16px 24px", "16px 20px", "16px 20px", "16px 24px"] as const;
 export const INVITE_CELL_PADDING = ["14px 24px", "14px 20px", "14px 20px", "14px 20px"] as const;
 
+/** Corner radii for the roster screen: panels (cards, tables) and the fields above them, so their corners agree */
+export const PANEL_RADIUS = 16;
+export const FIELD_RADIUS = 12;
+
 /** The rounded card both tables sit in */
 export const TABLE_CARD_STYLE: CSSProperties = {
   width: "100%",
   backgroundColor: "var(--color-surface)",
-  borderRadius: 22,
+  borderRadius: PANEL_RADIUS,
   border: "1px solid var(--color-line)",
   boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
   overflow: "hidden",
@@ -51,19 +55,16 @@ const HEADER_TEXT_STYLE: CSSProperties = {
 
 export const HEADER_ROW_STYLE = HEADER_TEXT_STYLE;
 
-/**
- * A roster header cell: centered over its column, and fixed to the top of the
- * scroll area. The background is solid so rows scrolling underneath do not show
- * through, and the bottom line is a shadow because a border does not travel
- * with a sticky cell.
- */
+/** A roster header cell, centered over its column */
 export const ROSTER_HEADER_CELL_STYLE: CSSProperties = {
-  position: "sticky",
-  top: 0,
-  zIndex: 1,
   textAlign: "center",
-  backgroundColor: "var(--color-base)",
-  boxShadow: "inset 0 -1px 0 var(--color-line)",
+};
+
+/** Both roster tables (the header and the rows) use fixed columns so they line up */
+export const ROSTER_TABLE_STYLE: CSSProperties = {
+  width: "100%",
+  borderCollapse: "collapse",
+  tableLayout: "fixed",
 };
 
 /** The strip under the roster table: the "Showing" text and the pager */

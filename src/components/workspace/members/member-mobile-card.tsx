@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 import { MemberStatusBadge } from "./member-status-badge";
 import { MemberActions } from "./member-actions";
+import { PANEL_RADIUS } from "./member-table-layout";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 interface MemberMobileCardProps {
@@ -62,7 +63,7 @@ export function MemberMobileCard({
       aria-label={`Member: ${member.fullName}`}
       style={{
         backgroundColor: "var(--color-surface)",
-        borderRadius: 20,
+        borderRadius: PANEL_RADIUS,
         border: "1px solid var(--color-line)",
         padding: "16px",
         boxShadow: "0 2px 10px color-mix(in srgb, var(--color-ink) 3%, transparent)",
