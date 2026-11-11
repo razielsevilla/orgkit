@@ -1,5 +1,6 @@
 import React from "react";
 import { Search, X } from "lucide-react";
+import { ALL_TONE, STATUS_TONES } from "./member-status-tones";
 
 export type StatusFilterOption = "all" | "pending" | "active" | "inactive";
 
@@ -141,6 +142,8 @@ export function MembersSearchFilter({
         >
           {filterTabs.map((tab) => {
             const isActive = statusFilter === tab.id;
+            // Each tab wears its status color; "All" is neutral
+            const tone = tab.id === "all" ? ALL_TONE : STATUS_TONES[tab.id];
             return (
               <button
                 key={tab.id}
@@ -154,17 +157,13 @@ export function MembersSearchFilter({
                   gap: 5,
                   padding: "6px 14px",
                   borderRadius: 9999,
-                  border: isActive
-                    ? "1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)"
-                    : "1px solid transparent",
-                  backgroundColor: isActive
-                    ? "color-mix(in srgb, var(--color-accent) 12%, transparent)"
-                    : "transparent",
-                  color: isActive ? "var(--color-accent-strong)" : "var(--color-muted)",
+                  border: isActive ? tone.border : "1px solid transparent",
+                  backgroundColor: isActive ? tone.background : "transparent",
+                  color: isActive ? tone.text : "var(--color-muted)",
                   fontWeight: isActive ? 600 : 500,
                   fontSize: 13,
                   cursor: "pointer",
-                  transition: "all 0.15s ease",
+                  transition: "background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease",
                   userSelect: "none",
                 }}
               >
@@ -176,12 +175,8 @@ export function MembersSearchFilter({
                       borderRadius: 9999,
                       fontSize: 11,
                       fontWeight: 700,
-                      backgroundColor:
-                        tab.id === "pending"
-                          ? "color-mix(in srgb, var(--color-accent) 15%, transparent)"
-                          : "color-mix(in srgb, var(--color-line) 80%, transparent)",
-                      color:
-                        tab.id === "pending" ? "var(--color-accent-strong)" : "var(--color-ink)",
+                      backgroundColor: tone.background,
+                      color: tone.text,
                     }}
                   >
                     {tab.badge}
