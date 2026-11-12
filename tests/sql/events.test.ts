@@ -4,6 +4,7 @@ import { as, addMember, addOfficer, addOrg, errorOf, getDb, newUuid, startDb } f
 
 // E1: events. Officers read their own org's events through row level security
 // and write only through create_event, update_event and cancel_event.
+// E2: the check-in window (checkin_open) changes only through set_event_checkin.
 
 let orgA: string;
 let orgB: string;
@@ -246,5 +247,111 @@ describe("row level security on events", () => {
   it("gives anon no access at all", async () => {
     const err = await errorOf(() => selectEvents("anon", null));
     assert.match(err ?? "", /permission denied/);
+  });
+});
+
+describe("set_event_checkin (E2)", () => {
+  const setAs = (user: string | null, id: string, open: boolean) =>
+    as("authenticated", user, () => getDb().query(`select public.set_event_checkin($1, $2)`, [id, open]));
+  const isOpen = async (id: string) =>
+    (await getDb().query<{ checkin_open: boolean }>(`select checkin_open from public.events where id = $1`, [id])).rows[0]
+      .checkin_open;
+  const hoursFromNow = (h: number) => new Date(Date.now() + h * 3_600_000).toISOString();
+  /** An event that runs from `startH` to `endH` hours from now (negative is the past) */
+  const newEvent = async (startH: number, endH: number) =>
+    (await createAs(officerA, orgA, "Check-in event", hoursFromNow(startH), hoursFromNow(endH))).rows[0].create_event;
+
+  it("starts closed", async () => {
+    assert.equal(await isOpen(eventA), false);
+  });
+
+  it("lets an officer of any role open and close the window, and repeating either is harmless", async () => {
+    const id = await newEvent(-1, 1);
+    for (const user of [officerA, adminA]) {
+      assert.equal(await errorOf(() => setAs(user, id, true)), null);
+      assert.equal(await isOpen(id), true);
+      assert.equal(await errorOf(() => setAs(user, id, true)), null);
+      assert.equal(await errorOf(() => setAs(user, id, false)), null);
+      assert.equal(await isOpen(id), false);
+      assert.equal(await errorOf(() => setAs(user, id, false)), null);
+    }
+  });
+
+  it("refuses an officer of another org, leaving the window as it was", async () => {
+    const id = await newEvent(-1, 1);
+    assert.match((await errorOf(() => setAs(officerB, id, true))) ?? "", /not_permitted/);
+    assert.equal(await isOpen(id), false);
+
+    await setAs(officerA, id, true);
+    assert.match((await errorOf(() => setAs(officerB, id, false))) ?? "", /not_permitted/);
+    assert.equal(await isOpen(id), true);
+  });
+
+  it("refuses an unknown event, a signed-out caller and anon", async () => {
+    assert.match((await errorOf(() => setAs(officerA, newUuid(), true))) ?? "", /event_not_found/);
+    assert.match((await errorOf(() => setAs(null, eventA, true))) ?? "", /not_authenticated/);
+    const anonErr = await errorOf(() =>
+      as("anon", null, () => getDb().query(`select public.set_event_checkin($1, true)`, [eventA]))
+    );
+    assert.match(anonErr ?? "", /permission denied/);
+  });
+
+  it("refuses to open a cancelled event, but still closes one", async () => {
+    const id = await newEvent(-1, 1);
+    await setAs(officerA, id, true);
+    await as("authenticated", officerA, () => getDb().query(`select public.cancel_event($1)`, [id]));
+    // Cancelling shut the window
+    assert.equal(await isOpen(id), false);
+    assert.match((await errorOf(() => setAs(officerA, id, true))) ?? "", /event_cancelled/);
+    assert.equal(await errorOf(() => setAs(officerA, id, false)), null);
+    assert.equal(await isOpen(id), false);
+  });
+
+  it("refuses to open an event that ended more than an hour ago", async () => {
+    const id = await newEvent(-4, -2);
+    assert.match((await errorOf(() => setAs(officerA, id, true))) ?? "", /event_ended/);
+    assert.equal(await isOpen(id), false);
+  });
+
+  it("opens an event that ended less than an hour ago, and closes one that has since expired", async () => {
+    const recent = await newEvent(-3, -0.5);
+    assert.equal(await errorOf(() => setAs(officerA, recent, true)), null);
+    assert.equal(await isOpen(recent), true);
+
+    // An event that ended long ago while its window was still open can always be closed
+    const stale = await newEvent(-1, 1);
+    await setAs(officerA, stale, true);
+    await getDb().query(
+      `update public.events set starts_at = now() - interval '5 hours', ends_at = now() - interval '3 hours' where id = $1`,
+      [stale]
+    );
+    assert.equal(await errorOf(() => setAs(officerA, stale, false)), null);
+    assert.equal(await isOpen(stale), false);
+  });
+});
+
+describe("checkin_open can't be written directly (E2)", () => {
+  const writeAs = (role: "authenticated" | "anon", user: string | null, id: string) =>
+    as(role, user, () => getDb().query(`update public.events set checkin_open = true where id = $1`, [id]));
+
+  it("refuses the org's own officers and admins", async () => {
+    for (const user of [officerA, adminA]) {
+      assert.match((await errorOf(() => writeAs("authenticated", user, eventA))) ?? "", /permission denied/);
+    }
+  });
+
+  it("refuses another org's officer", async () => {
+    assert.match((await errorOf(() => writeAs("authenticated", officerB, eventA))) ?? "", /permission denied/);
+  });
+
+  it("refuses anon", async () => {
+    assert.match((await errorOf(() => writeAs("anon", null, eventA))) ?? "", /permission denied/);
+  });
+
+  it("left the window closed after all of that", async () => {
+    const row = (
+      await getDb().query<{ checkin_open: boolean }>(`select checkin_open from public.events where id = $1`, [eventA])
+    ).rows[0];
+    assert.equal(row.checkin_open, false);
   });
 });
