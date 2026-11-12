@@ -11,6 +11,8 @@ import {
   joinLinkPath,
   joinPanelPath,
   membersPath,
+  eventsPath,
+  eventPath,
   officerLandingPath,
   officersPath,
   signInPath,
@@ -104,6 +106,8 @@ describe("path helpers", () => {
     assert.equal(membersPath(id), `/workspace/${id}/members`);
     assert.equal(officersPath(id), `/workspace/${id}/officers`);
     assert.equal(joinPanelPath(id), `/workspace/${id}/members/join`);
+    assert.equal(eventsPath(id), `/workspace/${id}/events`);
+    assert.equal(eventPath(id, id), `/workspace/${id}/events/${id}`);
     assert.equal(invitePath("t"), "/invite/t");
     assert.equal(inviteStartPath("t"), "/invite/t/start");
     assert.equal(joinLinkPath("t"), "/join/t");
@@ -120,6 +124,8 @@ describe("path helpers", () => {
       membersPath(id),
       officersPath(id),
       joinPanelPath(id),
+      eventsPath(id),
+      eventPath(id, id),
       invitePath("t"),
       inviteStartPath("t"),
       joinLinkPath("t"),
