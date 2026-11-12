@@ -40,6 +40,16 @@ export function eventPath(orgId: string, eventId: string): string {
   return `${eventsPath(orgId)}/${eventId}`;
 }
 
+/** The full-screen check-in view of one event, with the rotating QR code */
+export function checkinPath(orgId: string, eventId: string): string {
+  return `${eventPath(orgId, eventId)}/checkin`;
+}
+
+/** The link inside the check-in QR. The token is short-lived. The page that opens it arrives with E3. */
+export function checkinLinkPath(token: string): string {
+  return `/checkin/${token}`;
+}
+
 /** The admin-only route that streams the roster as a CSV download (POST) */
 export function membersExportPath(orgId: string): string {
   return `${membersPath(orgId)}/export`;
@@ -123,6 +133,7 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/workspace/:id/officers",
   "/workspace/:id/events",
   "/workspace/:id/events/:eventId",
+  "/workspace/:id/events/:eventId/checkin",
   "/workspace/:id/members/join",
   "/workspace/:id/members/export",
 ];

@@ -3,11 +3,11 @@
 import React, { useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowLeft, Ban, Pencil } from "lucide-react";
+import { ArrowLeft, Ban, Pencil, QrCode } from "lucide-react";
 import type { WorkspaceEvent } from "@/src/app/(workspace)/events-actions";
 import { PANEL_RADIUS } from "@/src/components/workspace/members/member-table-layout";
 import { MembersStyles } from "@/src/components/workspace/members/members-styles";
-import { eventsPath } from "@/src/lib/routes";
+import { checkinPath, eventsPath } from "@/src/lib/routes";
 import { EventStatusBadge } from "./event-status-badge";
 import { LocalTime } from "./local-time";
 
@@ -107,6 +107,26 @@ export function EventDetail({ rawId, event }: { rawId: string; event: WorkspaceE
 
           {!cancelled && (
             <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <Link
+                href={checkinPath(rawId, event.id)}
+                className="orgkit-btn-accent"
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  minHeight: 42,
+                  padding: "0 20px",
+                  borderRadius: 9999,
+                  backgroundColor: "var(--color-accent)",
+                  color: "#FFFFFF",
+                  fontWeight: 600,
+                  fontSize: 13.5,
+                  textDecoration: "none",
+                }}
+              >
+                <QrCode size={15} aria-hidden="true" />
+                <span>{event.checkinOpen ? "Check-in is open" : "Check-in"}</span>
+              </Link>
               <button
                 type="button"
                 onClick={() => setEditOpen(true)}
