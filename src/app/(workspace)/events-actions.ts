@@ -263,11 +263,6 @@ export interface CheckinToken {
   count: number;
 }
 
-/** Members checked in so far. E3 records the scans and replaces this. */
-async function getCheckinCount(): Promise<number> {
-  return 0;
-}
-
 /** The address check-in links are built on, never taken from the request */
 function getSiteUrl(): string | null {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
@@ -316,6 +311,15 @@ export async function getCheckinTokenAction(
         return fail("failed", CHECKIN_MESSAGES.tokenFailed);
       }
 
+      // Members checked in so far (E3). Officers can read their org's attendance.
+      // A failed count must not hide the QR code, so it falls back to 0.
+      const { count, error: countError } = await supabase
+        .from("attendance")
+        .select("id", { count: "exact", head: true })
+        .eq("org_id", orgId)
+        .eq("event_id", eventId);
+      if (countError) console.error("getCheckinTokenAction: could not count attendance:", countError);
+
       const slot = slotFor(now);
       const token = signCheckinToken(eventId, slot, getCheckinSecret());
       return ok({
@@ -323,7 +327,7 @@ export async function getCheckinTokenAction(
         expiresAtMs: slotEndsAtMs(slot),
         slotMs: SLOT_SECONDS * 1000,
         serverNowMs: now,
-        count: await getCheckinCount(),
+        count: count ?? 0,
       });
     }
   );

@@ -32,6 +32,7 @@ layout but is not part of the URL.
 | `/terms` | Terms of use | `terms/page.tsx` |
 | `/auth/callback` | Google sends the browser back here after sign-in. Redirects on | `auth/callback/route.ts` |
 | `/join/:token` | A student joins an org from its public link or QR code | `join/[token]/page.tsx` |
+| `/checkin/:token` | A member checks in to an event from the rotating QR code, with the email they joined with. No account | `checkin/[token]/page.tsx` |
 | `/invite/:token` | An officer invite. Signed out: sign-in card. Signed in: accepts the invite | `invite/[token]/page.tsx` |
 | `/invite/:token/start` | `POST` remembers the invite in a cookie before Google sign-in. `GET` does the same, then redirects to `/consent` | `invite/[token]/start/route.ts` |
 
@@ -124,7 +125,8 @@ in order:
    `officerLandingPath({ orgId, pendingInvite })`. That is their workspace, or
    their invite, or (if neither) they stay on, or go to, `/workspace/new`.
 4. **Signed out, on a non-public path:** go to `/signin`. Public means `/`,
-   `/signin`, `/register`, `/privacy`, `/terms`, `/auth/*`, `/join/*`, `/invite/*`
+   `/signin`, `/register`, `/privacy`, `/terms`, `/auth/*`, `/join/*`, `/invite/*`,
+   `/checkin/*`
    (`isPublicPath`). Anything not on that list needs a session, so a forgotten
    route fails safe.
 5. **Signed in, on `/workspace/*`:** delete the pending-invite cookie, because
@@ -133,8 +135,8 @@ in order:
 ### Step 3: the workspace gate and frame
 
 [`(workspace)/layout.tsx`](../src/app/(workspace)/layout.tsx) wraps everything
-under `/workspace/*`. `/consent`, `/join/*` and `/invite/*` are outside it on
-purpose.
+under `/workspace/*`. `/consent`, `/join/*`, `/invite/*` and `/checkin/*` are
+outside it on purpose.
 
 [`workspace/[id]/layout.tsx`](../src/app/(workspace)/workspace/[id]/layout.tsx)
 then draws the **one sidebar frame** for Home, Join and Invite. Those three pages
@@ -185,6 +187,15 @@ required" card.
 `/join/:token` (no account) → form and consent → success card. Rate limited per
 device.
 
+**Member check-in**
+An officer opens the check-in window and shows the full-screen QR. A member scans
+it → `/checkin/:token` (no account) → enters the email they joined with →
+"You're checked in, <first name>". Only an active member of the event's org can
+check in; an unknown, pending, inactive or other-org email gets one identical
+message. An expired or tampered token, a closed window or a cancelled event shows
+the "link has expired or is closed" card. Rate limited per device
+(`CHECKIN_ATTEMPTS_PER_MINUTE`).
+
 **Sign out**
 The `signOut` action ends the session and goes to `/signin`.
 
@@ -192,7 +203,7 @@ The `signOut` action ends the session and goes to `/signin`.
 
 ## 5. Secret URLs
 
-`/join/:token` and `/invite/:token` carry a secret in the path. Both are sent
+`/join/:token`, `/invite/:token` and `/checkin/:token` carry a secret in the path. All are sent
 with `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex, nofollow`
 (`headers()` in `next.config.ts`). The prefixes are listed in
 `SECRET_URL_PREFIXES` in `src/lib/routes.ts`, and a test fails if the config
@@ -229,6 +240,7 @@ Not URLs, but how pages change data.
 | `(workspace)/workspace/[id]/members/join/actions.ts` | `setJoinLink` |
 | `invite/actions.ts` | `clearInviteCookie` |
 | `join/[token]/actions.ts` | `submitJoin` |
+| `checkin/[token]/actions.ts` | `submitCheckin` |
 
 ---
 
