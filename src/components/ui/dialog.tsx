@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { X } from "lucide-react";
 import { useMounted } from "@/src/lib/use-mounted";
 
 const FOCUSABLE =
@@ -20,6 +21,7 @@ interface DialogProps {
   /** Whether a click on the backdrop dismisses (Escape always does) */
   dismissOnBackdrop?: boolean;
   maxWidth?: number;
+  /** Padding of the card itself. Leave it at 0 and build the inside from DialogHeader, DialogBody and DialogFooter. */
   padding?: string;
   zIndex?: number;
   /** Strength of the dark backdrop and the card shadow, in percent */
@@ -33,7 +35,10 @@ interface DialogProps {
 }
 
 /**
- * A modal dialog: dark backdrop with blur, centered card, and accessible modal behavior.
+ * The OrgKit modal frame: dark backdrop with blur, centered card, and accessible modal behavior.
+ * Build the inside from DialogHeader (brand mark, title, close), DialogBody and DialogFooter,
+ * so every modal in the app has the same identity.
+ *
  * Uses React Portal to mount to document.body, ensuring it escapes ancestor transforms/overflows
  * and centers cleanly on the screen while blurring the entire background.
  */
@@ -43,7 +48,7 @@ export function Dialog({
   onDismiss,
   dismissOnBackdrop = true,
   maxWidth = 480,
-  padding = "28px 24px",
+  padding = "0",
   zIndex = 1000,
   backdropPercent = 45,
   shadowPercent = 14,
@@ -138,8 +143,13 @@ export function Dialog({
           width: "100%",
           maxWidth,
           backgroundColor: "var(--color-surface)",
-          borderRadius: 24,
+          borderRadius: "var(--radius-panel, 20px)",
           border: "1px solid var(--color-line)",
+          // The header strip is clipped to the rounded corners; the body scrolls on short screens
+          overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
+          maxHeight: "calc(100dvh - 32px)",
           boxShadow: `0 20px 50px color-mix(in srgb, var(--color-ink) ${shadowPercent}%, transparent)`,
           padding,
           boxSizing: "border-box",
@@ -153,5 +163,153 @@ export function Dialog({
       </div>
     </div>,
     document.body
+  );
+}
+
+/** The OrgKit mark, painted in the brand emerald from its silhouette, in a small tile */
+function BrandMarkTile() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 44,
+        height: 44,
+        flexShrink: 0,
+        borderRadius: 12,
+        backgroundColor: "var(--color-surface)",
+        border: "1px solid color-mix(in srgb, var(--color-accent) 24%, transparent)",
+      }}
+    >
+      <span
+        style={{
+          width: 30,
+          height: 22,
+          backgroundColor: "var(--color-accent)",
+          WebkitMask: "url(/orgkit-logo-mask.png) center / contain no-repeat",
+          mask: "url(/orgkit-logo-mask.png) center / contain no-repeat",
+        }}
+      />
+    </span>
+  );
+}
+
+interface DialogHeaderProps {
+  /** Matches the Dialog's `labelledBy` */
+  titleId: string;
+  title: string;
+  /** One quiet line under the title */
+  description?: string;
+  /** Shows the close button. Leave it out for a dialog only its own buttons can close. */
+  onClose?: () => void;
+  /** Disables the close button while something is saving */
+  closeDisabled?: boolean;
+  closeLabel?: string;
+}
+
+/**
+ * The branded top of every dialog: a soft emerald wash, the OrgKit mark, the
+ * title in the deep brand green, and the close button.
+ */
+export function DialogHeader({
+  titleId,
+  title,
+  description,
+  onClose,
+  closeDisabled = false,
+  closeLabel = "Close",
+}: DialogHeaderProps) {
+  return (
+    <header
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 14,
+        flexShrink: 0,
+        padding: "16px 16px 16px 24px",
+        backgroundColor: "var(--color-brand-tint)",
+        borderBottom: "1px solid color-mix(in srgb, var(--color-accent) 18%, transparent)",
+      }}
+    >
+      <BrandMarkTile />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <h2
+          id={titleId}
+          style={{
+            margin: 0,
+            fontSize: 18,
+            fontWeight: 700,
+            lineHeight: 1.25,
+            letterSpacing: "-0.01em",
+            color: "var(--color-brand-deep)",
+            overflowWrap: "anywhere",
+          }}
+        >
+          {title}
+        </h2>
+        {description && (
+          <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.4, color: "var(--color-muted-strong)" }}>
+            {description}
+          </p>
+        )}
+      </div>
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          disabled={closeDisabled}
+          aria-label={closeLabel}
+          className="orgkit-dialog-close"
+        >
+          <X size={18} strokeWidth={2} aria-hidden="true" />
+        </button>
+      )}
+    </header>
+  );
+}
+
+/** The dialog's content. It scrolls on its own when the window is short. */
+export function DialogBody({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{ flex: "1 1 auto", minHeight: 0, overflowY: "auto", padding: "20px 24px", ...style }}>
+      {children}
+    </div>
+  );
+}
+
+/** The row of buttons at the bottom, with the main action last */
+export function DialogFooter({ children }: { children: React.ReactNode }) {
+  return (
+    <footer
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        gap: 10,
+        flexShrink: 0,
+        padding: "4px 24px 24px",
+      }}
+    >
+      {children}
+    </footer>
+  );
+}
+
+interface DialogButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  /** `primary` is the OrgKit emerald, `danger` is red for actions that remove access */
+  variant?: "primary" | "secondary" | "danger";
+}
+
+/** The one button style for every dialog */
+export function DialogButton({ variant = "secondary", type = "button", className, ...props }: DialogButtonProps) {
+  return (
+    <button
+      type={type}
+      className={`orgkit-dialog-btn orgkit-dialog-btn--${variant}${className ? ` ${className}` : ""}`}
+      {...props}
+    />
   );
 }

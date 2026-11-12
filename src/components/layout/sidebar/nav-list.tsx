@@ -1,7 +1,11 @@
+"use client";
+
+import { useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Home, QrCode, UserPlus } from "lucide-react";
-import { joinPanelPath, officersPath, workspacePath } from "@/src/lib/routes";
+import { Home, QrCode, UserPlus, Users } from "lucide-react";
+import { joinPanelPath, membersPath, officersPath, workspacePath } from "@/src/lib/routes";
 
 interface NavLinkItemProps {
   href: string;
@@ -22,10 +26,14 @@ function NavLinkItem({
   isActive,
   isCollapsed,
 }: NavLinkItemProps) {
+  const router = useRouter();
+
   return (
     <Link
       href={href}
       prefetch={true}
+      onMouseEnter={() => router.prefetch(href)}
+      onTouchStart={() => router.prefetch(href)}
       className={`orgkit-nav-item ${isActive ? "active" : ""}`}
       title={title}
       style={{
@@ -50,7 +58,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "join" | "invite";
+export type SidebarSection = "home" | "members" | "join" | "invite";
 
 interface NavListProps {
   rawId: string;
@@ -60,6 +68,28 @@ interface NavListProps {
 }
 
 export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListProps) {
+  const router = useRouter();
+
+  // Background idle-prewarm for 0ms transitions across core workspace routes
+  useEffect(() => {
+    const prewarm = () => {
+      router.prefetch(workspacePath(rawId));
+      router.prefetch(membersPath(rawId));
+      router.prefetch(officersPath(rawId));
+      if (isAdmin) {
+        router.prefetch(joinPanelPath(rawId));
+      }
+    };
+
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      const handle = window.requestIdleCallback(prewarm, { timeout: 1500 });
+      return () => window.cancelIdleCallback(handle);
+    } else {
+      const timer = setTimeout(prewarm, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [rawId, isAdmin, router]);
+
   return (
     <nav
       style={{
@@ -77,6 +107,16 @@ export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListP
         icon={Home}
         strokeWidth={2.2}
         isActive={activeSection === "home"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={membersPath(rawId)}
+        title="Members: view and manage roster"
+        label="Members"
+        icon={Users}
+        strokeWidth={2.2}
+        isActive={activeSection === "members"}
         isCollapsed={isCollapsed}
       />
 

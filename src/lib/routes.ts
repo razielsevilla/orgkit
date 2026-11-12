@@ -27,6 +27,15 @@ export function officersPath(orgId: string): string {
   return `${workspacePath(orgId)}/officers`;
 }
 
+export function membersPath(orgId: string): string {
+  return `${workspacePath(orgId)}/members`;
+}
+
+/** The admin-only route that streams the roster as a CSV download (POST) */
+export function membersExportPath(orgId: string): string {
+  return `${membersPath(orgId)}/export`;
+}
+
 /** The admin-only page that manages the public join link and QR code */
 export function joinPanelPath(orgId: string): string {
   return `${workspacePath(orgId)}/members/join`;
@@ -101,8 +110,10 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/consent",
   "/workspace/new",
   "/workspace/:id",
+  "/workspace/:id/members",
   "/workspace/:id/officers",
   "/workspace/:id/members/join",
+  "/workspace/:id/members/export",
 ];
 
 /**

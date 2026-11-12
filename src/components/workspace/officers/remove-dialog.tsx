@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertTriangle, X } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { removeWorkspaceOfficer } from "@/src/app/(workspace)/officers-actions";
-import { Dialog } from "@/src/components/ui/dialog";
+import { Dialog, DialogBody, DialogButton, DialogFooter, DialogHeader } from "@/src/components/ui/dialog";
 import { ErrorToast } from "@/src/components/error-toast";
 
 interface RemoveDialogProps {
@@ -54,111 +54,43 @@ export function RemoveDialog({
         onDismiss={loading ? undefined : onClose}
         maxWidth={440}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          disabled={loading}
-          aria-label="Close"
-          style={{
-            position: "absolute",
-            top: 18,
-            right: 18,
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            border: "none",
-            backgroundColor: "transparent",
-            color: "var(--color-muted)",
-            cursor: loading ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <X size={18} />
-        </button>
-
-        <div style={{ textAlign: "center", marginBottom: 20 }}>
+        <DialogHeader
+          titleId="remove-modal-title"
+          title="Remove officer"
+          onClose={onClose}
+          closeDisabled={loading}
+          closeLabel="Close"
+        />
+        <DialogBody>
+          <p style={{ fontSize: 14, color: "var(--color-muted-strong)", margin: "0 0 16px 0", lineHeight: 1.5 }}>
+            Are you sure you want to remove <strong style={{ color: "var(--color-ink)" }}>{officerName}</strong>?
+          </p>
           <div
             style={{
-              width: 52,
-              height: 52,
-              borderRadius: "50%",
-              backgroundColor: "color-mix(in srgb, var(--color-danger) 10%, transparent)",
               display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 14px auto",
+              alignItems: "flex-start",
+              gap: 8,
+              padding: "12px 14px",
+              borderRadius: 10,
+              backgroundColor: "var(--color-danger-soft)",
+              border: "1px solid var(--color-danger-line)",
+              color: "var(--color-danger-strong)",
+              fontSize: 13,
+              lineHeight: 1.45,
             }}
           >
-            <AlertTriangle size={26} color="var(--color-danger)" />
+            <AlertCircle size={16} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+            <span>They will lose access to this organization immediately. Everything they created will be kept.</span>
           </div>
-
-          <h2
-            id="remove-modal-title"
-            style={{
-              fontSize: 18.5,
-              fontWeight: 700,
-              color: "var(--color-ink)",
-              margin: "0 0 6px 0",
-              letterSpacing: "-0.015em",
-            }}
-          >
-            Remove officer
-          </h2>
-
-          <p style={{ fontSize: 13, color: "var(--color-muted-strong)", margin: 0, lineHeight: 1.45 }}>
-            Are you sure you want to remove <strong>{officerName}</strong>? They will lose access to this organization immediately. Everything they created will be kept.
-          </p>
-        </div>
-
-        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "10px 18px",
-              borderRadius: 9999,
-              border: "1px solid var(--color-line)",
-              backgroundColor: "var(--color-surface)",
-              color: "var(--color-muted-strong)",
-              fontSize: 13.5,
-              fontWeight: 600,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-          >
+        </DialogBody>
+        <DialogFooter>
+          <DialogButton onClick={onClose} disabled={loading}>
             Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleConfirm}
-            disabled={loading}
-            style={{
-              flex: 1,
-              padding: "10px 18px",
-              borderRadius: 9999,
-              border: "none",
-              backgroundColor: "var(--color-danger)",
-              color: "var(--color-on-accent)",
-              fontSize: 13.5,
-              fontWeight: 600,
-              cursor: loading ? "not-allowed" : "pointer",
-              boxShadow: "0 2px 8px color-mix(in srgb, var(--color-danger) 25%, transparent)",
-              opacity: loading ? 0.75 : 1,
-              transition: "all 0.15s ease",
-            }}
-            onMouseEnter={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = "var(--color-danger-strong)";
-            }}
-            onMouseLeave={(e) => {
-              if (!loading) e.currentTarget.style.backgroundColor = "var(--color-danger)";
-            }}
-          >
+          </DialogButton>
+          <DialogButton variant="danger" onClick={handleConfirm} disabled={loading}>
             {loading ? "Removing…" : "Remove officer"}
-          </button>
-        </div>
+          </DialogButton>
+        </DialogFooter>
       </Dialog>
 
       {/* Floating Error Toast */}

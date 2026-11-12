@@ -49,7 +49,7 @@ describe("proxy: signed out", () => {
     }
   );
 
-  it.each(["/consent", "/workspace/new", `/workspace/${ORG}`, `/workspace/${ORG}/officers`, `/workspace/${ORG}/members/join`])(
+  it.each(["/consent", "/workspace/new", `/workspace/${ORG}`, `/workspace/${ORG}/members`, `/workspace/${ORG}/officers`, `/workspace/${ORG}/members/join`])(
     "sends a visitor away from %s to sign-in",
     async (path) => {
       expect(await visit(path)).toBe("/signin");

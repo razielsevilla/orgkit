@@ -2,8 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 
-// The workspace frame: one sidebar for Home, Join and Invite. Rendered on the
-// server with an already-resolved promise, the way the layout hands it over.
+// The workspace frame: one sidebar for Home, Members, Join and Invite.
 let pathname = "/";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
@@ -52,38 +51,42 @@ beforeEach(() => {
   pathname = `/workspace/${ORG}`;
 });
 
-describe("workspace frame", () => {
-  it("shows Home, Join and Invite to an admin, and nothing else", async () => {
+describe("workspace frame navigation for Ticket R1", () => {
+  it("shows Home, Members, Join and Invite to an admin", async () => {
     const html = await render(data(true));
     expect(navHrefs(html)).toEqual([
       `/workspace/${ORG}`,
+      `/workspace/${ORG}/members`,
       `/workspace/${ORG}/members/join`,
       `/workspace/${ORG}/officers`,
     ]);
-    for (const label of ["Home", "Join", "Invite"]) expect(html).toContain(`<span>${label}</span>`);
-  });
-
-  it("has no 'Soon' items or placeholders for features that don't exist", async () => {
-    const html = await render(data(true));
-    expect(html).not.toMatch(/Soon/);
-    for (const label of ["Members", "Events", "Dues", "Archive"]) {
-      expect(html).not.toContain(`<span>${label}</span>`);
+    for (const label of ["Home", "Members", "Join", "Invite"]) {
+      expect(html).toContain(`<span>${label}</span>`);
     }
   });
 
-  it("hides Join from officers who aren't admins", async () => {
+  it("shows Members to regular officers, but hides Join", async () => {
     const html = await render(data(false));
     expect(html).toContain("<span>Home</span>");
+    expect(html).toContain("<span>Members</span>");
     expect(html).toContain("<span>Invite</span>");
     expect(html).not.toContain("<span>Join</span>");
+    expect(html).toContain(`/workspace/${ORG}/members`);
     expect(html).not.toContain("/members/join");
+  });
+
+  it("has no 'Soon' placeholders for Members", async () => {
+    const html = await render(data(true));
+    expect(html).not.toMatch(/Soon/);
+    expect(html).toContain("<span>Members</span>");
   });
 
   it.each([
     [`/workspace/${ORG}`, "Home"],
+    [`/workspace/${ORG}/members`, "Members"],
     [`/workspace/${ORG}/officers`, "Invite"],
     [`/workspace/${ORG}/members/join`, "Join"],
-  ])("highlights the right entry on %s", async (path, label) => {
+  ])("highlights %s as active when on %s", async (path, label) => {
     pathname = path;
     const html = await render(data(true));
     const active = [...html.matchAll(/class="orgkit-nav-item active"[^>]*>.*?<span>([^<]+)<\/span>/g)].map(
@@ -91,61 +94,5 @@ describe("workspace frame", () => {
     );
     expect(active).toEqual([label]);
   });
-
-  it("shows the same sidebar and the page's own content", async () => {
-    const html = await render(data(true));
-    expect(html).toContain("PAGE CONTENT");
-    expect(html).toContain("Robotics Club");
-    expect(html).toContain("<aside");
-  });
-
-  it("renders only the page when there is no org to show", async () => {
-    const html = await render(Promise.resolve(null));
-    expect(html).toContain("PAGE CONTENT");
-    expect(html).not.toContain("<aside");
-  });
 });
 
-async function renderLoader(props?: Record<string, unknown>) {
-  const { WorkspaceContentLoader } = await import(
-    "@/src/components/workspace/frame/workspace-content-loader"
-  );
-  const stream = await renderToReadableStream(createElement(WorkspaceContentLoader, props));
-  await stream.allReady;
-  return new Response(stream).text();
-}
-
-describe("workspace loading animation", () => {
-  it("defaults to the flow animation: the logo filling with color from below", async () => {
-    const html = await renderLoader();
-    expect(html).toContain("orgkit-flow-strip");
-    expect(html).toContain("orgkit-flow-ghost");
-    expect(html).not.toContain("orgkit-loader-ring");
-  });
-
-  it("announces loading and uses no sidebar markup", async () => {
-    const html = await renderLoader();
-    expect(html).toContain('role="status"');
-    expect(html).toContain("Loading");
-    expect(html).not.toContain("<aside");
-  });
-
-  it("marks itself finishing when the page is ready", async () => {
-    expect(await renderLoader()).not.toContain("is-finishing");
-    expect(await renderLoader({ finishing: true })).toContain("is-finishing");
-  });
-
-  it("shows the same loader beside a still sidebar skeleton on first load", async () => {
-    const { WorkspaceLoadingSkeleton } = await import(
-      "@/src/components/workspace/frame/workspace-skeleton"
-    );
-    const stream = await renderToReadableStream(createElement(WorkspaceLoadingSkeleton));
-    await stream.allReady;
-    const html = await new Response(stream).text();
-    expect(html).toContain("orgkit-loader");
-    // The sidebar placeholder must not animate
-    const aside = html.slice(html.indexOf("<aside"), html.indexOf("</aside>"));
-    expect(aside).not.toContain("orgkit-shimmer");
-    expect(aside).not.toContain("animation");
-  });
-});

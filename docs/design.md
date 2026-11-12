@@ -37,6 +37,8 @@ OrgKit uses a clean zinc neutral scale paired with an emerald accent and an expl
 | **Accent Light** | `#10B981` | `emerald-500` | Radial gradient highlights and stop colors |
 | **Accent Tint (6%)** | `rgba(5, 150, 105, 0.06)` | `emerald-600/6` | Background geometric rings and circles |
 | **Accent Tint (10%)** | `rgba(5, 150, 105, 0.10)` | `emerald-600/10` / `bg-emerald-50` | Soft badges, outer decorative rings |
+| **Brand Deep** | `#054A38` | `var(--color-brand-deep)` | The wordmark's deep green. Brand titles (dialog headers). 10.3:1 on white |
+| **Brand Tint** | Accent 8% over Surface | `var(--color-brand-tint)` | The faint emerald wash behind branded headers |
 | **Error / Destructive**| `#DC2626` | `red-600` | Form validation errors, error borders (`data-error`) |
 
 ### 2.2 Tailwind CSS Configuration (v4)
@@ -205,6 +207,86 @@ Every auth card follows this exact sequence:
   - Icon shifts color to `#059669` and scales `scale(1.08)`.
   - Label shifts from `#3F3F46` to `#18181B`.
 
+### 6.5 Dialogs (modals)
+
+Every modal in the app wears the same OrgKit frame: an emerald-tinted header strip with the brand mark, the title in the wordmark's deep green, and one shared set of buttons. A dialog is never built from scratch: no hand-made close button, icon box or `<h2>`, and no custom button styles.
+
+**Anatomy**
+
+```
+┌──────────────────────────────────────┐
+│ ░░ [mark]  Edit member            ✕ ░│  ← DialogHeader: brand tint, mark tile,
+│ ░░         One quiet line            │    deep-green title, optional description
+├──────────────────────────────────────┤
+│                                      │
+│   Content (scrolls if the window     │  ← DialogBody
+│   is short)                          │
+│                                      │
+│              [ Cancel ]  [ Save ]    │  ← DialogFooter: main action last
+└──────────────────────────────────────┘
+```
+
+**Components** (all exported from `src/components/ui/dialog.tsx`)
+
+| Component | Job |
+| :--- | :--- |
+| `Dialog` | The frame: portal, backdrop, card, focus trap, Escape and backdrop dismissal. Leave `padding` at its default of `0` |
+| `DialogHeader` | Brand mark, title (the `<h2>`, `id` = `titleId`), optional one-line `description`, optional close button |
+| `DialogBody` | The content, padded `20px 24px`. It is the part that scrolls, so the header and buttons stay in view |
+| `DialogFooter` | The button row, right-aligned, `gap: 10px`, padded `4px 24px 24px` |
+| `DialogButton` | `variant`: `primary`, `secondary` (default) or `danger` |
+
+```tsx
+<Dialog labelledBy="edit-member-title" onDismiss={onClose} maxWidth={460}>
+  <DialogHeader titleId="edit-member-title" title="Edit member" description="Update their name or email" onClose={onClose} closeLabel="Close edit dialog" />
+  <DialogBody>{/* fields */}</DialogBody>
+  <DialogFooter>
+    <DialogButton onClick={onClose}>Cancel</DialogButton>
+    <DialogButton variant="primary" type="submit">Save changes</DialogButton>
+  </DialogFooter>
+</Dialog>
+```
+
+**The frame**
+- **Card:** `var(--radius-panel)` (20px), `1px solid var(--color-line)`, shadow `0 20px 50px` ink at 14%, `overflow: hidden` so the header clips to the corners, `max-height: calc(100dvh - 32px)`.
+- **Backdrop:** ink at 45% with `blur(8px)`. **Entrance:** `cardPopout`, 0.22s.
+- **Width by use:** 420 to 440 for confirmations and notices, 460 to 480 for forms and the invite panels, 600 for the import flow.
+
+**The header**
+- **Strip:** `padding: 16px 16px 16px 24px`, background `var(--color-brand-tint)`, bottom line accent at 18%.
+- **Mark tile:** 44px square, 12px radius, white surface, hairline of accent at 24%. The OrgKit mark inside (30 × 22px) is the silhouette `/orgkit-logo-mask.png` used as a CSS mask over `var(--color-accent)`, so it needs no extra image.
+- **Title:** 18px, weight 700, line-height 1.25, `-0.01em`, color `var(--color-brand-deep)`.
+- **Description:** 13px, `var(--color-muted-strong)` (needs 4.5:1 on the tint; muted is too light here). Keep it to about 90 characters, otherwise put the text in the body.
+- **Close button:** 32px round icon, `var(--color-muted-strong)`, hover accent at 12% with the title green. Disabled while something is saving.
+
+**Buttons** (`.orgkit-dialog-btn` in `globals.css`): 40px high, `0 20px` padding, 10px radius, 14px weight 600.
+
+| Variant | Fill | Hover | Use |
+| :--- | :--- | :--- | :--- |
+| `primary` | `--color-accent`, `--color-on-accent` text | `--color-accent-strong` | The one main action |
+| `secondary` | `--color-surface`, `--color-line-strong` border, ink text | `--color-base-soft` | Cancel, back, copy |
+| `danger` | `--color-danger`, white text | `--color-danger-strong` | Confirming a destructive action only |
+
+Hover changes color only (no lift). Press is `scale(0.98)`. Disabled is 60% opacity. A saving button stays disabled and shows a 16px `Loader2` with the `spin` keyframe.
+
+**Destructive dialogs** (deactivate member, remove officer) use the same frame, not a red one. Only the confirm button is `danger`, and the consequence sits in a warning note in the body: a 16px `AlertCircle` plus one sentence on `--color-danger-soft`, 1px `--color-danger-line` border, 10px radius, text `--color-danger-strong`.
+
+**Forms inside dialogs**
+- Labels 13px weight 500 in `--color-ink-soft`. Inputs 40px high, 10px radius, `1px solid var(--color-line-strong)`.
+- Focus uses the global emerald ring (`:focus-visible`, see 7.2).
+- A **field error** is the `FieldError` component (`src/components/ui/field-error.tsx`) directly under the input: a 14px `AlertCircle` and one 13px sentence in `--color-danger-strong`, with no box or fill. The input gets a `--color-danger-strong` border, `aria-invalid`, and `aria-describedby` pointing at the message's `id`. Clear it as soon as the user edits the field.
+- A **form error** (the save failed, not one field) is a banner at the top of the body: `--color-danger-soft` fill, 1px `--color-danger-line` border, 10px radius, `--color-danger-strong` text, `role="alert"`.
+
+**Behaviour**
+- Pass `titleId` and `labelledBy` the same id so the dialog is announced by its title.
+- A dialog the user must acknowledge uses `role="alertdialog"`. One that only its own buttons may close leaves out both `onClose` on the header and `onDismiss` on the dialog (the access-revoked notice).
+- While saving, set `onDismiss` to `undefined` and `closeDisabled` so it cannot be closed mid-request.
+- Put `data-autofocus` on the control that should receive focus first (usually the primary action or first field).
+- A multi-step flow (the import dialog) has one header for all steps: the title stays, the `description` names the current step, and the step indicator sits at the top of the body.
+- Copy: sentence case titles, no trailing period on titles, labels or buttons, no exclamation marks.
+
+**Do not:** pass `padding` to `Dialog`; build a separate close button, icon box or `<h2>`; hardcode red hex values (use the danger tokens); use `transition: all`; or make a dialog red-tinted.
+
 ---
 
 ## 7. Motion & Accessibility Standards
@@ -238,6 +320,7 @@ Every auth card follows this exact sequence:
   ```
 
 ### 7.2 Accessibility & Reduced Motion
+- **Scrollbars:** set once in `globals.css` for every scroll area. A 12px bar with a clear track, no arrow buttons, and a rounded thumb (`--color-ink` at 22%, inset by a 3px transparent border) that turns emerald on hover and while dragged. Do not style a scrollbar on an individual component.
 - **WCAG Compliance:**
   - Ink (`#18181B`) on Surface (`#FFFFFF`): **17.7:1** (AAA).
   - Ink (`#18181B`) on Base (`#F4F4F5`): **16.0:1** (AAA).
@@ -273,4 +356,4 @@ When building new views (e.g., dashboard, member directory, event manager):
 5. [ ] **Color Accent:** Limit primary positive calls to `#059669` (hover `#047857`). Never introduce uncoordinated secondary hues.
 6. [ ] **Buttons:** Round interactive action buttons to `rounded-full` with micro-interaction hover lift.
 7. [ ] **Accessibility:** Maintain visible `focus-visible` double rings and screen reader notices.
-
+8. [ ] **Dialogs:** Build every modal from `Dialog`, `DialogHeader`, `DialogBody`, `DialogFooter` and `DialogButton` (section 6.5). Never hand-build a modal header or its buttons.
