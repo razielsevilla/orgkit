@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EVENT_MESSAGES } from "@/src/lib/events/event-validation";
 
 interface FakeState {
@@ -53,8 +53,17 @@ vi.mock("@/src/lib/supabase/server", () => ({ createClient: async () => fakeClie
 const revalidatePath = vi.fn();
 vi.mock("next/cache", () => ({ revalidatePath: (p: string) => revalidatePath(p) }));
 
-const { createEventAction, updateEventAction, cancelEventAction, getWorkspaceEvent, getWorkspaceEvents } =
-  await import("@/src/app/(workspace)/events-actions");
+const {
+  createEventAction,
+  updateEventAction,
+  cancelEventAction,
+  getWorkspaceEvent,
+  getWorkspaceEvents,
+  setCheckinOpenAction,
+  getCheckinTokenAction,
+} = await import("@/src/app/(workspace)/events-actions");
+const { verifyCheckinToken } = await import("@/src/lib/checkin/token");
+const { CHECKIN_MESSAGES } = await import("@/src/lib/events/checkin-eligibility");
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 const ME = "22222222-2222-4222-8222-222222222222";
@@ -209,6 +218,7 @@ describe("reading events", () => {
     ends_at: input.endsAt,
     location: null,
     status: "scheduled",
+    checkin_open: false,
     created_at: "2030-01-01T00:00:00Z",
   };
 
@@ -225,6 +235,7 @@ describe("reading events", () => {
         endsAt: input.endsAt,
         location: null,
         status: "scheduled",
+        checkinOpen: false,
         createdAt: "2030-01-01T00:00:00Z",
       },
     ]);
@@ -255,5 +266,140 @@ describe("reading events", () => {
     const res = await getWorkspaceEvent(ORG, EVENT);
     expect(res.success).toBe(true);
     expect(res.data?.title).toBe("General meeting");
+  });
+});
+
+describe("setCheckinOpenAction", () => {
+  it("opens and closes through set_event_checkin and revalidates the event page", async () => {
+    expect((await setCheckinOpenAction(ORG, EVENT, true)).success).toBe(true);
+    expect((await setCheckinOpenAction(ORG, EVENT, false)).success).toBe(true);
+    expect(state.rpcCalls).toEqual([
+      { fn: "set_event_checkin", args: { target_event: EVENT, should_open: true } },
+      { fn: "set_event_checkin", args: { target_event: EVENT, should_open: false } },
+    ]);
+    expect(revalidatePath).toHaveBeenCalledWith(`/workspace/${ORG}/events/${EVENT}`);
+  });
+
+  it("rejects malformed IDs and a non-boolean without touching the database", async () => {
+    expect((await setCheckinOpenAction("nope", EVENT, true)).error).toBe("invalid_request");
+    expect((await setCheckinOpenAction(ORG, "../x", true)).error).toBe("invalid_request");
+    expect((await setCheckinOpenAction(ORG, EVENT, "yes" as never)).error).toBe("invalid_request");
+    expect(state.rpcCalls).toEqual([]);
+    expect(state.tablesRead).toEqual([]);
+  });
+
+  it("explains why a cancelled or long-ended event can't be opened", async () => {
+    state.rpcResult = { data: null, error: { message: "event_cancelled" } };
+    const cancelled = await setCheckinOpenAction(ORG, EVENT, true);
+    expect(cancelled.error).toBe("cancelled");
+    expect(cancelled.errorMessage).toBe(CHECKIN_MESSAGES.cancelled);
+
+    state.rpcResult = { data: null, error: { message: "event_ended" } };
+    const ended = await setCheckinOpenAction(ORG, EVENT, true);
+    expect(ended.error).toBe("ended");
+    expect(ended.errorMessage).toBe(CHECKIN_MESSAGES.ended);
+  });
+
+  it("refuses an officer of another org and a signed-out caller", async () => {
+    state.callerRole = null;
+    expect((await setCheckinOpenAction(ORG, EVENT, true)).error).toBe("access_revoked");
+    state.callerRole = "officer";
+    state.user = null;
+    expect((await setCheckinOpenAction(ORG, EVENT, true)).error).toBe("not_authenticated");
+    expect(state.rpcCalls).toEqual([]);
+  });
+});
+
+describe("getCheckinTokenAction", () => {
+  const SECRET = "action-test-secret";
+  const hour = 3_600_000;
+  const openRow = (overrides: Record<string, unknown> = {}) => ({
+    status: "scheduled",
+    ends_at: new Date(Date.now() + hour).toISOString(),
+    checkin_open: true,
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    vi.stubEnv("CHECKIN_TOKEN_SECRET", SECRET);
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://orgkit.example/");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("returns a signed link on the site address for an open window", async () => {
+    state.eventRow = openRow();
+    const before = Date.now();
+    const res = await getCheckinTokenAction(ORG, EVENT);
+
+    expect(res.success).toBe(true);
+    const code = res.data!;
+    // The trailing slash of the configured address is dropped
+    expect(code.url.startsWith("https://orgkit.example/checkin/")).toBe(true);
+    expect(code.slotMs).toBe(30_000);
+    expect(code.count).toBe(0);
+    expect(code.serverNowMs).toBeGreaterThanOrEqual(before);
+    expect(code.expiresAtMs).toBeGreaterThan(code.serverNowMs);
+    expect(code.expiresAtMs - code.serverNowMs).toBeLessThanOrEqual(30_000);
+
+    const token = code.url.slice("https://orgkit.example/checkin/".length);
+    expect(verifyCheckinToken(token, SECRET, Date.now())).toEqual({ ok: true, eventId: EVENT });
+    // Nothing is stored: no write of any kind
+    expect(state.rpcCalls).toEqual([]);
+  });
+
+  it("returns no token while the window is closed", async () => {
+    state.eventRow = openRow({ checkin_open: false });
+    const res = await getCheckinTokenAction(ORG, EVENT);
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("closed");
+    expect(res.data).toBeUndefined();
+  });
+
+  it("returns no token for a cancelled event, or one that ended over an hour ago", async () => {
+    state.eventRow = openRow({ status: "cancelled" });
+    expect((await getCheckinTokenAction(ORG, EVENT)).error).toBe("cancelled");
+
+    state.eventRow = openRow({ ends_at: new Date(Date.now() - 2 * hour).toISOString() });
+    const ended = await getCheckinTokenAction(ORG, EVENT);
+    expect(ended.error).toBe("ended");
+    expect(ended.errorMessage).toBe(CHECKIN_MESSAGES.ended);
+  });
+
+  it("returns no token for an event that is missing or belongs to another org", async () => {
+    state.eventRow = null;
+    const res = await getCheckinTokenAction(ORG, EVENT);
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("not_found");
+    expect(res.data).toBeUndefined();
+  });
+
+  it("refuses a non-officer and a signed-out visitor, reading no event", async () => {
+    state.eventRow = openRow();
+    state.callerRole = null;
+    expect((await getCheckinTokenAction(ORG, EVENT)).error).toBe("access_revoked");
+    state.callerRole = "officer";
+    state.user = null;
+    expect((await getCheckinTokenAction(ORG, EVENT)).error).toBe("not_authenticated");
+    expect(state.tablesRead).not.toContain("events");
+  });
+
+  it("answers not_found for malformed IDs without any database query", async () => {
+    expect((await getCheckinTokenAction("nope", EVENT)).error).toBe("not_found");
+    expect((await getCheckinTokenAction(ORG, "not-a-uuid")).error).toBe("not_found");
+    expect(state.tablesRead).toEqual([]);
+  });
+
+  it("fails cleanly, without a token, when the signing secret is missing", async () => {
+    vi.stubEnv("CHECKIN_TOKEN_SECRET", "");
+    state.eventRow = openRow();
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await getCheckinTokenAction(ORG, EVENT);
+    spy.mockRestore();
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("failed");
+    expect(res.data).toBeUndefined();
   });
 });
