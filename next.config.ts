@@ -15,7 +15,7 @@ const nextConfig: NextConfig = {
   },
   cacheComponents: true,
   partialPrefetching: true,
-  // Join and invite links carry a secret in the URL: don't pass it on through
+  // Join, invite and check-in links carry a secret in the URL: don't pass it on through
   // Referer, and keep it out of search engines. Keep this list in step with
   // SECRET_URL_PREFIXES in src/lib/routes.ts (a test checks it).
   async headers() {
@@ -26,6 +26,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/join/:path*", headers: secretUrlHeaders },
       { source: "/invite/:path*", headers: secretUrlHeaders },
+      { source: "/checkin/:path*", headers: secretUrlHeaders },
     ];
   },
   // Old addresses. Each page has exactly one URL (see docs/routes.md), so these

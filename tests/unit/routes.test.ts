@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import {
+  checkinLinkPath,
   PRIVATE_ROUTES,
   SECRET_URL_PREFIXES,
   inviteStartPath,
@@ -111,6 +112,7 @@ describe("path helpers", () => {
     assert.equal(invitePath("t"), "/invite/t");
     assert.equal(inviteStartPath("t"), "/invite/t/start");
     assert.equal(joinLinkPath("t"), "/join/t");
+    assert.equal(checkinLinkPath("t"), "/checkin/t");
   });
 
   it("builds sign-in URLs with an optional error", () => {
@@ -129,6 +131,7 @@ describe("path helpers", () => {
       invitePath("t"),
       inviteStartPath("t"),
       joinLinkPath("t"),
+      checkinLinkPath("t"),
     ];
     for (const path of built) {
       const matches = routes.some(
@@ -165,6 +168,7 @@ describe("isPublicPath", () => {
     assert.equal(isPublicPath("/join/abc"), true);
     assert.equal(isPublicPath("/invite/abc"), true);
     assert.equal(isPublicPath("/invite/abc/start"), true);
+    assert.equal(isPublicPath("/checkin/abc.1.sig"), true);
   });
 
   it("keeps everything else behind sign-in", () => {

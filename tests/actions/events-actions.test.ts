@@ -10,6 +10,8 @@ interface FakeState {
   eventRows: Record<string, unknown>[];
   /** Every table the fake was asked to read, to prove a malformed ID reads nothing */
   tablesRead: string[];
+  attendanceCount: number | null;
+  attendanceError: { message: string } | null;
 }
 
 const state: FakeState = {
@@ -20,6 +22,8 @@ const state: FakeState = {
   eventRow: null,
   eventRows: [],
   tablesRead: [],
+  attendanceCount: 0,
+  attendanceError: null,
 };
 
 const fakeClient = {
@@ -32,6 +36,9 @@ const fakeClient = {
           // getWorkspaceEvents: .eq(org).order().order()
           order: () => ({ order: async () => ({ data: state.eventRows, error: null }) }),
           eq: () => ({
+            // The attendance count (E3): .select(count, head).eq(org).eq(event)
+            then: (resolve: (v: unknown) => unknown) =>
+              resolve({ count: state.attendanceCount, error: state.attendanceError }),
             maybeSingle: async () => {
               if (table === "org_officers") {
                 return { data: state.callerRole ? { role: state.callerRole } : null, error: null };
@@ -84,6 +91,8 @@ beforeEach(() => {
   state.eventRow = null;
   state.eventRows = [];
   state.tablesRead = [];
+  state.attendanceCount = 0;
+  state.attendanceError = null;
   revalidatePath.mockClear();
 });
 
@@ -348,6 +357,25 @@ describe("getCheckinTokenAction", () => {
     expect(verifyCheckinToken(token, SECRET, Date.now())).toEqual({ ok: true, eventId: EVENT });
     // Nothing is stored: no write of any kind
     expect(state.rpcCalls).toEqual([]);
+  });
+
+  it("returns the number of members checked in so far", async () => {
+    state.eventRow = openRow();
+    state.attendanceCount = 7;
+    const res = await getCheckinTokenAction(ORG, EVENT);
+    expect(res.data?.count).toBe(7);
+    expect(state.tablesRead).toContain("attendance");
+  });
+
+  it("still returns the link, with a count of 0, when the count cannot be read", async () => {
+    state.eventRow = openRow();
+    state.attendanceCount = null;
+    state.attendanceError = { message: "boom" };
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await getCheckinTokenAction(ORG, EVENT);
+    spy.mockRestore();
+    expect(res.success).toBe(true);
+    expect(res.data?.count).toBe(0);
   });
 
   it("returns no token while the window is closed", async () => {

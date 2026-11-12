@@ -37,6 +37,7 @@ Set these in `.env.local` (never commit it). `.env.example` lists them all.
 | `JOIN_RATE_LIMIT_SECRET` | No | Secret for hashing IP addresses in rate limiting. Defaults to the service role key |
 | `JOIN_ATTEMPTS_PER_MINUTE` | No | Join attempts per device per minute. Default 30 |
 | `INVITE_ATTEMPTS_PER_MINUTE` | No | Invite page opens per device per minute. Default 20 |
+| `CHECKIN_ATTEMPTS_PER_MINUTE` | No | Member check-in attempts per device per minute. Default 30 |
 
 ## Set up Supabase
 
