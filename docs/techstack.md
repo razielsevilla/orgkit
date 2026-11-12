@@ -94,5 +94,5 @@ SENTRY_DSN=
 
 - **Multi-tenancy:** every table carries an `org_id`, and Postgres Row Level Security keeps each org's data separate.
 - **Auth:** Google OAuth through Supabase Auth, requesting only the `openid`, `email` and `profile` scopes.
-- **QR check-in:** short-lived, signed, rotating tokens so a screenshot of the QR can't be reused by absent members.
+- **QR check-in:** short-lived, signed, rotating tokens so a screenshot of the QR can't be reused by absent members. A token is `<eventId>.<slot>.<HMAC-SHA256>` with slot = `floor(unix seconds / 30)`, signed with `CHECKIN_TOKEN_SECRET` and never stored. A scan is accepted in its own slot and the next one (30 to 60 seconds), and the officer's check-in window (`events.checkin_open`) must be open. Slot length and grace are constants in `src/lib/checkin/token.ts`.
 - **Payments:** GCash references are stored as records only. OrgKit never holds money.
