@@ -16,6 +16,7 @@ import {
   type AttendanceRecord,
   type AttendeeCandidate,
 } from "@/src/lib/events/attendance-state";
+import { HISTORY_MESSAGES, parseHistory, type MemberHistory } from "@/src/lib/members/attendance-history";
 
 /** Attendance lists and manual add or remove (E4). Officers of the event's org only. */
 export type AttendanceActionError =
@@ -81,6 +82,51 @@ export async function getEventAttendanceAction(
 
       const records = sortRecords((attendance.data as unknown as AttendanceRow[]).map(toRecord));
       return ok({ records, activeCount: active.count ?? 0 });
+    }
+  );
+}
+
+/** What the database says when a member's history can't be read */
+const HISTORY_ERRORS: ErrorRule<AttendanceActionError>[] = [
+  { match: "member_not_found", error: "not_found", message: HISTORY_MESSAGES.notFound },
+];
+
+/**
+ * One member's attendance across past events (E5). A malformed ID, a missing
+ * member and a member of another org all answer `not_found`, with no data.
+ */
+export async function getMemberAttendanceHistoryAction(
+  orgId: string,
+  memberId: string
+): Promise<ActionResult<MemberHistory, AttendanceActionError>> {
+  if (!isUuid(orgId) || !isUuid(memberId)) return fail("not_found", HISTORY_MESSAGES.notFound);
+
+  return withOrgCaller<MemberHistory, AttendanceActionError>(
+    orgId,
+    { name: "getMemberAttendanceHistoryAction", unexpected: HISTORY_MESSAGES.loadFailed },
+    async ({ supabase }) => {
+      const { data, error } = await supabase.rpc("get_member_attendance_history", {
+        target_member: memberId,
+      });
+      if (error) {
+        return rpcFailure(
+          "get_member_attendance_history",
+          error,
+          HISTORY_ERRORS,
+          HISTORY_MESSAGES.loadFailed
+        );
+      }
+
+      // An officer of two orgs must not read a member through the wrong one
+      const memberOrg = (data as { org_id?: unknown } | null)?.org_id;
+      if (memberOrg !== orgId) return fail("not_found", HISTORY_MESSAGES.notFound);
+
+      const history = parseHistory(data);
+      if (!history) {
+        console.error("getMemberAttendanceHistoryAction: unexpected response shape");
+        return fail("failed", HISTORY_MESSAGES.loadFailed);
+      }
+      return ok(history);
     }
   );
 }
