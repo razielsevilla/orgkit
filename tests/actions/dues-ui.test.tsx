@@ -85,6 +85,19 @@ describe("Dues Empty State & Skeleton", () => {
     const html = await render(createElement(DuesSkeleton, { rowCount: 3 }));
     expect(html).toContain("orgkit-skeleton");
   });
+
+  it("renders DuesHeader with counts and action button", async () => {
+    const html = await render(
+      createElement(DuesHeader, {
+        totalCount: 3,
+        openCount: 2,
+        onCreatePeriod: () => {},
+      })
+    );
+    expect(html).toContain("Dues");
+    expect(html).toContain("3 periods • 2 open");
+    expect(html).toContain("New period");
+  });
 });
 
 describe("Dues Formatting Helpers", () => {

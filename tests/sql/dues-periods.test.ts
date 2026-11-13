@@ -74,6 +74,20 @@ describe("dues_periods RLS and table isolation", () => {
       db.query(`select * from public.dues_periods where id = $1`, [periodId])
     );
     assert.equal(orgBRes.rows.length, 0, "Officer of Org B should see 0 rows");
+
+    // Create a period in Org B and verify officer of Org A cannot read it
+    const resB = await as("authenticated", adminB, () =>
+      db.query<{ create_dues_period: string }>(
+        `select public.create_dues_period($1, $2, $3, $4)`,
+        [orgB, "Dues Org B", 350.0, "2026-12-31"]
+      )
+    );
+    const periodBId = resB.rows[0].create_dues_period;
+
+    const orgAReadBRes = await as("authenticated", officerA, () =>
+      db.query(`select * from public.dues_periods where id = $1`, [periodBId])
+    );
+    assert.equal(orgAReadBRes.rows.length, 0, "Officer of Org A should see 0 rows from Org B");
   });
 
   it("direct insert, update, or delete via client table access is refused", async () => {
