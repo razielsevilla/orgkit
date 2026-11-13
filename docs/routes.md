@@ -50,7 +50,7 @@ layout but is not part of the URL.
 | `/workspace/:id` | Officer of that org | **Home**: workspace landing | `(workspace)/workspace/[id]/page.tsx` |
 | `/workspace/:id/members` | Officer of that org | **Members**: view and search roster. Admins also get **Import** (a CSV of people to invite, R3) and an **Invited** view. These are a dialog and a tab on this page, not separate URLs; the CSV upload goes through a Server Action, so `experimental.serverActions.bodySizeLimit` is set in `next.config.ts` | `(workspace)/workspace/[id]/members/page.tsx` |
 | `/workspace/:id/events` | Officer of that org | **Events**: upcoming and past events with Scheduled / Cancelled status. Create, edit and cancel are dialogs on this page. Times are shown in the viewer's local time | `(workspace)/workspace/[id]/events/page.tsx` |
-| `/workspace/:id/events/:eventId` | Officer of that org | **Event**: one event's details, with Edit and Cancel. A malformed or unknown event ID, or one from another org, shows the "We can't find that page" card | `(workspace)/workspace/[id]/events/[eventId]/page.tsx` |
+| `/workspace/:id/events/:eventId` | Officer of that org | **Event**: one event's details, with Edit and Cancel, and the live attendance list: who is present (name, QR or Manual, time) and "N of M present", refreshed every 5 seconds, with search-to-add and a confirmed remove. A cancelled event's list is read-only; an ended event's can still be corrected. A malformed or unknown event ID, or one from another org, shows the "We can't find that page" card | `(workspace)/workspace/[id]/events/[eventId]/page.tsx` |
 | `/workspace/:id/events/:eventId/checkin` | Officer of that org | **Check-in**: a full-screen view with a QR that rotates every 30 seconds, the event title, a live count and Open / Close check-in. A cancelled event, or one that ended over an hour ago, can't be opened and the screen says why. Same "We can't find that page" card as the event page | `(workspace)/workspace/[id]/events/[eventId]/checkin/page.tsx` |
 | `/workspace/:id/officers` | Officer of that org | **Invite**: officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
 | `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | **Join**: manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
@@ -196,6 +196,15 @@ message. An expired or tampered token, a closed window or a cancelled event show
 the "link has expired or is closed" card. Rate limited per device
 (`CHECKIN_ATTEMPTS_PER_MINUTE`).
 
+**Manual attendance**
+On the event page an officer watches the list fill in (it polls every 5 seconds, no
+reload). To fix it by hand they search the roster, press "Add member" and the
+member appears as Manual with the officer recorded; or they remove a row after
+confirming. Both update the screen first and roll back with an inline error if
+the server refuses. Only active members can be added, and adding someone who is
+already present (another officer, or a QR scan, got there first) never makes a
+duplicate: the list just refreshes. A cancelled event is read-only.
+
 **Sign out**
 The `signOut` action ends the session and goes to `/signin`.
 
@@ -235,6 +244,7 @@ Not URLs, but how pages change data.
 | `(workspace)/actions.ts` | `createWorkspace`, plus readers `getOrganizationById`, `getOfficerDefaultWorkspace`, `getCurrentOfficer`, `isOrgAdmin` |
 | `(workspace)/officers-actions.ts` | `getWorkspaceOfficers`, `createOfficerInvite`, `revokeOfficerInvite`, `updateOfficerRole`, `removeWorkspaceOfficer` |
 | `(workspace)/members-actions.ts` | `getWorkspaceMembers`, `confirmMemberAction` |
+| `(workspace)/attendance-actions.ts` | `getEventAttendanceAction`, `searchAttendeeCandidatesAction`, `addAttendanceAction`, `removeAttendanceAction` |
 | `(workspace)/events-actions.ts` | `getWorkspaceEvents`, `getWorkspaceEvent`, `createEventAction`, `updateEventAction`, `cancelEventAction`, `setCheckinOpenAction`, `getCheckinTokenAction` |
 | `(workspace)/member-invites-actions.ts` | R3, admin only: `parseRosterCsv`, `previewMemberInvites`, `importMemberInvites`, `getMemberInvites` |
 | `(workspace)/workspace/[id]/members/join/actions.ts` | `setJoinLink` |

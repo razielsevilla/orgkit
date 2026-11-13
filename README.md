@@ -6,7 +6,8 @@ with recorded consent.
 
 Built with Next.js (App Router), React, TypeScript and Supabase (Postgres, Auth
 with Google). This is the EP-1 foundation: accounts, org setup, officer roles,
-member join. Roster, attendance, dues and handover come in later epics.
+member join, roster, events with QR check-in and a live attendance list. Dues and
+handover come in later epics.
 
 > This project uses a Next.js version with breaking changes. Read
 > [AGENTS.md](AGENTS.md) and the guides in `node_modules/next/dist/docs/`
