@@ -26,13 +26,15 @@ export function DuesHeader({
         flexWrap: "wrap",
         gap: 16,
         width: "100%",
-        marginBottom: 20,
+        marginBottom: 24,
       }}
     >
       <div>
         <h1
+          tabIndex={-1}
           style={{
-            fontSize: "clamp(24px, 2.5vw, 32px)",
+            outline: "none",
+            fontSize: "clamp(26px, 2.6vw, 34px)",
             fontWeight: 800,
             color: "var(--color-ink)",
             letterSpacing: "-0.025em",
@@ -44,9 +46,10 @@ export function DuesHeader({
         </h1>
         <p
           style={{
-            fontSize: 13.5,
+            margin: "6px 0 0 0",
+            fontSize: 14,
             color: "var(--color-muted)",
-            margin: "4px 0 0",
+            lineHeight: 1.4,
           }}
         >
           {summaryText}
@@ -56,15 +59,16 @@ export function DuesHeader({
       <button
         type="button"
         onClick={onCreatePeriod}
+        className="orgkit-btn-accent"
         style={{
           display: "inline-flex",
           alignItems: "center",
-          gap: 6,
-          height: 38,
-          padding: "0 18px",
+          gap: 8,
+          minHeight: 42,
+          padding: "10px 20px",
           borderRadius: 9999,
           backgroundColor: "var(--color-accent)",
-          color: "var(--color-surface)",
+          color: "#FFFFFF",
           fontSize: 13.5,
           fontWeight: 600,
           border: "none",

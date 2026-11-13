@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
 import { FieldError } from "@/src/components/ui/field-error";
@@ -179,7 +179,7 @@ function DuesPeriodDialogForm({
             >
               <AlertCircle size={16} style={{ flexShrink: 0, marginTop: 2 }} />
               <span>
-                Payments already exist for this period. Changing the amount will not change those payments' recorded amounts.
+                Payments already exist for this period. Changing the amount will not change those payments&apos; recorded amounts.
               </span>
             </div>
           )}

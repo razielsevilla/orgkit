@@ -30,16 +30,27 @@ export function DuesSkeleton({ rowCount = 4 }: { rowCount?: number }) {
   return (
     <div
       style={{
+        height: "100%",
+        overflowY: "auto",
+        padding: "36px clamp(16px, 4vw, 36px) 60px clamp(16px, 4vw, 36px)",
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
-        gap: 20,
+        alignItems: "center",
         width: "100%",
-        maxWidth: 1040,
-        margin: "0 auto",
-        padding: "clamp(16px, 2.5vw, 32px)",
-        boxSizing: "border-box",
       }}
     >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+          width: "100%",
+          maxWidth: 960,
+          margin: "0 auto",
+          boxSizing: "border-box",
+        }}
+      >
       {/* Header skeleton */}
       <div
         style={{
@@ -108,6 +119,7 @@ export function DuesSkeleton({ rowCount = 4 }: { rowCount?: number }) {
         ))}
       </div>
     </div>
+  </div>
   );
 }
 

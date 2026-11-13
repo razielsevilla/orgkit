@@ -142,9 +142,13 @@ export function DuesClient({ rawId, initialPeriods }: DuesClientProps) {
       `}</style>
 
       <div
+        className="orgkit-dues-shell"
         style={{
           width: "100%",
-          maxWidth: 1040,
+          maxWidth: 960,
+          margin: "0 auto",
+          position: "relative",
+          animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
           display: "flex",
           flexDirection: "column",
         }}

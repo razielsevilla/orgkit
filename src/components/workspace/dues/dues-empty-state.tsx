@@ -9,20 +9,20 @@ export function DuesEmptyState({ onCreatePeriod }: DuesEmptyStateProps) {
   return (
     <div
       style={{
+        position: "relative",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        padding: "64px 24px",
+        padding: "clamp(48px, 6vw, 72px) clamp(24px, 4vw, 48px)",
         textAlign: "center",
         backgroundColor: "var(--color-surface)",
         borderRadius: 24,
         border: "1px solid var(--color-line)",
         boxShadow: "0 20px 50px rgba(24, 24, 27, 0.04)",
-        maxWidth: 600,
-        margin: "24px auto",
         width: "100%",
         boxSizing: "border-box",
+        overflow: "hidden",
       }}
     >
       <div
