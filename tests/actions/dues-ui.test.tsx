@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "../../src/app/(workspace)/dues-actions";
 
 // Mock Dialog components so they render inline in SSR stream
 vi.mock("@/src/components/ui/dialog", () => ({

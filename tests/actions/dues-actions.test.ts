@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { validateDuesPeriodInput } from "@/src/lib/dues/dues-validation";
+import { validateDuesPeriodInput } from "../../src/lib/dues/dues-validation";
 
 interface FakeDuesPeriod {
   id: string;
