@@ -51,39 +51,44 @@ beforeEach(() => {
   pathname = `/workspace/${ORG}`;
 });
 
-describe("workspace frame navigation for Ticket R1", () => {
-  it("shows Home, Members, Join and Invite to an admin", async () => {
+describe("workspace frame navigation for Ticket R1 & P1", () => {
+  it("shows Home, Members, Dues, Join and Invite to an admin", async () => {
     const html = await render(data(true));
     expect(navHrefs(html)).toEqual([
       `/workspace/${ORG}`,
       `/workspace/${ORG}/members`,
+      `/workspace/${ORG}/dues`,
       `/workspace/${ORG}/members/join`,
       `/workspace/${ORG}/officers`,
     ]);
-    for (const label of ["Home", "Members", "Join", "Invite"]) {
+    for (const label of ["Home", "Members", "Dues", "Join", "Invite"]) {
       expect(html).toContain(`<span>${label}</span>`);
     }
   });
 
-  it("shows Members to regular officers, but hides Join", async () => {
+  it("shows Members and Dues to regular officers, but hides Join", async () => {
     const html = await render(data(false));
     expect(html).toContain("<span>Home</span>");
     expect(html).toContain("<span>Members</span>");
+    expect(html).toContain("<span>Dues</span>");
     expect(html).toContain("<span>Invite</span>");
     expect(html).not.toContain("<span>Join</span>");
     expect(html).toContain(`/workspace/${ORG}/members`);
+    expect(html).toContain(`/workspace/${ORG}/dues`);
     expect(html).not.toContain("/members/join");
   });
 
-  it("has no 'Soon' placeholders for Members", async () => {
+  it("has no 'Soon' placeholders for Members or Dues", async () => {
     const html = await render(data(true));
     expect(html).not.toMatch(/Soon/);
     expect(html).toContain("<span>Members</span>");
+    expect(html).toContain("<span>Dues</span>");
   });
 
   it.each([
     [`/workspace/${ORG}`, "Home"],
     [`/workspace/${ORG}/members`, "Members"],
+    [`/workspace/${ORG}/dues`, "Dues"],
     [`/workspace/${ORG}/officers`, "Invite"],
     [`/workspace/${ORG}/members/join`, "Join"],
   ])("highlights %s as active when on %s", async (path, label) => {

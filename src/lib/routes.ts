@@ -31,6 +31,10 @@ export function membersPath(orgId: string): string {
   return `${workspacePath(orgId)}/members`;
 }
 
+export function duesPath(orgId: string): string {
+  return `${workspacePath(orgId)}/dues`;
+}
+
 /** The admin-only route that streams the roster as a CSV download (POST) */
 export function membersExportPath(orgId: string): string {
   return `${membersPath(orgId)}/export`;
@@ -111,6 +115,7 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/workspace/new",
   "/workspace/:id",
   "/workspace/:id/members",
+  "/workspace/:id/dues",
   "/workspace/:id/officers",
   "/workspace/:id/members/join",
   "/workspace/:id/members/export",
