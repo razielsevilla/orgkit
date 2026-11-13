@@ -17,6 +17,7 @@ interface MemberListProps {
   reactivatingIds: ReadonlySet<string>;
   onConfirm: (member: WorkspaceMember) => void;
   onEdit: (member: WorkspaceMember) => void;
+  onViewHistory: (member: WorkspaceMember) => void;
   onDeactivate: (member: WorkspaceMember) => void;
   onReactivate: (member: WorkspaceMember) => void;
 }
@@ -33,6 +34,7 @@ export function MemberList({
   reactivatingIds,
   onConfirm,
   onEdit,
+  onViewHistory,
   onDeactivate,
   onReactivate,
 }: MemberListProps) {
@@ -46,6 +48,7 @@ export function MemberList({
             members={members}
             onConfirm={onConfirm}
             onEdit={onEdit}
+            onViewHistory={onViewHistory}
             onDeactivate={onDeactivate}
             onReactivate={onReactivate}
             confirmingIds={confirmingIds}
@@ -65,6 +68,7 @@ export function MemberList({
               member={member}
               onConfirm={onConfirm}
               onEdit={onEdit}
+              onViewHistory={onViewHistory}
               onDeactivate={onDeactivate}
               onReactivate={onReactivate}
               isConfirming={confirmingIds.has(member.id)}

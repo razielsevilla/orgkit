@@ -29,6 +29,10 @@ const MemberDeactivateDialog = dynamic(
   () => import("./member-deactivate-dialog").then((m) => m.MemberDeactivateDialog),
   { ssr: false }
 );
+const MemberAttendanceDialog = dynamic(
+  () => import("./member-attendance-dialog").then((m) => m.MemberAttendanceDialog),
+  { ssr: false }
+);
 const ExportDialog = dynamic(
   () => import("./export/export-dialog").then((m) => m.ExportDialog),
   { ssr: false }
@@ -67,6 +71,7 @@ export function MembersClient({
   const [view, setView] = useState<MembersView>("members");
   const [editTarget, setEditTarget] = useState<WorkspaceMember | null>(null);
   const [deactivateTarget, setDeactivateTarget] = useState<WorkspaceMember | null>(null);
+  const [historyTarget, setHistoryTarget] = useState<WorkspaceMember | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
 
@@ -137,6 +142,7 @@ export function MembersClient({
             reactivatingIds={roster.reactivatingIds}
             onConfirm={roster.confirm}
             onEdit={setEditTarget}
+            onViewHistory={setHistoryTarget}
             onDeactivate={setDeactivateTarget}
             onReactivate={roster.reactivate}
           />
@@ -183,6 +189,16 @@ export function MembersClient({
           onClose={closeDeactivate}
           onConfirm={roster.deactivate}
         />
+
+        {/* Read-only, so the roster never changes under it; the dialog returns focus to its own button */}
+        {historyTarget && (
+          <MemberAttendanceDialog
+            key={historyTarget.id}
+            orgId={rawId}
+            member={historyTarget}
+            onClose={() => setHistoryTarget(null)}
+          />
+        )}
 
         <MembersHeader
           totalCount={data.totalCount}
