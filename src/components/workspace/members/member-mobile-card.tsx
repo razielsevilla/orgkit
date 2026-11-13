@@ -11,6 +11,7 @@ interface MemberMobileCardProps {
   member: WorkspaceMember;
   onConfirm: (member: WorkspaceMember) => void;
   onEdit: (member: WorkspaceMember) => void;
+  onViewHistory: (member: WorkspaceMember) => void;
   onDeactivate: (member: WorkspaceMember) => void;
   onReactivate: (member: WorkspaceMember) => void;
   isConfirming: boolean;
@@ -48,6 +49,7 @@ export function MemberMobileCard({
   member,
   onConfirm,
   onEdit,
+  onViewHistory,
   onDeactivate,
   onReactivate,
   isConfirming,
@@ -201,6 +203,7 @@ export function MemberMobileCard({
           member={member}
           onConfirm={onConfirm}
           onEdit={onEdit}
+          onViewHistory={onViewHistory}
           onDeactivate={onDeactivate}
           onReactivate={onReactivate}
           isConfirming={isConfirming}

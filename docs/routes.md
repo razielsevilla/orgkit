@@ -205,6 +205,18 @@ the server refuses. Only active members can be added, and adding someone who is
 already present (another officer, or a QR scan, got there first) never makes a
 duplicate: the list just refreshes. A cancelled event is read-only.
 
+**Member attendance history**
+On the members page, each row (any status, including inactive) has an
+"Attendance history" icon button that opens a dialog, loaded with `next/dynamic`
+so it adds no URL and no cost until used. It shows the member's past events,
+newest first, each with date, title, Present or Absent (and QR or Manual when
+present) or Cancelled, and a summary "Attended X of Y events". Y counts only
+events that ended after the member joined and were not cancelled, so a late
+joiner is not penalised. A member with nothing to count sees "No events yet",
+never "0 of 0". A malformed ID, a missing member and a member of another org all
+show the same "We couldn't find that member" with no data; a failed load shows an
+inline error with "Try again".
+
 **Sign out**
 The `signOut` action ends the session and goes to `/signin`.
 
@@ -244,7 +256,7 @@ Not URLs, but how pages change data.
 | `(workspace)/actions.ts` | `createWorkspace`, plus readers `getOrganizationById`, `getOfficerDefaultWorkspace`, `getCurrentOfficer`, `isOrgAdmin` |
 | `(workspace)/officers-actions.ts` | `getWorkspaceOfficers`, `createOfficerInvite`, `revokeOfficerInvite`, `updateOfficerRole`, `removeWorkspaceOfficer` |
 | `(workspace)/members-actions.ts` | `getWorkspaceMembers`, `confirmMemberAction` |
-| `(workspace)/attendance-actions.ts` | `getEventAttendanceAction`, `searchAttendeeCandidatesAction`, `addAttendanceAction`, `removeAttendanceAction` |
+| `(workspace)/attendance-actions.ts` | `getEventAttendanceAction`, `searchAttendeeCandidatesAction`, `addAttendanceAction`, `removeAttendanceAction`, `getMemberAttendanceHistoryAction` |
 | `(workspace)/events-actions.ts` | `getWorkspaceEvents`, `getWorkspaceEvent`, `createEventAction`, `updateEventAction`, `cancelEventAction`, `setCheckinOpenAction`, `getCheckinTokenAction` |
 | `(workspace)/member-invites-actions.ts` | R3, admin only: `parseRosterCsv`, `previewMemberInvites`, `importMemberInvites`, `getMemberInvites` |
 | `(workspace)/workspace/[id]/members/join/actions.ts` | `setJoinLink` |
