@@ -35,8 +35,19 @@ function Detail({ label, children }: { label: string; children: React.ReactNode 
   );
 }
 
-/** One event's page: its details, with Edit and Cancel while it is scheduled */
-export function EventDetail({ rawId, event }: { rawId: string; event: WorkspaceEvent }) {
+/**
+ * One event's page: its details, with Edit and Cancel while it is scheduled, and
+ * the attendance list (passed in, so the page can stream it behind its own skeleton)
+ */
+export function EventDetail({
+  rawId,
+  event,
+  attendance,
+}: {
+  rawId: string;
+  event: WorkspaceEvent;
+  attendance?: React.ReactNode;
+}) {
   const [editOpen, setEditOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const cancelled = event.status === "cancelled";
@@ -204,6 +215,8 @@ export function EventDetail({ rawId, event }: { rawId: string; event: WorkspaceE
             This event is cancelled. It stays in the list, and nobody can check in.
           </p>
         )}
+
+        {attendance}
       </div>
     </div>
   );
