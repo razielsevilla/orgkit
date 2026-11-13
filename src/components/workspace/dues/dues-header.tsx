@@ -56,38 +56,40 @@ export function DuesHeader({
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={onCreatePeriod}
-        className="orgkit-btn-accent"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          minHeight: 42,
-          padding: "10px 20px",
-          borderRadius: 9999,
-          backgroundColor: "var(--color-accent)",
-          color: "#FFFFFF",
-          fontSize: 13.5,
-          fontWeight: 600,
-          border: "none",
-          cursor: "pointer",
-          boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
-          transition: "background-color 0.15s ease, transform 0.15s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--color-accent-strong)";
-          e.currentTarget.style.transform = "translateY(-1px)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--color-accent)";
-          e.currentTarget.style.transform = "translateY(0)";
-        }}
-      >
-        <Plus size={16} strokeWidth={2.2} />
-        New period
-      </button>
+      {totalCount > 0 && (
+        <button
+          type="button"
+          onClick={onCreatePeriod}
+          className="orgkit-btn-accent"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 8,
+            minHeight: 42,
+            padding: "10px 20px",
+            borderRadius: 9999,
+            backgroundColor: "var(--color-accent)",
+            color: "#FFFFFF",
+            fontSize: 13.5,
+            fontWeight: 600,
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
+            transition: "background-color 0.15s ease, transform 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = "var(--color-accent-strong)";
+            e.currentTarget.style.transform = "translateY(-1px)";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "var(--color-accent)";
+            e.currentTarget.style.transform = "translateY(0)";
+          }}
+        >
+          <Plus size={16} strokeWidth={2.2} />
+          New period
+        </button>
+      )}
     </div>
   );
 }

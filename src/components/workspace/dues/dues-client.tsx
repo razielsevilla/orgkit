@@ -14,6 +14,7 @@ import { DuesMobileCard } from "./dues-mobile-card";
 import { DuesEmptyState } from "./dues-empty-state";
 import { DuesPeriodDialog } from "./dues-period-dialog";
 import { ClosePeriodDialog } from "./close-period-dialog";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 
 interface DuesClientProps {
   rawId: string;
@@ -180,30 +181,49 @@ export function DuesClient({ rawId, initialPeriods }: DuesClientProps) {
           </div>
         )}
 
-        {periods.length === 0 ? (
-          <DuesEmptyState onCreatePeriod={() => setIsNewDialogOpen(true)} />
-        ) : (
-          <>
-            <div className="orgkit-dues-desktop">
-              <DuesTable
-                periods={periods}
-                onEdit={(p) => setEditingPeriod(p)}
-                onClosePeriod={(p) => setClosingPeriod(p)}
-              />
-            </div>
+        {/* ── Cards / Content Container with Floating Icons Behind ── */}
+        <div style={{ position: "relative", width: "100%" }}>
+          {/* Floating Icons Decor positioned behind the cards in initial layout */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              inset: 0,
+              pointerEvents: "none",
+              zIndex: 0,
+            }}
+          >
+            <FloatingIconsDecor />
+          </div>
 
-            <div className="orgkit-dues-mobile">
-              {periods.map((period) => (
-                <DuesMobileCard
-                  key={period.id}
-                  period={period}
-                  onEdit={(p) => setEditingPeriod(p)}
-                  onClosePeriod={(p) => setClosingPeriod(p)}
-                />
-              ))}
-            </div>
-          </>
-        )}
+          {/* Foreground Content */}
+          <div style={{ position: "relative", zIndex: 2, width: "100%" }}>
+            {periods.length === 0 ? (
+              <DuesEmptyState onCreatePeriod={() => setIsNewDialogOpen(true)} />
+            ) : (
+              <>
+                <div className="orgkit-dues-desktop">
+                  <DuesTable
+                    periods={periods}
+                    onEdit={(p) => setEditingPeriod(p)}
+                    onClosePeriod={(p) => setClosingPeriod(p)}
+                  />
+                </div>
+
+                <div className="orgkit-dues-mobile">
+                  {periods.map((period) => (
+                    <DuesMobileCard
+                      key={period.id}
+                      period={period}
+                      onEdit={(p) => setEditingPeriod(p)}
+                      onClosePeriod={(p) => setClosingPeriod(p)}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* New Period Dialog */}

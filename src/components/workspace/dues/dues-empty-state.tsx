@@ -25,6 +25,33 @@ export function DuesEmptyState({ onCreatePeriod }: DuesEmptyStateProps) {
         overflow: "hidden",
       }}
     >
+      {/* Decorative Geometric Background Circles */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          top: -60,
+          left: -60,
+          width: 220,
+          height: 220,
+          borderRadius: "50%",
+          backgroundColor: "color-mix(in srgb, var(--color-accent) 4%, transparent)",
+          pointerEvents: "none",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          bottom: -80,
+          right: -80,
+          width: 260,
+          height: 260,
+          borderRadius: "50%",
+          backgroundColor: "color-mix(in srgb, var(--color-accent) 5%, transparent)",
+          pointerEvents: "none",
+        }}
+      />
       <div
         style={{
           width: 56,

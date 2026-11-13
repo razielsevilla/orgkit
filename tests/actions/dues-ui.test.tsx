@@ -86,7 +86,7 @@ describe("Dues Empty State & Skeleton", () => {
     expect(html).toContain("orgkit-skeleton");
   });
 
-  it("renders DuesHeader with counts and action button", async () => {
+  it("renders DuesHeader with counts and action button when periods exist", async () => {
     const html = await render(
       createElement(DuesHeader, {
         totalCount: 3,
@@ -97,6 +97,19 @@ describe("Dues Empty State & Skeleton", () => {
     expect(html).toContain("Dues");
     expect(html).toContain("3 periods • 2 open");
     expect(html).toContain("New period");
+  });
+
+  it("hides top New period button in DuesHeader when there are no dues periods", async () => {
+    const html = await render(
+      createElement(DuesHeader, {
+        totalCount: 0,
+        openCount: 0,
+        onCreatePeriod: () => {},
+      })
+    );
+    expect(html).toContain("Dues");
+    expect(html).toContain("No dues periods yet");
+    expect(html).not.toContain("New period");
   });
 });
 
@@ -212,7 +225,7 @@ describe("Dues Dialogs", () => {
 });
 
 describe("DuesClient", () => {
-  it("renders empty state when there are no dues periods", async () => {
+  it("renders empty state with floating icons and only in-card New period button", async () => {
     const html = await render(
       createElement(DuesClient, {
         rawId: "org-1",
@@ -221,9 +234,13 @@ describe("DuesClient", () => {
     );
     expect(html).toContain("Dues");
     expect(html).toContain("No dues periods yet");
+    expect(html).toContain("orgkit-floating-decor");
+    // Button exists once inside empty state card, not twice (header button is hidden)
+    const matches = html.match(/New period/g);
+    expect(matches).toHaveLength(1);
   });
 
-  it("renders both desktop table and mobile card markup for responsive viewports", async () => {
+  it("renders top New period button in header when periods exist", async () => {
     const html = await render(
       createElement(DuesClient, {
         rawId: "org-1",
@@ -234,5 +251,6 @@ describe("DuesClient", () => {
     expect(html).toContain("orgkit-dues-mobile");
     expect(html).toContain("1st Sem Membership Dues");
     expect(html).toContain("1 period • 1 open");
+    expect(html).toContain("New period");
   });
 });
