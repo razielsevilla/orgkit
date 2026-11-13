@@ -207,3 +207,4 @@ $$;
 
 revoke all on function public.close_dues_period(uuid) from public;
 grant execute on function public.close_dues_period(uuid) to authenticated;
+

@@ -4,3 +4,4 @@ import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspa
 export default function DuesLoading() {
   return <WorkspaceContentLoader />;
 }
+

@@ -100,3 +100,4 @@ export function DuesEmptyState({ onCreatePeriod }: DuesEmptyStateProps) {
     </div>
   );
 }
+

@@ -211,3 +211,4 @@ export function DuesTable({ periods, onEdit, onClosePeriod }: DuesTableProps) {
     </div>
   );
 }
+

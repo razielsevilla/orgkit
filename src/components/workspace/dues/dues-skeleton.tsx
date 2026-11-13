@@ -110,3 +110,4 @@ export function DuesSkeleton({ rowCount = 4 }: { rowCount?: number }) {
     </div>
   );
 }
+
