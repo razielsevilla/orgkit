@@ -83,7 +83,6 @@ describe("Dues Dashboard UI Components", () => {
           periods: mockPeriods,
           selectedPeriodId: "p-1",
           onSelectPeriod: vi.fn(),
-          onCreatePeriod: vi.fn(),
         })
       );
 
@@ -91,7 +90,6 @@ describe("Dues Dashboard UI Components", () => {
       expect(html).toContain("2nd Sem Membership Dues (Closed)");
       expect(html).toContain("₱250.00 / member");
       expect(html).toContain("Due 2026-12-15");
-      expect(html).toContain("New period");
     });
   });
 
