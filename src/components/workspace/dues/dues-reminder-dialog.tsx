@@ -22,6 +22,8 @@ import type {
 import { DuesReminderStatsBadge } from "./dues-reminder-stats-badge";
 import { DuesReminderPreviewMessage } from "./dues-reminder-preview-message";
 import { DuesReminderSkeleton } from "./dues-reminder-skeleton";
+import { DuesReminderProgressBar } from "./dues-reminder-progress";
+import { DuesReminderFailureList } from "./dues-reminder-failure-list";
 
 export interface DuesReminderDialogProps {
   isOpen: boolean;
@@ -64,6 +66,7 @@ function DuesReminderDialogContent({
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
   const [preview, setPreview] = useState<ReminderPreviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<SendReminderSummary | null>(null);
@@ -108,6 +111,27 @@ function DuesReminderDialogContent({
       }
     } else {
       setError(res.errorMessage || "Failed to send reminders.");
+    }
+  };
+
+  const handleRetry = async (failedMemberIds: string[]) => {
+    if (isRetrying || failedMemberIds.length === 0) return;
+    setIsRetrying(true);
+    setError(null);
+
+    const res = await retryFailedRemindersAction(orgId, period.id, failedMemberIds);
+    setIsRetrying(false);
+
+    if (res.success && res.data) {
+      setSummary(res.data);
+      if (onRemindersSent) {
+        onRemindersSent(res.data);
+      }
+      if (res.data.failed_count === 0) {
+        setTimeout(() => onClose(), 1200);
+      }
+    } else {
+      setError(res.errorMessage || "Failed to retry sending reminders.");
     }
   };
 
@@ -194,8 +218,25 @@ function DuesReminderDialogContent({
         {/* Loading Skeleton */}
         {isLoading && <DuesReminderSkeleton />}
 
+        {/* In-Flight Sending Progress */}
+        {(isSending || isRetrying) && (
+          <DuesReminderProgressBar
+            total={summary?.failures.length || preview?.eligible_count}
+            label={isRetrying ? "Retrying failed reminders..." : "Sending payment reminders..."}
+          />
+        )}
+
+        {/* Partial Failure List with Selective Retry */}
+        {summary && summary.failures.length > 0 && !isSending && !isRetrying && (
+          <DuesReminderFailureList
+            failures={summary.failures}
+            onRetry={handleRetry}
+            isRetrying={isRetrying}
+          />
+        )}
+
         {/* Preview State */}
-        {!isLoading && preview && (
+        {!isLoading && !isSending && !isRetrying && (!summary || summary.failures.length === 0) && preview && (
           <>
             <DuesReminderStatsBadge
               eligibleCount={preview.eligible_count}
@@ -218,23 +259,25 @@ function DuesReminderDialogContent({
       </DialogBody>
 
       <DialogFooter>
-        <DialogButton onClick={onClose} disabled={isSending}>
-          Cancel
+        <DialogButton onClick={onClose} disabled={isSending || isRetrying}>
+          {summary && summary.failures.length > 0 ? "Close" : "Cancel"}
         </DialogButton>
-        <DialogButton
-          variant="primary"
-          onClick={handleSend}
-          disabled={!canSend}
-        >
-          {isSending ? (
-            "Sending..."
-          ) : (
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              <Send size={14} />
-              <span>Send reminders</span>
-            </span>
-          )}
-        </DialogButton>
+        {(!summary || summary.failures.length === 0) && (
+          <DialogButton
+            variant="primary"
+            onClick={handleSend}
+            disabled={!canSend || isRetrying}
+          >
+            {isSending ? (
+              "Sending..."
+            ) : (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <Send size={14} />
+                <span>Send reminders</span>
+              </span>
+            )}
+          </DialogButton>
+        )}
       </DialogFooter>
     </Dialog>
   );
