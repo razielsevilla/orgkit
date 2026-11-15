@@ -23,7 +23,7 @@ export function DuesSummaryTiles({
     summary.expectedAmount
   );
 
-  const ringRadius = 27;
+  const ringRadius = 40;
   const ringCircumference = 2 * Math.PI * ringRadius;
   const ringOffset =
     ringCircumference * (1 - Math.min(Math.max(collectionRate, 0), 100) / 100);
@@ -109,8 +109,8 @@ export function DuesSummaryTiles({
             aria-label={`Collection progress: ${collectionRate}%`}
             style={{
               position: "relative",
-              width: 68,
-              height: 68,
+              width: 96,
+              height: 96,
               flexShrink: 0,
               display: "flex",
               alignItems: "center",
@@ -118,27 +118,27 @@ export function DuesSummaryTiles({
             }}
           >
             <svg
-              width={68}
-              height={68}
-              viewBox="0 0 68 68"
+              width={96}
+              height={96}
+              viewBox="0 0 96 96"
               style={{ transform: "rotate(-90deg)" }}
               aria-hidden="true"
             >
               <circle
-                cx={34}
-                cy={34}
+                cx={48}
+                cy={48}
                 r={ringRadius}
                 fill="transparent"
                 stroke="color-mix(in srgb, var(--color-accent) 16%, transparent)"
-                strokeWidth={6}
+                strokeWidth={8}
               />
               <circle
-                cx={34}
-                cy={34}
+                cx={48}
+                cy={48}
                 r={ringRadius}
                 fill="transparent"
                 stroke="var(--color-accent)"
-                strokeWidth={6}
+                strokeWidth={8}
                 strokeDasharray={ringCircumference}
                 strokeDashoffset={ringOffset}
                 strokeLinecap="round"
@@ -158,7 +158,7 @@ export function DuesSummaryTiles({
             >
               <span
                 style={{
-                  fontSize: 16,
+                  fontSize: 22,
                   fontWeight: 800,
                   color: "var(--color-ink)",
                   lineHeight: 1,
@@ -169,10 +169,10 @@ export function DuesSummaryTiles({
               </span>
               <span
                 style={{
-                  fontSize: 9.5,
+                  fontSize: 11,
                   fontWeight: 600,
                   color: "var(--color-muted)",
-                  marginTop: 3,
+                  marginTop: 4,
                   lineHeight: 1,
                 }}
               >
@@ -187,7 +187,7 @@ export function DuesSummaryTiles({
             aria-hidden="true"
             style={{
               width: 1,
-              height: 48,
+              height: 64,
               backgroundColor: "var(--color-line)",
               flexShrink: 0,
             }}
@@ -248,7 +248,7 @@ export function DuesSummaryTiles({
             aria-hidden="true"
             style={{
               width: 1,
-              height: 48,
+              height: 64,
               backgroundColor: "var(--color-line)",
               flexShrink: 0,
             }}

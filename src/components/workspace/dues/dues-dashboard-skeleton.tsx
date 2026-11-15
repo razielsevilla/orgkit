@@ -84,11 +84,11 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0, flex: "1 1 420px" }}>
-          <SkeletonBar width={68} height={68} radius={9999} />
+          <SkeletonBar width={96} height={96} radius={9999} />
           <div
             style={{
               width: 1,
-              height: 48,
+              height: 64,
               backgroundColor: "var(--color-line)",
               flexShrink: 0,
             }}
@@ -103,7 +103,7 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
           <div
             style={{
               width: 1,
-              height: 48,
+              height: 64,
               backgroundColor: "var(--color-line)",
               flexShrink: 0,
             }}
