@@ -72,14 +72,24 @@ export function DuesDashboardEmpty({
             onClick={onClearFilters}
             style={{
               marginTop: 14,
-              padding: "6px 14px",
-              borderRadius: 8,
+              padding: "8px 18px",
+              borderRadius: 9999,
               border: "1px solid var(--color-line)",
               backgroundColor: "var(--color-surface)",
               color: "var(--color-ink)",
-              fontSize: 12.5,
+              fontSize: 13,
               fontWeight: 600,
               cursor: "pointer",
+              boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(24, 24, 27, 0.08)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
             }}
           >
             Clear filters

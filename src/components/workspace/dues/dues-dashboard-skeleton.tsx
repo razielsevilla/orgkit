@@ -59,7 +59,7 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
           padding: "16px 20px",
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
-          borderRadius: 14,
+          borderRadius: 16,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -67,7 +67,7 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
           <SkeletonBar width={90} height={24} radius={9999} />
           <SkeletonBar width={120} height={18} />
         </div>
-        <SkeletonBar width={110} height={36} radius={8} />
+        <SkeletonBar width={110} height={38} radius={9999} />
       </div>
 
       {/* Collection Progress Banner Skeleton */}
@@ -79,7 +79,7 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
           padding: "20px 22px",
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
-          borderRadius: 14,
+          borderRadius: 16,
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -111,7 +111,7 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
               padding: "16px 18px",
               backgroundColor: "var(--color-surface)",
               border: "1px solid var(--color-line)",
-              borderRadius: 12,
+              borderRadius: 14,
               display: "flex",
               flexDirection: "column",
               gap: 12,
@@ -139,12 +139,12 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
         }}
       >
         <div style={{ display: "flex", gap: 8 }}>
-          <SkeletonBar width={60} height={34} radius={8} />
-          <SkeletonBar width={70} height={34} radius={8} />
-          <SkeletonBar width={100} height={34} radius={8} />
-          <SkeletonBar width={80} height={34} radius={8} />
+          <SkeletonBar width={60} height={36} radius={8} />
+          <SkeletonBar width={70} height={36} radius={8} />
+          <SkeletonBar width={100} height={36} radius={8} />
+          <SkeletonBar width={80} height={36} radius={8} />
         </div>
-        <SkeletonBar width={240} height={38} radius={8} />
+        <SkeletonBar width={240} height={40} radius={12} />
       </div>
 
       {/* Table Rows Skeleton */}
@@ -152,7 +152,7 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
         style={{
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
-          borderRadius: 14,
+          borderRadius: 16,
           overflow: "hidden",
         }}
       >

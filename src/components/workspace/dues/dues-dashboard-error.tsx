@@ -24,9 +24,9 @@ export function DuesDashboardError({
         justifyContent: "center",
         gap: 12,
         padding: "32px 24px",
-        backgroundColor: "color-mix(in srgb, var(--color-danger, #ef4444) 6%, var(--color-surface))",
-        border: "1px solid color-mix(in srgb, var(--color-danger, #ef4444) 25%, transparent)",
-        borderRadius: 14,
+        backgroundColor: "var(--color-danger-soft)",
+        border: "1px solid var(--color-danger-line)",
+        borderRadius: 16,
         textAlign: "center",
         width: "100%",
         maxWidth: 960,
@@ -38,11 +38,11 @@ export function DuesDashboardError({
           width: 44,
           height: 44,
           borderRadius: "50%",
-          backgroundColor: "color-mix(in srgb, var(--color-danger, #ef4444) 15%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--color-danger) 15%, transparent)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          color: "var(--color-danger-strong, #dc2626)",
+          color: "var(--color-danger-strong)",
         }}
       >
         <AlertCircle size={22} strokeWidth={2.2} />
@@ -84,7 +84,7 @@ export function DuesDashboardError({
             height: 38,
             padding: "0 18px",
             marginTop: 4,
-            borderRadius: 8,
+            borderRadius: 9999,
             backgroundColor: "var(--color-surface)",
             border: "1px solid var(--color-line)",
             color: "var(--color-ink)",
@@ -93,7 +93,19 @@ export function DuesDashboardError({
             cursor: isRetrying ? "not-allowed" : "pointer",
             opacity: isRetrying ? 0.6 : 1,
             transition: "all 0.15s ease",
-            boxShadow: "0 1px 2px rgba(0, 0, 0, 0.05)",
+            boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+          }}
+          onMouseEnter={(e) => {
+            if (!isRetrying) {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 4px 12px rgba(24, 24, 27, 0.08)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!isRetrying) {
+              e.currentTarget.style.transform = "none";
+              e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
+            }
           }}
         >
           <RefreshCw

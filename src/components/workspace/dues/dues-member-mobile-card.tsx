@@ -52,8 +52,8 @@ export function DuesMemberMobileCard({ member }: DuesMemberMobileCardProps) {
         padding: "14px 16px",
         backgroundColor: "var(--color-surface)",
         border: "1px solid var(--color-line)",
-        borderRadius: 12,
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
+        borderRadius: 14,
+        boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
         width: "100%",
         boxSizing: "border-box",
       }}
@@ -128,11 +128,11 @@ export function DuesMemberMobileCard({ member }: DuesMemberMobileCardProps) {
         <div
           style={{
             fontSize: 12,
-            padding: "8px 10px",
-            borderRadius: 8,
-            backgroundColor: "color-mix(in srgb, var(--color-danger, #ef4444) 8%, var(--color-surface))",
-            border: "1px solid color-mix(in srgb, var(--color-danger, #ef4444) 20%, transparent)",
-            color: "var(--color-danger-strong, #dc2626)",
+            padding: "8px 12px",
+            borderRadius: 10,
+            backgroundColor: "var(--color-danger-soft)",
+            border: "1px solid var(--color-danger-line)",
+            color: "var(--color-danger-strong)",
             lineHeight: 1.4,
           }}
         >
@@ -165,7 +165,7 @@ export function DuesMemberMobileCard({ member }: DuesMemberMobileCardProps) {
                   fontWeight: 600,
                   color: "var(--color-ink)",
                   backgroundColor: "color-mix(in srgb, var(--color-ink) 5%, transparent)",
-                  padding: "1px 5px",
+                  padding: "2px 6px",
                   borderRadius: 4,
                 }}
               >
@@ -179,17 +179,18 @@ export function DuesMemberMobileCard({ member }: DuesMemberMobileCardProps) {
                   display: "inline-flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  width: 22,
-                  height: 22,
+                  width: 24,
+                  height: 24,
                   padding: 0,
                   background: "transparent",
                   border: "none",
                   borderRadius: 4,
                   cursor: "pointer",
-                  color: copied ? "#10b981" : "var(--color-muted)",
+                  color: copied ? "var(--color-accent)" : "var(--color-muted)",
+                  transition: "color 0.15s ease",
                 }}
               >
-                {copied ? <Check size={12} /> : <Copy size={12} />}
+                {copied ? <Check size={12} strokeWidth={2.2} /> : <Copy size={12} strokeWidth={1.8} />}
               </button>
             </div>
           ) : (
