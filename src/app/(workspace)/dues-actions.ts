@@ -752,6 +752,57 @@ export async function getDuesReminderPreviewAction(
   );
 }
 
+/**
+ * Sends reminder emails to all eligible unpaid members for a dues period.
+ */
+export async function sendDuesRemindersAction(
+  orgId: string,
+  periodId: string
+): Promise<ActionResult<SendReminderSummary, DuesActionError>> {
+  const validation = validateSendReminders({ orgId, periodId });
+  if (!validation.isValid || !validation.data) {
+    return fail("invalid_input", validation.error ?? "Invalid send reminders parameters.");
+  }
+
+  const baseUrl = await getBaseUrl();
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "sendDuesRemindersAction",
+      unexpected: "We couldn't send the payment reminders. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { data, error } = await executeSendRemindersBatch({
+        supabase: caller.supabase,
+        periodId,
+        baseUrl,
+      });
+
+      if (error || !data) {
+        const msg = error?.message || "Failed to send payment reminders.";
+        if (msg.includes("closed period") || msg.includes("period_closed")) {
+          return fail("closed_period", "Reminders cannot be sent for a closed period.");
+        }
+        if (msg.includes("email provider") || msg.includes("RESEND_API_KEY")) {
+          return fail("no_email_provider", "No email provider is configured. Check your RESEND_API_KEY.");
+        }
+        if (msg.includes("period_not_found")) {
+          return fail("not_found", "Dues period not found.");
+        }
+        if (msg.includes("not_authorized")) {
+          return fail("not_authorized", "You are not authorized to send reminders for this organization.");
+        }
+        return fail("failed", msg);
+      }
+
+      revalidatePath(duesPath(orgId));
+      return ok(data);
+    }
+  );
+}
+
+
 
 
 
