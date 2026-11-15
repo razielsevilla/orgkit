@@ -21,6 +21,7 @@ import type {
 } from "@/src/lib/dues/dues-reminders-types";
 import { DuesReminderStatsBadge } from "./dues-reminder-stats-badge";
 import { DuesReminderPreviewMessage } from "./dues-reminder-preview-message";
+import { DuesReminderSkeleton } from "./dues-reminder-skeleton";
 
 export interface DuesReminderDialogProps {
   isOpen: boolean;
@@ -190,12 +191,8 @@ function DuesReminderDialogContent({
           </div>
         )}
 
-        {/* Loading Skeleton Placeholder */}
-        {isLoading && (
-          <div style={{ padding: "24px 0", textAlign: "center", color: "var(--color-muted)" }}>
-            Loading reminder recipient counts...
-          </div>
-        )}
+        {/* Loading Skeleton */}
+        {isLoading && <DuesReminderSkeleton />}
 
         {/* Preview State */}
         {!isLoading && preview && (
