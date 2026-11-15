@@ -7,6 +7,7 @@ import {
   ALLOWED_IMAGE_TYPES,
   type AllowedImageType,
   type DuesPayLanguage,
+  detectImageMimeType,
   isValidEmail,
   isValidReferenceNo,
   cleanReferenceNo,
@@ -122,10 +123,19 @@ export async function submitDuesPayment(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Verify genuine image bytes (prevents non-image files renamed to .png from being stored)
+    const genuineType = detectImageMimeType(buffer);
+    if (!genuineType) {
+      return {
+        status: "error",
+        screenshotError: messages.screenshotInvalidType,
+      };
+    }
+
     const { error: uploadError } = await supabase.storage
       .from("dues-screenshots")
       .upload(storagePath, buffer, {
-        contentType: file.type,
+        contentType: genuineType,
         upsert: false,
       });
 

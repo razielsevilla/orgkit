@@ -60,7 +60,9 @@ function createMockFormData(overrides: {
   fd.append("language", overrides.language ?? "en");
 
   if (overrides.file !== null) {
-    const defaultFile = overrides.file ?? new File(["fake-image-bytes"], "receipt.png", { type: "image/png" });
+    const pngMagic = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);
+    const defaultFile =
+      overrides.file ?? new File([pngMagic], "receipt.png", { type: "image/png" });
     fd.append("screenshot", defaultFile);
   }
 
@@ -133,6 +135,15 @@ describe("submitDuesPayment", () => {
     const resPdf = await submitDuesPayment(VALID_TOKEN, { status: "idle" }, fdPdf);
     expect(resPdf.status).toBe("error");
     expect(resPdf.screenshotError).toContain("JPEG, PNG, or WebP");
+    expect(state.uploadedFiles.length).toBe(0);
+
+    // File renamed to .png but containing plain text / non-image bytes
+    const fakePng = new File(["not an image, just text content pretending to be png"], "fake.png", { type: "image/png" });
+    const fdFake = createMockFormData({ file: fakePng });
+    const resFake = await submitDuesPayment(VALID_TOKEN, { status: "idle" }, fdFake);
+    expect(resFake.status).toBe("error");
+    expect(resFake.screenshotError).toContain("JPEG, PNG, or WebP");
+    expect(state.uploadedFiles.length).toBe(0);
   });
 
   it("returns inactive if dues period is closed or link is paused", async () => {

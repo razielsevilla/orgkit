@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   cleanReferenceNo,
+  detectImageMimeType,
   isValidEmail,
   isValidReferenceNo,
   isValidScreenshotFile,
@@ -81,5 +82,30 @@ describe("Dues Pay Validation Helpers", () => {
       isValidScreenshotFile({ size: 1024 * 500, type: "image/webp" }),
       { valid: true }
     );
+  });
+
+  it("detects genuine image magic bytes and rejects non-image files renamed to .png", () => {
+    // Genuine PNG bytes: 89 50 4E 47 0D 0A 1A 0A
+    const pngBuffer = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);
+    assert.equal(detectImageMimeType(pngBuffer), "image/png");
+
+    // Genuine JPEG bytes: FF D8 FF
+    const jpegBuffer = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01]);
+    assert.equal(detectImageMimeType(jpegBuffer), "image/jpeg");
+
+    // Genuine WebP bytes: RIFF....WEBP
+    const webpBuffer = Buffer.from([
+      0x52, 0x49, 0x46, 0x46, // RIFF
+      0x00, 0x00, 0x00, 0x00,
+      0x57, 0x45, 0x42, 0x50, // WEBP
+    ]);
+    assert.equal(detectImageMimeType(webpBuffer), "image/webp");
+
+    // File renamed to .png that is actually text / exe
+    const textFileAsPng = Buffer.from("Hello world, this is a plain text file pretending to be an image");
+    assert.equal(detectImageMimeType(textFileAsPng), null);
+
+    // Empty or short buffer
+    assert.equal(detectImageMimeType(Buffer.from([0x89, 0x50])), null);
   });
 });
