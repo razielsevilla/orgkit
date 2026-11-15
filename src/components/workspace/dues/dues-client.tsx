@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { AlertCircle, Link as LinkIcon, SlidersHorizontal, Lock } from "lucide-react";
+import { AlertCircle, Link as LinkIcon, SlidersHorizontal, Lock, Mail } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import {
   createDuesPeriod,
@@ -16,6 +16,7 @@ import { DuesEmptyState } from "./dues-empty-state";
 import { DuesPeriodDialog } from "./dues-period-dialog";
 import { ClosePeriodDialog } from "./close-period-dialog";
 import { DuesPayLinkDialog } from "./dues-pay-link-dialog";
+import { DuesReminderDialog } from "./dues-reminder-dialog";
 import { DuesReviewDialog } from "./dues-review-dialog";
 import { DuesPeriodPicker } from "./dues-period-picker";
 import { DuesSummaryTiles } from "./dues-summary-tiles";
@@ -69,6 +70,7 @@ export function DuesClient({
   const [editingPeriod, setEditingPeriod] = useState<DuesPeriod | null>(null);
   const [closingPeriod, setClosingPeriod] = useState<DuesPeriod | null>(null);
   const [payLinkPeriod, setPayLinkPeriod] = useState<DuesPeriod | null>(null);
+  const [reminderPeriod, setReminderPeriod] = useState<DuesPeriod | null>(null);
   const [reviewPeriod, setReviewPeriod] = useState<DuesPeriod | null>(null);
   const [toastError, setToastError] = useState<string | null>(null);
 
@@ -375,6 +377,40 @@ export function DuesClient({
                   >
                     <button
                       type="button"
+                      onClick={() => setReminderPeriod(currentSelectedPeriod)}
+                      aria-label="Send payment reminders"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 6,
+                        height: 36,
+                        padding: "0 16px",
+                        borderRadius: 9999,
+                        backgroundColor: "color-mix(in srgb, var(--color-brand-tint) 50%, var(--color-surface))",
+                        border: "1px solid color-mix(in srgb, var(--color-accent) 26%, transparent)",
+                        color: "var(--color-brand-deep)",
+                        fontSize: 13,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(28, 75, 56, 0.12)";
+                        e.currentTarget.style.borderColor = "var(--color-accent)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
+                        e.currentTarget.style.borderColor = "color-mix(in srgb, var(--color-accent) 26%, transparent)";
+                      }}
+                    >
+                      <Mail size={14} strokeWidth={2} style={{ color: "var(--color-accent)" }} />
+                      Send reminders
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => setPayLinkPeriod(currentSelectedPeriod)}
                       style={{
                         display: "inline-flex",
@@ -647,6 +683,17 @@ export function DuesClient({
         orgId={rawId}
         onClose={() => setPayLinkPeriod(null)}
         onLinkUpdated={handleLinkUpdated}
+      />
+
+      {/* Payment Reminders Dialog */}
+      <DuesReminderDialog
+        isOpen={Boolean(reminderPeriod)}
+        period={reminderPeriod}
+        orgId={rawId}
+        onClose={() => setReminderPeriod(null)}
+        onRemindersSent={() => {
+          fetchDashboard(page, false);
+        }}
       />
 
       {/* Payment Review Queue Dialog with Live Sync */}
