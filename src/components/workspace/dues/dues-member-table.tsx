@@ -74,7 +74,8 @@ export function DuesMemberTable({
           width: "100%",
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
-          borderRadius: 14,
+          borderRadius: 16,
+          boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
           overflow: "hidden",
         }}
       >
@@ -98,8 +99,8 @@ export function DuesMemberTable({
         width: "100%",
         backgroundColor: "var(--color-surface)",
         border: "1px solid var(--color-line)",
-        borderRadius: 14,
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+        borderRadius: 16,
+        boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
         overflow: "hidden",
       }}
     >
@@ -108,13 +109,13 @@ export function DuesMemberTable({
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(220px, 2.5fr) minmax(130px, 1.2fr) minmax(140px, 1.3fr) minmax(110px, 1fr)",
-          padding: "12px 20px",
+          padding: "14px 20px",
           backgroundColor: "color-mix(in srgb, var(--color-surface) 95%, var(--color-line) 5%)",
           borderBottom: "1px solid var(--color-line)",
           fontSize: 12,
-          fontWeight: 700,
+          fontWeight: 600,
           color: "var(--color-muted)",
-          letterSpacing: "0.03em",
+          letterSpacing: "0.04em",
           textTransform: "uppercase",
         }}
       >
@@ -234,8 +235,8 @@ export function DuesMemberTable({
                             fontWeight: 600,
                             color: "var(--color-ink)",
                             backgroundColor: "color-mix(in srgb, var(--color-ink) 5%, transparent)",
-                            padding: "2px 6px",
-                            borderRadius: 4,
+                            padding: "3px 7px",
+                            borderRadius: 6,
                           }}
                         >
                           {member.referenceNo}
@@ -255,10 +256,11 @@ export function DuesMemberTable({
                             border: "none",
                             borderRadius: 4,
                             cursor: "pointer",
-                            color: copiedRef === member.referenceNo ? "#10b981" : "var(--color-muted)",
+                            color: copiedRef === member.referenceNo ? "var(--color-accent)" : "var(--color-muted)",
+                            transition: "color 0.15s ease",
                           }}
                         >
-                          {copiedRef === member.referenceNo ? <Check size={13} /> : <Copy size={13} />}
+                          {copiedRef === member.referenceNo ? <Check size={13} strokeWidth={2.2} /> : <Copy size={13} strokeWidth={1.8} />}
                         </button>
                       </div>
                     ) : (
@@ -285,9 +287,9 @@ export function DuesMemberTable({
           justifyContent: "space-between",
           flexWrap: "wrap",
           gap: 12,
-          padding: "12px 20px",
+          padding: "14px 20px",
           borderTop: "1px solid var(--color-line)",
-          backgroundColor: "color-mix(in srgb, var(--color-surface) 97%, var(--color-line) 3%)",
+          backgroundColor: "var(--color-surface)",
         }}
       >
         <span style={{ fontSize: 13, color: "var(--color-muted)" }}>
