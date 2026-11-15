@@ -25,6 +25,9 @@ export function DuesReminderFailureList({
   return (
     <div
       data-testid="dues-reminder-failure-list"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
       style={{
         display: "flex",
         flexDirection: "column",

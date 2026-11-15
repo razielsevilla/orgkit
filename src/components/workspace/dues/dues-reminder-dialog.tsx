@@ -218,6 +218,8 @@ function DuesReminderDialogContent({
         {/* Generic Error */}
         {error && (
           <div
+            role="alert"
+            aria-live="assertive"
             style={{
               padding: "10px 14px",
               borderRadius: 10,

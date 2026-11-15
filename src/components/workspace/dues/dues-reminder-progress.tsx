@@ -20,6 +20,10 @@ export function DuesReminderProgressBar({
   return (
     <div
       data-testid="dues-reminder-progress"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-busy="true"
       style={{
         display: "flex",
         flexDirection: "column",

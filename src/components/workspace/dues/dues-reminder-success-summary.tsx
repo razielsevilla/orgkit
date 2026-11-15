@@ -17,6 +17,9 @@ export function DuesReminderSuccessSummary({
   return (
     <div
       data-testid="dues-reminder-success-summary"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
       style={{
         display: "flex",
         flexDirection: "column",
