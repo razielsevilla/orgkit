@@ -40,7 +40,7 @@ export function DuesSummaryTiles({
           gap: 12px;
           width: 100%;
         }
-        @media (max-width: 768px) {
+        @media (max-width: 840px) {
           .orgkit-dues-summary-grid {
             grid-template-columns: repeat(2, 1fr);
           }
@@ -48,6 +48,17 @@ export function DuesSummaryTiles({
         @media (max-width: 480px) {
           .orgkit-dues-summary-grid {
             grid-template-columns: 1fr;
+          }
+          .orgkit-dues-summary-banner-top {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+          }
+          .orgkit-dues-summary-banner-meta {
+            text-align: left !important;
+            width: 100% !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: baseline !important;
           }
         }
       `}</style>
@@ -58,20 +69,23 @@ export function DuesSummaryTiles({
           display: "flex",
           flexDirection: "column",
           gap: 12,
-          padding: "20px 22px",
+          padding: "clamp(16px, 3.5vw, 22px)",
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
           borderRadius: 14,
           boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
         <div
+          className="orgkit-dues-summary-banner-top"
           style={{
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
             flexWrap: "wrap",
-            gap: 8,
+            gap: 10,
           }}
         >
           <div>
@@ -89,17 +103,18 @@ export function DuesSummaryTiles({
             <h2
               style={{
                 margin: "4px 0 0 0",
-                fontSize: "clamp(20px, 2.2vw, 26px)",
+                fontSize: "clamp(18px, 4vw, 26px)",
                 fontWeight: 800,
                 color: "var(--color-ink)",
                 letterSpacing: "-0.02em",
+                wordBreak: "break-word",
               }}
             >
               Collected {formatPeso(summary.collectedAmount)} of {formatPeso(summary.expectedAmount)}
             </h2>
           </div>
 
-          <div style={{ textAlign: "right" }}>
+          <div className="orgkit-dues-summary-banner-meta" style={{ textAlign: "right" }}>
             <span
               style={{
                 fontSize: 13,
