@@ -22,7 +22,7 @@ import {
   DialogButton,
 } from "@/src/components/ui/dialog";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
-import { setDuesPayLink } from "@/src/app/(workspace)/dues-actions";
+import { getDuesPayLink, setDuesPayLink } from "@/src/app/(workspace)/dues-actions";
 import { payLinkPath } from "@/src/lib/routes";
 import { formatDueDate, formatPesos } from "./dues-table";
 
@@ -91,12 +91,81 @@ function DuesPayLinkDialogContent({
   const [qr, setQr] = useState<{ forUrl: string; dataUrl: string } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isInitialLoading, setIsInitialLoading] = useState<boolean>(
+    !period.payToken && !isPeriodClosed
+  );
 
   const titleId = "dues-pay-link-dialog-title";
 
+  // Use siteUrl prop or fallback to client-side window.location.origin
+  const clientOrigin =
+    siteUrl || (typeof window !== "undefined" ? window.location.origin : "");
   const payUrl =
-    token && siteUrl ? `${siteUrl}${payLinkPath(token)}` : null;
+    token && clientOrigin ? `${clientOrigin}${payLinkPath(token)}` : null;
   const qrUrl = qr && qr.forUrl === payUrl ? qr.dataUrl : null;
+
+  // Auto-fetch or generate link token if not present on period
+  useEffect(() => {
+    if (token || isPeriodClosed) return;
+    let cancelled = false;
+
+    async function loadOrGenerateToken() {
+      setIsInitialLoading(true);
+      try {
+        const fetchRes = await getDuesPayLink(orgId, period.id);
+        if (cancelled) return;
+
+        if (fetchRes.success && fetchRes.data?.payToken) {
+          const payData = fetchRes.data;
+          setToken(payData.payToken);
+          setIsActive(payData.payLinkActive);
+          onLinkUpdated?.(
+            period.id,
+            payData.payToken,
+            payData.payLinkActive
+          );
+          return;
+        }
+
+        // If not found or null token, activate link to generate one
+        const genRes = await setDuesPayLink(orgId, period.id, "on");
+        if (cancelled) return;
+
+        if (genRes.success && genRes.data?.payToken) {
+          const genData = genRes.data;
+          setToken(genData.payToken);
+          setIsActive(genData.payLinkActive);
+          onLinkUpdated?.(
+            period.id,
+            genData.payToken,
+            genData.payLinkActive
+          );
+        } else {
+          setErrorMessage(
+            genRes.error === "closed_period"
+              ? "This dues period is closed."
+              : "Could not load or generate payment link automatically. Please ensure migration 20261115120000_p2_dues_payments.sql has been run in Supabase, or click 'Rotate link'."
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setErrorMessage(
+            "Failed to load payment link. Please check your network and Supabase connection."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsInitialLoading(false);
+        }
+      }
+    }
+
+    loadOrGenerateToken();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, isPeriodClosed, orgId, period.id, onLinkUpdated]);
 
   // Generate QR code dynamically from link
   useEffect(() => {
@@ -501,7 +570,11 @@ function DuesPayLinkDialogContent({
                   <input
                     type="text"
                     readOnly
-                    value={payUrl || "Link not generated yet"}
+                    value={
+                      isInitialLoading
+                        ? "Generating payment link..."
+                        : payUrl || "Link not generated yet"
+                    }
                     onFocus={(e) => e.currentTarget.select()}
                     aria-label="Payment link"
                     style={{
@@ -562,7 +635,26 @@ function DuesPayLinkDialogContent({
                   gap: 12,
                 }}
               >
-                {isActive && qrUrl ? (
+                {isInitialLoading ? (
+                  <div
+                    style={{
+                      width: 180,
+                      height: 180,
+                      borderRadius: 12,
+                      border: "1px dashed var(--color-line)",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 8,
+                      color: "var(--color-muted)",
+                      backgroundColor: "var(--color-surface)",
+                    }}
+                  >
+                    <Loader2 size={32} className="animate-spin" color="var(--color-accent)" />
+                    <span style={{ fontSize: 12 }}>Generating link & QR...</span>
+                  </div>
+                ) : isActive && qrUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={qrUrl}

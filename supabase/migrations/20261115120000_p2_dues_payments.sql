@@ -78,6 +78,7 @@ end $$;
 
 -- 5. Security Definer Function: get_dues_period_pay_link
 -- Allows officers of the org to retrieve pay link information for an open period.
+-- If the period was created earlier without a token, a token is generated and persisted.
 create or replace function public.get_dues_period_pay_link(
   p_org_id uuid,
   p_period_id uuid
@@ -92,9 +93,28 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  v_token text;
+  v_status text;
 begin
   if not public.is_org_member(p_org_id) then
     raise exception 'not_authorized';
+  end if;
+
+  select p.pay_token, p.status into v_token, v_status
+  from public.dues_periods p
+  where p.id = p_period_id and p.org_id = p_org_id;
+
+  if v_status is null then
+    raise exception 'not_found';
+  end if;
+
+  -- Ensure token exists if null
+  if v_token is null then
+    v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+    update public.dues_periods
+       set pay_token = v_token
+     where id = p_period_id and org_id = p_org_id;
   end if;
 
   return query
@@ -159,6 +179,7 @@ begin
   elsif p_action = 'on' then
     update public.dues_periods
        set pay_link_active = true,
+           pay_token = coalesce(pay_token, replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')),
            updated_at = now()
      where id = p_period_id and org_id = p_org_id;
     select pay_token into v_new_token
@@ -182,6 +203,73 @@ $$;
 revoke all on function public.set_dues_pay_link(uuid, uuid, text) from public, anon;
 grant execute on function public.set_dues_pay_link(uuid, uuid, text) to authenticated;
 grant execute on function public.set_dues_pay_link(uuid, uuid, text) to service_role;
+
+-- 7. Update create_dues_period to generate pay_token on creation
+create or replace function public.create_dues_period(
+  p_org_id uuid,
+  p_name text,
+  p_amount numeric,
+  p_due_on date
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  new_id uuid;
+  new_pay_token text;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_org_member(p_org_id) then
+    raise exception 'Not permitted to create dues periods for this organization';
+  end if;
+
+  if p_name is null or char_length(trim(p_name)) < 2 or char_length(trim(p_name)) > 100 then
+    raise exception 'Name must be between 2 and 100 characters';
+  end if;
+
+  if p_amount is null or p_amount <= 0 or p_amount > 100000.00 or scale(p_amount) > 2 then
+    raise exception 'Amount must be above 0 and at most 100,000 with up to 2 decimal places';
+  end if;
+
+  if p_due_on is null then
+    raise exception 'Due date is required';
+  end if;
+
+  new_pay_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+
+  insert into public.dues_periods (
+    org_id,
+    name,
+    amount,
+    due_on,
+    status,
+    created_by,
+    pay_token,
+    pay_link_active
+  ) values (
+    p_org_id,
+    trim(p_name),
+    p_amount,
+    p_due_on,
+    'open',
+    caller_id,
+    new_pay_token,
+    true
+  ) returning id into new_id;
+
+  return new_id;
+end;
+$$;
+
+revoke all on function public.create_dues_period(uuid, text, numeric, date) from public;
+grant execute on function public.create_dues_period(uuid, text, numeric, date) to authenticated;
 
 -- 7. Security Definer Function: get_dues_pay_info
 -- Server-only function called by /pay/:token to get org, period, amount and due date.
