@@ -30,6 +30,20 @@ import {
   mapDashboardRpcResponse,
 } from "@/src/lib/dues/dues-dashboard";
 import { validateDashboardQuery } from "@/src/lib/dues/dues-dashboard-validation";
+import { getBaseUrl } from "@/src/lib/request";
+import {
+  validateReminderPreviewQuery,
+  validateSendReminders,
+  validateRetryReminders,
+} from "@/src/lib/dues/dues-reminders-validation";
+import {
+  fetchDuesReminderPreview,
+  executeSendRemindersBatch,
+} from "@/src/lib/dues/dues-reminders-server";
+import type {
+  ReminderPreviewData,
+  SendReminderSummary,
+} from "@/src/lib/dues/dues-reminders-types";
 
 export type DuesPeriodStatus = "open" | "closed";
 
@@ -56,6 +70,7 @@ export type DuesActionError =
   | "already_reviewed"
   | "cannot_review_own_payment"
   | "admin_only"
+  | "no_email_provider"
   | "failed";
 
 const DUES_ERROR_RULES: readonly ErrorRule<DuesActionError>[] = [
@@ -693,6 +708,50 @@ export async function getDuesDashboardData(
     }
   );
 }
+
+/**
+ * Loads payment reminder preview metadata and recipient evaluations for a period.
+ */
+export async function getDuesReminderPreviewAction(
+  orgId: string,
+  periodId: string
+): Promise<ActionResult<ReminderPreviewData, DuesActionError>> {
+  const validation = validateReminderPreviewQuery({ orgId, periodId });
+  if (!validation.isValid || !validation.data) {
+    return fail("invalid_input", validation.error ?? "Invalid reminder preview parameters.");
+  }
+
+  const baseUrl = await getBaseUrl();
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "getDuesReminderPreviewAction",
+      unexpected: "We couldn't load the reminder preview. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { data, error } = await fetchDuesReminderPreview(
+        caller.supabase,
+        periodId,
+        baseUrl
+      );
+
+      if (error || !data) {
+        const msg = error?.message || "Failed to load reminder preview.";
+        if (msg.includes("period_not_found")) {
+          return fail("not_found", "Dues period not found.");
+        }
+        if (msg.includes("not_authorized")) {
+          return fail("not_authorized", "You are not authorized to view this period's reminders.");
+        }
+        return fail("failed", msg);
+      }
+
+      return ok(data);
+    }
+  );
+}
+
 
 
 
