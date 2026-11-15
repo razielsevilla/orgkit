@@ -268,4 +268,121 @@ describe("P3 Payment Verification & Self-Review Guard", () => {
   });
 });
 
+describe("P3 Payment Rejection & Resubmission Eligibility", () => {
+  it("officer can reject with a reason and event is logged", async () => {
+    const db = getDb();
+    const m = await createTestMember("rej");
+    const pId = await submitPayment(payTokenA, m.email, "REF-REJ-001");
+
+    const reason = "Amount doesn't match the period dues";
+    await as("authenticated", officerA, () =>
+      db.query(`select public.reject_dues_payment($1, $2)`, [pId, reason])
+    );
+
+    const payment = await as("authenticated", officerA, () =>
+      db.query<{ status: string; reject_reason: string; reviewed_by: string; reviewed_at: string | null }>(
+        `select status, reject_reason, reviewed_by, reviewed_at from public.dues_payments where id = $1`,
+        [pId]
+      )
+    );
+    assert.equal(payment.rows[0].status, "rejected");
+    assert.equal(payment.rows[0].reject_reason, reason);
+    assert.equal(payment.rows[0].reviewed_by, officerA);
+    assert.ok(payment.rows[0].reviewed_at);
+
+    // Event audit trail
+    const events = await as("authenticated", officerA, () =>
+      db.query<{ action: string; actor_id: string; reason: string }>(
+        `select action, actor_id, reason from public.dues_payment_events where payment_id = $1`,
+        [pId]
+      )
+    );
+    assert.equal(events.rows.length, 1);
+    assert.equal(events.rows[0].action, "rejected");
+    assert.equal(events.rows[0].actor_id, officerA);
+    assert.equal(events.rows[0].reason, reason);
+  });
+
+  it("rejection requires a valid non-empty reason", async () => {
+    const db = getDb();
+    const m = await createTestMember("rejreq");
+    const pId = await submitPayment(payTokenA, m.email, "REF-REJ-002");
+
+    // Empty / whitespace reason
+    const emptyErr = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        db.query(`select public.reject_dues_payment($1, $2)`, [pId, "   "])
+      )
+    );
+    assert.ok(emptyErr?.includes("reason_required"), "Empty reason must be rejected");
+
+    // Short reason (< 3 chars)
+    const shortErr = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        db.query(`select public.reject_dues_payment($1, $2)`, [pId, "no"])
+      )
+    );
+    assert.ok(shortErr?.includes("reason_required"), "Short reason must be rejected");
+
+    // Too long reason (> 500 chars)
+    const longErr = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        db.query(`select public.reject_dues_payment($1, $2)`, [pId, "a".repeat(501)])
+      )
+    );
+    assert.ok(longErr?.includes("reason_too_long"), "Too long reason must be rejected");
+  });
+
+  it("member can resubmit after rejection and rejected row stays in history", async () => {
+    const db = getDb();
+    const m = await createTestMember("resub");
+    const firstPaymentId = await submitPayment(payTokenA, m.email, "REF-ORIG-001");
+
+    // Reject first payment
+    await as("authenticated", officerA, () =>
+      db.query(`select public.reject_dues_payment($1, 'Screenshot unclear')`, [firstPaymentId])
+    );
+
+    // Member submits second payment for same period
+    const secondPaymentId = await submitPayment(payTokenA, m.email, "REF-CORR-002");
+    assert.ok(secondPaymentId, "New submission should succeed after rejection");
+    assert.notEqual(firstPaymentId, secondPaymentId);
+
+    // Verify first is rejected and second is submitted
+    const list = await as("authenticated", officerA, () =>
+      db.query<{ id: string; status: string; reference_no: string }>(
+        `select id, status, reference_no from public.dues_payments where member_id = (
+           select id from public.members where email = $1
+         ) order by submitted_at asc`,
+        [m.email]
+      )
+    );
+    assert.equal(list.rows.length, 2);
+    assert.equal(list.rows[0].status, "rejected");
+    assert.equal(list.rows[0].reference_no, "REF-ORIG-001");
+    assert.equal(list.rows[1].status, "submitted");
+    assert.equal(list.rows[1].reference_no, "REF-CORR-002");
+  });
+
+  it("officer cannot reject their own payment", async () => {
+    const db = getDb();
+    const id = await addMember(orgA, "officer.rej.self@school.edu", "officer");
+    await createMember(orgA, "officer.rej.self@school.edu", "Officer Rej Self");
+
+    const ownPaymentId = await submitPayment(
+      payTokenA,
+      "officer.rej.self@school.edu",
+      "REF-SELF-REJ-001"
+    );
+
+    const selfErr = await errorOf(() =>
+      as("authenticated", id, () =>
+        db.query(`select public.reject_dues_payment($1, 'Invalid receipt')`, [ownPaymentId])
+      )
+    );
+    assert.ok(selfErr?.includes("cannot_review_own_payment"), "Self-rejection must be blocked");
+  });
+});
+
+
 
