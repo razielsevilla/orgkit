@@ -76,8 +76,7 @@ begin
     from public.members
    where id = v_payment.member_id;
 
-  if (v_caller_email is not null and lower(trim(v_caller_email)) = v_member_email_key)
-     or (auth.jwt() ->> 'email' is not null and lower(trim(auth.jwt() ->> 'email')) = v_member_email_key) then
+  if v_caller_email is not null and lower(trim(v_caller_email)) = v_member_email_key then
     raise exception 'cannot_review_own_payment';
   end if;
 
@@ -170,8 +169,7 @@ begin
     from public.members
    where id = v_payment.member_id;
 
-  if (v_caller_email is not null and lower(trim(v_caller_email)) = v_member_email_key)
-     or (auth.jwt() ->> 'email' is not null and lower(trim(auth.jwt() ->> 'email')) = v_member_email_key) then
+  if v_caller_email is not null and lower(trim(v_caller_email)) = v_member_email_key then
     raise exception 'cannot_review_own_payment';
   end if;
 

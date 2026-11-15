@@ -55,6 +55,13 @@ async function submitPayment(
   return res.rows[0].submit_dues_payment;
 }
 
+let testSeq = 0;
+async function createTestMember(emailPrefix = "member"): Promise<{ id: string; email: string }> {
+  const email = `${emailPrefix}.${++testSeq}@school.edu`;
+  const id = await createMember(orgA, email, `Member ${emailPrefix}`);
+  return { id, email };
+}
+
 before(async () => {
   await startDb();
 
@@ -172,3 +179,93 @@ describe("P3 Dues Payment Events Schema & RLS", () => {
     assert.ok(deleteErr, "Direct client delete must be denied by privileges");
   });
 });
+
+describe("P3 Payment Verification & Self-Review Guard", () => {
+  it("officer can verify a submitted payment and event is logged", async () => {
+    const db = getDb();
+    const m = await createTestMember("ver");
+    const pId = await submitPayment(payTokenA, m.email, "REF-VER-001");
+
+    // Verify payment as officerA
+    await as("authenticated", officerA, () =>
+      db.query(`select public.verify_dues_payment($1)`, [pId])
+    );
+
+    // Check payment record
+    const payment = await as("authenticated", officerA, () =>
+      db.query<{ status: string; reviewed_by: string; reviewed_at: string | null }>(
+        `select status, reviewed_by, reviewed_at from public.dues_payments where id = $1`,
+        [pId]
+      )
+    );
+    assert.equal(payment.rows[0].status, "verified");
+    assert.equal(payment.rows[0].reviewed_by, officerA);
+    assert.ok(payment.rows[0].reviewed_at, "reviewed_at should be recorded");
+
+    // Check event audit trail
+    const events = await as("authenticated", officerA, () =>
+      db.query<{ action: string; actor_id: string; reason: string | null }>(
+        `select action, actor_id, reason from public.dues_payment_events where payment_id = $1`,
+        [pId]
+      )
+    );
+    assert.equal(events.rows.length, 1);
+    assert.equal(events.rows[0].action, "verified");
+    assert.equal(events.rows[0].actor_id, officerA);
+    assert.equal(events.rows[0].reason, null);
+  });
+
+  it("officer is blocked from verifying their own member payment", async () => {
+    const db = getDb();
+    const ownPaymentId = await submitPayment(
+      payTokenA,
+      "officer.member.p3@school.edu",
+      "REF-SELF-001"
+    );
+
+    // Self-review attempt by officerMemberA
+    const selfErr = await errorOf(() =>
+      as("authenticated", officerMemberA, () =>
+        db.query(`select public.verify_dues_payment($1)`, [ownPaymentId])
+      )
+    );
+    assert.ok(selfErr?.includes("cannot_review_own_payment"), "Officer cannot verify own payment");
+
+    // Another officer can verify it
+    await as("authenticated", officerA, () =>
+      db.query(`select public.verify_dues_payment($1)`, [ownPaymentId])
+    );
+
+    const check = await as("authenticated", officerA, () =>
+      db.query<{ status: string }>(
+        `select status from public.dues_payments where id = $1`,
+        [ownPaymentId]
+      )
+    );
+    assert.equal(check.rows[0].status, "verified");
+  });
+
+  it("refuses unauthorized officer from another org or non-existent payment", async () => {
+    const db = getDb();
+    const m = await createTestMember("auth");
+    const pId = await submitPayment(payTokenA, m.email, "REF-VER-002");
+
+    // Org B officer cannot verify Org A payment
+    const authErr = await errorOf(() =>
+      as("authenticated", officerB, () =>
+        db.query(`select public.verify_dues_payment($1)`, [pId])
+      )
+    );
+    assert.ok(authErr?.includes("not_authorized"), "Officer of other org is denied");
+
+    // Non-existent payment
+    const notFoundErr = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        db.query(`select public.verify_dues_payment('00000000-0000-4000-8000-000000000000')`)
+      )
+    );
+    assert.ok(notFoundErr?.includes("payment_not_found"), "Non-existent payment throws payment_not_found");
+  });
+});
+
+
