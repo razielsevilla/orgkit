@@ -603,6 +603,7 @@ export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) 
         period={reviewPeriod}
         orgId={rawId}
         onClose={handleReviewClose}
+        onReviewed={() => fetchDashboard(page, false)}
       />
     </div>
   );
