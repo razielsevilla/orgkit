@@ -25,6 +25,7 @@ import { DuesReminderSkeleton } from "./dues-reminder-skeleton";
 import { DuesReminderProgressBar } from "./dues-reminder-progress";
 import { DuesReminderFailureList } from "./dues-reminder-failure-list";
 import { DuesReminderSuccessSummary } from "./dues-reminder-success-summary";
+import { DuesReminderEmptyState } from "./dues-reminder-empty-state";
 
 export interface DuesReminderDialogProps {
   isOpen: boolean;
@@ -253,16 +254,22 @@ function DuesReminderDialogContent({
               totalUnpaidCount={preview.total_unpaid_count}
             />
 
-            <div style={{ fontSize: 13, fontWeight: 600, color: "var(--color-ink)", marginTop: 4 }}>
-              Message preview
-            </div>
+            {preview.eligible_count === 0 && !isClosed ? (
+              <DuesReminderEmptyState />
+            ) : (
+              <>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "var(--color-ink)", marginTop: 4 }}>
+                  Message preview
+                </div>
 
-            <DuesReminderPreviewMessage
-              subject={preview.preview_subject}
-              text={preview.preview_text}
-              sampleRecipientName={preview.sample_recipient?.name}
-              sampleRecipientEmail={preview.sample_recipient?.email}
-            />
+                <DuesReminderPreviewMessage
+                  subject={preview.preview_subject}
+                  text={preview.preview_text}
+                  sampleRecipientName={preview.sample_recipient?.name}
+                  sampleRecipientEmail={preview.sample_recipient?.email}
+                />
+              </>
+            )}
           </>
         )}
       </DialogBody>
