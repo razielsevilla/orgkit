@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogHeader,
@@ -96,8 +96,6 @@ function DuesRejectDialogContent({
         title="Reject payment"
         titleId={titleId}
         onClose={isSubmitting ? undefined : onClose}
-        icon={<AlertTriangle size={20} style={{ color: "#ef4444" }} />}
-        iconBg="color-mix(in srgb, #ef4444 12%, transparent)"
       />
 
       <DialogBody>

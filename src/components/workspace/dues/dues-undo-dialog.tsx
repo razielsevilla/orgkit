@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { AlertCircle, RotateCcw, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogHeader,
@@ -97,8 +97,6 @@ function DuesUndoDialogContent({
         title="Undo payment verification"
         titleId={titleId}
         onClose={isSubmitting ? undefined : onClose}
-        icon={<RotateCcw size={20} style={{ color: "#d97706" }} />}
-        iconBg="color-mix(in srgb, #f59e0b 12%, transparent)"
       />
 
       <DialogBody>

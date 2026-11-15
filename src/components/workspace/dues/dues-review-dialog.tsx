@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { CheckCheck, AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import {
   Dialog,
   DialogHeader,
@@ -189,8 +189,6 @@ function DuesReviewDialogContent({
           title={`Review payments: ${period.name}`}
           titleId={titleId}
           onClose={onClose}
-          icon={<CheckCheck size={20} style={{ color: "#059669" }} />}
-          iconBg="color-mix(in srgb, #059669 12%, transparent)"
         />
 
         <DialogBody style={{ padding: "16px 20px" }}>
