@@ -287,5 +287,53 @@ $$;
 revoke all on function public.undo_dues_payment_verification(uuid, text) from public, anon;
 grant execute on function public.undo_dues_payment_verification(uuid, text) to authenticated;
 
+-- 5. Security Definer Function: get_dues_review_queue
+-- Returns submitted payments for a period ordered oldest first with member details.
+create or replace function public.get_dues_review_queue(
+  p_org_id uuid,
+  p_period_id uuid
+)
+returns table (
+  payment_id uuid,
+  member_id uuid,
+  member_name text,
+  member_email text,
+  amount numeric,
+  reference_no text,
+  screenshot_path text,
+  submitted_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_org_member(p_org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  return query
+  select
+    p.id as payment_id,
+    p.member_id,
+    m.full_name as member_name,
+    m.email as member_email,
+    p.amount,
+    p.reference_no,
+    p.screenshot_path,
+    p.submitted_at
+  from public.dues_payments p
+  join public.members m on m.id = p.member_id
+  where p.org_id = p_org_id
+    and p.period_id = p_period_id
+    and p.status = 'submitted'
+  order by p.submitted_at asc, p.id asc;
+end;
+$$;
+
+revoke all on function public.get_dues_review_queue(uuid, uuid) from public, anon;
+grant execute on function public.get_dues_review_queue(uuid, uuid) to authenticated;
+
+
 
 
