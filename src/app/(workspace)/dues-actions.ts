@@ -499,5 +499,43 @@ export async function getPaymentScreenshotUrl(
   );
 }
 
+/**
+ * Verifies a submitted dues payment, marking it verified and recording the reviewer.
+ */
+export async function verifyDuesPayment(
+  orgId: string,
+  paymentId: string
+): Promise<ActionResult<{ ok: true }, DuesActionError>> {
+  if (!isUuid(orgId) || !isUuid(paymentId)) {
+    return fail("not_found", "Invalid organization or payment ID.");
+  }
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "verifyDuesPayment",
+      unexpected: "We couldn't verify the payment. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { error } = await caller.supabase.rpc("verify_dues_payment", {
+        p_payment_id: paymentId,
+      });
+
+      if (error) {
+        return rpcFailure(
+          "verify_dues_payment",
+          error,
+          DUES_ERROR_RULES,
+          "We couldn't verify the payment. Try again."
+        );
+      }
+
+      revalidatePath(duesPath(orgId));
+      return ok({ ok: true });
+    }
+  );
+}
+
+
 
 
