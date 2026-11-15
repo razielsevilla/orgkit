@@ -384,5 +384,180 @@ describe("P3 Payment Rejection & Resubmission Eligibility", () => {
   });
 });
 
+describe("P3 Review Concurrency, Admin Undo & Queue Ordering", () => {
+  it("two officers acting simultaneously: exactly one wins, second sees already_reviewed", async () => {
+    const db = getDb();
+    const m = await createTestMember("conc");
+    const pId = await submitPayment(payTokenA, m.email, "REF-CONC-001");
+
+    // Officer A verifies
+    await as("authenticated", officerA, () =>
+      db.query(`select public.verify_dues_payment($1)`, [pId])
+    );
+
+    // Admin tries to reject the already verified payment
+    const secondErr = await errorOf(() =>
+      as("authenticated", adminA, () =>
+        db.query(`select public.reject_dues_payment($1, 'Late rejection')`, [pId])
+      )
+    );
+    assert.ok(secondErr?.includes("already_reviewed"), "Second reviewer receives already_reviewed");
+
+    // Admin tries to verify again
+    const thirdErr = await errorOf(() =>
+      as("authenticated", adminA, () =>
+        db.query(`select public.verify_dues_payment($1)`, [pId])
+      )
+    );
+    assert.ok(thirdErr?.includes("already_reviewed"), "Subsequent reviewer receives already_reviewed");
+
+    // Only 1 event is recorded
+    const events = await as("authenticated", officerA, () =>
+      db.query<{ count: string }>(
+        `select count(*)::text from public.dues_payment_events where payment_id = $1`,
+        [pId]
+      )
+    );
+    assert.equal(events.rows[0].count, "1");
+  });
+
+  it("admin can undo a verification with reason; non-admin is refused", async () => {
+    const db = getDb();
+    const m = await createTestMember("undo");
+    const pId = await submitPayment(payTokenA, m.email, "REF-UNDO-001");
+
+    // 1. Verify
+    await as("authenticated", officerA, () =>
+      db.query(`select public.verify_dues_payment($1)`, [pId])
+    );
+
+    // 2. Non-admin officer tries to undo -> denied
+    const nonAdminErr = await errorOf(() =>
+      as("authenticated", officerA, () =>
+        db.query(`select public.undo_dues_payment_verification($1, 'Mistake')`, [pId])
+      )
+    );
+    assert.ok(nonAdminErr?.includes("admin_only"), "Non-admin cannot undo verification");
+
+    // 3. Admin undoes with reason
+    const reason = "Mistakenly matched wrong bank transaction";
+    await as("authenticated", adminA, () =>
+      db.query(`select public.undo_dues_payment_verification($1, $2)`, [pId, reason])
+    );
+
+    // Check payment restored to submitted
+    const payment = await as("authenticated", officerA, () =>
+      db.query<{ status: string; reviewed_by: string | null; reviewed_at: string | null }>(
+        `select status, reviewed_by, reviewed_at from public.dues_payments where id = $1`,
+        [pId]
+      )
+    );
+    assert.equal(payment.rows[0].status, "submitted");
+    assert.equal(payment.rows[0].reviewed_by, null);
+    assert.equal(payment.rows[0].reviewed_at, null);
+
+    // Check undo event is logged
+    const events = await as("authenticated", officerA, () =>
+      db.query<{ action: string; actor_id: string; reason: string }>(
+        `select action, actor_id, reason from public.dues_payment_events where payment_id = $1 order by created_at asc`,
+        [pId]
+      )
+    );
+    assert.equal(events.rows.length, 2);
+    assert.equal(events.rows[0].action, "verified");
+    assert.equal(events.rows[1].action, "undone");
+    assert.equal(events.rows[1].actor_id, adminA);
+    assert.equal(events.rows[1].reason, reason);
+  });
+
+  it("undo requires valid reason and rejects non-verified payments", async () => {
+    const db = getDb();
+    const m = await createTestMember("undoval");
+    const pId = await submitPayment(payTokenA, m.email, "REF-UNDOVAL-001");
+
+    // Payment is still 'submitted' -> invalid status transition for undo
+    const submitUndoErr = await errorOf(() =>
+      as("authenticated", adminA, () =>
+        db.query(`select public.undo_dues_payment_verification($1, 'Valid reason')`, [pId])
+      )
+    );
+    assert.ok(submitUndoErr?.includes("invalid_status_transition"));
+
+    // Verify first
+    await as("authenticated", officerA, () =>
+      db.query(`select public.verify_dues_payment($1)`, [pId])
+    );
+
+    // Undo with empty reason
+    const emptyErr = await errorOf(() =>
+      as("authenticated", adminA, () =>
+        db.query(`select public.undo_dues_payment_verification($1, '   ')`, [pId])
+      )
+    );
+    assert.ok(emptyErr?.includes("reason_required"));
+  });
+
+  it("get_dues_review_queue returns only submitted payments oldest first", async () => {
+    const db = getDb();
+    // Create a new period for clean queue test
+    const periodRes = await as("authenticated", officerA, () =>
+      db.query<{ create_dues_period: string }>(
+        `select public.create_dues_period($1, $2, $3, $4)`,
+        [orgA, "Queue Test Period", 100.0, "2026-12-31"]
+      )
+    );
+    const qPeriodId = periodRes.rows[0].create_dues_period;
+
+    const tokenRes = await as("authenticated", officerA, () =>
+      db.query<{ pay_token: string }>(
+        `select pay_token from public.dues_periods where id = $1`,
+        [qPeriodId]
+      )
+    );
+    const qToken = tokenRes.rows[0].pay_token;
+
+    // Member 1 submits
+    const m1 = await createTestMember("queue1");
+    const p1 = await submitPayment(qToken, m1.email, "REF-Q-001");
+
+    // Member 2 submits
+    const m2 = await createTestMember("queue2");
+    const p2 = await submitPayment(qToken, m2.email, "REF-Q-002");
+
+    // Member 3 submits
+    const m3 = await createTestMember("queue3");
+    const p3 = await submitPayment(qToken, m3.email, "REF-Q-003");
+
+    // Verify Member 2 payment (should leave queue)
+    await as("authenticated", officerA, () =>
+      db.query(`select public.verify_dues_payment($1)`, [p2])
+    );
+
+    // Fetch queue
+    const queue = await as("authenticated", officerA, () =>
+      db.query<{ payment_id: string; reference_no: string; member_name: string }>(
+        `select payment_id, reference_no, member_name from public.get_dues_review_queue($1, $2)`,
+        [orgA, qPeriodId]
+      )
+    );
+
+    // Only p1 and p3 remain in queue, in submission order (oldest first)
+    assert.equal(queue.rows.length, 2);
+    assert.equal(queue.rows[0].payment_id, p1);
+    assert.equal(queue.rows[0].reference_no, "REF-Q-001");
+    assert.equal(queue.rows[1].payment_id, p3);
+    assert.equal(queue.rows[1].reference_no, "REF-Q-003");
+
+    // Unauthorized org officer is refused
+    const authErr = await errorOf(() =>
+      as("authenticated", officerB, () =>
+        db.query(`select * from public.get_dues_review_queue($1, $2)`, [orgA, qPeriodId])
+      )
+    );
+    assert.ok(authErr?.includes("not_authorized"));
+  });
+});
+
+
 
 
