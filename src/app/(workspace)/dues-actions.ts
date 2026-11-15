@@ -20,6 +20,7 @@ import {
   createScreenshotSignedUrl,
   fetchDuesReviewQueue,
 } from "@/src/lib/dues/dues-review-server";
+import { validateReviewReason } from "@/src/lib/dues/dues-review-validation";
 
 export type DuesPeriodStatus = "open" | "closed";
 
@@ -535,6 +536,51 @@ export async function verifyDuesPayment(
     }
   );
 }
+
+/**
+ * Rejects a submitted dues payment with a reason, allowing member resubmission.
+ */
+export async function rejectDuesPayment(
+  orgId: string,
+  paymentId: string,
+  reason: string
+): Promise<ActionResult<{ ok: true }, DuesActionError>> {
+  if (!isUuid(orgId) || !isUuid(paymentId)) {
+    return fail("not_found", "Invalid organization or payment ID.");
+  }
+
+  const reasonValidation = validateReviewReason(reason);
+  if (!reasonValidation.isValid || !reasonValidation.cleaned) {
+    return fail("invalid_input", reasonValidation.error ?? "A reason is required.");
+  }
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "rejectDuesPayment",
+      unexpected: "We couldn't reject the payment. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { error } = await caller.supabase.rpc("reject_dues_payment", {
+        p_payment_id: paymentId,
+        p_reason: reasonValidation.cleaned!,
+      });
+
+      if (error) {
+        return rpcFailure(
+          "reject_dues_payment",
+          error,
+          DUES_ERROR_RULES,
+          "We couldn't reject the payment. Try again."
+        );
+      }
+
+      revalidatePath(duesPath(orgId));
+      return ok({ ok: true });
+    }
+  );
+}
+
 
 
 
