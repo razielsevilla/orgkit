@@ -1,5 +1,6 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/src/lib/supabase/service-role";
 import type { DuesReviewQueueItem } from "@/src/lib/dues/dues-review";
 
 interface DuesReviewQueueRow {
@@ -66,15 +67,27 @@ export async function createScreenshotSignedUrl(
     // Strip bucket name if prefix included
     const cleanPath = screenshotPath.replace(/^dues-screenshots\//, "");
 
-    const { data, error } = await supabase.storage
+    let res = await supabase.storage
       .from("dues-screenshots")
       .createSignedUrl(cleanPath, expiresIn);
 
-    if (error || !data?.signedUrl) {
-      return { signedUrl: null, error: new Error(error?.message ?? "Failed to create signed URL") };
+    // If caller client fails (e.g. storage RLS restriction), fallback to service-role admin client
+    if (res.error || !res.data?.signedUrl) {
+      try {
+        const admin = createAdminClient();
+        res = await admin.storage
+          .from("dues-screenshots")
+          .createSignedUrl(cleanPath, expiresIn);
+      } catch (adminErr) {
+        console.error("Admin client signed URL fallback error:", adminErr);
+      }
     }
 
-    return { signedUrl: data.signedUrl, error: null };
+    if (res.error || !res.data?.signedUrl) {
+      return { signedUrl: null, error: new Error(res.error?.message ?? "Failed to create signed URL") };
+    }
+
+    return { signedUrl: res.data.signedUrl, error: null };
   } catch (err) {
     return { signedUrl: null, error: err instanceof Error ? err : new Error(String(err)) };
   }
