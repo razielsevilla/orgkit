@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Link as LinkIcon, Pencil, XCircle } from "lucide-react";
+import { Calendar, Link as LinkIcon, Pencil, XCircle, CheckCheck } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import { DuesStatusPill } from "./dues-status-pill";
 import { formatDueDate, formatPesos } from "./dues-table";
@@ -9,6 +9,7 @@ interface DuesMobileCardProps {
   onEdit: (period: DuesPeriod) => void;
   onClosePeriod: (period: DuesPeriod) => void;
   onPayLink?: (period: DuesPeriod) => void;
+  onReview?: (period: DuesPeriod) => void;
 }
 
 export function DuesMobileCard({
@@ -16,6 +17,7 @@ export function DuesMobileCard({
   onEdit,
   onClosePeriod,
   onPayLink,
+  onReview,
 }: DuesMobileCardProps) {
   const isOpen = period.status === "open";
 
@@ -94,6 +96,31 @@ export function DuesMobileCard({
 
       {/* Actions */}
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+        {onReview && (
+          <button
+            type="button"
+            onClick={() => onReview(period)}
+            aria-label={`Review submissions for ${period.name}`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              height: 38,
+              borderRadius: 8,
+              backgroundColor: "color-mix(in srgb, #059669 12%, transparent)",
+              border: "1px solid color-mix(in srgb, #059669 25%, transparent)",
+              color: "#059669",
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            <CheckCheck size={15} strokeWidth={2.2} />
+            Review submissions
+          </button>
+        )}
+
         <button
           type="button"
           onClick={() => onPayLink?.(period)}
