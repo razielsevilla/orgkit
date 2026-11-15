@@ -323,9 +323,10 @@ export function DuesReviewPane({
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: 12,
+              gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+              gap: 10,
               marginTop: 4,
+              width: "100%",
             }}
           >
             <button
@@ -333,19 +334,21 @@ export function DuesReviewPane({
               onClick={() => onOpenReject(selectedItem)}
               disabled={isVerifying}
               style={{
-                padding: "12px 16px",
+                padding: "12px 14px",
                 borderRadius: 12,
                 border: "1.5px solid color-mix(in srgb, #ef4444 40%, var(--color-line))",
                 backgroundColor: "var(--color-surface)",
                 color: "#b91c1c",
-                fontSize: "0.9375rem",
+                fontSize: "0.875rem",
                 fontWeight: 600,
                 cursor: isVerifying ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 8,
+                gap: 6,
                 minHeight: 46,
+                width: "100%",
+                boxSizing: "border-box",
                 transition: "all 0.15s ease",
               }}
             >
@@ -358,19 +361,21 @@ export function DuesReviewPane({
               onClick={() => handleVerifyClick(selectedItem.paymentId)}
               disabled={isVerifying}
               style={{
-                padding: "12px 16px",
+                padding: "12px 14px",
                 borderRadius: 12,
                 border: "none",
                 backgroundColor: "#059669",
                 color: "#ffffff",
-                fontSize: "0.9375rem",
+                fontSize: "0.875rem",
                 fontWeight: 600,
                 cursor: isVerifying ? "not-allowed" : "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 8,
+                gap: 6,
                 minHeight: 46,
+                width: "100%",
+                boxSizing: "border-box",
                 boxShadow: "0 4px 14px rgba(5, 150, 105, 0.25)",
                 transition: "all 0.15s ease",
               }}
