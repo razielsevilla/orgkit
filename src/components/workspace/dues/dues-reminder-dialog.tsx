@@ -24,6 +24,7 @@ import { DuesReminderPreviewMessage } from "./dues-reminder-preview-message";
 import { DuesReminderSkeleton } from "./dues-reminder-skeleton";
 import { DuesReminderProgressBar } from "./dues-reminder-progress";
 import { DuesReminderFailureList } from "./dues-reminder-failure-list";
+import { DuesReminderSuccessSummary } from "./dues-reminder-success-summary";
 
 export interface DuesReminderDialogProps {
   isOpen: boolean;
@@ -226,6 +227,14 @@ function DuesReminderDialogContent({
           />
         )}
 
+        {/* Success Completion Summary */}
+        {summary && summary.failed_count === 0 && !isSending && !isRetrying && (
+          <DuesReminderSuccessSummary
+            sentCount={summary.sent_count}
+            skippedCount={summary.skipped_count}
+          />
+        )}
+
         {/* Partial Failure List with Selective Retry */}
         {summary && summary.failures.length > 0 && !isSending && !isRetrying && (
           <DuesReminderFailureList
@@ -236,7 +245,7 @@ function DuesReminderDialogContent({
         )}
 
         {/* Preview State */}
-        {!isLoading && !isSending && !isRetrying && (!summary || summary.failures.length === 0) && preview && (
+        {!isLoading && !isSending && !isRetrying && !summary && preview && (
           <>
             <DuesReminderStatsBadge
               eligibleCount={preview.eligible_count}
@@ -260,9 +269,9 @@ function DuesReminderDialogContent({
 
       <DialogFooter>
         <DialogButton onClick={onClose} disabled={isSending || isRetrying}>
-          {summary && summary.failures.length > 0 ? "Close" : "Cancel"}
+          {summary ? "Done" : "Cancel"}
         </DialogButton>
-        {(!summary || summary.failures.length === 0) && (
+        {!summary && (
           <DialogButton
             variant="primary"
             onClick={handleSend}
