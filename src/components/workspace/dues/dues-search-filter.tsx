@@ -75,7 +75,7 @@ export function DuesSearchFilter({
             alignItems: "center",
             gap: 4,
             padding: 4,
-            borderRadius: 10,
+            borderRadius: 12,
             backgroundColor: "color-mix(in srgb, var(--color-ink) 5%, transparent)",
             maxWidth: "100%",
             overflowX: "auto",
@@ -97,8 +97,8 @@ export function DuesSearchFilter({
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,
-                  padding: "6px 12px",
-                  borderRadius: 7,
+                  padding: "7px 13px",
+                  borderRadius: 8,
                   fontSize: 13,
                   fontWeight: isSelected ? 700 : 500,
                   color: isSelected ? "var(--color-ink)" : "var(--color-muted)",
@@ -107,7 +107,23 @@ export function DuesSearchFilter({
                   cursor: disabled ? "not-allowed" : "pointer",
                   transition: "all 0.15s ease",
                   whiteSpace: "nowrap",
-                  boxShadow: isSelected ? "0 1px 2px rgba(0,0,0,0.05)" : "none",
+                  boxShadow: isSelected ? "0 1px 3px rgba(24, 24, 27, 0.06)" : "none",
+                  outline: "none",
+                }}
+                onFocus={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.color = "var(--color-ink)";
+                  }
+                }}
+                onMouseEnter={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.color = "var(--color-ink)";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isSelected) {
+                    e.currentTarget.style.color = "var(--color-muted)";
+                  }
                 }}
               >
                 <span>{tab.label}</span>
@@ -115,7 +131,7 @@ export function DuesSearchFilter({
                   style={{
                     fontSize: 11.5,
                     fontWeight: 700,
-                    padding: "1px 6px",
+                    padding: "1px 7px",
                     borderRadius: 9999,
                     backgroundColor: isSelected
                       ? "color-mix(in srgb, var(--color-ink) 10%, transparent)"
@@ -135,16 +151,16 @@ export function DuesSearchFilter({
           style={{
             position: "relative",
             minWidth: 220,
-            flex: "1 1 240px",
-            maxWidth: 360,
+            flex: "1 1 260px",
+            maxWidth: 380,
           }}
         >
           <Search
-            size={15}
+            size={16}
             aria-hidden="true"
             style={{
               position: "absolute",
-              left: 12,
+              left: 14,
               top: "50%",
               transform: "translateY(-50%)",
               color: "var(--color-muted)",
@@ -158,16 +174,26 @@ export function DuesSearchFilter({
             value={localSearch}
             disabled={disabled}
             onChange={(e) => setLocalSearch(e.target.value)}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-accent)";
+              e.currentTarget.style.boxShadow =
+                "0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-line)";
+              e.currentTarget.style.boxShadow = "0 1px 2px rgba(24, 24, 27, 0.03)";
+            }}
             style={{
               width: "100%",
-              height: 38,
-              padding: "0 34px 0 34px",
-              borderRadius: 8,
+              height: 40,
+              padding: "0 36px 0 38px",
+              borderRadius: 12,
               backgroundColor: "var(--color-surface)",
               border: "1px solid var(--color-line)",
               color: "var(--color-ink)",
-              fontSize: 13,
+              fontSize: 13.5,
               outline: "none",
+              boxShadow: "0 1px 2px rgba(24, 24, 27, 0.03)",
               transition: "border-color 0.15s ease, box-shadow 0.15s ease",
             }}
           />
@@ -181,20 +207,23 @@ export function DuesSearchFilter({
               }}
               style={{
                 position: "absolute",
-                right: 8,
+                right: 10,
                 top: "50%",
                 transform: "translateY(-50%)",
-                background: "transparent",
+                background: "color-mix(in srgb, var(--color-line) 80%, transparent)",
                 border: "none",
-                padding: 4,
+                borderRadius: "50%",
+                width: 20,
+                height: 20,
                 cursor: "pointer",
-                color: "var(--color-muted)",
+                color: "var(--color-ink)",
                 display: "inline-flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transition: "opacity 0.15s ease",
               }}
             >
-              <X size={14} />
+              <X size={12} strokeWidth={2.2} />
             </button>
           )}
         </div>
