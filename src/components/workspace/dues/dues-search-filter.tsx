@@ -73,9 +73,9 @@ export function DuesSearchFilter({
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 4,
-            padding: 4,
-            borderRadius: 12,
+            gap: 6,
+            padding: "4px 6px",
+            borderRadius: 9999,
             backgroundColor: "color-mix(in srgb, var(--color-ink) 5%, transparent)",
             maxWidth: "100%",
             overflowX: "auto",
@@ -97,8 +97,8 @@ export function DuesSearchFilter({
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,
-                  padding: "7px 13px",
-                  borderRadius: 8,
+                  padding: "6px 14px",
+                  borderRadius: 9999,
                   fontSize: 13,
                   fontWeight: isSelected ? 700 : 500,
                   color: isSelected ? "var(--color-ink)" : "var(--color-muted)",
@@ -107,7 +107,7 @@ export function DuesSearchFilter({
                   cursor: disabled ? "not-allowed" : "pointer",
                   transition: "all 0.15s ease",
                   whiteSpace: "nowrap",
-                  boxShadow: isSelected ? "0 1px 3px rgba(24, 24, 27, 0.06)" : "none",
+                  boxShadow: isSelected ? "0 1px 4px rgba(24, 24, 27, 0.08)" : "none",
                   outline: "none",
                 }}
                 onFocus={(e) => {
@@ -131,12 +131,12 @@ export function DuesSearchFilter({
                   style={{
                     fontSize: 11.5,
                     fontWeight: 700,
-                    padding: "1px 7px",
+                    padding: "1.5px 8px",
                     borderRadius: 9999,
                     backgroundColor: isSelected
-                      ? "color-mix(in srgb, var(--color-ink) 10%, transparent)"
-                      : "color-mix(in srgb, var(--color-ink) 5%, transparent)",
-                    color: isSelected ? "var(--color-ink)" : "var(--color-muted)",
+                      ? "color-mix(in srgb, var(--color-accent) 15%, transparent)"
+                      : "color-mix(in srgb, var(--color-ink) 6%, transparent)",
+                    color: isSelected ? "var(--color-accent-strong)" : "var(--color-muted)",
                   }}
                 >
                   {tab.count}
@@ -160,7 +160,7 @@ export function DuesSearchFilter({
             aria-hidden="true"
             style={{
               position: "absolute",
-              left: 14,
+              left: 16,
               top: "50%",
               transform: "translateY(-50%)",
               color: "var(--color-muted)",
@@ -185,15 +185,15 @@ export function DuesSearchFilter({
             }}
             style={{
               width: "100%",
-              height: 40,
-              padding: "0 36px 0 38px",
-              borderRadius: 12,
+              height: 42,
+              padding: "0 38px 0 42px",
+              borderRadius: 9999,
               backgroundColor: "var(--color-surface)",
               border: "1px solid var(--color-line)",
               color: "var(--color-ink)",
               fontSize: 13.5,
               outline: "none",
-              boxShadow: "0 1px 2px rgba(24, 24, 27, 0.03)",
+              boxShadow: "0 1px 3px rgba(24, 24, 27, 0.03)",
               transition: "border-color 0.15s ease, box-shadow 0.15s ease",
             }}
           />
