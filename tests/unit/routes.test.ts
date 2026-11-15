@@ -5,6 +5,7 @@ import { join, relative, sep } from "node:path";
 import {
   PRIVATE_ROUTES,
   SECRET_URL_PREFIXES,
+  duesPath,
   inviteStartPath,
   invitePath,
   isPublicPath,
@@ -102,6 +103,7 @@ describe("path helpers", () => {
   it("builds one URL per page", () => {
     assert.equal(workspacePath(id), `/workspace/${id}`);
     assert.equal(membersPath(id), `/workspace/${id}/members`);
+    assert.equal(duesPath(id), `/workspace/${id}/dues`);
     assert.equal(officersPath(id), `/workspace/${id}/officers`);
     assert.equal(joinPanelPath(id), `/workspace/${id}/members/join`);
     assert.equal(invitePath("t"), "/invite/t");
@@ -118,6 +120,7 @@ describe("path helpers", () => {
     const built = [
       workspacePath(id),
       membersPath(id),
+      duesPath(id),
       officersPath(id),
       joinPanelPath(id),
       invitePath("t"),
