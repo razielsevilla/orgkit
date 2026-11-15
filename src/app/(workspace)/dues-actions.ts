@@ -581,6 +581,51 @@ export async function rejectDuesPayment(
   );
 }
 
+/**
+ * Allows an organization admin to reverse a verified payment back to submitted with an audit reason.
+ */
+export async function undoDuesPaymentVerification(
+  orgId: string,
+  paymentId: string,
+  reason: string
+): Promise<ActionResult<{ ok: true }, DuesActionError>> {
+  if (!isUuid(orgId) || !isUuid(paymentId)) {
+    return fail("not_found", "Invalid organization or payment ID.");
+  }
+
+  const reasonValidation = validateReviewReason(reason);
+  if (!reasonValidation.isValid || !reasonValidation.cleaned) {
+    return fail("invalid_input", reasonValidation.error ?? "A reason is required.");
+  }
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "undoDuesPaymentVerification",
+      unexpected: "We couldn't undo the verification. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { error } = await caller.supabase.rpc("undo_dues_payment_verification", {
+        p_payment_id: paymentId,
+        p_reason: reasonValidation.cleaned!,
+      });
+
+      if (error) {
+        return rpcFailure(
+          "undo_dues_payment_verification",
+          error,
+          DUES_ERROR_RULES,
+          "We couldn't undo the verification. Try again."
+        );
+      }
+
+      revalidatePath(duesPath(orgId));
+      return ok({ ok: true });
+    }
+  );
+}
+
+
 
 
 
