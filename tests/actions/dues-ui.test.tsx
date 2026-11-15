@@ -26,6 +26,7 @@ const { DuesTable, formatPesos, formatDueDate } = await import("@/src/components
 const { DuesMobileCard } = await import("@/src/components/workspace/dues/dues-mobile-card");
 const { DuesPeriodDialog } = await import("@/src/components/workspace/dues/dues-period-dialog");
 const { ClosePeriodDialog } = await import("@/src/components/workspace/dues/close-period-dialog");
+const { DuesPayLinkDialog } = await import("@/src/components/workspace/dues/dues-pay-link-dialog");
 const { DuesClient } = await import("@/src/components/workspace/dues/dues-client");
 const { DuesSkeleton } = await import("@/src/components/workspace/dues/dues-skeleton");
 
@@ -133,6 +134,7 @@ describe("Dues Table & Mobile Cards", () => {
         periods: [mockPeriodOpen, mockPeriodClosed],
         onEdit: () => {},
         onClosePeriod: () => {},
+        onPayLink: () => {},
       })
     );
     expect(html).toContain("1st Sem Membership Dues");
@@ -140,8 +142,9 @@ describe("Dues Table & Mobile Cards", () => {
     expect(html).toContain("Dec 15, 2026");
     expect(html).toContain("General Assembly Fee");
     expect(html).toContain("₱1,500.50");
+    expect(html).toContain("Link");
     expect(html).toContain("Edit");
-    expect(html).toContain("Close period");
+    expect(html).toContain("Close");
   });
 
   it("renders mobile card with period details and touch targets", async () => {
@@ -150,11 +153,13 @@ describe("Dues Table & Mobile Cards", () => {
         period: mockPeriodOpen,
         onEdit: () => {},
         onClosePeriod: () => {},
+        onPayLink: () => {},
       })
     );
     expect(html).toContain("1st Sem Membership Dues");
     expect(html).toContain("₱250.00");
     expect(html).toContain("Dec 15, 2026");
+    expect(html).toContain("Payment link");
     expect(html).toContain("Edit");
     expect(html).toContain("Close");
   });
@@ -165,9 +170,11 @@ describe("Dues Table & Mobile Cards", () => {
         period: mockPeriodClosed,
         onEdit: () => {},
         onClosePeriod: () => {},
+        onPayLink: () => {},
       })
     );
     expect(html).toContain("Period closed");
+    expect(html).toContain("Payment link");
   });
 });
 
@@ -221,6 +228,45 @@ describe("Dues Dialogs", () => {
     expect(html).toContain("Close period");
     expect(html).toContain("Stop accepting new dues submissions");
     expect(html).toContain("Closing this period will stop accepting new payment submissions.");
+  });
+
+  it("renders DuesPayLinkDialog with copy button, rotate button, and QR controls", async () => {
+    const periodWithToken: DuesPeriod = {
+      ...mockPeriodOpen,
+      payToken: "token-abc-123",
+      payLinkActive: true,
+    };
+    const html = await render(
+      createElement(DuesPayLinkDialog, {
+        isOpen: true,
+        period: periodWithToken,
+        siteUrl: "https://orgkit.test",
+        orgId: "org-1",
+        onClose: () => {},
+      })
+    );
+    expect(html).toContain("Payment link");
+    expect(html).toContain("Link is active");
+    expect(html).toContain("Turn off");
+    expect(html).toContain("Public payment link");
+    expect(html).toContain("https://orgkit.test/pay/token-abc-123");
+    expect(html).toContain("Copy");
+    expect(html).toContain("Rotate link");
+  });
+
+  it("renders closed notice in DuesPayLinkDialog for closed period", async () => {
+    const html = await render(
+      createElement(DuesPayLinkDialog, {
+        isOpen: true,
+        period: mockPeriodClosed,
+        siteUrl: "https://orgkit.test",
+        orgId: "org-1",
+        onClose: () => {},
+      })
+    );
+    expect(html).toContain("Period is closed");
+    expect(html).toContain("This dues period is closed and no longer accepts submissions");
+    expect(html).not.toContain("Rotate link");
   });
 });
 

@@ -14,6 +14,7 @@ import {
   membersPath,
   officerLandingPath,
   officersPath,
+  payLinkPath,
   signInPath,
   workspacePath,
 } from "../../src/lib/routes.ts";
@@ -109,6 +110,7 @@ describe("path helpers", () => {
     assert.equal(invitePath("t"), "/invite/t");
     assert.equal(inviteStartPath("t"), "/invite/t/start");
     assert.equal(joinLinkPath("t"), "/join/t");
+    assert.equal(payLinkPath("t"), "/pay/t");
   });
 
   it("builds sign-in URLs with an optional error", () => {
@@ -126,6 +128,7 @@ describe("path helpers", () => {
       invitePath("t"),
       inviteStartPath("t"),
       joinLinkPath("t"),
+      payLinkPath("t"),
     ];
     for (const path of built) {
       const matches = routes.some(
@@ -160,6 +163,7 @@ describe("isPublicPath", () => {
       assert.equal(isPublicPath(path), true, path);
     }
     assert.equal(isPublicPath("/join/abc"), true);
+    assert.equal(isPublicPath("/pay/abc"), true);
     assert.equal(isPublicPath("/invite/abc"), true);
     assert.equal(isPublicPath("/invite/abc/start"), true);
   });

@@ -26,6 +26,8 @@ export interface DuesPeriod {
   dueOn: string;
   status: DuesPeriodStatus;
   paymentCount: number;
+  payToken?: string | null;
+  payLinkActive?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,6 +47,11 @@ const DUES_ERROR_RULES: readonly ErrorRule<DuesActionError>[] = [
     message: "Closed dues periods cannot be edited.",
   },
   {
+    match: "period_closed",
+    error: "closed_period",
+    message: "Closed dues periods cannot accept payment links.",
+  },
+  {
     match: "Name must be between 2 and 100 characters",
     error: "invalid_input",
     message: "Name must be between 2 and 100 characters.",
@@ -60,12 +67,27 @@ const DUES_ERROR_RULES: readonly ErrorRule<DuesActionError>[] = [
     message: "Due date is required.",
   },
   {
+    match: "invalid_action",
+    error: "invalid_input",
+    message: "Invalid action for payment link.",
+  },
+  {
     match: "Dues period not found",
     error: "not_found",
     message: "Dues period not found.",
   },
   {
+    match: "not_found",
+    error: "not_found",
+    message: "Dues period not found.",
+  },
+  {
     match: "Not permitted",
+    error: "not_authorized",
+    message: "You are not permitted to manage dues for this organization.",
+  },
+  {
+    match: "not_authorized",
     error: "not_authorized",
     message: "You are not permitted to manage dues for this organization.",
   },
@@ -86,7 +108,7 @@ export async function getWorkspaceDuesPeriods(
     async (caller: OrgCaller) => {
       const { data, error } = await caller.supabase
         .from("dues_periods")
-        .select("id, org_id, name, amount, due_on, status, created_at, updated_at")
+        .select("id, org_id, name, amount, due_on, status, pay_token, pay_link_active, created_at, updated_at")
         .eq("org_id", orgId)
         .order("created_at", { ascending: false });
 
@@ -103,6 +125,8 @@ export async function getWorkspaceDuesPeriods(
         dueOn: row.due_on,
         status: row.status as DuesPeriodStatus,
         paymentCount: 0, // Placeholder until payments table (subsequent ticket)
+        payToken: row.pay_token,
+        payLinkActive: Boolean(row.pay_link_active),
         createdAt: row.created_at,
         updatedAt: row.updated_at,
       }));
@@ -246,6 +270,117 @@ export async function closeDuesPeriod(
 
       revalidatePath(duesPath(orgId));
       return ok();
+    }
+  );
+}
+
+export interface DuesPayLinkInfo {
+  periodId: string;
+  payToken: string | null;
+  payLinkActive: boolean;
+  status: string;
+}
+
+export interface SetDuesPayLinkResult {
+  ok: boolean;
+  payToken: string | null;
+  payLinkActive: boolean;
+}
+
+/**
+ * Retrieves payment link info for a dues period.
+ */
+export async function getDuesPayLink(
+  orgId: string,
+  periodId: string
+): Promise<ActionResult<DuesPayLinkInfo, DuesActionError>> {
+  if (!isUuid(orgId) || !isUuid(periodId)) {
+    return fail("not_found", "Invalid organization or dues period ID.");
+  }
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "getDuesPayLink",
+      unexpected: "We couldn't retrieve the payment link. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { data, error } = await caller.supabase.rpc("get_dues_period_pay_link", {
+        p_org_id: orgId,
+        p_period_id: periodId,
+      });
+
+      if (error) {
+        return rpcFailure(
+          "get_dues_period_pay_link",
+          error,
+          DUES_ERROR_RULES,
+          "We couldn't retrieve the payment link. Try again."
+        );
+      }
+
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) {
+        return fail("not_found", "Dues period not found.");
+      }
+
+      return ok({
+        periodId: row.period_id,
+        payToken: row.pay_token,
+        payLinkActive: Boolean(row.pay_link_active),
+        status: row.status,
+      });
+    }
+  );
+}
+
+/**
+ * Turns a dues period payment link on/off or rotates its token.
+ */
+export async function setDuesPayLink(
+  orgId: string,
+  periodId: string,
+  action: "on" | "off" | "rotate"
+): Promise<ActionResult<SetDuesPayLinkResult, DuesActionError>> {
+  if (!isUuid(orgId) || !isUuid(periodId)) {
+    return fail("not_found", "Invalid organization or dues period ID.");
+  }
+
+  if (!["on", "off", "rotate"].includes(action)) {
+    return fail("invalid_input", "Invalid link action.");
+  }
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "setDuesPayLink",
+      unexpected: "We couldn't update the payment link. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { data, error } = await caller.supabase.rpc("set_dues_pay_link", {
+        p_org_id: orgId,
+        p_period_id: periodId,
+        p_action: action,
+      });
+
+      if (error) {
+        return rpcFailure(
+          "set_dues_pay_link",
+          error,
+          DUES_ERROR_RULES,
+          "We couldn't update the payment link. Try again."
+        );
+      }
+
+      revalidatePath(duesPath(orgId));
+      const isNowActive = action !== "off";
+      const token = typeof data === "string" ? data : null;
+
+      return ok({
+        ok: true,
+        payToken: token,
+        payLinkActive: isNowActive,
+      });
     }
   );
 }

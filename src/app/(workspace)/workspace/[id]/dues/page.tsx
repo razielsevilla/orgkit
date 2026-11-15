@@ -56,9 +56,17 @@ async function DuesContent({ params }: DuesPageProps) {
     );
   }
 
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  const siteUrl =
+    configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
+
   return (
     <PageReveal>
-      <DuesClient rawId={rawId} initialPeriods={periodsRes.data} />
+      <DuesClient
+        rawId={rawId}
+        initialPeriods={periodsRes.data}
+        siteUrl={siteUrl}
+      />
     </PageReveal>
   );
 }

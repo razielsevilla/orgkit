@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Pencil, XCircle } from "lucide-react";
+import { Calendar, Link as LinkIcon, Pencil, XCircle } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import { DuesStatusPill } from "./dues-status-pill";
 
@@ -7,6 +7,7 @@ interface DuesTableProps {
   periods: DuesPeriod[];
   onEdit: (period: DuesPeriod) => void;
   onClosePeriod: (period: DuesPeriod) => void;
+  onPayLink?: (period: DuesPeriod) => void;
 }
 
 export function formatPesos(amount: number): string {
@@ -33,7 +34,7 @@ export function formatDueDate(dateString: string): string {
   }
 }
 
-export function DuesTable({ periods, onEdit, onClosePeriod }: DuesTableProps) {
+export function DuesTable({ periods, onEdit, onClosePeriod, onPayLink }: DuesTableProps) {
   return (
     <div
       style={{
@@ -117,91 +118,128 @@ export function DuesTable({ periods, onEdit, onClosePeriod }: DuesTableProps) {
 
                 {/* Actions */}
                 <td style={{ padding: "16px 20px", textAlign: "right" }}>
-                  {isOpen ? (
-                    <div
+                  <div
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 8,
+                      justifyContent: "flex-end",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onPayLink?.(period)}
+                      title="Payment link settings"
+                      aria-label={`Payment link for ${period.name}`}
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: 8,
-                        justifyContent: "flex-end",
-                      }}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => onEdit(period)}
-                        title="Edit period"
-                        aria-label={`Edit ${period.name}`}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          height: 32,
-                          padding: "0 12px",
-                          borderRadius: 8,
-                          backgroundColor: "var(--color-surface)",
-                          border: "1px solid var(--color-line)",
-                          color: "var(--color-ink)",
-                          fontSize: 12.5,
-                          fontWeight: 500,
-                          cursor: "pointer",
-                          transition: "all 0.15s ease",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "color-mix(in srgb, var(--color-base) 70%, transparent)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = "var(--color-surface)";
-                        }}
-                      >
-                        <Pencil size={13} strokeWidth={2} />
-                        Edit
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => onClosePeriod(period)}
-                        title="Close period"
-                        aria-label={`Close ${period.name}`}
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 6,
-                          height: 32,
-                          padding: "0 12px",
-                          borderRadius: 8,
-                          backgroundColor: "color-mix(in srgb, var(--color-danger, #DC2626) 8%, transparent)",
-                          border: "1px solid color-mix(in srgb, var(--color-danger, #DC2626) 20%, transparent)",
-                          color: "var(--color-danger-strong)",
-                          fontSize: 12.5,
-                          fontWeight: 500,
-                          cursor: "pointer",
-                          transition: "all 0.15s ease",
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "color-mix(in srgb, var(--color-danger, #DC2626) 16%, transparent)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor =
-                            "color-mix(in srgb, var(--color-danger, #DC2626) 8%, transparent)";
-                        }}
-                      >
-                        <XCircle size={13} strokeWidth={2} />
-                        Close period
-                      </button>
-                    </div>
-                  ) : (
-                    <span
-                      style={{
+                        gap: 6,
+                        height: 32,
+                        padding: "0 12px",
+                        borderRadius: 8,
+                        backgroundColor: "var(--color-surface)",
+                        border: "1px solid var(--color-line)",
+                        color: "var(--color-ink)",
                         fontSize: 12.5,
-                        color: "var(--color-muted)",
-                        fontStyle: "italic",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor =
+                          "color-mix(in srgb, var(--color-base) 70%, transparent)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "var(--color-surface)";
                       }}
                     >
-                      Closed
-                    </span>
-                  )}
+                      <LinkIcon size={13} strokeWidth={2} />
+                      Link
+                    </button>
+
+                    {isOpen ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onEdit(period)}
+                          title="Edit period"
+                          aria-label={`Edit ${period.name}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            height: 32,
+                            padding: "0 12px",
+                            borderRadius: 8,
+                            backgroundColor: "var(--color-surface)",
+                            border: "1px solid var(--color-line)",
+                            color: "var(--color-ink)",
+                            fontSize: 12.5,
+                            fontWeight: 500,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              "color-mix(in srgb, var(--color-base) 70%, transparent)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = "var(--color-surface)";
+                          }}
+                        >
+                          <Pencil size={13} strokeWidth={2} />
+                          Edit
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onClosePeriod(period)}
+                          title="Close period"
+                          aria-label={`Close ${period.name}`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            height: 32,
+                            padding: "0 12px",
+                            borderRadius: 8,
+                            backgroundColor:
+                              "color-mix(in srgb, var(--color-danger, #DC2626) 8%, transparent)",
+                            border:
+                              "1px solid color-mix(in srgb, var(--color-danger, #DC2626) 20%, transparent)",
+                            color: "var(--color-danger-strong)",
+                            fontSize: 12.5,
+                            fontWeight: 500,
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              "color-mix(in srgb, var(--color-danger, #DC2626) 16%, transparent)";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor =
+                              "color-mix(in srgb, var(--color-danger, #DC2626) 8%, transparent)";
+                          }}
+                        >
+                          <XCircle size={13} strokeWidth={2} />
+                          Close
+                        </button>
+                      </>
+                    ) : (
+                      <span
+                        style={{
+                          fontSize: 12.5,
+                          color: "var(--color-muted)",
+                          fontStyle: "italic",
+                          paddingLeft: 4,
+                        }}
+                      >
+                        Closed
+                      </span>
+                    )}
+                  </div>
                 </td>
               </tr>
             );

@@ -32,6 +32,7 @@ layout but is not part of the URL.
 | `/terms` | Terms of use | `terms/page.tsx` |
 | `/auth/callback` | Google sends the browser back here after sign-in. Redirects on | `auth/callback/route.ts` |
 | `/join/:token` | A student joins an org from its public link or QR code | `join/[token]/page.tsx` |
+| `/pay/:token` | A member submits dues payment GCash reference and screenshot | `pay/[token]/page.tsx` |
 | `/invite/:token` | An officer invite. Signed out: sign-in card. Signed in: accepts the invite | `invite/[token]/page.tsx` |
 | `/invite/:token/start` | `POST` remembers the invite in a cookie before Google sign-in. `GET` does the same, then redirects to `/consent` | `invite/[token]/start/route.ts` |
 
@@ -221,7 +222,8 @@ Not URLs, but how pages change data.
 | `(workspace)/actions.ts` | `createWorkspace`, plus readers `getOrganizationById`, `getOfficerDefaultWorkspace`, `getCurrentOfficer`, `isOrgAdmin` |
 | `(workspace)/officers-actions.ts` | `getWorkspaceOfficers`, `createOfficerInvite`, `revokeOfficerInvite`, `updateOfficerRole`, `removeWorkspaceOfficer` |
 | `(workspace)/members-actions.ts` | `getWorkspaceMembers`, `confirmMemberAction` |
-| `(workspace)/dues-actions.ts` | `getWorkspaceDuesPeriods`, `createDuesPeriod`, `updateDuesPeriod`, `closeDuesPeriod` |
+| `(workspace)/dues-actions.ts` | `getWorkspaceDuesPeriods`, `createDuesPeriod`, `updateDuesPeriod`, `closeDuesPeriod`, `getDuesPayLink`, `setDuesPayLink` |
+| `pay/[token]/actions.ts` | `submitDuesPayment` |
 | `(workspace)/member-invites-actions.ts` | R3, admin only: `parseRosterCsv`, `previewMemberInvites`, `importMemberInvites`, `getMemberInvites` |
 | `(workspace)/workspace/[id]/members/join/actions.ts` | `setJoinLink` |
 | `invite/actions.ts` | `clearInviteCookie` |

@@ -68,6 +68,8 @@ const {
   createDuesPeriod,
   updateDuesPeriod,
   closeDuesPeriod,
+  getDuesPayLink,
+  setDuesPayLink,
 } = await import("@/src/app/(workspace)/dues-actions");
 
 const ORG = "11111111-1111-4111-8111-111111111111";
@@ -300,6 +302,93 @@ describe("closeDuesPeriod", () => {
       fn: "close_dues_period",
       args: { p_period_id: PERIOD_ID },
     });
+  });
+});
+
+describe("getDuesPayLink", () => {
+  it("rejects malformed period ID without calling RPC", async () => {
+    const res = await getDuesPayLink(ORG, "bad-id");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("not_found");
+    expect(state.rpcCalls.length).toBe(0);
+  });
+
+  it("calls get_dues_period_pay_link RPC and returns link info", async () => {
+    state.rpcResult = {
+      data: [
+        {
+          period_id: PERIOD_ID,
+          pay_token: "token123",
+          pay_link_active: true,
+          status: "open",
+        },
+      ],
+      error: null,
+    };
+    const res = await getDuesPayLink(ORG, PERIOD_ID);
+    expect(res.success).toBe(true);
+    expect(res.data).toEqual({
+      periodId: PERIOD_ID,
+      payToken: "token123",
+      payLinkActive: true,
+      status: "open",
+    });
+    expect(state.rpcCalls[0]).toEqual({
+      fn: "get_dues_period_pay_link",
+      args: { p_org_id: ORG, p_period_id: PERIOD_ID },
+    });
+  });
+});
+
+describe("setDuesPayLink", () => {
+  it("rejects malformed ID or invalid action", async () => {
+    const badId = await setDuesPayLink(ORG, "invalid-id", "on");
+    expect(badId.success).toBe(false);
+    expect(badId.error).toBe("not_found");
+
+    const badAction = await setDuesPayLink(
+      ORG,
+      PERIOD_ID,
+      "invalid" as "on" | "off" | "rotate"
+    );
+    expect(badAction.success).toBe(false);
+    expect(badAction.error).toBe("invalid_input");
+  });
+
+  it("calls set_dues_pay_link with 'off' action", async () => {
+    state.rpcResult = { data: null, error: null };
+    const res = await setDuesPayLink(ORG, PERIOD_ID, "off");
+    expect(res.success).toBe(true);
+    expect(res.data?.ok).toBe(true);
+    expect(res.data?.payLinkActive).toBe(false);
+    expect(state.rpcCalls[0]).toEqual({
+      fn: "set_dues_pay_link",
+      args: { p_org_id: ORG, p_period_id: PERIOD_ID, p_action: "off" },
+    });
+  });
+
+  it("calls set_dues_pay_link with 'rotate' and returns new token", async () => {
+    state.rpcResult = { data: "new-rotated-token-64", error: null };
+    const res = await setDuesPayLink(ORG, PERIOD_ID, "rotate");
+    expect(res.success).toBe(true);
+    expect(res.data?.ok).toBe(true);
+    expect(res.data?.payToken).toBe("new-rotated-token-64");
+    expect(res.data?.payLinkActive).toBe(true);
+    expect(state.rpcCalls[0]).toEqual({
+      fn: "set_dues_pay_link",
+      args: { p_org_id: ORG, p_period_id: PERIOD_ID, p_action: "rotate" },
+    });
+  });
+
+  it("handles period_closed error message cleanly", async () => {
+    state.rpcResult = {
+      data: null,
+      error: { message: "period_closed" },
+    };
+    const res = await setDuesPayLink(ORG, PERIOD_ID, "on");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("closed_period");
+    expect(res.errorMessage).toBe("Closed dues periods cannot accept payment links.");
   });
 });
 
