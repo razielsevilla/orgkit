@@ -14,21 +14,48 @@ import { DuesMobileCard } from "./dues-mobile-card";
 import { DuesEmptyState } from "./dues-empty-state";
 import { DuesPeriodDialog } from "./dues-period-dialog";
 import { ClosePeriodDialog } from "./close-period-dialog";
+import { DuesPayLinkDialog } from "./dues-pay-link-dialog";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 
 interface DuesClientProps {
   rawId: string;
   initialPeriods: DuesPeriod[];
+  siteUrl?: string | null;
 }
 
-export function DuesClient({ rawId, initialPeriods }: DuesClientProps) {
+export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) {
   const [periods, setPeriods] = useState<DuesPeriod[]>(initialPeriods);
   const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
   const [editingPeriod, setEditingPeriod] = useState<DuesPeriod | null>(null);
   const [closingPeriod, setClosingPeriod] = useState<DuesPeriod | null>(null);
+  const [payLinkPeriod, setPayLinkPeriod] = useState<DuesPeriod | null>(null);
   const [toastError, setToastError] = useState<string | null>(null);
 
   const openCount = periods.filter((p) => p.status === "open").length;
+
+  const handleLinkUpdated = (
+    periodId: string,
+    payToken: string | null,
+    payLinkActive: boolean
+  ) => {
+    setPeriods((prev) =>
+      prev.map((p) =>
+        p.id === periodId
+          ? {
+              ...p,
+              payToken,
+              payLinkActive,
+              updatedAt: new Date().toISOString(),
+            }
+          : p
+      )
+    );
+    if (payLinkPeriod && payLinkPeriod.id === periodId) {
+      setPayLinkPeriod((prev) =>
+        prev ? { ...prev, payToken, payLinkActive } : null
+      );
+    }
+  };
 
   const handleCreateSave = async (input: {
     name: string;
@@ -207,6 +234,7 @@ export function DuesClient({ rawId, initialPeriods }: DuesClientProps) {
                     periods={periods}
                     onEdit={(p) => setEditingPeriod(p)}
                     onClosePeriod={(p) => setClosingPeriod(p)}
+                    onPayLink={(p) => setPayLinkPeriod(p)}
                   />
                 </div>
 
@@ -217,6 +245,7 @@ export function DuesClient({ rawId, initialPeriods }: DuesClientProps) {
                       period={period}
                       onEdit={(p) => setEditingPeriod(p)}
                       onClosePeriod={(p) => setClosingPeriod(p)}
+                      onPayLink={(p) => setPayLinkPeriod(p)}
                     />
                   ))}
                 </div>
@@ -247,6 +276,16 @@ export function DuesClient({ rawId, initialPeriods }: DuesClientProps) {
         period={closingPeriod}
         onClose={() => setClosingPeriod(null)}
         onConfirmClose={handleConfirmClose}
+      />
+
+      {/* Payment Link Settings Dialog */}
+      <DuesPayLinkDialog
+        isOpen={Boolean(payLinkPeriod)}
+        period={payLinkPeriod}
+        siteUrl={siteUrl ?? null}
+        orgId={rawId}
+        onClose={() => setPayLinkPeriod(null)}
+        onLinkUpdated={handleLinkUpdated}
       />
     </div>
   );

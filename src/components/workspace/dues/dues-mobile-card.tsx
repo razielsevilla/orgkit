@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Pencil, XCircle } from "lucide-react";
+import { Calendar, Link as LinkIcon, Pencil, XCircle } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import { DuesStatusPill } from "./dues-status-pill";
 import { formatDueDate, formatPesos } from "./dues-table";
@@ -8,12 +8,14 @@ interface DuesMobileCardProps {
   period: DuesPeriod;
   onEdit: (period: DuesPeriod) => void;
   onClosePeriod: (period: DuesPeriod) => void;
+  onPayLink?: (period: DuesPeriod) => void;
 }
 
 export function DuesMobileCard({
   period,
   onEdit,
   onClosePeriod,
+  onPayLink,
 }: DuesMobileCardProps) {
   const isOpen = period.status === "open";
 
@@ -91,73 +93,99 @@ export function DuesMobileCard({
       </div>
 
       {/* Actions */}
-      {isOpen ? (
-        <div
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 4 }}>
+        <button
+          type="button"
+          onClick={() => onPayLink?.(period)}
+          aria-label={`Payment link for ${period.name}`}
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 8,
-            marginTop: 4,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            height: 36,
+            borderRadius: 8,
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-line)",
+            color: "var(--color-ink)",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
           }}
         >
-          <button
-            type="button"
-            onClick={() => onEdit(period)}
-            aria-label={`Edit ${period.name}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              height: 36,
-              borderRadius: 8,
-              backgroundColor: "var(--color-surface)",
-              border: "1px solid var(--color-line)",
-              color: "var(--color-ink)",
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: "pointer",
-            }}
-          >
-            <Pencil size={14} strokeWidth={2} />
-            Edit
-          </button>
+          <LinkIcon size={14} strokeWidth={2} />
+          Payment link
+        </button>
 
-          <button
-            type="button"
-            onClick={() => onClosePeriod(period)}
-            aria-label={`Close ${period.name}`}
+        {isOpen ? (
+          <div
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 6,
-              height: 36,
-              borderRadius: 8,
-              backgroundColor: "color-mix(in srgb, var(--color-danger, #DC2626) 8%, transparent)",
-              border: "1px solid color-mix(in srgb, var(--color-danger, #DC2626) 20%, transparent)",
-              color: "var(--color-danger-strong)",
-              fontSize: 13,
-              fontWeight: 500,
-              cursor: "pointer",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: 8,
             }}
           >
-            <XCircle size={14} strokeWidth={2} />
-            Close
-          </button>
-        </div>
-      ) : (
-        <div
-          style={{
-            fontSize: 12.5,
-            color: "var(--color-muted)",
-            fontStyle: "italic",
-            textAlign: "right",
-          }}
-        >
-          Period closed
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={() => onEdit(period)}
+              aria-label={`Edit ${period.name}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                height: 36,
+                borderRadius: 8,
+                backgroundColor: "var(--color-surface)",
+                border: "1px solid var(--color-line)",
+                color: "var(--color-ink)",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              <Pencil size={14} strokeWidth={2} />
+              Edit
+            </button>
+
+            <button
+              type="button"
+              onClick={() => onClosePeriod(period)}
+              aria-label={`Close ${period.name}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                height: 36,
+                borderRadius: 8,
+                backgroundColor:
+                  "color-mix(in srgb, var(--color-danger, #DC2626) 8%, transparent)",
+                border:
+                  "1px solid color-mix(in srgb, var(--color-danger, #DC2626) 20%, transparent)",
+                color: "var(--color-danger-strong)",
+                fontSize: 13,
+                fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              <XCircle size={14} strokeWidth={2} />
+              Close
+            </button>
+          </div>
+        ) : (
+          <div
+            style={{
+              fontSize: 12.5,
+              color: "var(--color-muted)",
+              fontStyle: "italic",
+              textAlign: "right",
+            }}
+          >
+            Period closed
+          </div>
+        )}
+      </div>
     </div>
   );
 }
