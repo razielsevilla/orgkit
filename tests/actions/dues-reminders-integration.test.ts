@@ -153,6 +153,7 @@ vi.mock("@/src/lib/request", () => ({
 const {
   getDuesReminderPreviewAction,
   sendDuesRemindersAction,
+  retryFailedRemindersAction,
 } = await import("@/src/app/(workspace)/dues-actions");
 
 describe("Phase 10: Dues Reminders End-to-End Integration Flow", () => {
@@ -267,5 +268,97 @@ describe("Phase 10: Dues Reminders End-to-End Integration Flow", () => {
     expect(state.mockSender.getSentEmails()).toHaveLength(0);
     const logCalls = state.rpcCalls.filter((c) => c.fn === "log_dues_reminder");
     expect(logCalls).toHaveLength(0);
+  });
+
+  it("Scenario 5: lists partial send failures by member and retries only failed recipients", async () => {
+    // Reset raw data to 3 eligible members
+    state.rawRpcData = {
+      ...state.rawRpcData,
+      counts: {
+        total_active_members: 15,
+        total_unpaid: 3,
+        eligible: 3,
+        skipped_24h: 0,
+        paid_or_pending: 12,
+      },
+      recipients: [
+        {
+          member_id: MEM_1,
+          full_name: "Juan Dela Cruz",
+          email: "juan@university.edu.ph",
+          is_eligible: true,
+          skip_reason: null,
+          last_reminded_at: null,
+        },
+        {
+          member_id: MEM_2,
+          full_name: "Maria Clara",
+          email: "maria@university.edu.ph",
+          is_eligible: true,
+          skip_reason: null,
+          last_reminded_at: null,
+        },
+        {
+          member_id: MEM_3,
+          full_name: "Jose Rizal",
+          email: "jose@university.edu.ph",
+          is_eligible: true,
+          skip_reason: null,
+          last_reminded_at: null,
+        },
+      ],
+    };
+
+    // Force Jose's email delivery to bounce/fail
+    state.mockSender.setFailFor(["jose@university.edu.ph"], "550 Mailbox does not exist");
+
+    // 1. Initial send execution
+    const initialSendRes = await sendDuesRemindersAction(ORG_ID, PERIOD_ID);
+    expect(initialSendRes.success).toBe(true);
+
+    const summary = initialSendRes.data!;
+    expect(summary.sent_count).toBe(2);
+    expect(summary.failed_count).toBe(1);
+    expect(summary.failures).toHaveLength(1);
+
+    const failedMember = summary.failures[0];
+    expect(failedMember.member_id).toBe(MEM_3);
+    expect(failedMember.full_name).toBe("Jose Rizal");
+    expect(failedMember.email).toBe("jose@university.edu.ph");
+    expect(failedMember.error_message).toBe("Email bounced (address not found)");
+
+    // Verify 2 emails succeeded, 1 failed in the sender
+    expect(state.mockSender.getSentEmails()).toHaveLength(2);
+
+    // Verify database logs status: sent for 2, bounced for 1
+    const initialLogCalls = state.rpcCalls.filter((c) => c.fn === "log_dues_reminder");
+    expect(initialLogCalls).toHaveLength(3);
+    const statuses = initialLogCalls.map((c) => c.args.p_status);
+    expect(statuses).toContain("sent");
+    expect(statuses).toContain("bounced");
+
+    // 2. Clear sender failure to simulate resolution or transient retry
+    state.mockSender.clearFailures();
+    state.rpcCalls = [];
+
+    // 3. Retry specifically for failed recipient MEM_3
+    const retryRes = await retryFailedRemindersAction(ORG_ID, PERIOD_ID, [MEM_3]);
+    expect(retryRes.success).toBe(true);
+
+    const retrySummary = retryRes.data!;
+    expect(retrySummary.sent_count).toBe(1);
+    expect(retrySummary.failed_count).toBe(0);
+    expect(retrySummary.failures).toHaveLength(0);
+
+    // Verify that ONLY Jose received a retry email and previously successful members were not emailed again
+    const allSentEmails = state.mockSender.getSentEmails();
+    expect(allSentEmails).toHaveLength(3); // 2 initial + 1 retry
+    expect(allSentEmails[2].to).toBe("jose@university.edu.ph");
+
+    // Verify retry logged status "sent" for Jose
+    const retryLogs = state.rpcCalls.filter((c) => c.fn === "log_dues_reminder");
+    expect(retryLogs).toHaveLength(1);
+    expect(retryLogs[0].args.p_member_id).toBe(MEM_3);
+    expect(retryLogs[0].args.p_status).toBe("sent");
   });
 });
