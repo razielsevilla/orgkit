@@ -108,10 +108,9 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
               flexShrink: 0,
             }}
           />
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-            <SkeletonBar width={96} height={22} radius={9999} />
-            <SkeletonBar width={70} height={13} />
-            <SkeletonBar width={90} height={20} />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+            <SkeletonBar width={80} height={13} />
+            <SkeletonBar width={110} height={26} />
           </div>
         </div>
       </div>

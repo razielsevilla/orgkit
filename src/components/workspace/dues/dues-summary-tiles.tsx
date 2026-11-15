@@ -156,6 +156,7 @@ export function DuesSummaryTiles({
                 textAlign: "center",
               }}
             >
+              <span className="sr-only">{collectionRate}% collected</span>
               <span
                 style={{
                   fontSize: 22,
@@ -260,40 +261,31 @@ export function DuesSummaryTiles({
               flexDirection: "column",
               alignItems: "flex-end",
               textAlign: "right",
-              gap: 4,
+              justifyContent: "center",
             }}
           >
             <span
               style={{
-                display: "inline-flex",
-                alignItems: "center",
-                padding: "3px 10px",
-                borderRadius: 9999,
-                backgroundColor:
-                  "color-mix(in srgb, var(--color-accent) 12%, transparent)",
-                color: "var(--color-accent-strong)",
-                fontSize: 12,
+                fontSize: 11.5,
                 fontWeight: 700,
-                letterSpacing: "0.01em",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "var(--color-muted)",
               }}
             >
-              {collectionRate}% collected
+              Outstanding
             </span>
-            <div>
-              <span style={{ fontSize: 11.5, color: "var(--color-muted)" }}>
-                Outstanding
-              </span>
-              <div
-                style={{
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: "var(--color-ink)",
-                  letterSpacing: "-0.02em",
-                  lineHeight: 1.2,
-                }}
-              >
-                {formatPeso(summary.outstandingAmount)}
-              </div>
+            <div
+              style={{
+                margin: "4px 0 0 0",
+                fontSize: "clamp(18px, 2.2vw, 24px)",
+                fontWeight: 800,
+                color: "var(--color-ink)",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.2,
+              }}
+            >
+              {formatPeso(summary.outstandingAmount)}
             </div>
           </div>
         </div>
