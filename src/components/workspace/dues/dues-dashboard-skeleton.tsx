@@ -67,7 +67,6 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
           <SkeletonBar width={90} height={24} radius={9999} />
           <SkeletonBar width={120} height={18} />
         </div>
-        <SkeletonBar width={110} height={38} radius={9999} />
       </div>
 
       {/* Collection Progress Banner Skeleton */}

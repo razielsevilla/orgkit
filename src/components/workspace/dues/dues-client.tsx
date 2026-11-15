@@ -358,7 +358,6 @@ export function DuesClient({
                   periods={periods}
                   selectedPeriodId={selectedPeriodId}
                   onSelectPeriod={handleSelectPeriod}
-                  onCreatePeriod={() => setIsNewDialogOpen(true)}
                   disabled={isLoadingDashboard}
                 />
 

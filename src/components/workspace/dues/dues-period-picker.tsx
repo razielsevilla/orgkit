@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, Calendar, Plus, Layers } from "lucide-react";
+import { ChevronDown, Calendar, Layers } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import { DuesStatusPill } from "./dues-status-pill";
 import { formatPeso } from "@/src/lib/dues/dues-dashboard";
@@ -10,7 +10,6 @@ interface DuesPeriodPickerProps {
   periods: DuesPeriod[];
   selectedPeriodId: string;
   onSelectPeriod: (periodId: string) => void;
-  onCreatePeriod?: () => void;
   disabled?: boolean;
 }
 
@@ -18,7 +17,6 @@ export function DuesPeriodPicker({
   periods,
   selectedPeriodId,
   onSelectPeriod,
-  onCreatePeriod,
   disabled = false,
 }: DuesPeriodPickerProps) {
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId) || periods[0];
@@ -143,42 +141,6 @@ export function DuesPeriodPicker({
           </div>
         )}
       </div>
-
-      {onCreatePeriod && (
-        <button
-          type="button"
-          onClick={onCreatePeriod}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            height: 38,
-            padding: "0 16px",
-            borderRadius: 9999,
-            backgroundColor: "var(--color-surface)",
-            border: "1px solid var(--color-line)",
-            color: "var(--color-ink)",
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: "pointer",
-            boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
-            transition: "all 0.15s ease",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 4px 12px rgba(24, 24, 27, 0.08)";
-            e.currentTarget.style.borderColor = "var(--color-line-strong)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "none";
-            e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
-            e.currentTarget.style.borderColor = "var(--color-line)";
-          }}
-        >
-          <Plus size={14} strokeWidth={2.2} />
-          New period
-        </button>
-      )}
     </div>
   );
 }
