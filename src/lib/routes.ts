@@ -102,8 +102,8 @@ const PUBLIC_EXACT: readonly string[] = [
   "/invite",
 ];
 
-// Member join links (A4) and invites open with no account
-const PUBLIC_PREFIXES: readonly string[] = ["/auth/", "/join/", "/invite/"];
+// Member join links (A4), invites, and public dues payment links open with no account
+const PUBLIC_PREFIXES: readonly string[] = ["/auth/", "/join/", "/invite/", "/pay/"];
 
 /** Pages a signed-out visitor may open. Everything else needs a session. */
 export function isPublicPath(pathname: string): boolean {
@@ -130,4 +130,4 @@ export const PRIVATE_ROUTES: readonly string[] = [
  * URL prefixes whose path holds a secret token. They are sent without a
  * Referer and marked noindex (see next.config.ts, which lists the same ones).
  */
-export const SECRET_URL_PREFIXES: readonly string[] = ["/join/", "/invite/"];
+export const SECRET_URL_PREFIXES: readonly string[] = ["/join/", "/invite/", "/pay/"];

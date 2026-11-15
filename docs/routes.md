@@ -32,6 +32,7 @@ layout but is not part of the URL.
 | `/terms` | Terms of use | `terms/page.tsx` |
 | `/auth/callback` | Google sends the browser back here after sign-in. Redirects on | `auth/callback/route.ts` |
 | `/join/:token` | A student joins an org from its public link or QR code | `join/[token]/page.tsx` |
+| `/pay/:token` | A member submits dues payment GCash reference and screenshot | `pay/[token]/page.tsx` |
 | `/invite/:token` | An officer invite. Signed out: sign-in card. Signed in: accepts the invite | `invite/[token]/page.tsx` |
 | `/invite/:token/start` | `POST` remembers the invite in a cookie before Google sign-in. `GET` does the same, then redirects to `/consent` | `invite/[token]/start/route.ts` |
 
