@@ -23,6 +23,11 @@ export function DuesSummaryTiles({
     summary.expectedAmount
   );
 
+  const ringRadius = 27;
+  const ringCircumference = 2 * Math.PI * ringRadius;
+  const ringOffset =
+    ringCircumference * (1 - Math.min(Math.max(collectionRate, 0), 100) / 100);
+
   return (
     <div
       style={{
@@ -37,7 +42,7 @@ export function DuesSummaryTiles({
         .orgkit-dues-summary-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
-          gap: 12px;
+          gap: 14px;
           width: 100%;
         }
         @media (max-width: 840px) {
@@ -61,13 +66,20 @@ export function DuesSummaryTiles({
             align-items: baseline !important;
           }
         }
+        @media (max-width: 640px) {
+          .orgkit-banner-divider {
+            display: none !important;
+          }
+        }
       `}</style>
 
-      {/* Main Collection Progress Banner */}
+      {/* Main Collection Progress Banner (Circular Donut Ring Design) */}
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
           gap: 16,
           padding: "20px 24px",
           backgroundColor: "var(--color-surface)",
@@ -83,108 +95,207 @@ export function DuesSummaryTiles({
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: 16,
+            gap: 18,
+            minWidth: 0,
+            flex: "1 1 420px",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 16, minWidth: 0 }}>
-            {/* Soft gradient squircle wallet icon box */}
-            <div
+          {/* Circular Donut Ring Progress */}
+          <div
+            role="progressbar"
+            aria-valuenow={collectionRate}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Collection progress: ${collectionRate}%`}
+            style={{
+              position: "relative",
+              width: 68,
+              height: 68,
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <svg
+              width={68}
+              height={68}
+              viewBox="0 0 68 68"
+              style={{ transform: "rotate(-90deg)" }}
               aria-hidden="true"
+            >
+              <circle
+                cx={34}
+                cy={34}
+                r={ringRadius}
+                fill="transparent"
+                stroke="color-mix(in srgb, var(--color-accent) 16%, transparent)"
+                strokeWidth={6}
+              />
+              <circle
+                cx={34}
+                cy={34}
+                r={ringRadius}
+                fill="transparent"
+                stroke="var(--color-accent)"
+                strokeWidth={6}
+                strokeDasharray={ringCircumference}
+                strokeDashoffset={ringOffset}
+                strokeLinecap="round"
+                style={{ transition: "stroke-dashoffset 0.5s ease" }}
+              />
+            </svg>
+            <div
               style={{
-                width: 52,
-                height: 52,
-                borderRadius: 18,
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 20%, transparent) 0%, color-mix(in srgb, var(--color-accent) 6%, transparent) 100%)",
-                border: "1px solid color-mix(in srgb, var(--color-accent) 25%, transparent)",
+                position: "absolute",
+                inset: 0,
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                flexShrink: 0,
-                color: "var(--color-accent)",
+                textAlign: "center",
               }}
             >
-              <Wallet size={24} strokeWidth={2.2} />
-            </div>
-
-            <div style={{ minWidth: 0 }}>
               <span
                 style={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "var(--color-muted)",
-                }}
-              >
-                Collection Status
-              </span>
-              <h2
-                style={{
-                  margin: "4px 0 0 0",
-                  fontSize: "clamp(20px, 2.5vw, 26px)",
+                  fontSize: 16,
                   fontWeight: 800,
                   color: "var(--color-ink)",
+                  lineHeight: 1,
                   letterSpacing: "-0.02em",
-                  wordBreak: "break-word",
                 }}
               >
-                Collected {formatPeso(summary.collectedAmount)} of {formatPeso(summary.expectedAmount)}
-              </h2>
+                {collectionRate}%
+              </span>
+              <span
+                style={{
+                  fontSize: 9.5,
+                  fontWeight: 600,
+                  color: "var(--color-muted)",
+                  marginTop: 3,
+                  lineHeight: 1,
+                }}
+              >
+                Collected
+              </span>
             </div>
           </div>
 
-          <div className="orgkit-dues-summary-banner-meta" style={{ textAlign: "right" }}>
+          {/* Left Vertical Divider */}
+          <div
+            className="orgkit-banner-divider"
+            aria-hidden="true"
+            style={{
+              width: 1,
+              height: 48,
+              backgroundColor: "var(--color-line)",
+              flexShrink: 0,
+            }}
+          />
+
+          {/* Title & Status Details */}
+          <div style={{ minWidth: 0, flex: 1 }}>
             <span
               style={{
-                fontSize: 14,
+                fontSize: 11.5,
                 fontWeight: 700,
-                color: "var(--color-accent)",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                color: "var(--color-muted)",
+              }}
+            >
+              Collection Status
+            </span>
+            <h2
+              style={{
+                margin: "4px 0 0 0",
+                fontSize: "clamp(18px, 2.2vw, 24px)",
+                fontWeight: 800,
+                color: "var(--color-ink)",
+                letterSpacing: "-0.02em",
+                wordBreak: "break-word",
+              }}
+            >
+              Collected {formatPeso(summary.collectedAmount)} of{" "}
+              {formatPeso(summary.expectedAmount)}
+            </h2>
+            <p
+              style={{
+                margin: "4px 0 0 0",
+                fontSize: 12.5,
+                color: "var(--color-muted)",
+                fontWeight: 500,
+              }}
+            >
+              {summary.paidCount} of {summary.activeMemberCount}{" "}
+              {summary.activeMemberCount === 1 ? "member has" : "members have"} paid
+            </p>
+          </div>
+        </div>
+
+        {/* Right Vertical Divider & Meta Column */}
+        <div
+          className="orgkit-dues-summary-banner-meta"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 16,
+            flexShrink: 0,
+          }}
+        >
+          <div
+            className="orgkit-banner-divider"
+            aria-hidden="true"
+            style={{
+              width: 1,
+              height: 48,
+              backgroundColor: "var(--color-line)",
+              flexShrink: 0,
+            }}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              textAlign: "right",
+              gap: 4,
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                padding: "3px 10px",
+                borderRadius: 9999,
+                backgroundColor:
+                  "color-mix(in srgb, var(--color-accent) 12%, transparent)",
+                color: "var(--color-accent-strong)",
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: "0.01em",
               }}
             >
               {collectionRate}% collected
             </span>
-            <div
-              style={{
-                fontSize: 12.5,
-                color: "var(--color-muted)",
-                marginTop: 2,
-              }}
-            >
-              Outstanding:{" "}
-              <span style={{ fontWeight: 700, color: "var(--color-ink)" }}>
-                {formatPeso(summary.outstandingAmount)}
+            <div>
+              <span style={{ fontSize: 11.5, color: "var(--color-muted)" }}>
+                Outstanding<span className="sr-only">:</span>
               </span>
+              <div
+                style={{
+                  fontSize: 18,
+                  fontWeight: 800,
+                  color: "var(--color-ink)",
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.2,
+                }}
+              >
+                {formatPeso(summary.outstandingAmount)}
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Visual Progress Bar */}
-        <div
-          role="progressbar"
-          aria-valuenow={collectionRate}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label={`Collection progress: ${collectionRate}%`}
-          style={{
-            width: "100%",
-            height: 6,
-            backgroundColor: "color-mix(in srgb, var(--color-line) 80%, transparent)",
-            borderRadius: 9999,
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: `${collectionRate}%`,
-              height: "100%",
-              backgroundColor: "var(--color-accent)",
-              borderRadius: 9999,
-              transition: "width 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-            }}
-          />
         </div>
       </div>
 
