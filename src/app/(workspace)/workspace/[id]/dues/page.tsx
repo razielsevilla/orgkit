@@ -6,7 +6,10 @@ import {
   getCurrentOfficer,
   getOfficerDefaultWorkspace,
 } from "@/src/app/(workspace)/actions";
-import { getWorkspaceDuesPeriods } from "@/src/app/(workspace)/dues-actions";
+import {
+  getWorkspaceDuesPeriods,
+  getDuesDashboardData,
+} from "@/src/app/(workspace)/dues-actions";
 import { isUuid } from "@/src/lib/validation";
 import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
@@ -60,11 +63,22 @@ async function DuesContent({ params }: DuesPageProps) {
   const siteUrl =
     configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
 
+  const defaultPeriod =
+    periodsRes.data.find((p) => p.status === "open") || periodsRes.data[0];
+
+  const initialDashboardRes = defaultPeriod
+    ? await getDuesDashboardData(rawId, { periodId: defaultPeriod.id })
+    : null;
+  const initialDashboardData = initialDashboardRes?.success
+    ? initialDashboardRes.data
+    : null;
+
   return (
     <PageReveal>
       <DuesClient
         rawId={rawId}
         initialPeriods={periodsRes.data}
+        initialDashboardData={initialDashboardData}
         siteUrl={siteUrl}
       />
     </PageReveal>

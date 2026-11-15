@@ -25,6 +25,7 @@ interface DuesReviewDialogProps {
   isOpen: boolean;
   onClose: () => void;
   orgId: string;
+  onReviewed?: (paymentId: string, action: "verified" | "rejected") => void;
 }
 
 export function DuesReviewDialog({
@@ -32,6 +33,7 @@ export function DuesReviewDialog({
   isOpen,
   onClose,
   orgId,
+  onReviewed,
 }: DuesReviewDialogProps) {
   if (!isOpen || !period) return null;
 
@@ -41,6 +43,7 @@ export function DuesReviewDialog({
       period={period}
       onClose={onClose}
       orgId={orgId}
+      onReviewed={onReviewed}
     />
   );
 }
@@ -49,10 +52,12 @@ function DuesReviewDialogContent({
   period,
   onClose,
   orgId,
+  onReviewed,
 }: {
   period: DuesPeriod;
   onClose: () => void;
   orgId: string;
+  onReviewed?: (paymentId: string, action: "verified" | "rejected") => void;
 }) {
   const [items, setItems] = useState<DuesReviewQueueItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<DuesReviewQueueItem | null>(null);
@@ -124,6 +129,7 @@ function DuesReviewDialogContent({
           errorMessage: res.errorMessage || "Failed to verify payment.",
         };
       }
+      onReviewed?.(paymentId, "verified");
       return { success: true };
     } catch {
       // Rollback
@@ -172,6 +178,7 @@ function DuesReviewDialogContent({
           errorMessage: res.errorMessage || "Failed to reject payment.",
         };
       }
+      onReviewed?.(paymentId, "rejected");
       return { success: true };
     } catch {
       setItems(previousItems);
