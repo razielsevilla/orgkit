@@ -1,5 +1,5 @@
 import { Resend } from "resend";
-import { getResendApiKey, requireResendApiKey } from "./env";
+import { getResendApiKey, requireResendApiKey } from "./env.ts";
 
 let cachedClient: Resend | null = null;
 
