@@ -217,7 +217,11 @@ export function DuesSummaryTiles({
               }
             }
           }}
-          aria-label={`Pending review: ${summary.pendingCount} submissions`}
+          aria-label={
+            summary.pendingCount > 0 && onOpenReviewQueue
+              ? `Open review queue for ${summary.pendingCount} pending submissions`
+              : `Pending review: ${summary.pendingCount} submissions`
+          }
           style={{
             display: "flex",
             flexDirection: "column",
@@ -227,7 +231,9 @@ export function DuesSummaryTiles({
               ? "color-mix(in srgb, #f59e0b 5%, var(--color-surface))"
               : "var(--color-surface)",
             border: `1px solid ${
-              summary.pendingCount > 0
+              activeStatusFilter === "pending"
+                ? "var(--color-accent)"
+                : summary.pendingCount > 0
                 ? "color-mix(in srgb, #f59e0b 35%, var(--color-line))"
                 : "var(--color-line)"
             }`,
