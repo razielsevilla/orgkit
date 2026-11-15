@@ -85,6 +85,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 DATABASE_URL=
 RESEND_API_KEY=
+RESEND_FROM_EMAIL=
 SENTRY_DSN=
 ```
 
@@ -96,3 +97,4 @@ SENTRY_DSN=
 - **Auth:** Google OAuth through Supabase Auth, requesting only the `openid`, `email` and `profile` scopes.
 - **QR check-in:** short-lived, signed, rotating tokens so a screenshot of the QR can't be reused by absent members.
 - **Payments:** GCash references are stored as records only. OrgKit never holds money.
+- **Email notifications:** Resend sends transactional payment reminders initiated by officers. Outbound sends are chunked (25 per batch with 150ms delays) to respect API rate limits. Development and automated test runs fall back to an in-memory mock transport when `RESEND_API_KEY` is omitted.
