@@ -183,3 +183,81 @@ $$;
 revoke all on function public.get_dues_reminder_recipients(uuid) from public, anon;
 grant execute on function public.get_dues_reminder_recipients(uuid) to authenticated;
 grant execute on function public.get_dues_reminder_recipients(uuid) to service_role;
+
+-- 4. Security Definer Function: log_dues_reminder
+-- Records a reminder dispatch attempt (sent, failed, bounced, skipped) in dues_reminders.
+create or replace function public.log_dues_reminder(
+  p_period_id uuid,
+  p_member_id uuid,
+  p_status text,
+  p_error_message text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_period record;
+  v_member record;
+  v_reminder_id uuid;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if p_status not in ('sent', 'failed', 'bounced', 'skipped') then
+    raise exception 'invalid_reminder_status';
+  end if;
+
+  select id, org_id, status
+    into v_period
+    from public.dues_periods
+   where id = p_period_id;
+
+  if v_period.id is null then
+    raise exception 'period_not_found';
+  end if;
+
+  if not public.is_org_member(v_period.org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  -- Ensure member belongs to the same org
+  select id, org_id
+    into v_member
+    from public.members
+   where id = p_member_id;
+
+  if v_member.id is null or v_member.org_id != v_period.org_id then
+    raise exception 'member_not_found';
+  end if;
+
+  insert into public.dues_reminders (
+    org_id,
+    period_id,
+    member_id,
+    sent_by,
+    sent_at,
+    status,
+    error_message
+  ) values (
+    v_period.org_id,
+    p_period_id,
+    p_member_id,
+    v_caller_id,
+    now(),
+    p_status,
+    p_error_message
+  )
+  returning id into v_reminder_id;
+
+  return v_reminder_id;
+end;
+$$;
+
+revoke all on function public.log_dues_reminder(uuid, uuid, text, text) from public, anon;
+grant execute on function public.log_dues_reminder(uuid, uuid, text, text) to authenticated;
+grant execute on function public.log_dues_reminder(uuid, uuid, text, text) to service_role;
