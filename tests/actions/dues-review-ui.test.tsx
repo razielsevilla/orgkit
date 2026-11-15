@@ -36,6 +36,12 @@ const { DuesUndoDialog } = await import(
 const { DuesScreenshotViewer } = await import(
   "@/src/components/workspace/dues/dues-screenshot-viewer"
 );
+const { DuesReviewQueueItemRow } = await import(
+  "@/src/components/workspace/dues/dues-review-queue-item"
+);
+const { DuesReviewPane } = await import(
+  "@/src/components/workspace/dues/dues-review-pane"
+);
 
 async function render(element: ReturnType<typeof createElement>): Promise<string> {
   const stream = await renderToReadableStream(element);
@@ -135,3 +141,74 @@ describe("DuesScreenshotViewer component", () => {
     expect(html).toContain("Loading screenshot...");
   });
 });
+
+describe("DuesReviewQueueItemRow component", () => {
+  it("renders member name, amount, reference, and formatted timestamp", async () => {
+    const html = await render(
+      createElement(DuesReviewQueueItemRow, {
+        item: mockItem,
+        isSelected: false,
+        onSelect: () => {},
+      })
+    );
+
+    expect(html).toContain("Maria Santos");
+    expect(html).toContain("₱200.00");
+    expect(html).toContain("1001 2345 6789");
+  });
+
+  it("indicates selected state when active", async () => {
+    const html = await render(
+      createElement(DuesReviewQueueItemRow, {
+        item: mockItem,
+        isSelected: true,
+        onSelect: () => {},
+      })
+    );
+
+    expect(html).toContain('aria-selected="true"');
+  });
+});
+
+describe("DuesReviewPane layout component", () => {
+  it("renders pending count badge, queue, and detail pane when item selected", async () => {
+    const html = await render(
+      createElement(DuesReviewPane, {
+        orgId: "org-1",
+        periodId: "period-1",
+        periodName: "1st Sem 2026",
+        items: [mockItem],
+        selectedItem: mockItem,
+        onSelectItem: () => {},
+        onVerify: async () => ({ success: true }),
+        onOpenReject: () => {},
+      })
+    );
+
+    expect(html).toContain("1 pending");
+    expect(html).toContain("Maria Santos");
+    expect(html).toContain("Amount to match");
+    expect(html).toContain("₱200.00");
+    expect(html).toContain("Verify payment");
+    expect(html).toContain("Reject payment");
+    expect(html).toContain("Back to queue");
+  });
+
+  it("renders empty state when items list is empty", async () => {
+    const html = await render(
+      createElement(DuesReviewPane, {
+        orgId: "org-1",
+        periodId: "period-1",
+        periodName: "1st Sem 2026",
+        items: [],
+        selectedItem: null,
+        onSelectItem: () => {},
+        onVerify: async () => ({ success: true }),
+        onOpenReject: () => {},
+      })
+    );
+
+    expect(html).toContain("Nothing to review");
+  });
+});
+
