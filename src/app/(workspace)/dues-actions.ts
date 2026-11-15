@@ -802,6 +802,59 @@ export async function sendDuesRemindersAction(
   );
 }
 
+/**
+ * Retries sending reminder emails to a specific subset of members that previously failed.
+ */
+export async function retryFailedRemindersAction(
+  orgId: string,
+  periodId: string,
+  memberIds: string[]
+): Promise<ActionResult<SendReminderSummary, DuesActionError>> {
+  const validation = validateRetryReminders({ orgId, periodId, memberIds });
+  if (!validation.isValid || !validation.data) {
+    return fail("invalid_input", validation.error ?? "Invalid retry parameters.");
+  }
+
+  const baseUrl = await getBaseUrl();
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "retryFailedRemindersAction",
+      unexpected: "We couldn't retry sending reminders. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { data, error } = await executeSendRemindersBatch({
+        supabase: caller.supabase,
+        periodId,
+        baseUrl,
+        targetMemberIds: validation.data!.memberIds,
+      });
+
+      if (error || !data) {
+        const msg = error?.message || "Failed to retry sending reminders.";
+        if (msg.includes("closed period") || msg.includes("period_closed")) {
+          return fail("closed_period", "Reminders cannot be sent for a closed period.");
+        }
+        if (msg.includes("email provider") || msg.includes("RESEND_API_KEY")) {
+          return fail("no_email_provider", "No email provider is configured. Check your RESEND_API_KEY.");
+        }
+        if (msg.includes("period_not_found")) {
+          return fail("not_found", "Dues period not found.");
+        }
+        if (msg.includes("not_authorized")) {
+          return fail("not_authorized", "You are not authorized to send reminders for this organization.");
+        }
+        return fail("failed", msg);
+      }
+
+      revalidatePath(duesPath(orgId));
+      return ok(data);
+    }
+  );
+}
+
+
 
 
 
