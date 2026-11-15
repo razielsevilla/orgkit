@@ -225,5 +225,5 @@ begin
 end;
 $$;
 
-revoke all on function public.get_dues_period_dashboard(uuid, text, text, int, int) from public;
+revoke all on function public.get_dues_period_dashboard(uuid, text, text, int, int) from public, anon;
 grant execute on function public.get_dues_period_dashboard(uuid, text, text, int, int) to authenticated;
