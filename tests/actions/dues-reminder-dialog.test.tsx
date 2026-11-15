@@ -121,12 +121,36 @@ describe("DuesReminderDialog component render", () => {
     expect(html).toContain("Send reminders");
   });
 
-  it("renders closed period notice when period is closed", async () => {
+  it("renders closed period notice when period is closed and disables send button", async () => {
     const closedPeriod: DuesPeriod = {
       ...samplePeriod,
       status: "closed",
     };
     const html = await render({ period: closedPeriod });
-    expect(html).toContain("Reminders cannot be sent for a closed dues period.");
+    expect(html).toContain("This dues period is closed");
+    expect(html).toContain("disabled");
+  });
+
+  it("renders empty state message when everyone has paid or is pending review", async () => {
+    const html = await render({
+      initialPreview: {
+        ...mockPreviewData,
+        eligible_count: 0,
+        total_unpaid_count: 0,
+      },
+    });
+    expect(html).toContain("Everyone has paid or is pending review");
+    expect(html).toContain("No reminder emails to send");
+  });
+
+  it("renders missing email provider alert when RESEND_API_KEY is not configured", async () => {
+    const html = await render({
+      initialPreview: {
+        ...mockPreviewData,
+        is_email_configured: false,
+      },
+    });
+    expect(html).toContain("Email service not configured");
+    expect(html).toContain("RESEND_API_KEY is not set");
   });
 });

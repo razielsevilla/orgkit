@@ -32,6 +32,7 @@ export interface DuesReminderDialogProps {
   onClose: () => void;
   orgId: string;
   period: DuesPeriod | null;
+  initialPreview?: ReminderPreviewData | null;
   onRemindersSent?: (summary: SendReminderSummary) => void;
 }
 
@@ -40,6 +41,7 @@ export function DuesReminderDialog({
   onClose,
   orgId,
   period,
+  initialPreview,
   onRemindersSent,
 }: DuesReminderDialogProps) {
   if (!isOpen || !period) return null;
@@ -49,6 +51,7 @@ export function DuesReminderDialog({
       key={period.id}
       orgId={orgId}
       period={period}
+      initialPreview={initialPreview}
       onClose={onClose}
       onRemindersSent={onRemindersSent}
     />
@@ -58,23 +61,26 @@ export function DuesReminderDialog({
 function DuesReminderDialogContent({
   orgId,
   period,
+  initialPreview = null,
   onClose,
   onRemindersSent,
 }: {
   orgId: string;
   period: DuesPeriod;
+  initialPreview?: ReminderPreviewData | null;
   onClose: () => void;
   onRemindersSent?: (summary: SendReminderSummary) => void;
 }) {
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialPreview);
   const [isSending, setIsSending] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
-  const [preview, setPreview] = useState<ReminderPreviewData | null>(null);
+  const [preview, setPreview] = useState<ReminderPreviewData | null>(initialPreview);
   const [error, setError] = useState<string | null>(null);
   const [summary, setSummary] = useState<SendReminderSummary | null>(null);
 
-  // Load preview data on open
+  // Load preview data on open if not provided initially
   useEffect(() => {
+    if (initialPreview) return;
     let cancelled = false;
     setIsLoading(true);
     setError(null);
