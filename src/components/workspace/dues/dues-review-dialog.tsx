@@ -184,7 +184,7 @@ function DuesReviewDialogContent({
 
   return (
     <>
-      <Dialog labelledBy={titleId} onDismiss={onClose} maxWidth={880}>
+      <Dialog labelledBy={titleId} onDismiss={onClose} maxWidth={920}>
         <DialogHeader
           title={`Review payments: ${period.name}`}
           titleId={titleId}
@@ -193,7 +193,7 @@ function DuesReviewDialogContent({
           iconBg="color-mix(in srgb, #059669 12%, transparent)"
         />
 
-        <DialogBody>
+        <DialogBody style={{ padding: "16px 20px" }}>
           {bannerError && (
             <div
               style={{

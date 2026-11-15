@@ -49,15 +49,15 @@ export function DuesScreenshotViewer({
         style={{
           position: "relative",
           width: "100%",
-          minHeight: 240,
-          maxHeight: 380,
-          backgroundColor: "color-mix(in srgb, var(--color-line) 30%, transparent)",
-          borderRadius: 14,
+          height: 210,
+          backgroundColor: "color-mix(in srgb, var(--color-base) 60%, var(--color-surface))",
+          borderRadius: 12,
           overflow: "hidden",
           border: "1px solid var(--color-line)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          boxSizing: "border-box",
         }}
       >
         {isLoading && (
@@ -67,11 +67,11 @@ export function DuesScreenshotViewer({
               flexDirection: "column",
               alignItems: "center",
               gap: 8,
-              color: "var(--color-ink-muted)",
-              fontSize: "0.875rem",
+              color: "var(--color-muted)",
+              fontSize: "0.8125rem",
             }}
           >
-            <RefreshCw size={24} className="animate-spin" />
+            <RefreshCw size={20} className="animate-spin" />
             <span>Loading screenshot...</span>
           </div>
         )}
@@ -79,41 +79,41 @@ export function DuesScreenshotViewer({
         {!isLoading && hasError && (
           <div
             style={{
-              padding: 24,
+              padding: 16,
               textAlign: "center",
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 8,
-              color: "var(--color-ink-muted)",
+              gap: 6,
+              color: "var(--color-muted)",
             }}
           >
-            <AlertCircle size={32} style={{ color: "#ef4444" }} />
-            <span style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--color-ink)" }}>
+            <AlertCircle size={24} style={{ color: "var(--color-danger)" }} />
+            <span style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--color-ink)" }}>
               Screenshot unavailable
             </span>
-            <p style={{ margin: 0, fontSize: "0.8rem", maxWidth: 240 }}>
+            <p style={{ margin: 0, fontSize: "0.75rem", maxWidth: 220, lineHeight: 1.3 }}>
               The payment screenshot could not be loaded or the link has expired.
             </p>
             <button
               type="button"
               onClick={loadUrl}
               style={{
-                marginTop: 6,
-                padding: "6px 14px",
-                fontSize: "0.8rem",
-                fontWeight: 500,
-                borderRadius: 8,
+                marginTop: 4,
+                padding: "4px 12px",
+                fontSize: "0.75rem",
+                fontWeight: 600,
+                borderRadius: 6,
                 border: "1px solid var(--color-line)",
                 backgroundColor: "var(--color-surface)",
                 color: "var(--color-ink)",
                 cursor: "pointer",
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 5,
               }}
             >
-              <RefreshCw size={14} />
+              <RefreshCw size={12} />
               <span>Retry</span>
             </button>
           </div>
@@ -144,7 +144,7 @@ export function DuesScreenshotViewer({
               onError={() => setHasError(true)}
               style={{
                 maxWidth: "100%",
-                maxHeight: 380,
+                maxHeight: "100%",
                 objectFit: "contain",
                 display: "block",
               }}
@@ -152,21 +152,21 @@ export function DuesScreenshotViewer({
             <div
               style={{
                 position: "absolute",
-                bottom: 10,
-                right: 10,
-                backgroundColor: "rgba(0, 0, 0, 0.65)",
+                bottom: 8,
+                right: 8,
+                backgroundColor: "rgba(0, 0, 0, 0.7)",
                 color: "#ffffff",
-                padding: "6px 10px",
-                borderRadius: 8,
-                fontSize: "0.75rem",
-                fontWeight: 500,
+                padding: "4px 8px",
+                borderRadius: 6,
+                fontSize: "0.6875rem",
+                fontWeight: 600,
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
+                gap: 5,
                 backdropFilter: "blur(4px)",
               }}
             >
-              <ZoomIn size={14} />
+              <ZoomIn size={12} />
               <span>Tap to enlarge</span>
             </div>
           </button>
