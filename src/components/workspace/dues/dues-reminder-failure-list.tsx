@@ -69,7 +69,8 @@ export function DuesReminderFailureList({
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
-              gap: 12,
+              flexWrap: "wrap",
+              gap: 8,
               padding: "10px 12px",
               borderRadius: 10,
               backgroundColor: "var(--color-surface)",
@@ -77,11 +78,11 @@ export function DuesReminderFailureList({
               fontSize: 12.5,
             }}
           >
-            <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-              <span style={{ fontWeight: 600, color: "var(--color-ink)", overflowWrap: "anywhere" }}>
+            <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: "1 1 180px" }}>
+              <span style={{ fontWeight: 600, color: "var(--color-ink)", overflowWrap: "anywhere", wordBreak: "break-word" }}>
                 {f.full_name}
               </span>
-              <span style={{ color: "var(--color-muted)", fontSize: 11.5, overflowWrap: "anywhere" }}>
+              <span style={{ color: "var(--color-muted)", fontSize: 11.5, overflowWrap: "anywhere", wordBreak: "break-word" }}>
                 {f.email}
               </span>
             </div>
@@ -98,10 +99,12 @@ export function DuesReminderFailureList({
                 backgroundColor: "color-mix(in srgb, var(--color-danger, #ef4444) 12%, transparent)",
                 color: "var(--color-danger, #ef4444)",
                 flexShrink: 0,
+                maxWidth: "100%",
+                overflowWrap: "anywhere",
               }}
             >
-              <MailX size={12} />
-              <span>{f.error_message}</span>
+              <MailX size={12} style={{ flexShrink: 0 }} />
+              <span style={{ overflowWrap: "anywhere" }}>{f.error_message}</span>
             </span>
           </div>
         ))}

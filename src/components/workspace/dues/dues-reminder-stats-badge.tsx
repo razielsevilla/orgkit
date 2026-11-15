@@ -80,8 +80,8 @@ export function DuesReminderStatsBadge({
       {skipped24hCount > 0 && (
         <div
           style={{
-            display: "inline-flex",
-            alignItems: "center",
+            display: "flex",
+            alignItems: "flex-start",
             gap: 8,
             padding: "8px 12px",
             borderRadius: 10,
@@ -91,8 +91,8 @@ export function DuesReminderStatsBadge({
             color: "#854d0e",
           }}
         >
-          <Clock size={14} style={{ flexShrink: 0, color: "#ca8a04" }} />
-          <span>
+          <Clock size={14} style={{ flexShrink: 0, marginTop: 2, color: "#ca8a04" }} />
+          <span style={{ overflowWrap: "anywhere" }}>
             <strong>{skipped24hCount}</strong> {skipped24hCount === 1 ? "member was" : "members were"} reminded in the last 24 hours and will be skipped.
           </span>
         </div>

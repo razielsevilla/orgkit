@@ -289,25 +289,36 @@ function DuesReminderDialogContent({
       </DialogBody>
 
       <DialogFooter>
-        <DialogButton onClick={onClose} disabled={isSending || isRetrying}>
-          {summary ? "Done" : "Cancel"}
-        </DialogButton>
-        {!summary && (
-          <DialogButton
-            variant="primary"
-            onClick={handleSend}
-            disabled={!canSend || isRetrying}
-          >
-            {isSending ? (
-              "Sending..."
-            ) : (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <Send size={14} />
-                <span>Send reminders</span>
-              </span>
-            )}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            flexWrap: "wrap",
+            gap: 10,
+            width: "100%",
+          }}
+        >
+          <DialogButton onClick={onClose} disabled={isSending || isRetrying}>
+            {summary ? "Done" : "Cancel"}
           </DialogButton>
-        )}
+          {!summary && (
+            <DialogButton
+              variant="primary"
+              onClick={handleSend}
+              disabled={!canSend || isRetrying}
+            >
+              {isSending ? (
+                "Sending..."
+              ) : (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <Send size={14} />
+                  <span>Send reminders</span>
+                </span>
+              )}
+            </DialogButton>
+          )}
+        </div>
       </DialogFooter>
     </Dialog>
   );

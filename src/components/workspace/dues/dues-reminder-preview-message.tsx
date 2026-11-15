@@ -34,22 +34,40 @@ export function DuesReminderPreviewMessage({
           borderBottom: "1px solid var(--color-line)",
           display: "flex",
           flexDirection: "column",
-          gap: 4,
+          gap: 6,
           fontSize: 12.5,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--color-muted-strong)" }}>
-          <Mail size={13} style={{ color: "var(--color-accent)", flexShrink: 0 }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            flexWrap: "wrap",
+            gap: "4px 6px",
+            color: "var(--color-muted-strong)",
+          }}
+        >
+          <Mail size={13} style={{ color: "var(--color-accent)", flexShrink: 0, alignSelf: "center" }} />
           <span>To:</span>
-          <span style={{ fontWeight: 600, color: "var(--color-ink)" }}>
+          <span style={{ fontWeight: 600, color: "var(--color-ink)", overflowWrap: "anywhere", wordBreak: "break-word" }}>
             {sampleRecipientName}
           </span>
-          <span style={{ color: "var(--color-muted)" }}>&lt;{sampleRecipientEmail}&gt;</span>
+          <span style={{ color: "var(--color-muted)", overflowWrap: "anywhere", wordBreak: "break-word" }}>
+            &lt;{sampleRecipientEmail}&gt;
+          </span>
         </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 6, color: "var(--color-muted-strong)" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            flexWrap: "wrap",
+            gap: "4px 6px",
+            color: "var(--color-muted-strong)",
+          }}
+        >
           <span style={{ width: 13, flexShrink: 0 }} />
           <span>Subject:</span>
-          <span style={{ fontWeight: 600, color: "var(--color-brand-deep)", overflowWrap: "anywhere" }}>
+          <span style={{ fontWeight: 600, color: "var(--color-brand-deep)", overflowWrap: "anywhere", wordBreak: "break-word" }}>
             {subject}
           </span>
         </div>
@@ -63,6 +81,8 @@ export function DuesReminderPreviewMessage({
           lineHeight: 1.6,
           color: "var(--color-ink)",
           whiteSpace: "pre-wrap",
+          overflowWrap: "anywhere",
+          wordBreak: "break-word",
           maxHeight: 220,
           overflowY: "auto",
           fontFamily: "var(--font-sans, inherit)",
