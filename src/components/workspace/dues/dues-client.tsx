@@ -31,18 +31,31 @@ import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 interface DuesClientProps {
   rawId: string;
   initialPeriods: DuesPeriod[];
+  initialDashboardData?: DuesDashboardData | null;
   siteUrl?: string | null;
 }
 
-export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) {
+export function DuesClient({
+  rawId,
+  initialPeriods,
+  initialDashboardData = null,
+  siteUrl,
+}: DuesClientProps) {
   const [periods, setPeriods] = useState<DuesPeriod[]>(initialPeriods);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(
-    initialPeriods.find((p) => p.status === "open")?.id || initialPeriods[0]?.id || ""
+    initialDashboardData?.period.id ||
+      initialPeriods.find((p) => p.status === "open")?.id ||
+      initialPeriods[0]?.id ||
+      ""
   );
 
   // Dashboard state
-  const [dashboardData, setDashboardData] = useState<DuesDashboardData | null>(null);
-  const [isLoadingDashboard, setIsLoadingDashboard] = useState<boolean>(Boolean(initialPeriods.length));
+  const [dashboardData, setDashboardData] = useState<DuesDashboardData | null>(
+    initialDashboardData
+  );
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState<boolean>(
+    Boolean(initialPeriods.length && !initialDashboardData)
+  );
   const [isPaging, setIsPaging] = useState<boolean>(false);
   const [dashboardError, setDashboardError] = useState<string | null>(null);
 
@@ -99,8 +112,14 @@ export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) 
     [rawId, selectedPeriodId, searchQuery, statusFilter, page]
   );
 
+  const isFirstMountRef = useRef(Boolean(initialDashboardData));
+
   // Initial and reactive load on filter / search / period changes
   useEffect(() => {
+    if (isFirstMountRef.current) {
+      isFirstMountRef.current = false;
+      return;
+    }
     if (selectedPeriodId) {
       fetchDashboard(page, false);
     }
