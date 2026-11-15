@@ -35,8 +35,8 @@ export function DuesPeriodPicker({
         padding: "16px 20px",
         backgroundColor: "var(--color-surface)",
         border: "1px solid var(--color-line)",
-        borderRadius: 14,
-        boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+        borderRadius: 16,
+        boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
       }}
     >
       <div
@@ -58,22 +58,32 @@ export function DuesPeriodPicker({
             disabled={disabled || periods.length === 0}
             value={selectedPeriod?.id || ""}
             onChange={(e) => onSelectPeriod(e.target.value)}
+            onFocus={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-accent)";
+              e.currentTarget.style.boxShadow =
+                "0 0 0 3px color-mix(in srgb, var(--color-accent) 15%, transparent)";
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.borderColor = "var(--color-line)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
             style={{
               width: "100%",
               height: 40,
               padding: "0 36px 0 14px",
               appearance: "none",
               borderRadius: 10,
-              backgroundColor: "color-mix(in srgb, var(--color-surface) 90%, var(--color-line) 10%)",
+              backgroundColor: "var(--color-surface)",
               border: "1px solid var(--color-line)",
               color: "var(--color-ink)",
-              fontSize: 14,
+              fontSize: 13.5,
               fontWeight: 600,
               cursor: disabled ? "not-allowed" : "pointer",
               outline: "none",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
               overflow: "hidden",
+              transition: "border-color 0.15s ease, box-shadow 0.15s ease",
             }}
           >
             {periods.map((p) => (
@@ -111,9 +121,9 @@ export function DuesPeriodPicker({
             <span style={{ fontWeight: 600, color: "var(--color-ink)" }}>
               {formatPeso(selectedPeriod.amount)} / member
             </span>
-            <span aria-hidden="true">•</span>
+            <span aria-hidden="true" style={{ color: "var(--color-line-strong)" }}>•</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <Calendar size={13} style={{ flexShrink: 0 }} />
+              <Calendar size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: "var(--color-muted)" }} />
               Due {selectedPeriod.dueOn}
             </span>
           </div>
@@ -128,22 +138,27 @@ export function DuesPeriodPicker({
             display: "inline-flex",
             alignItems: "center",
             gap: 6,
-            height: 36,
-            padding: "0 14px",
-            borderRadius: 8,
-            backgroundColor: "transparent",
+            height: 38,
+            padding: "0 16px",
+            borderRadius: 9999,
+            backgroundColor: "var(--color-surface)",
             border: "1px solid var(--color-line)",
             color: "var(--color-ink)",
             fontSize: 13,
-            fontWeight: 500,
+            fontWeight: 600,
             cursor: "pointer",
+            boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
             transition: "all 0.15s ease",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.backgroundColor = "var(--color-surface-hover, rgba(0,0,0,0.03))";
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 4px 12px rgba(24, 24, 27, 0.08)";
+            e.currentTarget.style.borderColor = "var(--color-line-strong)";
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = "transparent";
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
+            e.currentTarget.style.borderColor = "var(--color-line)";
           }}
         >
           <Plus size={14} strokeWidth={2.2} />

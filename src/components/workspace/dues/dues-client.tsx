@@ -381,18 +381,30 @@ export function DuesClient({
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 6,
-                        height: 32,
-                        padding: "0 12px",
-                        borderRadius: 6,
+                        height: 34,
+                        padding: "0 14px",
+                        borderRadius: 9999,
                         backgroundColor: "var(--color-surface)",
                         border: "1px solid var(--color-line)",
                         color: "var(--color-ink)",
                         fontSize: 12.5,
-                        fontWeight: 500,
+                        fontWeight: 600,
                         cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(24, 24, 27, 0.08)";
+                        e.currentTarget.style.borderColor = "var(--color-line-strong)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
+                        e.currentTarget.style.borderColor = "var(--color-line)";
                       }}
                     >
-                      <LinkIcon size={13} />
+                      <LinkIcon size={13} strokeWidth={1.8} />
                       Pay Link
                     </button>
                     <button
@@ -402,18 +414,30 @@ export function DuesClient({
                         display: "inline-flex",
                         alignItems: "center",
                         gap: 6,
-                        height: 32,
-                        padding: "0 12px",
-                        borderRadius: 6,
+                        height: 34,
+                        padding: "0 14px",
+                        borderRadius: 9999,
                         backgroundColor: "var(--color-surface)",
                         border: "1px solid var(--color-line)",
                         color: "var(--color-ink)",
                         fontSize: 12.5,
-                        fontWeight: 500,
+                        fontWeight: 600,
                         cursor: "pointer",
+                        boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+                        transition: "all 0.15s ease",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = "translateY(-1px)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(24, 24, 27, 0.08)";
+                        e.currentTarget.style.borderColor = "var(--color-line-strong)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = "none";
+                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
+                        e.currentTarget.style.borderColor = "var(--color-line)";
                       }}
                     >
-                      <Settings2 size={13} />
+                      <Settings2 size={13} strokeWidth={1.8} />
                       Edit
                     </button>
                     {currentSelectedPeriod.status === "open" && (
@@ -424,18 +448,30 @@ export function DuesClient({
                           display: "inline-flex",
                           alignItems: "center",
                           gap: 6,
-                          height: 32,
-                          padding: "0 12px",
-                          borderRadius: 6,
+                          height: 34,
+                          padding: "0 14px",
+                          borderRadius: 9999,
                           backgroundColor: "var(--color-surface)",
                           border: "1px solid var(--color-line)",
                           color: "var(--color-danger-strong)",
                           fontSize: 12.5,
-                          fontWeight: 500,
+                          fontWeight: 600,
                           cursor: "pointer",
+                          boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+                          transition: "all 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = "translateY(-1px)";
+                          e.currentTarget.style.boxShadow = "0 4px 12px rgba(220, 38, 38, 0.1)";
+                          e.currentTarget.style.borderColor = "var(--color-danger-line)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = "none";
+                          e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
+                          e.currentTarget.style.borderColor = "var(--color-line)";
                         }}
                       >
-                        <Lock size={13} />
+                        <Lock size={13} strokeWidth={1.8} />
                         Close Period
                       </button>
                     )}
