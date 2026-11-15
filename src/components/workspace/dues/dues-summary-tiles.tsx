@@ -281,7 +281,7 @@ export function DuesSummaryTiles({
             </span>
             <div>
               <span style={{ fontSize: 11.5, color: "var(--color-muted)" }}>
-                Outstanding<span className="sr-only">:</span>
+                Outstanding
               </span>
               <div
                 style={{

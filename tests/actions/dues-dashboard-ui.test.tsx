@@ -104,7 +104,7 @@ describe("Dues Dashboard UI Components", () => {
 
       expect(html).toContain("Collected ₱500.00 of ₱1,000.00");
       expect(html).toContain("50% collected");
-      expect(html).toContain("Outstanding:");
+      expect(html).toContain("Outstanding");
       expect(html).toContain("₱500.00");
     });
 

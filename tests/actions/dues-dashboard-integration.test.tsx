@@ -181,7 +181,7 @@ describe("Dues Dashboard End-to-End Integration Flow", () => {
     // Collection banner & Summary Tiles
     expect(html).toContain("Collected ₱500.00 of ₱1,000.00");
     expect(html).toContain("50% collected");
-    expect(html).toContain("Outstanding:");
+    expect(html).toContain("Outstanding");
     expect(html).toContain("Paid");
     expect(html).toContain("Pending review");
     expect(html).toContain("Rejected");
