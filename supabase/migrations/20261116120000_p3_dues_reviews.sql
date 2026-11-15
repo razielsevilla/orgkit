@@ -115,3 +115,99 @@ $$;
 revoke all on function public.verify_dues_payment(uuid) from public, anon;
 grant execute on function public.verify_dues_payment(uuid) to authenticated;
 
+-- 3. Security Definer Function: reject_dues_payment
+-- Marks a submitted payment as rejected with a mandatory reason.
+-- Allows the member to subsequently submit a corrected payment.
+create or replace function public.reject_dues_payment(
+  p_payment_id uuid,
+  p_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_email text;
+  v_payment record;
+  v_member_email_key text;
+  v_clean_reason text;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  v_clean_reason := trim(p_reason);
+  if v_clean_reason is null or char_length(v_clean_reason) < 3 then
+    raise exception 'reason_required';
+  end if;
+
+  if char_length(v_clean_reason) > 500 then
+    raise exception 'reason_too_long';
+  end if;
+
+  select id, org_id, member_id, status
+    into v_payment
+    from public.dues_payments
+   where id = p_payment_id;
+
+  if v_payment.id is null then
+    raise exception 'payment_not_found';
+  end if;
+
+  if not public.is_org_member(v_payment.org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  -- Self-review guard: Officer cannot reject their own payment
+  select email into v_caller_email
+    from public.officers
+   where id = v_caller_id;
+
+  select email_key into v_member_email_key
+    from public.members
+   where id = v_payment.member_id;
+
+  if (v_caller_email is not null and lower(trim(v_caller_email)) = v_member_email_key)
+     or (auth.jwt() ->> 'email' is not null and lower(trim(auth.jwt() ->> 'email')) = v_member_email_key) then
+    raise exception 'cannot_review_own_payment';
+  end if;
+
+  -- Atomic transition from submitted -> rejected
+  update public.dues_payments
+     set status = 'rejected',
+         reject_reason = v_clean_reason,
+         reviewed_by = v_caller_id,
+         reviewed_at = now()
+   where id = p_payment_id
+     and status = 'submitted';
+
+  if not found then
+    raise exception 'already_reviewed';
+  end if;
+
+  -- Record audit event
+  insert into public.dues_payment_events (
+    payment_id,
+    org_id,
+    action,
+    actor_id,
+    reason,
+    created_at
+  ) values (
+    p_payment_id,
+    v_payment.org_id,
+    'rejected',
+    v_caller_id,
+    v_clean_reason,
+    now()
+  );
+end;
+$$;
+
+revoke all on function public.reject_dues_payment(uuid, text) from public, anon;
+grant execute on function public.reject_dues_payment(uuid, text) to authenticated;
+
+
