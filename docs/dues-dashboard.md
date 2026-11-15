@@ -71,24 +71,30 @@ public.get_dues_period_dashboard(
 
 ## Responsive UI & User Experience
 
+- **Design System Alignment (`docs/design.md`)**:
+  - Consistent zinc neutral scale (`#F4F4F5` base, `#FFFFFF` surface, `#18181B` ink, `#71717A` muted, `#E4E4E7` line).
+  - Single-accent discipline with signature emerald (`var(--color-accent) = #059669`, `var(--color-accent-strong) = #047857`).
+  - Standard semantic status tokens (`var(--color-warning)`, `var(--color-warning-soft)`, `var(--color-danger)`, `var(--color-danger-soft)`).
+  - Consistent card frames (`PANEL_RADIUS = 16`, `box-shadow: 0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)`), pill action buttons with hover elevation, and focus rings (`box-shadow: 0 0 0 2px #FFFFFF, 0 0 0 4px #059669`).
 - **Period Picker (`DuesPeriodPicker`)**:
-  - Switch periods via select dropdown.
+  - Switch periods via select dropdown with accessible focus rings.
   - View amount per member and due date.
-  - Direct shortcuts to create new period, copy pay link, edit, or close period.
+  - Direct shortcuts to create new period, copy pay link, edit, or close period with rounded-full buttons.
 - **Summary Tiles (`DuesSummaryTiles`)**:
   - Primary progress banner: "Collected ₱X of ₱Y" with visual progress bar and outstanding total.
-  - 4 status tiles (`Paid`, `Pending review`, `Rejected`, `Unpaid`).
+  - 4 status tiles (`Paid`, `Pending review`, `Rejected`, `Unpaid`) with hover lift micro-interactions.
   - The **Pending review** tile features a direct shortcut into the P3 Review Queue modal.
 - **Search & Filter Tabs (`DuesSearchFilter`)**:
   - Filter tabs: `All`, `Paid`, `Pending review`, `Unpaid`, `Rejected` with live count badges.
-  - 250ms debounced search input matching member full name and email.
+  - 250ms debounced search input matching member full name and email with clear icon button.
 - **Desktop Member Table (`DuesMemberTable`)**:
   - Inside-table scroll region (`maxHeight: 520px`, `scrollbarGutter: "stable"`).
+  - Table card frame matching `TABLE_CARD_STYLE` and uppercase 12px header row styling.
   - Avatar initials, status pills, copyable reference codes, and formatted dates.
   - 20-per-page pager navigation (`DuesMemberPager`).
 - **Mobile Viewport (`DuesMemberMobileCard`)**:
   - Optimized for 360px viewports with zero horizontal scrolling.
-  - Single-column card layout with touch targets >= 40px.
+  - Single-column card layout with touch targets >= 40px and stacked status details.
 
 ---
 
