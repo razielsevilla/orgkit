@@ -38,6 +38,15 @@ export class MockEmailSender implements EmailSender {
     }
 
     this.sent.push({ ...options });
+
+    if (process.env.NODE_ENV !== "test") {
+      console.log(`\n================== 📧 MOCK EMAIL DISPATCHED ==================`);
+      console.log(`To: ${options.to}`);
+      console.log(`Subject: ${options.subject}`);
+      console.log(`\n--- Plaintext Body ---\n${options.text}`);
+      console.log(`==============================================================\n`);
+    }
+
     return {
       success: true,
       id: `mock-email-${this.sent.length}-${Date.now()}`,
