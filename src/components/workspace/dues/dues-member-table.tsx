@@ -74,8 +74,8 @@ export function DuesMemberTable({
           width: "100%",
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
-          borderRadius: 16,
-          boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
+          borderRadius: 24,
+          boxShadow: "0 2px 10px rgba(24, 24, 27, 0.03)",
           overflow: "hidden",
         }}
       >
@@ -99,8 +99,8 @@ export function DuesMemberTable({
         width: "100%",
         backgroundColor: "var(--color-surface)",
         border: "1px solid var(--color-line)",
-        borderRadius: 16,
-        boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
+        borderRadius: 24,
+        boxShadow: "0 2px 10px rgba(24, 24, 27, 0.03)",
         overflow: "hidden",
       }}
     >
@@ -109,13 +109,13 @@ export function DuesMemberTable({
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(220px, 2.5fr) minmax(130px, 1.2fr) minmax(140px, 1.3fr) minmax(110px, 1fr)",
-          padding: "14px 20px",
+          padding: "16px 24px",
           backgroundColor: "color-mix(in srgb, var(--color-surface) 95%, var(--color-line) 5%)",
           borderBottom: "1px solid var(--color-line)",
           fontSize: 12,
-          fontWeight: 600,
+          fontWeight: 700,
           color: "var(--color-muted)",
-          letterSpacing: "0.04em",
+          letterSpacing: "0.05em",
           textTransform: "uppercase",
         }}
       >
@@ -168,13 +168,13 @@ export function DuesMemberTable({
                   }}
                 >
                   {/* Member (Avatar, Name, Email) */}
-                  <td style={{ padding: "14px 20px", width: "40%" }}>
+                  <td style={{ padding: "16px 24px", width: "40%" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
                       <div
                         aria-hidden="true"
                         style={{
-                          width: 34,
-                          height: 34,
+                          width: 38,
+                          height: 38,
                           borderRadius: "50%",
                           backgroundColor: "color-mix(in srgb, var(--color-accent) 15%, transparent)",
                           color: "var(--color-accent-strong)",
@@ -182,7 +182,7 @@ export function DuesMemberTable({
                           alignItems: "center",
                           justifyContent: "center",
                           fontWeight: 700,
-                          fontSize: 12.5,
+                          fontSize: 13.5,
                           flexShrink: 0,
                         }}
                       >
@@ -191,7 +191,8 @@ export function DuesMemberTable({
                       <div style={{ minWidth: 0, overflow: "hidden" }}>
                         <div
                           style={{
-                            fontWeight: 600,
+                            fontWeight: 700,
+                            fontSize: 14,
                             color: "var(--color-ink)",
                             whiteSpace: "nowrap",
                             textOverflow: "ellipsis",
@@ -216,7 +217,7 @@ export function DuesMemberTable({
                   </td>
 
                   {/* Status Pill */}
-                  <td style={{ padding: "14px 20px", width: "20%" }}>
+                  <td style={{ padding: "16px 24px", width: "20%" }}>
                     <DuesMemberStatusPill
                       status={member.duesStatus}
                       size="md"
@@ -225,7 +226,7 @@ export function DuesMemberTable({
                   </td>
 
                   {/* Reference # */}
-                  <td style={{ padding: "14px 20px", width: "22%" }}>
+                  <td style={{ padding: "16px 24px", width: "22%" }}>
                     {member.referenceNo ? (
                       <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
                         <code
@@ -269,7 +270,7 @@ export function DuesMemberTable({
                   </td>
 
                   {/* Date */}
-                  <td style={{ padding: "14px 20px", width: "18%", textAlign: "right", color: "var(--color-muted)", fontSize: 13 }}>
+                  <td style={{ padding: "16px 24px", width: "18%", textAlign: "right", color: "var(--color-muted)", fontSize: 13 }}>
                     {formatDate(displayDate)}
                   </td>
                 </tr>
@@ -287,7 +288,7 @@ export function DuesMemberTable({
           justifyContent: "space-between",
           flexWrap: "wrap",
           gap: 12,
-          padding: "14px 20px",
+          padding: "16px 24px",
           borderTop: "1px solid var(--color-line)",
           backgroundColor: "var(--color-surface)",
         }}
