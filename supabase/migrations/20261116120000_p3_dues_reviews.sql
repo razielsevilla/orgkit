@@ -210,4 +210,82 @@ $$;
 revoke all on function public.reject_dues_payment(uuid, text) from public, anon;
 grant execute on function public.reject_dues_payment(uuid, text) to authenticated;
 
+-- 4. Security Definer Function: undo_dues_payment_verification
+-- Allows an org admin to reverse a verified payment back to submitted with an audit reason.
+create or replace function public.undo_dues_payment_verification(
+  p_payment_id uuid,
+  p_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_payment record;
+  v_clean_reason text;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  v_clean_reason := trim(p_reason);
+  if v_clean_reason is null or char_length(v_clean_reason) < 3 then
+    raise exception 'reason_required';
+  end if;
+
+  if char_length(v_clean_reason) > 500 then
+    raise exception 'reason_too_long';
+  end if;
+
+  select id, org_id, member_id, status
+    into v_payment
+    from public.dues_payments
+   where id = p_payment_id;
+
+  if v_payment.id is null then
+    raise exception 'payment_not_found';
+  end if;
+
+  if not public.is_org_admin(v_payment.org_id) then
+    raise exception 'admin_only';
+  end if;
+
+  -- Atomic transition from verified -> submitted
+  update public.dues_payments
+     set status = 'submitted',
+         reviewed_by = null,
+         reviewed_at = null
+   where id = p_payment_id
+     and status = 'verified';
+
+  if not found then
+    raise exception 'invalid_status_transition';
+  end if;
+
+  -- Record audit event
+  insert into public.dues_payment_events (
+    payment_id,
+    org_id,
+    action,
+    actor_id,
+    reason,
+    created_at
+  ) values (
+    p_payment_id,
+    v_payment.org_id,
+    'undone',
+    v_caller_id,
+    v_clean_reason,
+    now()
+  );
+end;
+$$;
+
+revoke all on function public.undo_dues_payment_verification(uuid, text) from public, anon;
+grant execute on function public.undo_dues_payment_verification(uuid, text) to authenticated;
+
+
 
