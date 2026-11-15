@@ -16,7 +16,10 @@ import {
   type DuesPeriodValidationErrors,
 } from "@/src/lib/dues/dues-validation";
 import type { DuesReviewQueueItem } from "@/src/lib/dues/dues-review";
-import { fetchDuesReviewQueue } from "@/src/lib/dues/dues-review-server";
+import {
+  createScreenshotSignedUrl,
+  fetchDuesReviewQueue,
+} from "@/src/lib/dues/dues-review-server";
 
 export type DuesPeriodStatus = "open" | "closed";
 
@@ -457,5 +460,44 @@ export async function getDuesReviewQueue(
     }
   );
 }
+
+/**
+ * Generates a short-lived signed URL (5 minutes) for viewing a submission screenshot.
+ */
+export async function getPaymentScreenshotUrl(
+  orgId: string,
+  screenshotPath: string
+): Promise<ActionResult<{ signedUrl: string }, DuesActionError>> {
+  if (!isUuid(orgId)) {
+    return fail("not_found", "Invalid organization ID.");
+  }
+
+  const trimmedPath = (screenshotPath ?? "").trim();
+  if (!trimmedPath) {
+    return fail("invalid_input", "Screenshot path is required.");
+  }
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "getPaymentScreenshotUrl",
+      unexpected: "We couldn't load the screenshot. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { signedUrl, error } = await createScreenshotSignedUrl(
+        caller.supabase,
+        trimmedPath,
+        300
+      );
+
+      if (error || !signedUrl) {
+        return fail("failed", "Screenshot is unavailable or could not be loaded.");
+      }
+
+      return ok({ signedUrl });
+    }
+  );
+}
+
 
 
