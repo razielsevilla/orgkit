@@ -361,4 +361,52 @@ describe("Phase 10: Dues Reminders End-to-End Integration Flow", () => {
     expect(retryLogs[0].args.p_member_id).toBe(MEM_3);
     expect(retryLogs[0].args.p_status).toBe("sent");
   });
+
+  it("Scenario 8: verifies payment link token integrity in generated emails", async () => {
+    const customToken = "unique-rotated-token-xyz-789";
+    state.rawRpcData = {
+      ...state.rawRpcData,
+      period: {
+        ...state.rawRpcData.period,
+        pay_token: customToken,
+      },
+      counts: {
+        total_active_members: 1,
+        total_unpaid: 1,
+        eligible: 1,
+        skipped_24h: 0,
+        paid_or_pending: 0,
+      },
+      recipients: [
+        {
+          member_id: MEM_1,
+          full_name: "Juan Dela Cruz",
+          email: "juan@university.edu.ph",
+          is_eligible: true,
+          skip_reason: null,
+          last_reminded_at: null,
+        },
+      ],
+    };
+
+    const sendRes = await sendDuesRemindersAction(ORG_ID, PERIOD_ID);
+    expect(sendRes.success).toBe(true);
+
+    const sentEmails = state.mockSender.getSentEmails();
+    expect(sentEmails).toHaveLength(1);
+
+    const sentEmail = sentEmails[0];
+    const expectedPayUrl = `https://orgkit.ph/pay/${customToken}`;
+
+    // Verify plaintext content has exact token link
+    expect(sentEmail.text).toContain(expectedPayUrl);
+    expect(sentEmail.text).toContain("₱350.00");
+    expect(sentEmail.text).toContain("Dec 15, 2026");
+
+    // Verify HTML content has exact token link in CTA button
+    expect(sentEmail.html).toBeDefined();
+    expect(sentEmail.html).toContain(`href="${expectedPayUrl}"`);
+    expect(sentEmail.html).toContain("Pay Now &amp; Submit Receipt");
+    expect(sentEmail.html).toContain("₱350.00");
+  });
 });
