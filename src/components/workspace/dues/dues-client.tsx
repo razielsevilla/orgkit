@@ -15,6 +15,7 @@ import { DuesEmptyState } from "./dues-empty-state";
 import { DuesPeriodDialog } from "./dues-period-dialog";
 import { ClosePeriodDialog } from "./close-period-dialog";
 import { DuesPayLinkDialog } from "./dues-pay-link-dialog";
+import { DuesReviewDialog } from "./dues-review-dialog";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 
 interface DuesClientProps {
@@ -29,6 +30,7 @@ export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) 
   const [editingPeriod, setEditingPeriod] = useState<DuesPeriod | null>(null);
   const [closingPeriod, setClosingPeriod] = useState<DuesPeriod | null>(null);
   const [payLinkPeriod, setPayLinkPeriod] = useState<DuesPeriod | null>(null);
+  const [reviewPeriod, setReviewPeriod] = useState<DuesPeriod | null>(null);
   const [toastError, setToastError] = useState<string | null>(null);
 
   const openCount = periods.filter((p) => p.status === "open").length;
@@ -235,6 +237,7 @@ export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) 
                     onEdit={(p) => setEditingPeriod(p)}
                     onClosePeriod={(p) => setClosingPeriod(p)}
                     onPayLink={(p) => setPayLinkPeriod(p)}
+                    onReview={(p) => setReviewPeriod(p)}
                   />
                 </div>
 
@@ -246,6 +249,7 @@ export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) 
                       onEdit={(p) => setEditingPeriod(p)}
                       onClosePeriod={(p) => setClosingPeriod(p)}
                       onPayLink={(p) => setPayLinkPeriod(p)}
+                      onReview={(p) => setReviewPeriod(p)}
                     />
                   ))}
                 </div>
@@ -286,6 +290,14 @@ export function DuesClient({ rawId, initialPeriods, siteUrl }: DuesClientProps) 
         orgId={rawId}
         onClose={() => setPayLinkPeriod(null)}
         onLinkUpdated={handleLinkUpdated}
+      />
+
+      {/* Payment Review Queue Dialog */}
+      <DuesReviewDialog
+        isOpen={Boolean(reviewPeriod)}
+        period={reviewPeriod}
+        orgId={rawId}
+        onClose={() => setReviewPeriod(null)}
       />
     </div>
   );

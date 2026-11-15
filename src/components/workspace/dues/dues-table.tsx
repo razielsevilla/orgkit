@@ -1,5 +1,5 @@
 import React from "react";
-import { Calendar, Link as LinkIcon, Pencil, XCircle } from "lucide-react";
+import { Calendar, Link as LinkIcon, Pencil, XCircle, CheckCheck } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import { DuesStatusPill } from "./dues-status-pill";
 
@@ -8,6 +8,7 @@ interface DuesTableProps {
   onEdit: (period: DuesPeriod) => void;
   onClosePeriod: (period: DuesPeriod) => void;
   onPayLink?: (period: DuesPeriod) => void;
+  onReview?: (period: DuesPeriod) => void;
 }
 
 export function formatPesos(amount: number): string {
@@ -34,7 +35,7 @@ export function formatDueDate(dateString: string): string {
   }
 }
 
-export function DuesTable({ periods, onEdit, onClosePeriod, onPayLink }: DuesTableProps) {
+export function DuesTable({ periods, onEdit, onClosePeriod, onPayLink, onReview }: DuesTableProps) {
   return (
     <div
       style={{
@@ -157,6 +158,43 @@ export function DuesTable({ periods, onEdit, onClosePeriod, onPayLink }: DuesTab
                       <LinkIcon size={13} strokeWidth={2} />
                       Link
                     </button>
+
+                    {onReview && (
+                      <button
+                        type="button"
+                        onClick={() => onReview(period)}
+                        title="Review submissions"
+                        aria-label={`Review submissions for ${period.name}`}
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 6,
+                          height: 32,
+                          padding: "0 12px",
+                          borderRadius: 8,
+                          backgroundColor:
+                            "color-mix(in srgb, #059669 10%, transparent)",
+                          border:
+                            "1px solid color-mix(in srgb, #059669 25%, transparent)",
+                          color: "#059669",
+                          fontSize: 12.5,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          transition: "all 0.15s ease",
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "color-mix(in srgb, #059669 18%, transparent)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor =
+                            "color-mix(in srgb, #059669 10%, transparent)";
+                        }}
+                      >
+                        <CheckCheck size={14} strokeWidth={2.2} />
+                        Review
+                      </button>
+                    )}
 
                     {isOpen ? (
                       <>
