@@ -178,7 +178,7 @@ function DuesPayLinkDialogContent({
     >
       <DialogHeader
         title="Payment link"
-        subtitle={`${period.name} · ${formatPesos(period.amount)} · Due ${formatDueDate(period.dueOn)}`}
+        description={`${period.name} · ${formatPesos(period.amount)} · Due ${formatDueDate(period.dueOn)}`}
         titleId={titleId}
         onClose={isPending ? undefined : onClose}
       />

@@ -42,7 +42,7 @@ vi.mock("@/src/lib/supabase/service-role", () => ({
   }),
 }));
 
-const { submitDuesPayment } = await import("@/src/app/pay/[token]/actions");
+const { submitDuesPayment } = await import("../../src/app/pay/[token]/actions");
 
 const VALID_TOKEN = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 const ORG_ID = "org-1111-2222";
