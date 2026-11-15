@@ -72,8 +72,8 @@ export function DuesSummaryTiles({
           padding: "clamp(16px, 3.5vw, 22px)",
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
-          borderRadius: 14,
-          boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+          borderRadius: 16,
+          boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
           width: "100%",
           boxSizing: "border-box",
         }}
@@ -119,7 +119,7 @@ export function DuesSummaryTiles({
               style={{
                 fontSize: 13,
                 fontWeight: 700,
-                color: collectionRate === 100 ? "var(--color-success-strong, #10b981)" : "var(--color-accent)",
+                color: collectionRate === 100 ? "var(--color-accent-strong)" : "var(--color-accent)",
               }}
             >
               {collectionRate}% collected
@@ -149,7 +149,7 @@ export function DuesSummaryTiles({
           style={{
             width: "100%",
             height: 8,
-            backgroundColor: "color-mix(in srgb, var(--color-line) 70%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--color-line) 80%, transparent)",
             borderRadius: 9999,
             overflow: "hidden",
           }}
@@ -191,15 +191,33 @@ export function DuesSummaryTiles({
                 ? "var(--color-accent)"
                 : "var(--color-line)"
             }`,
-            borderRadius: 12,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
+            borderRadius: 14,
+            boxShadow: activeStatusFilter === "paid"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)",
             cursor: "pointer",
             transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 6px 18px rgba(24, 24, 27, 0.08)";
+            if (activeStatusFilter !== "paid") {
+              e.currentTarget.style.borderColor = "var(--color-line-strong)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = activeStatusFilter === "paid"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)";
+            if (activeStatusFilter !== "paid") {
+              e.currentTarget.style.borderColor = "var(--color-line)";
+            }
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-muted)" }}>Paid</span>
-            <CheckCircle2 size={16} style={{ color: "#10b981" }} />
+            <CheckCircle2 size={16} strokeWidth={2} style={{ color: "var(--color-accent)" }} />
           </div>
           <div style={{ marginTop: 10 }}>
             <span style={{ fontSize: 26, fontWeight: 800, color: "var(--color-ink)", lineHeight: 1 }}>
@@ -243,27 +261,45 @@ export function DuesSummaryTiles({
             justifyContent: "space-between",
             padding: "16px 18px",
             backgroundColor: summary.pendingCount > 0
-              ? "color-mix(in srgb, #f59e0b 5%, var(--color-surface))"
+              ? "color-mix(in srgb, var(--color-warning-soft) 30%, var(--color-surface))"
               : "var(--color-surface)",
             border: `1px solid ${
               activeStatusFilter === "pending"
                 ? "var(--color-accent)"
                 : summary.pendingCount > 0
-                ? "color-mix(in srgb, #f59e0b 35%, var(--color-line))"
+                ? "var(--color-warning-line)"
                 : "var(--color-line)"
             }`,
-            borderRadius: 12,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
+            borderRadius: 14,
+            boxShadow: activeStatusFilter === "pending"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)",
             cursor: "pointer",
             transition: "all 0.15s ease",
             position: "relative",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 6px 18px rgba(24, 24, 27, 0.08)";
+            if (activeStatusFilter !== "pending" && summary.pendingCount === 0) {
+              e.currentTarget.style.borderColor = "var(--color-line-strong)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = activeStatusFilter === "pending"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)";
+            if (activeStatusFilter !== "pending" && summary.pendingCount === 0) {
+              e.currentTarget.style.borderColor = "var(--color-line)";
+            }
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-muted)" }}>
               Pending review
             </span>
-            <Clock size={16} style={{ color: "#f59e0b" }} />
+            <Clock size={16} strokeWidth={2} style={{ color: "var(--color-warning)" }} />
           </div>
           <div style={{ marginTop: 10 }}>
             <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
@@ -278,10 +314,10 @@ export function DuesSummaryTiles({
                     gap: 2,
                     fontSize: 11,
                     fontWeight: 700,
-                    color: "#d97706",
+                    color: "var(--color-warning)",
                   }}
                 >
-                  Review <ArrowUpRight size={12} />
+                  Review <ArrowUpRight size={12} strokeWidth={2.5} />
                 </span>
               )}
             </div>
@@ -314,15 +350,33 @@ export function DuesSummaryTiles({
                 ? "var(--color-accent)"
                 : "var(--color-line)"
             }`,
-            borderRadius: 12,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
+            borderRadius: 14,
+            boxShadow: activeStatusFilter === "rejected"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)",
             cursor: "pointer",
             transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 6px 18px rgba(24, 24, 27, 0.08)";
+            if (activeStatusFilter !== "rejected") {
+              e.currentTarget.style.borderColor = "var(--color-line-strong)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = activeStatusFilter === "rejected"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)";
+            if (activeStatusFilter !== "rejected") {
+              e.currentTarget.style.borderColor = "var(--color-line)";
+            }
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-muted)" }}>Rejected</span>
-            <XCircle size={16} style={{ color: "#ef4444" }} />
+            <XCircle size={16} strokeWidth={2} style={{ color: "var(--color-danger)" }} />
           </div>
           <div style={{ marginTop: 10 }}>
             <span style={{ fontSize: 26, fontWeight: 800, color: "var(--color-ink)", lineHeight: 1 }}>
@@ -357,15 +411,33 @@ export function DuesSummaryTiles({
                 ? "var(--color-accent)"
                 : "var(--color-line)"
             }`,
-            borderRadius: 12,
-            boxShadow: "0 1px 3px rgba(0, 0, 0, 0.03)",
+            borderRadius: 14,
+            boxShadow: activeStatusFilter === "unpaid"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)",
             cursor: "pointer",
             transition: "all 0.15s ease",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 6px 18px rgba(24, 24, 27, 0.08)";
+            if (activeStatusFilter !== "unpaid") {
+              e.currentTarget.style.borderColor = "var(--color-line-strong)";
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = "none";
+            e.currentTarget.style.boxShadow = activeStatusFilter === "unpaid"
+              ? "0 0 0 1px var(--color-accent), 0 2px 6px rgba(5, 150, 105, 0.08)"
+              : "0 1px 3px rgba(24, 24, 27, 0.04)";
+            if (activeStatusFilter !== "unpaid") {
+              e.currentTarget.style.borderColor = "var(--color-line)";
+            }
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--color-muted)" }}>Unpaid</span>
-            <AlertTriangle size={16} style={{ color: "var(--color-muted)" }} />
+            <AlertTriangle size={16} strokeWidth={2} style={{ color: "var(--color-muted)" }} />
           </div>
           <div style={{ marginTop: 10 }}>
             <span style={{ fontSize: 26, fontWeight: 800, color: "var(--color-ink)", lineHeight: 1 }}>
