@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { ChevronDown, Calendar, Plus } from "lucide-react";
+import { ChevronDown, Calendar, Plus, Layers } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import { DuesStatusPill } from "./dues-status-pill";
 import { formatPeso } from "@/src/lib/dues/dues-dashboard";
@@ -32,11 +32,12 @@ export function DuesPeriodPicker({
         justifyContent: "space-between",
         gap: 16,
         width: "100%",
-        padding: "16px 20px",
+        padding: "18px 24px",
         backgroundColor: "var(--color-surface)",
         border: "1px solid var(--color-line)",
-        borderRadius: 16,
-        boxShadow: "0 1px 3px rgba(24, 24, 27, 0.04)",
+        borderRadius: 24,
+        boxShadow: "0 2px 10px rgba(24, 24, 27, 0.03)",
+        boxSizing: "border-box",
       }}
     >
       <div
@@ -48,10 +49,23 @@ export function DuesPeriodPicker({
           minWidth: 0,
         }}
       >
-        <div style={{ position: "relative", minWidth: 220, maxWidth: 360 }}>
+        <div style={{ position: "relative", minWidth: 230, maxWidth: 360 }}>
           <label htmlFor="dues-period-select" className="sr-only" style={{ display: "none" }}>
             Select dues period
           </label>
+          <Layers
+            size={16}
+            strokeWidth={2}
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              left: 14,
+              top: "50%",
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+              color: "var(--color-ink)",
+            }}
+          />
           <select
             id="dues-period-select"
             aria-label="Select dues period"
@@ -69,10 +83,10 @@ export function DuesPeriodPicker({
             }}
             style={{
               width: "100%",
-              height: 40,
-              padding: "0 36px 0 14px",
+              height: 42,
+              padding: "0 36px 0 38px",
               appearance: "none",
-              borderRadius: 10,
+              borderRadius: 12,
               backgroundColor: "var(--color-surface)",
               border: "1px solid var(--color-line)",
               color: "var(--color-ink)",
@@ -112,18 +126,18 @@ export function DuesPeriodPicker({
               display: "flex",
               alignItems: "center",
               flexWrap: "wrap",
-              gap: 10,
+              gap: 12,
               fontSize: 13,
               color: "var(--color-muted)",
             }}
           >
             <DuesStatusPill status={selectedPeriod.status} size="sm" />
-            <span style={{ fontWeight: 600, color: "var(--color-ink)" }}>
+            <span style={{ fontWeight: 700, color: "var(--color-ink)", fontSize: 13.5 }}>
               {formatPeso(selectedPeriod.amount)} / member
             </span>
             <span aria-hidden="true" style={{ color: "var(--color-line-strong)" }}>•</span>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
-              <Calendar size={14} strokeWidth={1.5} style={{ flexShrink: 0, color: "var(--color-muted)" }} />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <Calendar size={14} strokeWidth={1.6} style={{ flexShrink: 0, color: "var(--color-muted)" }} />
               Due {selectedPeriod.dueOn}
             </span>
           </div>
