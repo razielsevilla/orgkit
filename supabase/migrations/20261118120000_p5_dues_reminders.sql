@@ -22,3 +22,18 @@ create index if not exists dues_reminders_cooldown_idx
 
 create index if not exists dues_reminders_period_status_idx
   on public.dues_reminders (period_id, status);
+
+-- 2. Row Level Security for dues_reminders
+alter table public.dues_reminders enable row level security;
+
+drop policy if exists "Officers can read dues reminders in their org" on public.dues_reminders;
+create policy "Officers can read dues reminders in their org"
+  on public.dues_reminders
+  for select
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- Direct client insert, update, and delete are prohibited.
+revoke insert, update, delete on public.dues_reminders from public, anon, authenticated;
+grant select on public.dues_reminders to authenticated;
+grant all on public.dues_reminders to service_role;
