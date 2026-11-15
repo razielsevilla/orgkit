@@ -73,14 +73,24 @@ export async function submitDuesPayment(
       referenceError = messages.referenceInvalid;
     }
 
-    if (!screenshot || !(screenshot instanceof File) || screenshot.size === 0) {
+    const isFileOrBlob =
+      Boolean(screenshot) &&
+      typeof screenshot === "object" &&
+      typeof (screenshot as Blob).size === "number" &&
+      typeof (screenshot as Blob).arrayBuffer === "function";
+
+    if (!isFileOrBlob || (screenshot as Blob).size === 0) {
       screenshotError = messages.screenshotMissing;
-    } else if (screenshot.size > MAX_SCREENSHOT_BYTES) {
-      screenshotError = messages.screenshotTooLarge;
-    } else if (
-      !ALLOWED_IMAGE_TYPES.includes(screenshot.type as AllowedImageType)
-    ) {
-      screenshotError = messages.screenshotInvalidType;
+    } else {
+      const fileObj = screenshot as File;
+      if (fileObj.size > MAX_SCREENSHOT_BYTES) {
+        screenshotError = messages.screenshotTooLarge;
+      } else if (
+        fileObj.type &&
+        !ALLOWED_IMAGE_TYPES.includes(fileObj.type as AllowedImageType)
+      ) {
+        screenshotError = messages.screenshotInvalidType;
+      }
     }
 
     if (emailError || referenceError || screenshotError) {
@@ -112,14 +122,6 @@ export async function submitDuesPayment(
     }
 
     // 6. Upload file buffer to private dues-screenshots storage
-    const ext =
-      file.type === "image/png"
-        ? "png"
-        : file.type === "image/webp"
-          ? "webp"
-          : "jpg";
-    const storagePath = `${row.org_id}/${crypto.randomUUID()}.${ext}`;
-
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
@@ -131,6 +133,14 @@ export async function submitDuesPayment(
         screenshotError: messages.screenshotInvalidType,
       };
     }
+
+    const ext =
+      genuineType === "image/png"
+        ? "png"
+        : genuineType === "image/webp"
+          ? "webp"
+          : "jpg";
+    const storagePath = `${row.org_id}/${crypto.randomUUID()}.${ext}`;
 
     const { error: uploadError } = await supabase.storage
       .from("dues-screenshots")

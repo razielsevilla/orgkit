@@ -60,6 +60,7 @@ export function PayForm({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
+  const [screenshotErrorDismissed, setScreenshotErrorDismissed] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const copy = DUES_PAY_MESSAGES[language];
@@ -79,6 +80,7 @@ export function PayForm({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError(null);
+    setScreenshotErrorDismissed(true);
     const files = e.target.files;
     if (!files || files.length === 0) {
       setSelectedFile(null);
@@ -91,7 +93,7 @@ export function PayForm({
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    if (!ALLOWED_IMAGE_TYPES.includes(file.type as AllowedImageType)) {
+    if (file.type && !ALLOWED_IMAGE_TYPES.includes(file.type as AllowedImageType)) {
       setFileError(copy.screenshotInvalidType);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -103,9 +105,32 @@ export function PayForm({
   const handleRemoveFile = () => {
     setSelectedFile(null);
     setFileError(null);
+    setScreenshotErrorDismissed(true);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setFileError(null);
+    setScreenshotErrorDismissed(false);
+
+    if (!selectedFile) {
+      setFileError(copy.screenshotMissing);
+      return;
+    }
+
+    const formData = new FormData(e.currentTarget);
+    formData.set("email", email);
+    formData.set("referenceNo", referenceNo);
+    formData.set("language", language);
+    // Explicitly guarantee the actual File object is attached to formData
+    formData.set("screenshot", selectedFile);
+
+    React.startTransition(() => {
+      formAction(formData);
+    });
   };
 
   if (state.status === "inactive") {
@@ -131,6 +156,7 @@ export function PayForm({
     >
       <form
         action={formAction}
+        onSubmit={handleSubmit}
         noValidate
         style={{ display: "flex", flexDirection: "column", gap: 18 }}
       >
@@ -551,7 +577,7 @@ export function PayForm({
             <span role="alert" style={{ fontSize: 12, color: "var(--color-danger)" }}>
               {fileError}
             </span>
-          ) : state.screenshotError ? (
+          ) : !screenshotErrorDismissed && state.screenshotError ? (
             <span role="alert" style={{ fontSize: 12, color: "var(--color-danger)" }}>
               {state.screenshotError}
             </span>
