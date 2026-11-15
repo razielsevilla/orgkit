@@ -60,6 +60,11 @@ export function joinLinkPath(token: string): string {
   return `/join/${token}`;
 }
 
+/** The public link members open to pay dues for a period. The token is a secret. */
+export function payLinkPath(token: string): string {
+  return `/pay/${token}`;
+}
+
 /** The sign-in page, optionally showing an error (see docs/routes.md for the codes) */
 export function signInPath(error?: string): string {
   return error ? `${ROUTES.signIn}?error=${error}` : ROUTES.signIn;
