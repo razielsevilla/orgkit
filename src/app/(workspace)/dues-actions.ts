@@ -15,6 +15,8 @@ import {
   type DuesPeriodInput,
   type DuesPeriodValidationErrors,
 } from "@/src/lib/dues/dues-validation";
+import type { DuesReviewQueueItem } from "@/src/lib/dues/dues-review";
+import { fetchDuesReviewQueue } from "@/src/lib/dues/dues-review-server";
 
 export type DuesPeriodStatus = "open" | "closed";
 
@@ -38,9 +40,42 @@ export type DuesActionError =
   | "not_found"
   | "closed_period"
   | "not_authorized"
+  | "already_reviewed"
+  | "cannot_review_own_payment"
+  | "admin_only"
   | "failed";
 
 const DUES_ERROR_RULES: readonly ErrorRule<DuesActionError>[] = [
+  {
+    match: "already_reviewed",
+    error: "already_reviewed",
+    message: "This payment has already been reviewed by another officer.",
+  },
+  {
+    match: "cannot_review_own_payment",
+    error: "cannot_review_own_payment",
+    message: "You cannot review your own payment.",
+  },
+  {
+    match: "admin_only",
+    error: "admin_only",
+    message: "Only organization admins can undo payment verifications.",
+  },
+  {
+    match: "payment_not_found",
+    error: "not_found",
+    message: "Payment submission not found.",
+  },
+  {
+    match: "reason_required",
+    error: "invalid_input",
+    message: "A reason is required.",
+  },
+  {
+    match: "reason_too_long",
+    error: "invalid_input",
+    message: "Reason cannot exceed 500 characters.",
+  },
   {
     match: "Cannot edit closed dues period",
     error: "closed_period",
@@ -384,4 +419,43 @@ export async function setDuesPayLink(
     }
   );
 }
+
+/**
+ * Loads submitted payments waiting for officer review for a dues period.
+ */
+export async function getDuesReviewQueue(
+  orgId: string,
+  periodId: string
+): Promise<ActionResult<DuesReviewQueueItem[], DuesActionError>> {
+  if (!isUuid(orgId) || !isUuid(periodId)) {
+    return fail("not_found", "Invalid organization or dues period ID.");
+  }
+
+  return withOrgCaller(
+    orgId,
+    {
+      name: "getDuesReviewQueue",
+      unexpected: "We couldn't load the review queue. Try again.",
+    },
+    async (caller: OrgCaller) => {
+      const { data, error } = await fetchDuesReviewQueue(
+        caller.supabase,
+        orgId,
+        periodId
+      );
+
+      if (error) {
+        return rpcFailure(
+          "get_dues_review_queue",
+          error,
+          DUES_ERROR_RULES,
+          "We couldn't load the review queue. Try again."
+        );
+      }
+
+      return ok(data ?? []);
+    }
+  );
+}
+
 
