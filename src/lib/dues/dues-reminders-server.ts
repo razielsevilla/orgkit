@@ -158,6 +158,48 @@ export function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Classifies an error message into a ReminderStatus ('failed' or 'bounced').
+ */
+export function classifyReminderError(
+  errorMessage?: string | null
+): "failed" | "bounced" {
+  if (!errorMessage) return "failed";
+  const lower = errorMessage.toLowerCase();
+  if (
+    lower.includes("bounce") ||
+    lower.includes("does not exist") ||
+    lower.includes("invalid email") ||
+    lower.includes("recipient rejected") ||
+    lower.includes("undeliverable")
+  ) {
+    return "bounced";
+  }
+  return "failed";
+}
+
+/**
+ * Returns a human-friendly error description for member failure cards.
+ */
+export function formatReminderErrorMessage(rawError?: string | null): string {
+  if (!rawError) return "Delivery failed";
+  const lower = rawError.toLowerCase();
+  if (
+    lower.includes("bounce") ||
+    lower.includes("does not exist") ||
+    lower.includes("undeliverable")
+  ) {
+    return "Email bounced (address not found)";
+  }
+  if (lower.includes("rate limit") || lower.includes("429")) {
+    return "Sending paused (rate limit reached, retry shortly)";
+  }
+  if (lower.includes("invalid") && lower.includes("key")) {
+    return "Email service configuration error";
+  }
+  return rawError;
+}
+
 export interface SendRemindersOptions {
   supabase: SupabaseClient;
   periodId: string;
@@ -250,8 +292,15 @@ export async function executeSendRemindersBatch(
           html: emailContent.html,
         });
 
-        const status = sendResult.success ? "sent" : "failed";
-        const errorMessage = sendResult.success ? null : (sendResult.error || "Unknown delivery error");
+        const status = sendResult.success
+          ? "sent"
+          : classifyReminderError(sendResult.error);
+        const errorMessage = sendResult.success
+          ? null
+          : (sendResult.error || "Unknown delivery error");
+        const userFriendlyError = sendResult.success
+          ? null
+          : formatReminderErrorMessage(sendResult.error);
 
         // Log result to database
         try {
@@ -273,7 +322,7 @@ export async function executeSendRemindersBatch(
             member_id: recipient.member_id,
             full_name: recipient.full_name,
             email: recipient.email,
-            error_message: sendResult.error || "Delivery failed",
+            error_message: userFriendlyError || "Delivery failed",
           });
         }
       }
