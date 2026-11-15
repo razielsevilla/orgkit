@@ -210,4 +210,62 @@ describe("Phase 10: Dues Reminders End-to-End Integration Flow", () => {
     expect(logCalls).toHaveLength(3);
     expect(logCalls.map((c) => c.args.p_status)).toEqual(["sent", "sent", "sent"]);
   });
+
+  it("Scenario 4: skips already-reminded members within 24 hours on consecutive send", async () => {
+    // Simulate state where all 3 unpaid members were reminded within the last 24 hours
+    state.rawRpcData = {
+      ...state.rawRpcData,
+      counts: {
+        total_active_members: 15,
+        total_unpaid: 3,
+        eligible: 0,
+        skipped_24h: 3,
+        paid_or_pending: 12,
+      },
+      recipients: [
+        {
+          member_id: MEM_1,
+          full_name: "Juan Dela Cruz",
+          email: "juan@university.edu.ph",
+          is_eligible: false,
+          skip_reason: "reminded_recently",
+          last_reminded_at: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
+        },
+        {
+          member_id: MEM_2,
+          full_name: "Maria Clara",
+          email: "maria@university.edu.ph",
+          is_eligible: false,
+          skip_reason: "reminded_recently",
+          last_reminded_at: new Date(Date.now() - 5 * 3600 * 1000).toISOString(),
+        },
+        {
+          member_id: MEM_3,
+          full_name: "Jose Rizal",
+          email: "jose@university.edu.ph",
+          is_eligible: false,
+          skip_reason: "reminded_recently",
+          last_reminded_at: new Date(Date.now() - 12 * 3600 * 1000).toISOString(),
+        },
+      ],
+    };
+
+    // 1. Preview shows 0 eligible, 3 skipped due to 24h cooldown
+    const previewRes = await getDuesReminderPreviewAction(ORG_ID, PERIOD_ID);
+    expect(previewRes.success).toBe(true);
+    expect(previewRes.data!.eligible_count).toBe(0);
+    expect(previewRes.data!.skipped_24h_count).toBe(3);
+
+    // 2. Dispatching reminders skips all recently reminded members
+    const sendRes = await sendDuesRemindersAction(ORG_ID, PERIOD_ID);
+    expect(sendRes.success).toBe(true);
+    expect(sendRes.data!.sent_count).toBe(0);
+    expect(sendRes.data!.skipped_count).toBe(3);
+    expect(sendRes.data!.failed_count).toBe(0);
+
+    // 0 emails dispatched, 0 logs added
+    expect(state.mockSender.getSentEmails()).toHaveLength(0);
+    const logCalls = state.rpcCalls.filter((c) => c.fn === "log_dues_reminder");
+    expect(logCalls).toHaveLength(0);
+  });
 });
