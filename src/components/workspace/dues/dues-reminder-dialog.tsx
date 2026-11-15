@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useTransition } from "react";
-import { Mail, AlertCircle, AlertTriangle, Send } from "lucide-react";
+import { Mail, AlertCircle, AlertTriangle, Send, Lock } from "lucide-react";
 import {
   Dialog,
   DialogHeader,
@@ -159,20 +159,28 @@ function DuesReminderDialogContent({
         {/* Closed Period Alert */}
         {isClosed && (
           <div
+            data-testid="closed-period-alert"
             style={{
-              padding: "12px 16px",
-              borderRadius: 12,
-              backgroundColor: "color-mix(in srgb, var(--color-ink) 6%, transparent)",
+              padding: "14px 16px",
+              borderRadius: 14,
+              backgroundColor: "color-mix(in srgb, var(--color-ink) 5%, transparent)",
               border: "1px solid var(--color-line)",
               display: "flex",
-              alignItems: "center",
-              gap: 10,
+              alignItems: "flex-start",
+              gap: 12,
               fontSize: 13,
-              color: "var(--color-muted-strong)",
+              color: "var(--color-ink)",
             }}
           >
-            <AlertCircle size={16} style={{ flexShrink: 0 }} />
-            <span>Reminders cannot be sent for a closed dues period.</span>
+            <Lock size={16} style={{ flexShrink: 0, marginTop: 2, color: "var(--color-muted-strong)" }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <strong style={{ fontSize: 13.5, color: "var(--color-ink)" }}>
+                This dues period is closed
+              </strong>
+              <span style={{ fontSize: 12.5, color: "var(--color-muted-strong)", lineHeight: 1.4 }}>
+                Payment links are inactive and reminders cannot be sent for closed periods.
+              </span>
+            </div>
           </div>
         )}
 

@@ -379,6 +379,11 @@ export function DuesClient({
                       type="button"
                       onClick={() => setReminderPeriod(currentSelectedPeriod)}
                       aria-label="Send payment reminders"
+                      title={
+                        currentSelectedPeriod.status === "closed"
+                          ? "Reminders cannot be sent for closed periods"
+                          : "Send payment reminders"
+                      }
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
