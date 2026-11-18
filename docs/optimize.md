@@ -1,6 +1,6 @@
 # OrgKit Performance Optimization Guide (`docs/optimize.md`)
 
-This document outlines the performance architecture, route transition optimizations, and Core Web Vitals blueprints applied across OrgKit's workspace routes: **Home** (`/workspace/:id`), **Members** (`/workspace/:id/members`), **Join** (`/workspace/:id/members/join`), and **Invite** (`/workspace/:id/officers`).
+This document outlines the performance architecture, route transition optimizations, and Core Web Vitals blueprints applied across OrgKit's workspace routes: **Home** (`/workspace/:id`), **Members** (`/workspace/:id/members`), **Dues** (`/workspace/:id/dues`), **Join** (`/workspace/:id/members/join`), and **Invite** (`/workspace/:id/officers`).
 
 ---
 
@@ -32,6 +32,14 @@ In `/workspace/:id/members`, three queries were executed in series, compounding 
 
 #### The Fix
 We leveraged React's request-level memoization (`React.cache()`) and `Promise.all` to parallelize independent queries into a single concurrent network batch.
+
+* **File:** [`src/lib/orgs/org-access.ts`](file:///c:/Projects-Personal/orgkit/src/lib/orgs/org-access.ts)
+  ```tsx
+  // Request-level memoization of caller membership validation across all server actions
+  export const getCallerOrgMembership = cache(async (orgId: string): Promise<CallerLookup> => {
+    // Shared between layout, page, and concurrent actions in a single server pass
+  });
+  ```
 
 * **File:** [`src/app/(workspace)/workspace/[id]/members/page.tsx`](file:///c:/Projects-Personal/orgkit/src/app/(workspace)/workspace/[id]/members/page.tsx)
   ```tsx
@@ -99,7 +107,33 @@ Converted dialogs to lazy-loaded chunks using `next/dynamic` with `{ ssr: false 
   );
   ```
 
-**Impact:** Strips **~45KB (gzipped)** of unnecessary JavaScript from the critical transition path, reducing script evaluation time to near zero.
+* **File:** [`src/components/workspace/dues/dues-client.tsx`](file:///c:/Projects-Personal/orgkit/src/components/workspace/dues/dues-client.tsx)
+  ```tsx
+  import dynamic from "next/dynamic";
+
+  const DuesPeriodDialog = dynamic(
+    () => import("./dues-period-dialog").then((m) => m.DuesPeriodDialog),
+    { ssr: false }
+  );
+  const ClosePeriodDialog = dynamic(
+    () => import("./close-period-dialog").then((m) => m.ClosePeriodDialog),
+    { ssr: false }
+  );
+  const DuesPayLinkDialog = dynamic(
+    () => import("./dues-pay-link-dialog").then((m) => m.DuesPayLinkDialog),
+    { ssr: false }
+  );
+  const DuesReminderDialog = dynamic(
+    () => import("./dues-reminder-dialog").then((m) => m.DuesReminderDialog),
+    { ssr: false }
+  );
+  const DuesReviewDialog = dynamic(
+    () => import("./dues-review-dialog").then((m) => m.DuesReviewDialog),
+    { ssr: false }
+  );
+  ```
+
+**Impact:** Strips **~45KB (gzipped)** of unnecessary JavaScript from members and **~80KB** from dues critical transition paths, reducing script evaluation time to near zero.
 
 ---
 
@@ -119,6 +153,8 @@ Created segment-level `loading.tsx` files that match the exact geometry, margins
    - Holds the exact container box for the Join Link card and QR preview panel.
 3. **[`officers/loading.tsx`](file:///c:/Projects-Personal/orgkit/src/app/(workspace)/workspace/[id]/officers/loading.tsx)**:
    - Skeletons the officer roster and pending invite cards.
+4. **[`dues/loading.tsx`](file:///c:/Projects-Personal/orgkit/src/app/(workspace)/workspace/[id]/dues/loading.tsx)**:
+   - Geometry-matched skeleton matching the period picker, summary metrics tiles, filter pills, and member payment table using `DuesDashboardSkeleton`.
 
 **Impact:** Cumulative Layout Shift (CLS) drops to **0.00**. Clicking a link displays the layout skeleton instantly without any full-page spinner interruption.
 

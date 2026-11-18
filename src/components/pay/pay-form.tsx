@@ -6,16 +6,12 @@ import {
   AlertCircle,
   Calendar,
   Camera,
-  CheckCircle2,
-  Image as ImageIcon,
   Loader2,
   Lock,
-  Upload,
   X,
 } from "lucide-react";
 import {
   Card,
-  CardHeader,
   CardTitle,
   CardDescription,
   CardContent,

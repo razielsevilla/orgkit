@@ -13,7 +13,6 @@ import { isUuid } from "@/src/lib/validation";
 import {
   validateDuesPeriodInput,
   type DuesPeriodInput,
-  type DuesPeriodValidationErrors,
 } from "@/src/lib/dues/dues-validation";
 import type { DuesReviewQueueItem } from "@/src/lib/dues/dues-review";
 import {
@@ -24,9 +23,6 @@ import { validateReviewReason } from "@/src/lib/dues/dues-review-validation";
 import {
   type DuesDashboardData,
   type DuesStatusFilter,
-  type DuesMemberStatus,
-  type DuesPeriodSummary,
-  type DuesMemberRow,
   mapDashboardRpcResponse,
 } from "@/src/lib/dues/dues-dashboard";
 import { validateDashboardQuery } from "@/src/lib/dues/dues-dashboard-validation";
@@ -702,7 +698,7 @@ export async function getDuesDashboardData(
       try {
         const mapped = mapDashboardRpcResponse(data);
         return ok(mapped);
-      } catch (err) {
+      } catch {
         return fail("failed", "Failed to parse dues dashboard data.");
       }
     }
