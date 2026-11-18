@@ -456,6 +456,14 @@ export function PayForm({
           {!selectedFile ? (
             <div
               onClick={() => fileInputRef.current?.click()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  fileInputRef.current?.click();
+                }
+              }}
+              role="button"
+              tabIndex={0}
               className="pf-dropzone"
               style={{
                 borderRadius: 12,
