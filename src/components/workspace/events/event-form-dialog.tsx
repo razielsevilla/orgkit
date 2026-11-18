@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
 import { FieldError } from "@/src/components/ui/field-error";
@@ -53,12 +53,104 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 8,
 };
 
+/** `YYYY-MM-DDTHH:mm` into [date, time] */
+function splitLocal(value: string): [string, string] {
+  const [d = "", t = ""] = value.split("T");
+  return [d, t];
+}
+
+/** Date and time inputs back into a datetime-local value, or "" if either is missing */
+function joinLocal(date: string, time: string): string {
+  return date && time ? `${date}T${time}` : "";
+}
+
+/** `HH:mm` plus one hour, or "" past midnight so the user picks the end themselves */
+function oneHourLater(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  if (Number.isNaN(h) || Number.isNaN(m) || h >= 23) return "";
+  return `${String(h + 1).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
+interface Draft {
+  title: string;
+  date: string;
+  startClock: string;
+  endClock: string;
+  endDate: string;
+  multiDay: boolean;
+  endTouched: boolean;
+  location: string;
+}
+
+/**
+ * Unsaved form contents, kept while the page stays open so closing the dialog by
+ * accident (Escape, the X, Cancel) doesn't lose what was typed. One draft per
+ * event being edited, plus one for a new event. Cleared on a successful save.
+ */
+const drafts = new Map<string, Draft>();
+const draftKey = (orgId: string, event: WorkspaceEvent | null) => `${orgId}:${event?.id ?? "new"}`;
+
 function EventForm({ orgId, event, onClose, onSaved }: Omit<EventFormDialogProps, "isOpen">) {
   const isEdit = event !== null;
-  const [title, setTitle] = useState(event?.title ?? "");
-  const [startsAt, setStartsAt] = useState(event ? toDatetimeLocal(event.startsAt) : "");
-  const [endsAt, setEndsAt] = useState(event ? toDatetimeLocal(event.endsAt) : "");
-  const [location, setLocation] = useState(event?.location ?? "");
+  const [startDate, startTime] = splitLocal(event ? toDatetimeLocal(event.startsAt) : "");
+  const [endDateInit, endTimeInit] = splitLocal(event ? toDatetimeLocal(event.endsAt) : "");
+  const initial: Draft = {
+    title: event?.title ?? "",
+    date: startDate,
+    startClock: startTime,
+    endClock: endTimeInit,
+    endDate: endDateInit,
+    multiDay: Boolean(event) && endDateInit !== startDate,
+    // Once the user edits the end time, stop auto-filling it from the start time
+    endTouched: Boolean(event),
+    location: event?.location ?? "",
+  };
+  const key = draftKey(orgId, event);
+  const [restored, setRestored] = useState(() => drafts.has(key));
+  const [start] = useState<Draft>(() => drafts.get(key) ?? initial);
+
+  const [title, setTitle] = useState(start.title);
+  const [date, setDate] = useState(start.date);
+  const [startClock, setStartClock] = useState(start.startClock);
+  const [endClock, setEndClock] = useState(start.endClock);
+  const [endDate, setEndDate] = useState(start.endDate);
+  const [multiDay, setMultiDay] = useState(start.multiDay);
+  const [endTouched, setEndTouched] = useState(start.endTouched);
+  const [location, setLocation] = useState(start.location);
+  const startsAt = joinLocal(date, startClock);
+  const endsAt = joinLocal(multiDay ? endDate : date, endClock);
+
+  // Keep the draft up to date; drop it when the form is back to its starting values
+  useEffect(() => {
+    const current: Draft = { title, date, startClock, endClock, endDate, multiDay, endTouched, location };
+    const unchanged =
+      title === initial.title &&
+      date === initial.date &&
+      startClock === initial.startClock &&
+      endClock === initial.endClock &&
+      location === initial.location &&
+      multiDay === initial.multiDay &&
+      (!multiDay || endDate === initial.endDate);
+    if (unchanged) drafts.delete(key);
+    else drafts.set(key, current);
+    // `initial` is rebuilt each render from the same props; the fields are what change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, date, startClock, endClock, endDate, multiDay, endTouched, location, key]);
+
+  const discardDraft = () => {
+    drafts.delete(key);
+    setTitle(initial.title);
+    setDate(initial.date);
+    setStartClock(initial.startClock);
+    setEndClock(initial.endClock);
+    setEndDate(initial.endDate);
+    setMultiDay(initial.multiDay);
+    setEndTouched(initial.endTouched);
+    setLocation(initial.location);
+    setErrors({});
+    setRestored(false);
+  };
+
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -110,6 +202,7 @@ function EventForm({ orgId, event, onClose, onSaved }: Omit<EventFormDialogProps
       if (event) {
         const res = await updateEventAction(orgId, event.id, input);
         if (res.success) {
+          drafts.delete(key);
           onSaved?.({ id: event.id, created: false });
           onClose();
         } else {
@@ -118,6 +211,7 @@ function EventForm({ orgId, event, onClose, onSaved }: Omit<EventFormDialogProps
       } else {
         const res = await createEventAction(orgId, input);
         if (res.success && res.data) {
+          drafts.delete(key);
           onSaved?.({ id: res.data.id, created: true });
           onClose();
         } else {
@@ -150,6 +244,33 @@ function EventForm({ orgId, event, onClose, onSaved }: Omit<EventFormDialogProps
         closeLabel={isEdit ? "Close edit event dialog" : "Close new event dialog"}
       />
       <DialogBody>
+        {restored && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              padding: "8px 12px",
+              borderRadius: 10,
+              backgroundColor: "color-mix(in srgb, var(--color-accent) 8%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)",
+              color: "var(--color-ink-soft)",
+              fontSize: 13,
+              marginBottom: 16,
+            }}
+          >
+            <span>Restored your unsaved changes.</span>
+            <button
+              type="button"
+              onClick={discardDraft}
+              disabled={isSaving}
+              style={{ background: "none", border: "none", padding: 0, fontSize: 13, fontWeight: 600, color: "var(--color-accent)", cursor: "pointer" }}
+            >
+              Discard
+            </button>
+          </div>
+        )}
         {formError && (
           <div
             role="alert"
@@ -194,15 +315,15 @@ function EventForm({ orgId, event, onClose, onSaved }: Omit<EventFormDialogProps
         </div>
 
         <div style={{ marginBottom: 16 }}>
-          <label htmlFor="event-starts-at" style={labelStyle}>
-            Starts
+          <label htmlFor="event-date" style={labelStyle}>
+            Date
           </label>
           <input
-            id="event-starts-at"
-            type="datetime-local"
-            value={startsAt}
+            id="event-date"
+            type="date"
+            value={date}
             onChange={(e) => {
-              setStartsAt(e.target.value);
+              setDate(e.target.value);
               clearError("startsAt");
               clearError("endsAt");
             }}
@@ -214,24 +335,90 @@ function EventForm({ orgId, event, onClose, onSaved }: Omit<EventFormDialogProps
           {errors.startsAt && <FieldError id="event-starts-at-error">{errors.startsAt}</FieldError>}
         </div>
 
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 8 }}>
+          <div>
+            <label htmlFor="event-start-time" style={labelStyle}>
+              Starts
+            </label>
+            <input
+              id="event-start-time"
+              type="time"
+              value={startClock}
+              onChange={(e) => {
+                const value = e.target.value;
+                setStartClock(value);
+                if (!endTouched) setEndClock(oneHourLater(value));
+                clearError("startsAt");
+                clearError("endsAt");
+              }}
+              disabled={isSaving}
+              aria-invalid={Boolean(errors.startsAt)}
+              style={inputStyle(Boolean(errors.startsAt))}
+            />
+          </div>
+          <div>
+            <label htmlFor="event-end-time" style={labelStyle}>
+              Ends
+            </label>
+            <input
+              id="event-end-time"
+              type="time"
+              value={endClock}
+              onChange={(e) => {
+                setEndClock(e.target.value);
+                setEndTouched(true);
+                clearError("endsAt");
+              }}
+              disabled={isSaving}
+              aria-invalid={Boolean(errors.endsAt)}
+              aria-describedby={errors.endsAt ? "event-ends-at-error" : undefined}
+              style={inputStyle(Boolean(errors.endsAt))}
+            />
+          </div>
+        </div>
+        {errors.endsAt && <FieldError id="event-ends-at-error">{errors.endsAt}</FieldError>}
+
         <div style={{ marginBottom: 16 }}>
-          <label htmlFor="event-ends-at" style={labelStyle}>
-            Ends
-          </label>
-          <input
-            id="event-ends-at"
-            type="datetime-local"
-            value={endsAt}
-            onChange={(e) => {
-              setEndsAt(e.target.value);
-              clearError("endsAt");
-            }}
-            disabled={isSaving}
-            aria-invalid={Boolean(errors.endsAt)}
-            aria-describedby={errors.endsAt ? "event-ends-at-error" : undefined}
-            style={inputStyle(Boolean(errors.endsAt))}
-          />
-          {errors.endsAt && <FieldError id="event-ends-at-error">{errors.endsAt}</FieldError>}
+          {multiDay ? (
+            <div style={{ marginTop: 8 }}>
+              <label htmlFor="event-end-date" style={labelStyle}>
+                End date
+              </label>
+              <input
+                id="event-end-date"
+                type="date"
+                value={endDate}
+                min={date || undefined}
+                onChange={(e) => {
+                  setEndDate(e.target.value);
+                  clearError("endsAt");
+                }}
+                disabled={isSaving}
+                style={inputStyle(Boolean(errors.endsAt))}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setEndDate(date);
+                setMultiDay(true);
+              }}
+              disabled={isSaving}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                marginTop: 4,
+                fontSize: 13,
+                fontWeight: 500,
+                color: "var(--color-accent)",
+                cursor: "pointer",
+              }}
+            >
+              Ends on a different day
+            </button>
+          )}
         </div>
 
         <div>
@@ -274,7 +461,7 @@ export function EventFormDialog({ orgId, event, isOpen, onClose, onSaved }: Even
   if (!isOpen) return null;
 
   return (
-    <Dialog labelledBy="event-form-title" onDismiss={onClose} maxWidth={460}>
+    <Dialog labelledBy="event-form-title" onDismiss={onClose} dismissOnBackdrop={false} maxWidth={460}>
       <EventForm key={event?.id ?? "new"} orgId={orgId} event={event} onClose={onClose} onSaved={onSaved} />
     </Dialog>
   );

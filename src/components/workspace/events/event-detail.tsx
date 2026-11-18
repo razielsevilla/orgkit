@@ -7,6 +7,7 @@ import { ArrowLeft, Ban, Pencil, QrCode } from "lucide-react";
 import type { WorkspaceEvent } from "@/src/app/(workspace)/events-actions";
 import { PANEL_RADIUS } from "@/src/components/workspace/members/member-table-layout";
 import { MembersStyles } from "@/src/components/workspace/members/members-styles";
+import { isPastEvent } from "@/src/lib/events/event-validation";
 import { checkinPath, eventsPath } from "@/src/lib/routes";
 import { EventStatusBadge } from "./event-status-badge";
 import { LocalTime } from "./local-time";
@@ -51,6 +52,8 @@ export function EventDetail({
   const [editOpen, setEditOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const cancelled = event.status === "cancelled";
+  // An event that has already ended can't be cancelled any more
+  const canCancel = !isPastEvent(event);
 
   return (
     <div
@@ -160,6 +163,7 @@ export function EventDetail({
                 <Pencil size={15} aria-hidden="true" />
                 <span>Edit</span>
               </button>
+              {canCancel && (
               <button
                 type="button"
                 onClick={() => setCancelOpen(true)}
@@ -181,6 +185,7 @@ export function EventDetail({
                 <Ban size={15} aria-hidden="true" />
                 <span>Cancel event</span>
               </button>
+              )}
             </div>
           )}
         </div>

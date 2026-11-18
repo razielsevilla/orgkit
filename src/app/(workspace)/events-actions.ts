@@ -197,6 +197,12 @@ export async function updateEventAction(
 }
 
 /** Cancelling twice is harmless: the second call succeeds and changes nothing */
+/** An event that has already ended can't be cancelled */
+const CANCEL_EVENT_ERRORS: ErrorRule<EventsActionError>[] = [
+  { match: "event_ended", error: "ended", message: EVENT_MESSAGES.cannotCancelPast },
+  ...EVENT_WRITE_ERRORS,
+];
+
 export async function cancelEventAction(
   orgId: string,
   eventId: string
@@ -208,7 +214,7 @@ export async function cancelEventAction(
     { name: "cancelEventAction", unexpected: EVENT_MESSAGES.cancelFailed },
     async ({ supabase }) => {
       const { error } = await supabase.rpc("cancel_event", { target_event: eventId });
-      if (error) return rpcFailure("cancel_event", error, EVENT_WRITE_ERRORS, EVENT_MESSAGES.cancelFailed);
+      if (error) return rpcFailure("cancel_event", error, CANCEL_EVENT_ERRORS, EVENT_MESSAGES.cancelFailed);
 
       revalidatePath(eventsPath(orgId));
       revalidatePath(eventPath(orgId, eventId));

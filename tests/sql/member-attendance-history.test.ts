@@ -173,7 +173,8 @@ describe("get_member_attendance_history", () => {
 
   it("returns cancelled events with their status", async () => {
     const ev = await pastEvent(orgA, officerA, "Called off", 10);
-    await as("authenticated", officerA, () => getDb().query(`select public.cancel_event($1)`, [ev]));
+    // It was cancelled before it would have happened; cancel_event refuses an event that has already ended
+    await getDb().query(`update public.events set status = 'cancelled' where id = $1`, [ev]);
     const h = await history(officerA, ana);
     assert.equal(h.events.find((e) => e.event_id === ev)?.status, "cancelled");
   });
