@@ -108,6 +108,21 @@ export function calculateCollectionRate(
   return clampAt100 ? Math.min(rate, 100) : rate;
 }
 
+interface RawMemberRow {
+  member_id?: string;
+  full_name?: string;
+  email?: string;
+  member_status?: DuesMemberRow["memberStatus"];
+  dues_status?: DuesMemberStatus;
+  payment_id?: string | null;
+  amount?: number | string | null;
+  reference_no?: string | null;
+  payment_status?: DuesMemberRow["paymentStatus"];
+  reject_reason?: string | null;
+  submitted_at?: string | null;
+  reviewed_at?: string | null;
+}
+
 /**
  * Safely maps the raw JSON response from get_dues_period_dashboard RPC into typed DuesDashboardData.
  */
@@ -119,7 +134,7 @@ export function mapDashboardRpcResponse(raw: unknown): DuesDashboardData {
   const rawObj = raw as Record<string, unknown>;
   const periodRaw = (rawObj.period || {}) as Record<string, unknown>;
   const summaryRaw = (rawObj.summary || {}) as Record<string, unknown>;
-  const membersRaw = Array.isArray(rawObj.members) ? (rawObj.members as Record<string, unknown>[]) : [];
+  const membersRaw = Array.isArray(rawObj.members) ? (rawObj.members as RawMemberRow[]) : [];
   const paginationRaw = (rawObj.pagination || {}) as Record<string, unknown>;
 
   return {
@@ -144,16 +159,16 @@ export function mapDashboardRpcResponse(raw: unknown): DuesDashboardData {
       activeMemberCount: Number(summaryRaw.active_member_count || 0),
       totalMemberCount: Number(summaryRaw.total_member_count || 0),
     },
-    members: membersRaw.map((m: Record<string, unknown>) => ({
-      memberId: String(m.member_id || ""),
-      fullName: String(m.full_name || ""),
-      email: String(m.email || ""),
-      memberStatus: (m.member_status || "active") as DuesMemberStatus,
-      duesStatus: (m.dues_status || "unpaid") as DuesStatusFilter,
-      paymentId: m.payment_id ? String(m.payment_id) : null,
+    members: membersRaw.map((m: RawMemberRow) => ({
+      memberId: m.member_id || "",
+      fullName: m.full_name || "",
+      email: m.email || "",
+      memberStatus: (m.member_status || "active") as DuesMemberRow["memberStatus"],
+      duesStatus: (m.dues_status || "unpaid") as DuesMemberStatus,
+      paymentId: m.payment_id || null,
       amount: m.amount !== null && m.amount !== undefined ? (typeof m.amount === "number" ? m.amount : parseFloat(String(m.amount))) : null,
-      referenceNo: m.reference_no ? String(m.reference_no) : null,
-      paymentStatus: (m.payment_status ? String(m.payment_status) : null) as DuesMemberRow["paymentStatus"],
+      referenceNo: m.reference_no || null,
+      paymentStatus: m.payment_status || null,
       rejectReason: m.reject_reason || null,
       submittedAt: m.submitted_at || null,
       reviewedAt: m.reviewed_at || null,
