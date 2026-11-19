@@ -21,6 +21,7 @@ export const EVENT_MESSAGES = {
   loadFailed: "We couldn't load your events. Try again.",
   notFound: "We couldn't find that event.",
   notPermitted: "You don't have permission to change events for this organization.",
+  cannotCancelPast: "This event has already ended, so it can't be cancelled.",
   alreadyCancelled: "This event is cancelled, so it can't be edited.",
   cancelPrompt: (title: string) =>
     `Cancel ${title}? It will stay in the list marked Cancelled, and nobody will be able to check in.`,
@@ -106,23 +107,28 @@ export function validateEvent(input: EventInput): EventValidationResult {
 interface Sortable {
   startsAt: string;
   endsAt: string;
+  status?: string;
 }
 
 /**
- * Upcoming events first (soonest first), then past events (most recent first).
- * An event that is still running counts as upcoming. Cancelled events sit
- * where their time puts them; the list marks them.
+ * Upcoming events first (soonest first), then past events (most recent first),
+ * then cancelled events (most recent first). A cancelled event is no longer
+ * coming up, so it never counts as upcoming. An event that is still running
+ * counts as upcoming.
  */
 export function sortEvents<T extends Sortable>(events: readonly T[], now: number = Date.now()): T[] {
   const upcoming: T[] = [];
   const past: T[] = [];
+  const cancelled: T[] = [];
   for (const event of events) {
-    (new Date(event.endsAt).getTime() >= now ? upcoming : past).push(event);
+    if (event.status === "cancelled") cancelled.push(event);
+    else (new Date(event.endsAt).getTime() >= now ? upcoming : past).push(event);
   }
   const byStart = (a: T, b: T) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime();
   upcoming.sort(byStart);
   past.sort((a, b) => byStart(b, a));
-  return [...upcoming, ...past];
+  cancelled.sort((a, b) => byStart(b, a));
+  return [...upcoming, ...past, ...cancelled];
 }
 
 /** True once the event has ended */

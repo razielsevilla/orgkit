@@ -3,6 +3,7 @@
 import React from "react";
 import { Ban, Pencil, type LucideIcon } from "lucide-react";
 import type { WorkspaceEvent } from "@/src/app/(workspace)/events-actions";
+import { isPastEvent } from "@/src/lib/events/event-validation";
 
 interface EventActionsProps {
   event: WorkspaceEvent;
@@ -64,7 +65,8 @@ function ActionButton({
 
 /**
  * Edit and Cancel for a scheduled event. A cancelled event has no actions: it
- * can't be edited and can't be cancelled again.
+ * can't be edited and can't be cancelled again. An event that has already ended
+ * can still be edited but can no longer be cancelled.
  */
 export function EventActions({ event, onEdit, onCancel, isMobile = false }: EventActionsProps) {
   if (event.status === "cancelled") return null;
@@ -81,7 +83,9 @@ export function EventActions({ event, onEdit, onCancel, isMobile = false }: Even
       }}
     >
       <ActionButton label="Edit" event={event} icon={Pencil} onClick={onEdit} showLabel={isMobile} />
-      <ActionButton label="Cancel event" event={event} icon={Ban} danger onClick={onCancel} showLabel={isMobile} />
+      {!isPastEvent(event) && (
+        <ActionButton label="Cancel" event={event} icon={Ban} danger onClick={onCancel} showLabel={isMobile} />
+      )}
     </div>
   );
 }

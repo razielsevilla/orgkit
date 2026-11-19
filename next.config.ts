@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
+    agentUpgrade: "security",
     agentFeedback: true,
     // The member-list import (R3) uploads a CSV of up to 1 MB through a Server
     // Action. The default 1 MB cap, which also counts the multipart overhead,

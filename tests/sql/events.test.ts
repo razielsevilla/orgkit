@@ -173,6 +173,15 @@ describe("cancel_event", () => {
     assert.equal(new Date(second.updated_at).getTime(), new Date(first.updated_at).getTime());
   });
 
+  it("refuses to cancel an event that has already ended", async () => {
+    const id = (
+      await createAs(officerA, orgA, "Long over", "2020-01-01T10:00:00Z", "2020-01-01T11:00:00Z")
+    ).rows[0].create_event;
+    assert.match((await errorOf(() => cancelAs(officerA, id))) ?? "", /event_ended/);
+    const row = (await getDb().query<EventRow>(`select * from public.events where id = $1`, [id])).rows[0];
+    assert.equal(row.status, "scheduled");
+  });
+
   it("can no longer be edited once cancelled", async () => {
     const id = (await createAs(officerA, orgA, "Cancelled for good")).rows[0].create_event;
     await cancelAs(officerA, id);

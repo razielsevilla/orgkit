@@ -1,8 +1,8 @@
 import React from "react";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 
-/** Shown when the org has no events: "No events yet. Create your first event." */
-export function EventEmptyState({ onNewEvent }: { onNewEvent: () => void }) {
+/** Shown when the org has no events. The header's "New event" button is the single call to action. */
+export function EventEmptyState() {
   return (
     <div
       role="region"
@@ -80,31 +80,9 @@ export function EventEmptyState({ onNewEvent }: { onNewEvent: () => void }) {
       >
         No events yet
       </h2>
-      <p style={{ fontSize: 15, color: "var(--color-muted)", maxWidth: 420, lineHeight: 1.5, margin: "0 0 28px 0" }}>
+      <p style={{ fontSize: 15, color: "var(--color-muted)", maxWidth: 420, lineHeight: 1.5, margin: 0 }}>
         Create your first event. Attendance is recorded against an event.
       </p>
-      <button
-        type="button"
-        onClick={onNewEvent}
-        className="orgkit-btn-accent"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          minHeight: 42,
-          padding: "10px 24px",
-          borderRadius: 9999,
-          backgroundColor: "var(--color-accent)",
-          color: "#FFFFFF",
-          fontSize: 13.5,
-          fontWeight: 600,
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        <Plus size={15} aria-hidden="true" />
-        <span>New event</span>
-      </button>
     </div>
   );
 }

@@ -84,6 +84,18 @@ describe("sortEvents", () => {
     assert.deepEqual(sorted.map((e) => e.id), ["soon", "later", "past-new", "past-old"]);
   });
 
+  it("puts cancelled events last, even when their time is upcoming", () => {
+    const sorted = sortEvents(
+      [
+        { id: "cancelled-soon", startsAt: "2030-06-05T10:00:00Z", endsAt: "2030-06-05T11:00:00Z", status: "cancelled" },
+        ev("past", "2030-05-01T10:00:00Z", "2030-05-01T11:00:00Z"),
+        ev("later", "2030-08-01T10:00:00Z", "2030-08-01T11:00:00Z"),
+      ],
+      now
+    );
+    assert.deepEqual(sorted.map((e) => e.id), ["later", "past", "cancelled-soon"]);
+  });
+
   it("treats an event still running as upcoming", () => {
     const running = ev("running", "2030-05-31T23:00:00Z", "2030-06-01T01:00:00Z");
     assert.equal(isPastEvent(running, now), false);

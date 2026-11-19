@@ -52,7 +52,7 @@ export function EventsClient({ rawId, events, initialError = null }: EventsClien
       style={{
         height: "100%",
         overflowY: "auto",
-        padding: "36px clamp(16px, 4vw, 36px) 60px clamp(16px, 4vw, 36px)",
+        padding: "36px clamp(16px, 4vw, 36px) 24px clamp(16px, 4vw, 36px)",
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
@@ -67,6 +67,10 @@ export function EventsClient({ rawId, events, initialError = null }: EventsClien
           maxWidth: 960,
           margin: "0 auto",
           position: "relative",
+          flex: "1 1 auto",
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
           animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
         }}
       >
@@ -100,7 +104,7 @@ export function EventsClient({ rawId, events, initialError = null }: EventsClien
         {sorted.length > 0 ? (
           <EventList orgId={rawId} events={sorted} onEdit={setEditTarget} onCancel={setCancelTarget} />
         ) : (
-          !initialError && <EventEmptyState onNewEvent={() => setCreateOpen(true)} />
+          !initialError && <EventEmptyState />
         )}
       </div>
     </div>
