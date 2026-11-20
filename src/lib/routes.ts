@@ -31,6 +31,25 @@ export function membersPath(orgId: string): string {
   return `${workspacePath(orgId)}/members`;
 }
 
+export function eventsPath(orgId: string): string {
+  return `${workspacePath(orgId)}/events`;
+}
+
+/** One event's page */
+export function eventPath(orgId: string, eventId: string): string {
+  return `${eventsPath(orgId)}/${eventId}`;
+}
+
+/** The full-screen check-in view of one event, with the rotating QR code */
+export function checkinPath(orgId: string, eventId: string): string {
+  return `${eventPath(orgId, eventId)}/checkin`;
+}
+
+/** The link inside the check-in QR. The token is short-lived and a secret. Members open it with no account (E3). */
+export function checkinLinkPath(token: string): string {
+  return `/checkin/${token}`;
+}
+
 /** The admin-only route that streams the roster as a CSV download (POST) */
 export function membersExportPath(orgId: string): string {
   return `${membersPath(orgId)}/export`;
@@ -93,8 +112,8 @@ const PUBLIC_EXACT: readonly string[] = [
   "/invite",
 ];
 
-// Member join links (A4) and invites open with no account
-const PUBLIC_PREFIXES: readonly string[] = ["/auth/", "/join/", "/invite/"];
+// Member join links (A4), invites and check-in links (E3) open with no account
+const PUBLIC_PREFIXES: readonly string[] = ["/auth/", "/join/", "/invite/", "/checkin/"];
 
 /** Pages a signed-out visitor may open. Everything else needs a session. */
 export function isPublicPath(pathname: string): boolean {
@@ -112,6 +131,9 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/workspace/:id",
   "/workspace/:id/members",
   "/workspace/:id/officers",
+  "/workspace/:id/events",
+  "/workspace/:id/events/:eventId",
+  "/workspace/:id/events/:eventId/checkin",
   "/workspace/:id/members/join",
   "/workspace/:id/members/export",
 ];
@@ -120,4 +142,4 @@ export const PRIVATE_ROUTES: readonly string[] = [
  * URL prefixes whose path holds a secret token. They are sent without a
  * Referer and marked noindex (see next.config.ts, which lists the same ones).
  */
-export const SECRET_URL_PREFIXES: readonly string[] = ["/join/", "/invite/"];
+export const SECRET_URL_PREFIXES: readonly string[] = ["/join/", "/invite/", "/checkin/"];

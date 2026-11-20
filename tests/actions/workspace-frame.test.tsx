@@ -57,10 +57,11 @@ describe("workspace frame navigation for Ticket R1", () => {
     expect(navHrefs(html)).toEqual([
       `/workspace/${ORG}`,
       `/workspace/${ORG}/members`,
+      `/workspace/${ORG}/events`,
       `/workspace/${ORG}/members/join`,
       `/workspace/${ORG}/officers`,
     ]);
-    for (const label of ["Home", "Members", "Join", "Invite"]) {
+    for (const label of ["Home", "Members", "Events", "Join", "Invite"]) {
       expect(html).toContain(`<span>${label}</span>`);
     }
   });
@@ -69,6 +70,7 @@ describe("workspace frame navigation for Ticket R1", () => {
     const html = await render(data(false));
     expect(html).toContain("<span>Home</span>");
     expect(html).toContain("<span>Members</span>");
+    expect(html).toContain("<span>Events</span>");
     expect(html).toContain("<span>Invite</span>");
     expect(html).not.toContain("<span>Join</span>");
     expect(html).toContain(`/workspace/${ORG}/members`);
@@ -85,6 +87,8 @@ describe("workspace frame navigation for Ticket R1", () => {
     [`/workspace/${ORG}`, "Home"],
     [`/workspace/${ORG}/members`, "Members"],
     [`/workspace/${ORG}/officers`, "Invite"],
+    [`/workspace/${ORG}/events`, "Events"],
+    [`/workspace/${ORG}/events/22222222-2222-4222-8222-222222222222`, "Events"],
     [`/workspace/${ORG}/members/join`, "Join"],
   ])("highlights %s as active when on %s", async (path, label) => {
     pathname = path;

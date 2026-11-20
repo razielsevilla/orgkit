@@ -32,6 +32,7 @@ layout but is not part of the URL.
 | `/terms` | Terms of use | `terms/page.tsx` |
 | `/auth/callback` | Google sends the browser back here after sign-in. Redirects on | `auth/callback/route.ts` |
 | `/join/:token` | A student joins an org from its public link or QR code | `join/[token]/page.tsx` |
+| `/checkin/:token` | A member checks in to an event from the rotating QR code, with the email they joined with. No account | `checkin/[token]/page.tsx` |
 | `/invite/:token` | An officer invite. Signed out: sign-in card. Signed in: accepts the invite | `invite/[token]/page.tsx` |
 | `/invite/:token/start` | `POST` remembers the invite in a cookie before Google sign-in. `GET` does the same, then redirects to `/consent` | `invite/[token]/start/route.ts` |
 
@@ -48,6 +49,9 @@ layout but is not part of the URL.
 | `/workspace/new` | Any officer | Create your org's workspace | `(workspace)/workspace/new/page.tsx` |
 | `/workspace/:id` | Officer of that org | **Home**: workspace landing | `(workspace)/workspace/[id]/page.tsx` |
 | `/workspace/:id/members` | Officer of that org | **Members**: view and search roster. Admins also get **Import** (a CSV of people to invite, R3) and an **Invited** view. These are a dialog and a tab on this page, not separate URLs; the CSV upload goes through a Server Action, so `experimental.serverActions.bodySizeLimit` is set in `next.config.ts` | `(workspace)/workspace/[id]/members/page.tsx` |
+| `/workspace/:id/events` | Officer of that org | **Events**: upcoming and past events with Scheduled / Cancelled status. Create, edit and cancel are dialogs on this page. Times are shown in the viewer's local time | `(workspace)/workspace/[id]/events/page.tsx` |
+| `/workspace/:id/events/:eventId` | Officer of that org | **Event**: one event's details, with Edit and Cancel, and the live attendance list: who is present (name, QR or Manual, time) and "N of M present", refreshed every 5 seconds, with search-to-add and a confirmed remove. A cancelled event's list is read-only; an ended event's can still be corrected. A malformed or unknown event ID, or one from another org, shows the "We can't find that page" card | `(workspace)/workspace/[id]/events/[eventId]/page.tsx` |
+| `/workspace/:id/events/:eventId/checkin` | Officer of that org | **Check-in**: a full-screen view with a QR that rotates every 30 seconds, the event title, a live count and Open / Close check-in. A cancelled event, or one that ended over an hour ago, can't be opened and the screen says why. Same "We can't find that page" card as the event page | `(workspace)/workspace/[id]/events/[eventId]/checkin/page.tsx` |
 | `/workspace/:id/officers` | Officer of that org | **Invite**: officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
 | `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | **Join**: manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
 | `/workspace/:id/members/export` | **Admin** of that org (others get 403) | **Export**: `POST` streams the roster as a CSV download | `(workspace)/workspace/[id]/members/export/route.ts` |
@@ -78,7 +82,7 @@ Do not link to these. They exist for people who saved an old address.
 | Need | Use |
 |---|---|
 | A fixed page | `ROUTES.home`, `.signIn`, `.register`, `.privacy`, `.terms`, `.consent`, `.authCallback`, `.newWorkspace` |
-| An org's pages | `workspacePath(id)`, `membersPath(id)`, `officersPath(id)`, `joinPanelPath(id)` |
+| An org's pages | `workspacePath(id)`, `membersPath(id)`, `eventsPath(id)`, `eventPath(id, eventId)`, `checkinPath(id, eventId)`, `officersPath(id)`, `joinPanelPath(id)` |
 | An invite | `invitePath(token)`, `inviteStartPath(encodedToken)` |
 | A student join link | `joinLinkPath(token)` |
 | Sign-in with an error | `signInPath("google_error")` |
@@ -121,7 +125,8 @@ in order:
    `officerLandingPath({ orgId, pendingInvite })`. That is their workspace, or
    their invite, or (if neither) they stay on, or go to, `/workspace/new`.
 4. **Signed out, on a non-public path:** go to `/signin`. Public means `/`,
-   `/signin`, `/register`, `/privacy`, `/terms`, `/auth/*`, `/join/*`, `/invite/*`
+   `/signin`, `/register`, `/privacy`, `/terms`, `/auth/*`, `/join/*`, `/invite/*`,
+   `/checkin/*`
    (`isPublicPath`). Anything not on that list needs a session, so a forgotten
    route fails safe.
 5. **Signed in, on `/workspace/*`:** delete the pending-invite cookie, because
@@ -130,8 +135,8 @@ in order:
 ### Step 3: the workspace gate and frame
 
 [`(workspace)/layout.tsx`](../src/app/(workspace)/layout.tsx) wraps everything
-under `/workspace/*`. `/consent`, `/join/*` and `/invite/*` are outside it on
-purpose.
+under `/workspace/*`. `/consent`, `/join/*`, `/invite/*` and `/checkin/*` are
+outside it on purpose.
 
 [`workspace/[id]/layout.tsx`](../src/app/(workspace)/workspace/[id]/layout.tsx)
 then draws the **one sidebar frame** for Home, Join and Invite. Those three pages
@@ -152,7 +157,8 @@ officer takes effect on the very next request.
 | Not an officer of the org (home) | "We can't find that page" card |
 | Not an officer of the org (officers page) | redirect to `/workspace/:id`, which shows the same card |
 | Not an admin (join panel) | 404 |
-| Malformed `:id` | same as not found, with no database query |
+| Not an officer of the org (events), or an event of another org | "We can't find that page" card |
+| Malformed `:id` or `:eventId` | same as not found, with no database query |
 
 Non-members and admins get the same wording, so a guessed org ID never confirms
 that the org exists.
@@ -181,6 +187,36 @@ required" card.
 `/join/:token` (no account) → form and consent → success card. Rate limited per
 device.
 
+**Member check-in**
+An officer opens the check-in window and shows the full-screen QR. A member scans
+it → `/checkin/:token` (no account) → enters the email they joined with →
+"You're checked in, <first name>". Only an active member of the event's org can
+check in; an unknown, pending, inactive or other-org email gets one identical
+message. An expired or tampered token, a closed window or a cancelled event shows
+the "link has expired or is closed" card. Rate limited per device
+(`CHECKIN_ATTEMPTS_PER_MINUTE`).
+
+**Manual attendance**
+On the event page an officer watches the list fill in (it polls every 5 seconds, no
+reload). To fix it by hand they search the roster, press "Add member" and the
+member appears as Manual with the officer recorded; or they remove a row after
+confirming. Both update the screen first and roll back with an inline error if
+the server refuses. Only active members can be added, and adding someone who is
+already present (another officer, or a QR scan, got there first) never makes a
+duplicate: the list just refreshes. A cancelled event is read-only.
+
+**Member attendance history**
+On the members page, each row (any status, including inactive) has an
+"Attendance history" icon button that opens a dialog, loaded with `next/dynamic`
+so it adds no URL and no cost until used. It shows the member's past events,
+newest first, each with date, title, Present or Absent (and QR or Manual when
+present) or Cancelled, and a summary "Attended X of Y events". Y counts only
+events that ended after the member joined and were not cancelled, so a late
+joiner is not penalised. A member with nothing to count sees "No events yet",
+never "0 of 0". A malformed ID, a missing member and a member of another org all
+show the same "We couldn't find that member" with no data; a failed load shows an
+inline error with "Try again".
+
 **Sign out**
 The `signOut` action ends the session and goes to `/signin`.
 
@@ -188,7 +224,7 @@ The `signOut` action ends the session and goes to `/signin`.
 
 ## 5. Secret URLs
 
-`/join/:token` and `/invite/:token` carry a secret in the path. Both are sent
+`/join/:token`, `/invite/:token` and `/checkin/:token` carry a secret in the path. All are sent
 with `Referrer-Policy: no-referrer` and `X-Robots-Tag: noindex, nofollow`
 (`headers()` in `next.config.ts`). The prefixes are listed in
 `SECRET_URL_PREFIXES` in `src/lib/routes.ts`, and a test fails if the config
@@ -220,10 +256,13 @@ Not URLs, but how pages change data.
 | `(workspace)/actions.ts` | `createWorkspace`, plus readers `getOrganizationById`, `getOfficerDefaultWorkspace`, `getCurrentOfficer`, `isOrgAdmin` |
 | `(workspace)/officers-actions.ts` | `getWorkspaceOfficers`, `createOfficerInvite`, `revokeOfficerInvite`, `updateOfficerRole`, `removeWorkspaceOfficer` |
 | `(workspace)/members-actions.ts` | `getWorkspaceMembers`, `confirmMemberAction` |
+| `(workspace)/attendance-actions.ts` | `getEventAttendanceAction`, `searchAttendeeCandidatesAction`, `addAttendanceAction`, `removeAttendanceAction`, `getMemberAttendanceHistoryAction` |
+| `(workspace)/events-actions.ts` | `getWorkspaceEvents`, `getWorkspaceEvent`, `createEventAction`, `updateEventAction`, `cancelEventAction`, `setCheckinOpenAction`, `getCheckinTokenAction` |
 | `(workspace)/member-invites-actions.ts` | R3, admin only: `parseRosterCsv`, `previewMemberInvites`, `importMemberInvites`, `getMemberInvites` |
 | `(workspace)/workspace/[id]/members/join/actions.ts` | `setJoinLink` |
 | `invite/actions.ts` | `clearInviteCookie` |
 | `join/[token]/actions.ts` | `submitJoin` |
+| `checkin/[token]/actions.ts` | `submitCheckin` |
 
 ---
 

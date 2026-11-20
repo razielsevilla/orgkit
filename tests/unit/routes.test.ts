@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import {
+  checkinLinkPath,
   PRIVATE_ROUTES,
   SECRET_URL_PREFIXES,
   inviteStartPath,
@@ -11,6 +12,8 @@ import {
   joinLinkPath,
   joinPanelPath,
   membersPath,
+  eventsPath,
+  eventPath,
   officerLandingPath,
   officersPath,
   signInPath,
@@ -104,9 +107,12 @@ describe("path helpers", () => {
     assert.equal(membersPath(id), `/workspace/${id}/members`);
     assert.equal(officersPath(id), `/workspace/${id}/officers`);
     assert.equal(joinPanelPath(id), `/workspace/${id}/members/join`);
+    assert.equal(eventsPath(id), `/workspace/${id}/events`);
+    assert.equal(eventPath(id, id), `/workspace/${id}/events/${id}`);
     assert.equal(invitePath("t"), "/invite/t");
     assert.equal(inviteStartPath("t"), "/invite/t/start");
     assert.equal(joinLinkPath("t"), "/join/t");
+    assert.equal(checkinLinkPath("t"), "/checkin/t");
   });
 
   it("builds sign-in URLs with an optional error", () => {
@@ -120,9 +126,12 @@ describe("path helpers", () => {
       membersPath(id),
       officersPath(id),
       joinPanelPath(id),
+      eventsPath(id),
+      eventPath(id, id),
       invitePath("t"),
       inviteStartPath("t"),
       joinLinkPath("t"),
+      checkinLinkPath("t"),
     ];
     for (const path of built) {
       const matches = routes.some(
@@ -159,6 +168,7 @@ describe("isPublicPath", () => {
     assert.equal(isPublicPath("/join/abc"), true);
     assert.equal(isPublicPath("/invite/abc"), true);
     assert.equal(isPublicPath("/invite/abc/start"), true);
+    assert.equal(isPublicPath("/checkin/abc.1.sig"), true);
   });
 
   it("keeps everything else behind sign-in", () => {

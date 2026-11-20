@@ -16,6 +16,7 @@ interface MemberTableProps {
   members: WorkspaceMember[];
   onConfirm: (member: WorkspaceMember) => void;
   onEdit: (member: WorkspaceMember) => void;
+  onViewHistory: (member: WorkspaceMember) => void;
   onDeactivate: (member: WorkspaceMember) => void;
   onReactivate: (member: WorkspaceMember) => void;
   confirmingIds: ReadonlySet<string>;
@@ -61,6 +62,7 @@ export function MemberTable({
   members,
   onConfirm,
   onEdit,
+  onViewHistory,
   onDeactivate,
   onReactivate,
   confirmingIds,
@@ -205,6 +207,7 @@ export function MemberTable({
                     member={member}
                     onConfirm={onConfirm}
                     onEdit={onEdit}
+                    onViewHistory={onViewHistory}
                     onDeactivate={onDeactivate}
                     onReactivate={onReactivate}
                     isConfirming={isConfirming}
