@@ -91,7 +91,7 @@ export async function fetchDuesReminderPreview(
       full_name: r.full_name,
       email: r.email,
       is_eligible: r.is_eligible,
-      skip_reason: r.skip_reason as any,
+      skip_reason: r.skip_reason as ReminderRecipient["skip_reason"],
       last_reminded_at: r.last_reminded_at,
     }));
 

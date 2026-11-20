@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { AlertCircle, Link as LinkIcon, SlidersHorizontal, Lock, Mail } from "lucide-react";
 import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
 import {
@@ -13,11 +14,6 @@ import type { DuesDashboardData, DuesStatusFilter } from "@/src/lib/dues/dues-da
 import { DUES_PAGE_SIZE } from "@/src/lib/dues/dues-dashboard";
 import { DuesHeader } from "./dues-header";
 import { DuesEmptyState } from "./dues-empty-state";
-import { DuesPeriodDialog } from "./dues-period-dialog";
-import { ClosePeriodDialog } from "./close-period-dialog";
-import { DuesPayLinkDialog } from "./dues-pay-link-dialog";
-import { DuesReminderDialog } from "./dues-reminder-dialog";
-import { DuesReviewDialog } from "./dues-review-dialog";
 import { DuesPeriodPicker } from "./dues-period-picker";
 import { DuesSummaryTiles } from "./dues-summary-tiles";
 import { DuesSearchFilter } from "./dues-search-filter";
@@ -28,6 +24,28 @@ import { DuesDashboardSkeleton } from "./dues-dashboard-skeleton";
 import { DuesDashboardError } from "./dues-dashboard-error";
 import { DuesDashboardEmpty } from "./dues-dashboard-empty";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
+
+// Heavy off-screen dialogs lazy-loaded on demand to keep critical bundle minimal
+const DuesPeriodDialog = dynamic(
+  () => import("./dues-period-dialog").then((m) => m.DuesPeriodDialog),
+  { ssr: false }
+);
+const ClosePeriodDialog = dynamic(
+  () => import("./close-period-dialog").then((m) => m.ClosePeriodDialog),
+  { ssr: false }
+);
+const DuesPayLinkDialog = dynamic(
+  () => import("./dues-pay-link-dialog").then((m) => m.DuesPayLinkDialog),
+  { ssr: false }
+);
+const DuesReminderDialog = dynamic(
+  () => import("./dues-reminder-dialog").then((m) => m.DuesReminderDialog),
+  { ssr: false }
+);
+const DuesReviewDialog = dynamic(
+  () => import("./dues-review-dialog").then((m) => m.DuesReviewDialog),
+  { ssr: false }
+);
 
 interface DuesClientProps {
   rawId: string;

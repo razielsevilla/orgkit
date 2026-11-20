@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   experimental: {
+    agentUpgrade: "security",
     agentFeedback: true,
     // The member-list import (R3) uploads a CSV and dues payment screenshot
     // (P2) uploads proof of up to 5 MB through a Server Action. Allow up to 7 MB

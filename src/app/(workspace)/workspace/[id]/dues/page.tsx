@@ -13,7 +13,7 @@ import {
 import { isUuid } from "@/src/lib/validation";
 import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
-import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
+import DuesLoading from "./loading";
 import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
 import { DuesClient } from "@/src/components/workspace/dues/dues-client";
 
@@ -87,7 +87,7 @@ async function DuesContent({ params }: DuesPageProps) {
 
 export default function DuesPage(props: DuesPageProps) {
   return (
-    <Suspense fallback={<WorkspaceContentLoader />}>
+    <Suspense fallback={<DuesLoading />}>
       <DuesContent {...props} />
     </Suspense>
   );
