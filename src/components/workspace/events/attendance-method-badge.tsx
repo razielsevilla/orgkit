@@ -2,10 +2,14 @@ import React from "react";
 import type { AttendanceMethod } from "@/src/lib/events/attendance-state";
 import { ALL_TONE, STATUS_TONES } from "@/src/components/workspace/members/member-status-tones";
 
-/** QR uses the accent tone and Manual the neutral one, so an officer's own entries stand apart */
+/** QR uses the emerald accent tone and Manual uses the warm amber tone so manual officer entries stand distinct */
 const METHOD_TONES = {
   qr: STATUS_TONES.active,
-  manual: ALL_TONE,
+  manual: {
+    background: "var(--color-amber-soft, #fef3c7)",
+    border: "1px solid var(--color-amber-line, #fde68a)",
+    text: "var(--color-amber-strong, #b45309)",
+  },
 } as const;
 
 const METHOD_LABELS: Record<AttendanceMethod, string> = {
