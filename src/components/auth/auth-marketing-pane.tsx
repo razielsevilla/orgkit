@@ -45,7 +45,9 @@ export function AuthMarketingPane() {
             marginBottom: 0,
           }}
         >
-          <span style={{ whiteSpace: "nowrap" }}>Organize. Collaborate.</span>
+          <span style={{ whiteSpace: "nowrap" }}>
+            Organize. <span style={{ color: "var(--color-amber, #d97706)" }}>Collaborate.</span>
+          </span>
           <br />
           <span style={{ color: "var(--color-accent)" }}>Lead.</span>
         </h1>

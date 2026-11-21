@@ -4,11 +4,10 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Banknote, CalendarDays, Home, QrCode, UserPlus, Users } from "lucide-react";
+import { Banknote, CalendarDays, Home, UserPlus, Users } from "lucide-react";
 import {
   duesPath,
   eventsPath,
-  joinPanelPath,
   membersPath,
   officersPath,
   workspacePath,
@@ -65,7 +64,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "events" | "join" | "invite";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "invite";
 
 interface NavListProps {
   rawId: string;
@@ -74,7 +73,7 @@ interface NavListProps {
   activeSection: SidebarSection;
 }
 
-export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListProps) {
+export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
   const router = useRouter();
 
   // Background idle-prewarm for 0ms transitions across core workspace routes
@@ -85,9 +84,6 @@ export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListP
       router.prefetch(duesPath(rawId));
       router.prefetch(eventsPath(rawId));
       router.prefetch(officersPath(rawId));
-      if (isAdmin) {
-        router.prefetch(joinPanelPath(rawId));
-      }
     };
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
@@ -97,7 +93,7 @@ export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListP
       const timer = setTimeout(prewarm, 400);
       return () => clearTimeout(timer);
     }
-  }, [rawId, isAdmin, router]);
+  }, [rawId, router]);
 
   return (
     <nav
@@ -148,19 +144,6 @@ export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListP
         isActive={activeSection === "events"}
         isCollapsed={isCollapsed}
       />
-
-      {/* Admins only: the public link and QR code students join with */}
-      {isAdmin && (
-        <NavLinkItem
-          href={joinPanelPath(rawId)}
-          title="Join: the link and QR code for members"
-          label="Join"
-          icon={QrCode}
-          strokeWidth={2.2}
-          isActive={activeSection === "join"}
-          isCollapsed={isCollapsed}
-        />
-      )}
 
       <NavLinkItem
         href={officersPath(rawId)}

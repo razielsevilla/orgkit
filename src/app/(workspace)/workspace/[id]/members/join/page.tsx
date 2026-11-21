@@ -1,59 +1,7 @@
-import { Suspense } from "react";
-import { connection } from "next/server";
-import { notFound } from "next/navigation";
-import { createClient } from "@/src/lib/supabase/server";
-import { requireOfficer } from "@/src/lib/auth/officer";
-import { isUuid } from "@/src/lib/validation";
-import { getSiteUrl } from "@/src/lib/site-url";
-import { JoinPanel } from "@/src/components/workspace/member-join/join-panel";
-import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
-import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
+import { redirect } from "next/navigation";
+import { membersPath } from "@/src/lib/routes";
 
-export default function MemberJoinPage({ params }: { params: Promise<{ id: string }> }) {
-  return (
-    <Suspense fallback={<WorkspaceContentLoader />}>
-      <MemberJoinContent params={params} />
-    </Suspense>
-  );
-}
-
-// Reads the session and the database, so it streams in behind Suspense.
-// Only the org's admin gets past this; everyone else sees a plain 404.
-async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }) {
-  await connection();
+export default async function MemberJoinPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  if (!isUuid(id)) notFound();
-
-  await requireOfficer();
-  const supabase = await createClient();
-
-  // Execute admin check, org details, and active join link in parallel
-  const [{ data: isAdmin }, { data: org }, { data: link }] = await Promise.all([
-    supabase.rpc("is_org_admin", { target_org: id }),
-    supabase.from("orgs").select("name, school").eq("id", id).maybeSingle(),
-    supabase
-      .from("org_join_links")
-      .select("token")
-      .eq("org_id", id)
-      .eq("active", true)
-      .maybeSingle(),
-  ]);
-
-  if (isAdmin !== true || !org) notFound();
-
-  // Links are built from the configured address, never from the request, so a
-  // link copied on a preview deployment can't point somewhere else.
-  const siteUrl = getSiteUrl();
-
-  return (
-    <PageReveal>
-      <JoinPanel
-        orgId={id}
-        orgName={org.name}
-        schoolName={org.school}
-        initialToken={link?.token ?? null}
-        siteUrl={siteUrl}
-      />
-    </PageReveal>
-  );
+  redirect(membersPath(id));
 }

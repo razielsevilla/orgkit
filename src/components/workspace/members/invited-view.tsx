@@ -41,14 +41,23 @@ function InviteStatus({ invite }: { invite: MemberInvite }) {
         fontWeight: 600,
         whiteSpace: "nowrap",
         backgroundColor: joined
-          ? "color-mix(in srgb, var(--color-accent) 8%, transparent)"
-          : "color-mix(in srgb, var(--color-base) 80%, transparent)",
+          ? "color-mix(in srgb, var(--color-accent) 12%, transparent)"
+          : "var(--color-amber-soft, #fef3c7)",
         border: joined
           ? "1px solid color-mix(in srgb, var(--color-accent) 28%, transparent)"
-          : "1px solid var(--color-line)",
-        color: joined ? "var(--color-accent-strong)" : "var(--color-ink)",
+          : "1px solid var(--color-amber-line, #fde68a)",
+        color: joined ? "var(--color-accent-strong)" : "var(--color-amber-strong, #b45309)",
       }}
     >
+      <span
+        aria-hidden="true"
+        style={{
+          width: 6,
+          height: 6,
+          borderRadius: "50%",
+          backgroundColor: joined ? "var(--color-accent)" : "var(--color-amber, #d97706)",
+        }}
+      />
       {joined ? "Joined" : "Invited"}
     </span>
   );
