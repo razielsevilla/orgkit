@@ -10,6 +10,7 @@ interface MemberEmptyStateProps {
   inactiveCount?: number;
   onClearFilters?: () => void;
   onViewInactive?: () => void;
+  onOpenAddModal?: () => void;
 }
 
 /**
@@ -25,6 +26,7 @@ export function MemberEmptyState({
   inactiveCount,
   onClearFilters,
   onViewInactive,
+  onOpenAddModal,
 }: MemberEmptyStateProps) {
   const [copied, setCopied] = useState(false);
 
@@ -499,8 +501,29 @@ export function MemberEmptyState({
         </div>
       ) : (
         <p style={{ fontSize: 13, color: "var(--color-muted)", margin: 0 }}>
-          Your public join link is currently turned off. An admin can activate it under{" "}
-          <strong style={{ color: "var(--color-ink)" }}>Join</strong> in the sidebar.
+          Your public join link is currently turned off.{" "}
+          {onOpenAddModal ? (
+            <button
+              type="button"
+              onClick={onOpenAddModal}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                color: "var(--color-accent-strong)",
+                fontWeight: 600,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Turn on join link
+            </button>
+          ) : (
+            <>
+              An admin can activate it using{" "}
+              <strong style={{ color: "var(--color-ink)" }}>Add Members</strong> above.
+            </>
+          )}
         </p>
       )}
     </div>

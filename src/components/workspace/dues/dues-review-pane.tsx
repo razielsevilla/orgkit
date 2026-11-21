@@ -148,9 +148,9 @@ export function DuesReviewPane({
                   fontWeight: 700,
                   padding: "2px 8px",
                   borderRadius: 9999,
-                  backgroundColor: "color-mix(in srgb, #f59e0b 16%, transparent)",
-                  color: "#b45309",
-                  border: "1px solid color-mix(in srgb, #f59e0b 24%, transparent)",
+                  backgroundColor: "var(--color-amber-soft, #fef3c7)",
+                  color: "var(--color-amber-strong, #b45309)",
+                  border: "1px solid var(--color-amber-line, #fde68a)",
                 }}
               >
                 {items.length} pending
@@ -295,9 +295,9 @@ export function DuesReviewPane({
                     letterSpacing: "0.04em",
                     padding: "2px 8px",
                     borderRadius: 9999,
-                    backgroundColor: "color-mix(in srgb, #f59e0b 14%, transparent)",
-                    color: "#b45309",
-                    border: "1px solid color-mix(in srgb, #f59e0b 28%, transparent)",
+                    backgroundColor: "var(--color-amber-soft, #fef3c7)",
+                    color: "var(--color-amber-strong, #b45309)",
+                    border: "1px solid var(--color-amber-line, #fde68a)",
                     flexShrink: 0,
                   }}
                 >

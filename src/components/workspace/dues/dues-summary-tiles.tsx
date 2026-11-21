@@ -270,9 +270,20 @@ export function DuesSummaryTiles({
                 fontWeight: 700,
                 textTransform: "uppercase",
                 letterSpacing: "0.05em",
-                color: "var(--color-muted)",
+                color: "var(--color-amber-strong, #b45309)",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
               }}
             >
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: "50%",
+                  backgroundColor: "var(--color-amber, #d97706)",
+                }}
+              />
               Outstanding
             </span>
             <div
@@ -280,7 +291,7 @@ export function DuesSummaryTiles({
                 margin: "4px 0 0 0",
                 fontSize: "clamp(18px, 2.2vw, 24px)",
                 fontWeight: 800,
-                color: "var(--color-ink)",
+                color: summary.outstandingAmount > 0 ? "var(--color-amber-strong, #b45309)" : "var(--color-ink)",
                 letterSpacing: "-0.02em",
                 lineHeight: 1.2,
               }}
@@ -429,7 +440,7 @@ export function DuesSummaryTiles({
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Clock size={18} strokeWidth={2.2} style={{ color: "var(--color-warning)" }} />
+              <Clock size={18} strokeWidth={2.2} style={{ color: "var(--color-amber, #d97706)" }} />
               <span style={{ fontSize: 13.5, fontWeight: 600, color: "var(--color-ink)" }}>
                 Pending review
               </span>
@@ -442,7 +453,11 @@ export function DuesSummaryTiles({
                   gap: 2,
                   fontSize: 11,
                   fontWeight: 700,
-                  color: "var(--color-warning)",
+                  color: "var(--color-amber-strong, #b45309)",
+                  backgroundColor: "var(--color-amber-soft, #fef3c7)",
+                  padding: "2px 8px",
+                  borderRadius: 9999,
+                  border: "1px solid var(--color-amber-line, #fde68a)",
                 }}
               >
                 Review <ArrowUpRight size={12} strokeWidth={2.5} />

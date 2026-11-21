@@ -3,13 +3,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AlertCircle, Link as LinkIcon, SlidersHorizontal, Lock, Mail } from "lucide-react";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import {
   createDuesPeriod,
   updateDuesPeriod,
   closeDuesPeriod,
-  getDuesDashboardData,
-} from "@/src/app/(workspace)/dues-actions";
+} from "@/src/app/(workspace)/dues-periods-actions";
+import { getDuesDashboardData } from "@/src/app/(workspace)/dues-dashboard-actions";
 import type { DuesDashboardData, DuesStatusFilter } from "@/src/lib/dues/dues-dashboard";
 import { DUES_PAGE_SIZE } from "@/src/lib/dues/dues-dashboard";
 import { DuesHeader } from "./dues-header";
@@ -409,9 +409,9 @@ export function DuesClient({
                         height: 36,
                         padding: "0 16px",
                         borderRadius: 9999,
-                        backgroundColor: "color-mix(in srgb, var(--color-brand-tint) 50%, var(--color-surface))",
-                        border: "1px solid color-mix(in srgb, var(--color-accent) 26%, transparent)",
-                        color: "var(--color-brand-deep)",
+                        backgroundColor: "color-mix(in srgb, var(--color-amber-soft, #fef3c7) 60%, var(--color-surface))",
+                        border: "1px solid var(--color-amber-line, #fde68a)",
+                        color: "var(--color-amber-strong, #b45309)",
                         fontSize: 13,
                         fontWeight: 600,
                         cursor: "pointer",
@@ -420,16 +420,16 @@ export function DuesClient({
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = "translateY(-1px)";
-                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(28, 75, 56, 0.12)";
-                        e.currentTarget.style.borderColor = "var(--color-accent)";
+                        e.currentTarget.style.boxShadow = "0 4px 12px rgba(217, 119, 6, 0.15)";
+                        e.currentTarget.style.borderColor = "var(--color-amber, #d97706)";
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = "none";
                         e.currentTarget.style.boxShadow = "0 1px 3px rgba(24, 24, 27, 0.04)";
-                        e.currentTarget.style.borderColor = "color-mix(in srgb, var(--color-accent) 26%, transparent)";
+                        e.currentTarget.style.borderColor = "var(--color-amber-line, #fde68a)";
                       }}
                     >
-                      <Mail size={14} strokeWidth={2} style={{ color: "var(--color-accent)" }} />
+                      <Mail size={14} strokeWidth={2} style={{ color: "var(--color-amber, #d97706)" }} />
                       Send reminders
                     </button>
                     <button

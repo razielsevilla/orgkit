@@ -104,45 +104,15 @@ export default function SignInPage() {
           )}
         </AuthErrorAlert>
 
-        {/* 5. Terms & Sign Up Link */}
+        {/* 5. Sign Up Link */}
         <div
           style={{
             marginTop: "clamp(24px, 3.8vh, 36px)",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: "clamp(12px, 1.8vh, 18px)",
           }}
         >
-          <p
-            style={{
-              fontSize: "clamp(13px, 0.95vw, 15px)",
-              lineHeight: 1.5,
-              color: "var(--color-muted-strong)",
-              margin: 0,
-              fontWeight: 400,
-              whiteSpace: "nowrap",
-            }}
-          >
-            By continuing, you agree to our{" "}
-            <Link
-              href={ROUTES.terms}
-              className="orgkit-terms-link"
-              title="View OrgKit Terms of Service"
-            >
-              Terms
-            </Link>{" "}
-            and{" "}
-            <Link
-              href={ROUTES.privacy}
-              className="orgkit-terms-link"
-              title="View OrgKit Privacy Policy"
-            >
-              Privacy Policy
-            </Link>
-            .
-          </p>
-
           <p
             style={{
               fontSize: "clamp(13px, 0.95vw, 15px)",

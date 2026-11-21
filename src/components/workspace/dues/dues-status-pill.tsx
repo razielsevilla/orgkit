@@ -1,5 +1,5 @@
 import React from "react";
-import type { DuesPeriodStatus } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriodStatus } from "@/src/app/(workspace)/dues-shared";
 
 interface DuesStatusPillProps {
   status: DuesPeriodStatus;

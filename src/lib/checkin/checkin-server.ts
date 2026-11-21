@@ -3,19 +3,16 @@ import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { verifyCheckinToken } from "@/src/lib/checkin/token";
 import { getCheckinSecret } from "@/src/lib/checkin/secret";
 import { allowRequest } from "@/src/lib/rate-limit";
+import { logger } from "@/src/lib/logger";
+import { getCheckinAttemptsPerMinute } from "@/src/lib/config";
 
 /**
- * Check-in attempts allowed per device per minute. Same reasoning as
- * JOIN_ATTEMPTS_PER_MINUTE: a device is an IP address, and a whole room can
- * share one campus Wi-Fi IP while the QR is on screen. Set
- * CHECKIN_ATTEMPTS_PER_MINUTE to change it without a code change.
+ * Counts this attempt against the caller's device and says whether it may go ahead.
+ * The limit is CHECKIN_ATTEMPTS_PER_MINUTE (default 30): a device is an IP address,
+ * and a whole room can share one campus Wi-Fi IP while the QR is on screen.
  */
-export const CHECKIN_ATTEMPTS_PER_MINUTE =
-  Number(process.env.CHECKIN_ATTEMPTS_PER_MINUTE) || 30;
-
-/** Counts this attempt against the caller's device and says whether it may go ahead. */
 export function allowCheckinAttempt(): Promise<boolean> {
-  return allowRequest("checkin", CHECKIN_ATTEMPTS_PER_MINUTE);
+  return allowRequest("checkin", getCheckinAttemptsPerMinute());
 }
 
 /** The event id for a token that is genuine and still fresh, or null. */
@@ -42,7 +39,7 @@ export async function getCheckinEvent(token: string): Promise<CheckinEvent | nul
     p_event: eventId,
   });
   if (error) {
-    console.error("Error loading check-in event:", error);
+    logger.error("checkin.load_event_failed", { eventId, error });
     return null;
   }
 

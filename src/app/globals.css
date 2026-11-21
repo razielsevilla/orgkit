@@ -21,11 +21,18 @@
   --color-line: #e4e4e7;
   --color-line-strong: #d4d4d8;
 
-  /* Accent (the only brand color) */
+  /* Accent (the signature emerald brand color) */
   --color-accent: #059669;
   --color-accent-strong: #047857;
   --color-accent-bright: #10b981;
   --color-accent-soft: #d1fae5;
+
+  /* Secondary Accent (Warm Amber / Marigold - Standout companion to Emerald) */
+  --color-amber: #d97706;
+  --color-amber-strong: #b45309;
+  --color-amber-bright: #f59e0b;
+  --color-amber-soft: #fef3c7;
+  --color-amber-line: #fde68a;
 
   /* The deep green of the OrgKit wordmark, for brand titles. 10.3:1 on white. */
   --color-brand-deep: #054a38;

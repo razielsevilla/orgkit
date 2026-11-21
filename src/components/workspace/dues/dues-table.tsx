@@ -1,6 +1,6 @@
 import React from "react";
 import { Calendar, Link as LinkIcon, Pencil, XCircle, CheckCheck } from "lucide-react";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import { DuesStatusPill } from "./dues-status-pill";
 
 interface DuesTableProps {

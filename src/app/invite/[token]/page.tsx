@@ -7,7 +7,8 @@ import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { findUsableInvite } from "@/src/lib/invites/invite-lookup";
 import { acceptInvite } from "@/src/lib/invites/invite-accept";
-import { allowRequest, INVITE_ATTEMPTS_PER_MINUTE } from "@/src/lib/rate-limit";
+import { allowRequest } from "@/src/lib/rate-limit";
+import { getInviteAttemptsPerMinute } from "@/src/lib/config";
 import { ROLE_DETAILS, isOfficerRole } from "@/src/lib/orgs/permissions";
 import {
   Card,
@@ -34,7 +35,7 @@ async function InviteContent({ params }: InvitePageProps) {
   const { token } = await params;
 
   // 1. Rate limit per device
-  if (!(await allowRequest("invite", INVITE_ATTEMPTS_PER_MINUTE))) {
+  if (!(await allowRequest("invite", getInviteAttemptsPerMinute()))) {
     return <TooManyRequestsCard />;
   }
 

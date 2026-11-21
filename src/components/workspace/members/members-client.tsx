@@ -12,6 +12,7 @@ import { MemberEmptyState } from "./member-empty-state";
 import { MemberList } from "./member-list";
 import { MemberSkeleton } from "./member-skeleton";
 import { MembersHeader } from "./members-header";
+import { MembersAddButton } from "./members-add-button";
 import { MembersImportButton } from "./members-import-button";
 import { MembersSearchFilter } from "./members-search-filter";
 import { MembersStyles } from "./members-styles";
@@ -41,6 +42,10 @@ const ImportDialog = dynamic(
   () => import("./import/import-dialog").then((m) => m.ImportDialog),
   { ssr: false }
 );
+const MemberJoinDialog = dynamic(
+  () => import("./member-join-dialog").then((m) => m.MemberJoinDialog),
+  { ssr: false }
+);
 
 interface MembersClientProps {
   rawId: string;
@@ -48,6 +53,10 @@ interface MembersClientProps {
   initialError?: string | null;
   /** Admins only: shows the Export button and dialog */
   canExport?: boolean;
+  orgName?: string;
+  schoolName?: string | null;
+  initialJoinToken?: string | null;
+  siteUrl?: string | null;
 }
 
 export function MembersClient({
@@ -55,6 +64,10 @@ export function MembersClient({
   initialData,
   initialError = null,
   canExport = false,
+  orgName,
+  schoolName = null,
+  initialJoinToken = null,
+  siteUrl = null,
 }: MembersClientProps) {
   const router = useRouter();
   const [toastError, setToastError] = useState<string | null>(null);
@@ -74,6 +87,10 @@ export function MembersClient({
   const [historyTarget, setHistoryTarget] = useState<WorkspaceMember | null>(null);
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [joinOpen, setJoinOpen] = useState(false);
+  const [joinToken, setJoinToken] = useState<string | null>(
+    initialJoinToken ?? initialData.joinLinkToken ?? null
+  );
 
   const queueFocus = useRowFocusRestore(
     data.members,
@@ -118,7 +135,13 @@ export function MembersClient({
 
     switch (emptyState) {
       case "no-members":
-        return <MemberEmptyState type="no-members" joinLinkToken={data.joinLinkToken} />;
+        return (
+          <MemberEmptyState
+            type="no-members"
+            joinLinkToken={joinToken}
+            onOpenAddModal={data.canImport ? () => setJoinOpen(true) : undefined}
+          />
+        );
       case "no-active-members":
         return (
           <MemberEmptyState
@@ -208,7 +231,14 @@ export function MembersClient({
           errorMessage={roster.errorMessage}
           onRetry={roster.reload}
           isRetrying={roster.isBusy}
-          actions={data.canImport ? <MembersImportButton onClick={() => setImportOpen(true)} /> : null}
+          actions={
+            data.canImport ? (
+              <>
+                <MembersAddButton onClick={() => setJoinOpen(true)} />
+                <MembersImportButton onClick={() => setImportOpen(true)} variant="secondary" />
+              </>
+            ) : null
+          }
           onExport={canExport ? () => setExportOpen(true) : undefined}
         />
 
@@ -226,6 +256,19 @@ export function MembersClient({
             onClose={() => setImportOpen(false)}
             onFinished={handleImportFinished}
             onSignedOut={() => router.push(ROUTES.signIn)}
+          />
+        )}
+
+        {data.canImport && (
+          <MemberJoinDialog
+            isOpen={joinOpen}
+            onClose={() => setJoinOpen(false)}
+            orgId={rawId}
+            orgName={orgName || "Organization"}
+            schoolName={schoolName}
+            siteUrl={siteUrl}
+            initialToken={joinToken}
+            onTokenChange={setJoinToken}
           />
         )}
 

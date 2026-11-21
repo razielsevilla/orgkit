@@ -67,8 +67,9 @@ export function MembersViewTabs({ view, onSelect, pendingInvites }: MembersViewT
                   fontWeight: 700,
                   backgroundColor: isActive
                     ? "color-mix(in srgb, #FFFFFF 25%, transparent)"
-                    : "color-mix(in srgb, var(--color-line) 80%, transparent)",
-                  color: isActive ? "#FFFFFF" : "var(--color-ink)",
+                    : "var(--color-amber-soft, #fef3c7)",
+                  color: isActive ? "#FFFFFF" : "var(--color-amber-strong, #b45309)",
+                  border: isActive ? "none" : "1px solid var(--color-amber-line, #fde68a)",
                 }}
               >
                 {badge}

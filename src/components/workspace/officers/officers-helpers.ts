@@ -39,9 +39,9 @@ export const roleBadgeStyles: Record<
     border: "color-mix(in srgb, var(--color-accent) 25%, transparent)",
   },
   finance: {
-    bg: "var(--color-base)",
-    text: "var(--color-ink-soft)",
-    border: "var(--color-line)",
+    bg: "var(--color-amber-soft, #fef3c7)",
+    text: "var(--color-amber-strong, #b45309)",
+    border: "var(--color-amber-line, #fde68a)",
   },
   officer: {
     bg: "var(--color-base)",

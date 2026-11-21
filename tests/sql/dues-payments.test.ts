@@ -11,7 +11,6 @@ import {
 } from "./helpers.ts";
 
 let orgA: string;
-let orgB: string;
 let adminA: string;
 let officerA: string;
 let memberA1: string;
@@ -51,7 +50,7 @@ before(async () => {
 
   // Org B and officer
   adminB = await addOfficer("admin.dues.p2.b@school.edu", "Admin Dues P2 B");
-  orgB = await addOrg(adminB, "Dues P2 Org B");
+  await addOrg(adminB, "Dues P2 Org B");
 
   // Create an initial open dues period in Org A
   const periodRes = await as("authenticated", officerA, () =>

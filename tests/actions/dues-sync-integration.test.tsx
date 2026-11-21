@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createElement, type ReactNode } from "react";
 import { renderToReadableStream } from "react-dom/server";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 
 vi.mock("@/src/components/ui/dialog", () => ({
   Dialog: ({ children }: { children: ReactNode }) =>
@@ -16,7 +16,10 @@ vi.mock("@/src/components/ui/dialog", () => ({
     createElement("button", { type: "button", ...props }, children),
 }));
 
-vi.mock("@/src/app/(workspace)/dues-actions", () => ({
+// The dues actions now live in four files. One factory serves all of them, so every
+// mocked name resolves from whichever file a component imports it from.
+function duesActionsMock() {
+  return {
   getDuesReviewQueue: vi.fn().mockResolvedValue({
     success: true,
     data: [
@@ -38,7 +41,12 @@ vi.mock("@/src/app/(workspace)/dues-actions", () => ({
   }),
   verifyDuesPayment: vi.fn().mockResolvedValue({ success: true }),
   rejectDuesPayment: vi.fn().mockResolvedValue({ success: true }),
-}));
+  };
+}
+vi.mock("@/src/app/(workspace)/dues-periods-actions", duesActionsMock);
+vi.mock("@/src/app/(workspace)/dues-review-actions", duesActionsMock);
+vi.mock("@/src/app/(workspace)/dues-dashboard-actions", duesActionsMock);
+vi.mock("@/src/app/(workspace)/dues-reminders-actions", duesActionsMock);
 
 const { DuesReviewDialog } = await import(
   "@/src/components/workspace/dues/dues-review-dialog"

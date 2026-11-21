@@ -25,14 +25,31 @@ export function ConsentForm() {
         <input
           type="checkbox"
           name="agree"
+          id="consent-agree"
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
           style={{ width: 20, height: 20, marginTop: 2, accentColor: "var(--color-accent)", flexShrink: 0 }}
         />
-        <span>
-          I agree to the{" "}
-          <Link href={ROUTES.privacy} target="_blank" className="orgkit-terms-link">
-            Privacy Notice
+        <span style={{ userSelect: "none" }}>
+          By continuing, I agree to the{" "}
+          <Link
+            href={ROUTES.terms}
+            target="_blank"
+            className="orgkit-terms-link"
+            title="View OrgKit Terms of Service"
+            style={{ fontWeight: 700 }}
+          >
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link
+            href={ROUTES.privacy}
+            target="_blank"
+            className="orgkit-terms-link"
+            title="View OrgKit Privacy Policy"
+            style={{ fontWeight: 700 }}
+          >
+            Privacy Policy
           </Link>
           .
         </span>
@@ -65,9 +82,15 @@ export function ConsentForm() {
           background: "none",
           border: "none",
           fontSize: 14,
-          color: "var(--color-muted)",
+          fontWeight: 500,
+          color: "var(--color-danger, #ef4444)",
+          textDecoration: "underline",
+          textUnderlineOffset: 3,
           cursor: "pointer",
+          transition: "color 0.15s ease, opacity 0.15s ease",
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-danger-strong, #b91c1c)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-danger, #ef4444)")}
       >
         Cancel and sign out
       </button>

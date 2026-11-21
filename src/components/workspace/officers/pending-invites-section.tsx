@@ -101,17 +101,29 @@ export function PendingInvitesSection({
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <span
                   style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
                     fontSize: 11,
                     fontWeight: 700,
-                    color: "var(--color-warning)",
-                    backgroundColor: "var(--color-warning-soft)",
-                    border: "1px solid var(--color-warning-line)",
+                    color: "var(--color-amber-strong, #b45309)",
+                    backgroundColor: "var(--color-amber-soft, #fef3c7)",
+                    border: "1px solid var(--color-amber-line, #fde68a)",
                     padding: "2px 8px",
                     borderRadius: 9999,
                     letterSpacing: "0.03em",
                     textTransform: "uppercase",
                   }}
                 >
+                  <span
+                    aria-hidden="true"
+                    style={{
+                      width: 5,
+                      height: 5,
+                      borderRadius: "50%",
+                      backgroundColor: "var(--color-amber, #d97706)",
+                    }}
+                  />
                   Pending
                 </span>
 

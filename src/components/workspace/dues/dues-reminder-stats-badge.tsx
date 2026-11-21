@@ -85,13 +85,13 @@ export function DuesReminderStatsBadge({
             gap: 8,
             padding: "8px 12px",
             borderRadius: 10,
-            backgroundColor: "color-mix(in srgb, #eab308 10%, var(--color-surface))",
-            border: "1px solid color-mix(in srgb, #eab308 30%, transparent)",
+            backgroundColor: "var(--color-amber-soft, #fef3c7)",
+            border: "1px solid var(--color-amber-line, #fde68a)",
             fontSize: 12,
-            color: "#854d0e",
+            color: "var(--color-amber-strong, #b45309)",
           }}
         >
-          <Clock size={14} style={{ flexShrink: 0, marginTop: 2, color: "#ca8a04" }} />
+          <Clock size={14} style={{ flexShrink: 0, marginTop: 2, color: "var(--color-amber, #d97706)" }} />
           <span style={{ overflowWrap: "anywhere" }}>
             <strong>{skipped24hCount}</strong> {skipped24hCount === 1 ? "member was" : "members were"} reminded in the last 24 hours and will be skipped.
           </span>

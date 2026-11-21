@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { z } from "zod";
 import { unstable_rethrow } from "next/navigation";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
@@ -111,7 +112,7 @@ async function loadOfficers(
     .order("joined_at", { ascending: true });
 
   if (error || !memberships) {
-    console.error("Error fetching memberships:", error);
+    logger.error("officers.load_memberships_failed", { orgId, error });
     return null;
   }
 
@@ -126,7 +127,7 @@ async function loadOfficers(
     );
 
   if (profileError) {
-    console.error("Error fetching officer profiles:", profileError);
+    logger.error("officers.load_profiles_failed", { orgId, error: profileError });
   }
 
   const profileById = new Map((profiles || []).map((p) => [p.id, p]));
@@ -159,7 +160,7 @@ async function loadPendingInvites(
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching invites:", error);
+    logger.error("officers.load_invites_failed", { orgId, error });
   }
 
   return (rows || []).map((inv) => ({
@@ -216,7 +217,7 @@ export async function getWorkspaceOfficers(
   } catch (err) {
     // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
     unstable_rethrow(err);
-    console.error("Unexpected error in getWorkspaceOfficers:", err);
+    logger.error("officers.load_unexpected", { error: err });
     return fail("failed", "Failed to load officers.");
   }
 }
@@ -264,6 +265,10 @@ export async function createOfficerInvite(
       unexpected: "An unexpected error occurred while creating the invite.",
     },
     async ({ supabase }) => {
+      // Resolve the site address before writing anything: if it is missing in production
+      // this throws, and no invite is created whose link could never be shown
+      const baseUrl = await getBaseUrl();
+
       // 32 cryptographically secure random bytes; only the hash is stored
       const rawToken = generateInviteToken();
 
@@ -285,7 +290,7 @@ export async function createOfficerInvite(
       }
 
       return ok({
-        inviteUrl: `${await getBaseUrl()}/invite/${rawToken}`,
+        inviteUrl: `${baseUrl}/invite/${rawToken}`,
         rawToken,
         email: parsed.data.email,
         role: parsed.data.role,

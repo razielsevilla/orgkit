@@ -12,12 +12,13 @@ vi.mock("@/src/app/auth/actions", () => ({ signOut: vi.fn() }));
 // next/font only works inside the Next compiler
 vi.mock("@/src/lib/fonts", () => ({ plusJakarta: { className: "font-test" } }));
 
+import type { WorkspaceFrameData } from "@/src/components/workspace/frame/workspace-frame";
 const { WorkspaceFrame } = await import("@/src/components/workspace/frame/workspace-frame");
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 const officer = { id: "u1", email: "ana@school.edu", full_name: "Ana Cruz" };
 
-const data = (isAdmin: boolean) =>
+const data = (isAdmin: boolean): Promise<WorkspaceFrameData | null> =>
   Promise.resolve({
     rawId: ORG,
     orgName: "Robotics Club",
@@ -26,12 +27,11 @@ const data = (isAdmin: boolean) =>
     isAdmin,
   });
 
-async function render(frameData: Promise<ReturnType<typeof Object> | null>) {
+async function render(frameData: Promise<WorkspaceFrameData | null>) {
   const stream = await renderToReadableStream(
     createElement(
       WorkspaceFrame,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { data: frameData as any },
+      { data: frameData },
       createElement("p", null, "PAGE CONTENT")
     )
   );
@@ -52,19 +52,19 @@ beforeEach(() => {
 });
 
 describe("workspace frame navigation for Ticket R1 & P1", () => {
-  it("shows Home, Members, Dues, Join and Invite to an admin", async () => {
+  it("shows Home, Members, Dues, Events and Invite to an admin", async () => {
     const html = await render(data(true));
     expect(navHrefs(html)).toEqual([
       `/workspace/${ORG}`,
       `/workspace/${ORG}/members`,
       `/workspace/${ORG}/dues`,
       `/workspace/${ORG}/events`,
-      `/workspace/${ORG}/members/join`,
       `/workspace/${ORG}/officers`,
     ]);
-    for (const label of ["Home", "Members", "Dues", "Events", "Join", "Invite"]) {
+    for (const label of ["Home", "Members", "Dues", "Events", "Invite"]) {
       expect(html).toContain(`<span>${label}</span>`);
     }
+    expect(html).not.toContain("<span>Join</span>");
   });
 
   it("shows Members and Dues to regular officers, but hides Join", async () => {
@@ -94,7 +94,6 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
     [`/workspace/${ORG}/officers`, "Invite"],
     [`/workspace/${ORG}/events`, "Events"],
     [`/workspace/${ORG}/events/22222222-2222-4222-8222-222222222222`, "Events"],
-    [`/workspace/${ORG}/members/join`, "Join"],
   ])("highlights %s as active when on %s", async (path, label) => {
     pathname = path;
     const html = await render(data(true));

@@ -59,7 +59,7 @@ export function FloatingIconsDecor() {
         </div>
       </div>
 
-      {/* 3. Bottom-Left: Wallet (White Card, +7deg tilt) */}
+      {/* 3. Bottom-Left: Wallet (White Card, +7deg tilt, Warm Amber finance accent) */}
       <div
         className="orgkit-floating-decor orgkit-burst-bl"
         style={{
@@ -76,14 +76,14 @@ export function FloatingIconsDecor() {
             height: 50,
             borderRadius: 16,
             backgroundColor: "var(--color-surface)",
-            border: "1px solid color-mix(in srgb, var(--color-line) 80%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--color-amber-line, #fde68a) 80%, transparent)",
             boxShadow: "0 10px 25px color-mix(in srgb, var(--color-ink) 8%, transparent)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Wallet size={22} color="var(--color-accent)" strokeWidth={2} />
+          <Wallet size={22} color="var(--color-amber, #d97706)" strokeWidth={2} />
         </div>
       </div>
 
@@ -191,7 +191,7 @@ export function FloatingIconsDecor() {
           width: 5,
           height: 5,
           borderRadius: "50%",
-          backgroundColor: "color-mix(in srgb, var(--color-accent) 25%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--color-amber, #d97706) 50%, transparent)",
         }}
       />
       <div
@@ -215,7 +215,7 @@ export function FloatingIconsDecor() {
           width: 5,
           height: 5,
           borderRadius: "50%",
-          backgroundColor: "color-mix(in srgb, var(--color-accent) 25%, transparent)",
+          backgroundColor: "color-mix(in srgb, var(--color-amber, #d97706) 50%, transparent)",
         }}
       />
     </>

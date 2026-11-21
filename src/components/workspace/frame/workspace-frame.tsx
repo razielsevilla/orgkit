@@ -3,7 +3,7 @@
 import { use } from "react";
 import { usePathname } from "next/navigation";
 import { plusJakarta } from "@/src/lib/fonts";
-import { duesPath, eventsPath, joinPanelPath, membersPath, officersPath } from "@/src/lib/routes";
+import { duesPath, eventsPath, membersPath, officersPath } from "@/src/lib/routes";
 import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
 import { Sidebar } from "@/src/components/layout/sidebar";
 import type { SidebarSection } from "@/src/components/layout/sidebar/nav-list";
@@ -21,7 +21,6 @@ export interface WorkspaceFrameData {
 }
 
 function sectionFor(pathname: string, rawId: string): SidebarSection {
-  if (pathname.startsWith(joinPanelPath(rawId))) return "join";
   if (pathname.startsWith(membersPath(rawId))) return "members";
   if (pathname.startsWith(duesPath(rawId))) return "dues";
   if (pathname.startsWith(eventsPath(rawId))) return "events";

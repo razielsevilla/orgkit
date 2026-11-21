@@ -9,7 +9,7 @@ This document is the official design specification for **OrgKit**, extracted dir
 OrgKit is a modern, reliable, and approachable platform built for student organization officers and members.
 
 - **Purposeful Minimalism:** Clear hierarchy, ample negative space, and zero unnecessary visual clutter.
-- **Single-Accent Discipline:** A signature emerald green accent (`#059669`) is the *only* semantic hue on neutral canvases. When something is green, it communicates action, growth, vitality, or success.
+- **Dual-Accent Harmony:** A signature emerald green accent (`#059669`) serves as the primary brand anchor for success, completion, and growth. A warm amber / marigold companion accent (`#D97706` / `#F59E0B`) provides a vibrant, high-energy counterpoint for pending states, outstanding balances, reminders, and attention items, making OrgKit's design distinct, lively, and immediately recognizable.
 - **Friendly Geometry:** Generously rounded corners (`rounded-3xl`, `rounded-full`), soft elevated drop shadows, and subtle border lines create an inviting, polished modern aesthetic.
 - **Responsive Fluidity:** Uses fluid CSS `clamp(...)` scaling for typography, padding, card dimensions, and icon sizes across standard desktop, laptop, and mobile viewports.
 
@@ -37,6 +37,9 @@ OrgKit uses a clean zinc neutral scale paired with an emerald accent and an expl
 | **Accent Light** | `#10B981` | `emerald-500` | Radial gradient highlights and stop colors |
 | **Accent Tint (6%)** | `rgba(5, 150, 105, 0.06)` | `emerald-600/6` | Background geometric rings and circles |
 | **Accent Tint (10%)** | `rgba(5, 150, 105, 0.10)` | `emerald-600/10` / `bg-emerald-50` | Soft badges, outer decorative rings |
+| **Amber (Standout Accent)** | `#D97706` | `var(--color-amber)` / `amber-600` | Standout secondary accent: pending reviews, reminders |
+| **Amber Strong** | `#B45309` | `var(--color-amber-strong)` / `amber-700` | Outstanding amounts, high-contrast amber labels |
+| **Amber Soft** | `#FEF3C7` | `var(--color-amber-soft)` / `amber-100` | Warm warning washes, pending badges |
 | **Brand Deep** | `#054A38` | `var(--color-brand-deep)` | The wordmark's deep green. Brand titles (dialog headers). 10.3:1 on white |
 | **Brand Tint** | Accent 8% over Surface | `var(--color-brand-tint)` | The faint emerald wash behind branded headers |
 | **Error / Destructive**| `#DC2626` | `red-600` | Form validation errors, error borders (`data-error`) |
