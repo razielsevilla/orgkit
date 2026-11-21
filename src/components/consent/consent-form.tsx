@@ -82,9 +82,15 @@ export function ConsentForm() {
           background: "none",
           border: "none",
           fontSize: 14,
-          color: "var(--color-muted)",
+          fontWeight: 500,
+          color: "var(--color-danger, #ef4444)",
+          textDecoration: "underline",
+          textUnderlineOffset: 3,
           cursor: "pointer",
+          transition: "color 0.15s ease, opacity 0.15s ease",
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-danger-strong, #b91c1c)")}
+        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-danger, #ef4444)")}
       >
         Cancel and sign out
       </button>
