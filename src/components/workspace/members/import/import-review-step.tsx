@@ -84,7 +84,17 @@ export function ImportReviewStep({
         aria-label="Import preview"
         style={{ listStyle: "none", margin: "0 0 16px 0", padding: 0, display: "grid", gap: 8, ...tabular }}
       >
-        <li style={{ ...noteBox, margin: 0, fontWeight: 700, fontSize: 16 }}>
+        <li
+          style={{
+            ...noteBox,
+            margin: 0,
+            fontWeight: 700,
+            fontSize: 15.5,
+            backgroundColor: "var(--color-amber-soft, #fef3c7)",
+            borderColor: "var(--color-amber-line, #fde68a)",
+            color: "var(--color-amber-strong, #b45309)",
+          }}
+        >
           {plural(preview.invited, "person", "people")} will be invited
         </li>
         <li style={{ ...noteBox, margin: 0 }}>
