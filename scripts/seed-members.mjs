@@ -20,7 +20,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const SEED_DOMAIN = "seed.orgkit.test";
-const CONSENT_VERSION = "member-consent-v1";
+const CONSENT_VERSION = "member-consent-v2";
 const DAY_MS = 24 * 60 * 60 * 1000;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

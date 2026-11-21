@@ -1,6 +1,7 @@
 "use server";
 
 import { logger } from "@/src/lib/logger";
+import { getPrivacyContactEmail } from "@/src/lib/config";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { CURRENT_MEMBER_CONSENT, type ConsentLanguage } from "@/src/lib/members/member-consent";
 import { allowJoinAttempt } from "@/src/lib/members/member-join-server";
@@ -31,6 +32,14 @@ export async function submitJoin(
   formData: FormData
 ): Promise<JoinState> {
   try {
+    // Same rule as the join page: no privacy contact, nothing is collected
+    if (!getPrivacyContactEmail()) {
+      logger.error("join_page.privacy_contact_missing", "The join action is closed: PRIVACY_CONTACT_EMAIL is not set.", {
+        variable: "PRIVACY_CONTACT_EMAIL",
+      });
+      return { status: "inactive" };
+    }
+
     if (!(await allowJoinAttempt())) {
       return { status: "error", formError: JOIN_MESSAGES.tooMany };
     }

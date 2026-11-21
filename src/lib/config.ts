@@ -6,6 +6,18 @@
  * Each variable is documented in `.env.example`.
  */
 
+// Relative with an extension (not "@/"), because the node:test unit tests import this file directly
+import { parseContactEmail } from "./members/member-join.ts";
+
+/**
+ * The monitored privacy contact (PRIVACY_CONTACT_EMAIL), or null when it is
+ * missing or isn't a valid email. The join page and the join action refuse to
+ * collect member data while this is null.
+ */
+export function getPrivacyContactEmail(): string | null {
+  return parseContactEmail(process.env.PRIVACY_CONTACT_EMAIL);
+}
+
 /** The largest value the database's `int` rate-limit argument can take. */
 const MAX_LIMIT = 2_147_483_647;
 

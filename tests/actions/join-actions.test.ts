@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * submitJoin is the one public, signed-out write in the app, so these tests pin
- * down its order of checks: rate limit, fields, consent, 18+, then the database.
+ * down its order of checks: privacy contact, rate limit, fields, consent, 18+, then the database.
  */
 
 interface FakeState {
@@ -60,6 +60,7 @@ const limitKeys = () =>
   state.rpcCalls.filter((c) => c.fn === "hit_join_rate_limit").map((c) => c.args.p_key);
 
 beforeEach(() => {
+  vi.stubEnv("PRIVACY_CONTACT_EMAIL", "privacy@orgkit.example");
   state.headers = { "x-forwarded-for": "203.0.113.7, 10.0.0.1" };
   state.rateLimitResult = { data: true, error: null };
   state.joinResult = { data: "ok", error: null };
@@ -84,6 +85,26 @@ describe("submitJoin", () => {
         },
       },
     ]);
+  });
+
+  it("records the current consent version, member-consent-v2", async () => {
+    expect(CURRENT_MEMBER_CONSENT.version).toBe("member-consent-v2");
+    await submitJoin(TOKEN, idle, form());
+    expect(joinCalls()[0].args.p_consent_version).toBe("member-consent-v2");
+  });
+
+  it("stays closed without a valid privacy contact, before any rate limit or save", async () => {
+    for (const value of ["", "   ", "not-an-email"]) {
+      vi.stubEnv("PRIVACY_CONTACT_EMAIL", value);
+      state.rpcCalls = [];
+
+      expect(await submitJoin(TOKEN, idle, form())).toEqual({ status: "inactive" });
+      expect(state.rpcCalls).toHaveLength(0);
+    }
+
+    vi.stubEnv("PRIVACY_CONTACT_EMAIL", undefined as unknown as string);
+    expect(await submitJoin(TOKEN, idle, form())).toEqual({ status: "inactive" });
+    expect(state.rpcCalls).toHaveLength(0);
   });
 
   it("treats any unknown language as English", async () => {
