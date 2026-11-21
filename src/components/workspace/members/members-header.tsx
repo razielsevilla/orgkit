@@ -89,7 +89,7 @@ export function MembersHeader({
                   display: "inline-flex",
                   alignItems: "center",
                   gap: 6,
-                  color: "var(--color-accent-strong)",
+                  color: "var(--color-amber-strong, #b45309)",
                   fontWeight: 600,
                 }}
               >
@@ -99,7 +99,7 @@ export function MembersHeader({
                     width: 6,
                     height: 6,
                     borderRadius: "50%",
-                    backgroundColor: "var(--color-accent)",
+                    backgroundColor: "var(--color-amber, #d97706)",
                   }}
                 />
                 {pendingCount} pending to review
