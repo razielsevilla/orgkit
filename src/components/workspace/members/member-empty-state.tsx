@@ -520,8 +520,8 @@ export function MemberEmptyState({
             </button>
           ) : (
             <>
-              An admin can activate it under{" "}
-              <strong style={{ color: "var(--color-ink)" }}>Join</strong> in the sidebar.
+              An admin can activate it using{" "}
+              <strong style={{ color: "var(--color-ink)" }}>Add Members</strong> above.
             </>
           )}
         </p>
