@@ -52,7 +52,7 @@ export function EventsClient({ rawId, events, initialError = null }: EventsClien
       style={{
         height: "100%",
         overflowY: "auto",
-        padding: "36px clamp(16px, 4vw, 36px) 24px clamp(16px, 4vw, 36px)",
+        padding: "36px clamp(16px, 4vw, 36px) 72px clamp(16px, 4vw, 36px)",
         boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",

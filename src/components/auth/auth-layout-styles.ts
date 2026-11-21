@@ -57,6 +57,13 @@ export const AUTH_LAYOUT_CSS = `
           }
         }
 
+        /* A forced line break and no-wrap, for the desktop card only; on a phone the text just wraps */
+        .orgkit-br-desktop { display: none; }
+        @media (min-width: 1024px) {
+          .orgkit-nowrap-desktop { white-space: nowrap; }
+          .orgkit-br-desktop { display: inline; }
+        }
+
         /* ── Mobile View Fallback (< 1024px) ── */
         @media (max-width: 1023px) {
           html, body {
@@ -69,6 +76,7 @@ export const AUTH_LAYOUT_CSS = `
           .orgkit-page-root {
             height: auto !important;
             min-height: 100vh !important;
+            min-height: 100dvh !important; /* the visible height: 100vh hides the bottom under a phone's toolbar */
             max-height: none !important;
             overflow-y: auto !important;
             overflow-x: hidden !important;

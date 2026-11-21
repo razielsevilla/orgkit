@@ -86,6 +86,9 @@ export function JoinForm({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            // The language pills grow to 44px on a phone: let the row wrap rather than squeeze
+            flexWrap: "wrap",
+            gap: 8,
             marginBottom: 2,
           }}
         >
@@ -115,6 +118,8 @@ export function JoinForm({
               fontSize: "clamp(22px, 2.2vw, 26px)",
               textAlign: "left",
               marginBottom: 6,
+              // An org name can be one long word: wrap it instead of widening the card
+              overflowWrap: "anywhere",
             }}
           >
             {copy.heading(orgName)}

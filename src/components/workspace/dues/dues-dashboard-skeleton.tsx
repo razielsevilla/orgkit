@@ -17,6 +17,7 @@ function SkeletonBar({
       style={{
         width,
         height,
+        maxWidth: "100%",
         flexShrink: 0,
         borderRadius: radius,
         backgroundColor: "color-mix(in srgb, var(--color-line) 85%, transparent)",
@@ -56,13 +57,15 @@ export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "18px 24px",
+          padding: "18px clamp(16px, 4vw, 24px)",
           backgroundColor: "var(--color-surface)",
           border: "1px solid var(--color-line)",
           borderRadius: 24,
+          // The three bars total about 478px: on a phone they wrap instead of overflowing
+          minWidth: 0,
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 14, minWidth: 0 }}>
           <SkeletonBar width={240} height={42} radius={12} />
           <SkeletonBar width={90} height={24} radius={9999} />
           <SkeletonBar width={120} height={18} />

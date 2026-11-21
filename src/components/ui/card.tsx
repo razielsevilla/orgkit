@@ -9,7 +9,8 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export function Card({
   maxWidth = 440,
-  padding = "40px 36px",
+  // 36px each side leaves only 216px inside a 328px card on a phone: shrink on small screens
+  padding = "clamp(24px, 6vw, 40px) clamp(20px, 5vw, 36px)",
   children,
   style,
   className = "",

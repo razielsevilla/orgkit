@@ -8,7 +8,7 @@ export default function TermsPage() {
     <main
       className={plusJakarta.className}
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         backgroundColor: "var(--color-base)",
         color: "var(--color-ink)",
         padding: "clamp(24px, 5vh, 48px) clamp(16px, 3vw, 24px)",
@@ -32,7 +32,7 @@ export default function TermsPage() {
             marginBottom: "clamp(20px, 3.5vh, 32px)",
           }}
         >
-          <Link href={ROUTES.signIn} style={{ display: "inline-flex", textDecoration: "none" }}>
+          <Link href={ROUTES.signIn} className="orgkit-tap-link" style={{ display: "inline-flex", textDecoration: "none" }}>
             <Image
               src="/orgkit-text-logo.png"
               alt="OrgKit"
@@ -44,6 +44,7 @@ export default function TermsPage() {
           </Link>
           <Link
             href={ROUTES.signIn}
+            className="orgkit-tap-link"
             style={{
               fontSize: 14,
               fontWeight: 600,

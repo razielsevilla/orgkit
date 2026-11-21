@@ -10,8 +10,8 @@ export function WorkspaceLoadingSkeleton() {
   return (
     <div
       style={{
-        height: "100vh",
-        maxHeight: "100vh",
+        height: "100dvh",
+        maxHeight: "100dvh",
         width: "100vw",
         overflow: "hidden",
         backgroundColor: "var(--color-base)",

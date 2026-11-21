@@ -12,13 +12,19 @@ export function OfficersStyles() {
           align-items: flex-start !important;
           gap: 12px !important;
         }
+        .orgkit-officer-row { width: 100%; box-sizing: border-box; }
         .orgkit-officer-controls {
           width: 100% !important;
-          justifyContent: space-between !important;
+          justify-content: space-between !important;
           margin-top: 4px !important;
         }
+        /* The select sits in a wrapper div: the wrapper is the flex child, so it is the one that stretches */
+        .orgkit-officer-controls > div:first-child {
+          flex: 1 1 0;
+          min-width: 0;
+        }
         .orgkit-officer-select {
-          flex: 1 !important;
+          width: 100% !important;
         }
         .orgkit-header-actions {
           width: 100% !important;

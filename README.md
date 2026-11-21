@@ -96,6 +96,7 @@ into `main`.
 |---|---|
 | [docs/routes.md](docs/routes.md) | Every URL, who can open it, and what runs before it |
 | [docs/backup-and-access.md](docs/backup-and-access.md) | Backups, the restore runbook, who can reach production data, and the service role key |
+| [docs/mobile-qa.md](docs/mobile-qa.md) | The phone checklist: how to test every screen at 360px, on a real phone too |
 | [docs/feedback.md](docs/feedback.md) | In-app feedback: what is saved, who reads it, limits, cleaning up |
 | [docs/usage-metrics.md](docs/usage-metrics.md) | The weekly usage report: what it counts, how it runs, how to check it |
 | [docs/techstack.md](docs/techstack.md) | Stack choices and open decisions |

@@ -205,6 +205,8 @@ function DuesReviewDialogContent({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                // The message and Retry stack on a narrow screen instead of crushing the text
+                flexWrap: "wrap",
                 padding: "10px 14px",
                 borderRadius: 10,
                 backgroundColor: "color-mix(in srgb, #ef4444 10%, transparent)",
@@ -214,7 +216,7 @@ function DuesReviewDialogContent({
                 gap: 12,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flex: "1 1 200px", minWidth: 0 }}>
                 <AlertCircle size={16} style={{ flexShrink: 0 }} />
                 <span>{bannerError}</span>
               </div>

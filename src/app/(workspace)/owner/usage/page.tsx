@@ -46,7 +46,7 @@ export default function OwnerUsagePage() {
     <main
       className={plusJakarta.className}
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         backgroundColor: "var(--color-base)",
         color: "var(--color-ink)",
         padding: "clamp(24px, 5vh, 48px) 16px",

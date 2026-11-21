@@ -90,6 +90,7 @@ export function ActiveOfficersSection({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                gap: 12,
                 padding: "16px 24px",
                 borderBottom:
                   idx < data.officers.length - 1 ? "1px solid var(--color-base)" : "none",
@@ -98,7 +99,7 @@ export function ActiveOfficersSection({
               }}
             >
               {/* Left: Avatar + Details */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flex: "1 1 auto" }}>
                 <div
                   style={{
                     width: 40,
@@ -118,14 +119,16 @@ export function ActiveOfficersSection({
                   {getInitials(officer.fullName)}
                 </div>
 
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {/* minWidth: 0 lets a long name or email wrap instead of widening the row */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                     <span
                       style={{
                         fontSize: 14,
                         fontWeight: 600,
                         color: "var(--color-ink)",
                         lineHeight: 1.2,
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {officer.fullName}
@@ -175,6 +178,7 @@ export function ActiveOfficersSection({
                         fontSize: 12,
                         color: "var(--color-muted)",
                         marginTop: 3,
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {officer.email}
@@ -201,6 +205,7 @@ export function ActiveOfficersSection({
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    flexWrap: "wrap",
                     gap: 12,
                   }}
                 >

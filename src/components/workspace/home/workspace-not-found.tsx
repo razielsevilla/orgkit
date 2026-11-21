@@ -26,7 +26,7 @@ export function WorkspaceNotFound({ officer, workspaceHref }: WorkspaceNotFoundP
     <div
       className={plusJakarta.className}
       style={{
-        height: "100vh",
+        height: "100dvh",
         width: "100%",
         overflow: "hidden",
         position: "relative",

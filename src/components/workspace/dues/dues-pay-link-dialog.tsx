@@ -317,6 +317,8 @@ function DuesPayLinkDialogContent({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  flexWrap: "wrap",
+                  gap: 8,
                   padding: "10px 14px",
                   borderRadius: 12,
                   backgroundColor: isActive
@@ -440,7 +442,7 @@ function DuesPayLinkDialogContent({
                     Members visiting this link will see that submissions are
                     currently closed until you turn it back on.
                   </p>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     <button
                       type="button"
                       disabled={isPending}
@@ -515,7 +517,7 @@ function DuesPayLinkDialogContent({
                     The current link and QR code will immediately stop working.
                     Members who have the previous link will need the new one.
                   </p>
-                  <div style={{ display: "flex", gap: 8 }}>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     <button
                       type="button"
                       disabled={isPending}
@@ -579,6 +581,8 @@ function DuesPayLinkDialogContent({
                     aria-label="Payment link"
                     style={{
                       flex: 1,
+                      // Without min-width: 0 an input never shrinks below its natural width, which pushed the Copy button out
+                      minWidth: 0,
                       height: 40,
                       padding: "0 12px",
                       borderRadius: 10,

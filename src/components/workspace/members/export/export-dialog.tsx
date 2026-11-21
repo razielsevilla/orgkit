@@ -88,7 +88,7 @@ export function ExportDialog({ orgId, onClose }: ExportDialogProps) {
         {EXPORT_FIELDS.map((field) => {
           const noteId = `export-note-${field.key}`;
           return (
-            <label key={field.key} style={checkRow}>
+            <label key={field.key} className="orgkit-check-row" style={checkRow}>
               <input
                 type="checkbox"
                 style={checkbox}
@@ -118,7 +118,7 @@ export function ExportDialog({ orgId, onClose }: ExportDialogProps) {
         <legend style={legend}>Which members</legend>
         <div style={{ display: "flex", flexWrap: "wrap", columnGap: 20 }}>
           {EXPORT_STATUSES.map((status) => (
-            <label key={status} style={checkRow}>
+            <label key={status} className="orgkit-check-row" style={checkRow}>
               <input
                 type="checkbox"
                 style={checkbox}

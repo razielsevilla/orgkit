@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { ZoomIn, AlertCircle, RefreshCw, X } from "lucide-react";
+import { useMounted } from "@/src/lib/use-mounted";
 import { getPaymentScreenshotUrl } from "@/src/app/(workspace)/dues-review-actions";
 
 interface DuesScreenshotViewerProps {
@@ -175,68 +177,117 @@ export function DuesScreenshotViewer({
 
       {/* Full-screen Lightbox Modal */}
       {isZoomed && signedUrl && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Full-size receipt preview"
-          onClick={() => setIsZoomed(false)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 9999,
-            backgroundColor: "rgba(0, 0, 0, 0.88)",
-            backdropFilter: "blur(8px)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 16,
-            boxSizing: "border-box",
-            cursor: "zoom-out",
-          }}
-        >
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsZoomed(false);
-            }}
-            aria-label="Close full-size preview"
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              width: 40,
-              height: 40,
-              borderRadius: "50%",
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              color: "#ffffff",
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <X size={20} />
-          </button>
-
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={signedUrl}
-            alt={`Full size proof of payment for reference ${referenceNo}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: "95vw",
-              maxHeight: "90vh",
-              objectFit: "contain",
-              borderRadius: 12,
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
-              cursor: "default",
-            }}
-          />
-        </div>
+        <Lightbox url={signedUrl} referenceNo={referenceNo} onClose={() => setIsZoomed(false)} />
       )}
     </>
+  );
+}
+
+/**
+ * The full-size receipt. It is drawn through a portal into document.body, not
+ * inside the review dialog: the dialog card keeps a transform, and a fixed
+ * element inside a transformed parent is sized to that parent, not the screen.
+ *
+ * It handles its own Escape and Tab in the capture phase, so Escape closes only
+ * the receipt (not the review dialog under it) and focus stays on its button.
+ */
+function Lightbox({ url, referenceNo, onClose }: { url: string; referenceNo: string; onClose: () => void }) {
+  const mounted = useMounted();
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    if (!mounted) return;
+    const opener = document.activeElement as HTMLElement | null;
+    closeRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        onCloseRef.current();
+      } else if (event.key === "Tab") {
+        // The close button is the only control: keep focus on it
+        event.preventDefault();
+        event.stopPropagation();
+        closeRef.current?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown, true);
+      opener?.focus?.();
+    };
+  }, [mounted]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Full-size receipt preview"
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        backgroundColor: "rgba(0, 0, 0, 0.88)",
+        backdropFilter: "blur(8px)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 16,
+        boxSizing: "border-box",
+        cursor: "zoom-out",
+      }}
+    >
+      <button
+        ref={closeRef}
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onClose();
+        }}
+        aria-label="Close full-size preview"
+        style={{
+          position: "absolute",
+          top: 16,
+          right: 16,
+          width: 44,
+          height: 44,
+          borderRadius: "50%",
+          backgroundColor: "rgba(255, 255, 255, 0.2)",
+          color: "#ffffff",
+          border: "none",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <X size={20} />
+      </button>
+
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={url}
+        alt={`Full size proof of payment for reference ${referenceNo}`}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: "95vw",
+          maxHeight: "90dvh",
+          objectFit: "contain",
+          borderRadius: 12,
+          boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+          cursor: "default",
+        }}
+      />
+    </div>,
+    document.body
   );
 }

@@ -180,6 +180,9 @@ export function PayForm({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            // The language pills grow to 44px on a phone: let the row wrap rather than squeeze
+            flexWrap: "wrap",
+            gap: 8,
             marginBottom: 2,
           }}
         >
@@ -252,8 +255,17 @@ export function PayForm({
             boxSizing: "border-box",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-            <div>
+          {/* Org and period names are typed by officers: they wrap, and the amount drops below them if it must */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              flexWrap: "wrap",
+              gap: 8,
+            }}
+          >
+            <div style={{ minWidth: 0, flex: "1 1 160px" }}>
               <span
                 style={{
                   fontSize: 11.5,
@@ -263,6 +275,7 @@ export function PayForm({
                   color: "var(--color-muted)",
                   display: "block",
                   marginBottom: 2,
+                  overflowWrap: "anywhere",
                 }}
               >
                 {orgName}
@@ -274,6 +287,7 @@ export function PayForm({
                   color: "var(--color-ink)",
                   margin: 0,
                   lineHeight: 1.25,
+                  overflowWrap: "anywhere",
                 }}
               >
                 {periodName}

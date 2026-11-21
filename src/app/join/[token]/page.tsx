@@ -26,7 +26,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
       className={`${plusJakarta.className} orgkit-join-page`}
       style={{
         position: "relative",
-        minHeight: "100vh",
+        minHeight: "100dvh",
         backgroundColor: "var(--color-base)",
         color: "var(--color-ink)",
         display: "flex",

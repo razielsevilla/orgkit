@@ -172,6 +172,38 @@ Theme tokens are defined in `src/app/globals.css`:
 - Body reverts to standard responsive vertical scrolling (`overflow-y: auto !important`).
 - Card expands to fill mobile container up to `440px` with `padding: 32px 16px 48px 16px`.
 
+### 5.4 Phones and touch screens (T2)
+
+Every core screen has to work at **360px wide** with no sideways scrolling, and every control has to be easy to hit with a thumb. Check a change in browser device mode and on a real phone with [mobile-qa.md](mobile-qa.md).
+
+**Breakpoints** (there are only these; do not add a new one without a reason):
+
+| Width | What changes |
+| :--- | :--- |
+| `< 1024px` | The workspace sidebar becomes a **drawer**, opened from a slim top bar with a 44px menu button. The page gets the full width. The auth screens use the mobile layout (5.3). |
+| `<= 800px` | The Dues list shows cards instead of its table (the table needs about 650px). |
+| `<= 640px` | The Members list, attendance, and usage report show cards. A dialog's buttons stack full width, the main action on top. Pagers show "Page 2 of 5" instead of numbered pages. |
+| `(pointer: coarse)` | Any touch screen gets the 44px targets below, whatever its width. |
+
+**Touch targets.** On a phone, or any touch screen (`@media (max-width: 640px), (pointer: coarse)`), every control is at least **44px** tall and wide. A mouse on a desktop keeps the denser sizes in this guide. The rules are central, in `globals.css`, so a new control gets them for free:
+- Every `button`, `[role="button"]`, `[role="option"]`, `[role="tab"]`, `[role="menuitem"]`, `select` and text field is at least 44px. `!important` is needed because most sizes are inline.
+- A link on its own line (a back link, a logo) takes `className="orgkit-tap-link"`. A link inside a sentence stays text-sized.
+- A checkbox or radio is tiny: wrap it in a `label` with `className="orgkit-check-row"`, so the whole row is the target.
+- Text fields are **16px** on a phone. iOS zooms the whole page in when a smaller field is focused, and the zoomed page then pans sideways.
+
+**Sizes.**
+- Use **`100dvh`**, never `100vh`: on a phone `100vh` is taller than the visible screen and hides the bottom under the browser toolbar. A test fails if `"100vh"` appears in `src`. (A stylesheet that needs a fallback for older browsers writes `100vh` then `100dvh`, as in `frame-styles.tsx`.)
+- Nothing has a fixed width over **328px** (360px less 16px each side). Use `min()`, `clamp()`, a percentage or `maxWidth: "100%"`. A test fails on a new wide fixed width.
+- A flex row that can run out of room has `flex-wrap: wrap`. A flex child that holds text or an input has `min-width: 0`, or it will not shrink. In a column, do not keep a `flex: 1 1 280px` basis: it becomes a height.
+
+**Text that people type** (names, emails, org and period names, links, reasons) never widens a layout. It wraps (`overflow-wrap: anywhere`, or the `.orgkit-wrap` class) or shortens with an ellipsis (`.orgkit-truncate`, with `min-width: 0` on the flex parent).
+
+**Dialogs.** Put the content in `DialogBody` (it scrolls, so the buttons stay reachable on a short phone), never pass `padding` to `Dialog`, and never put a `position: fixed` element inside a dialog: the dialog card keeps a transform, which makes a fixed child size to the card, not the screen. Draw toasts and lightboxes through a portal into `document.body`.
+
+**Stacking order** (z-index): content below 900; the Feedback button 900; the drawer scrim 950; the drawer 960; dialogs 1000. The error toast sits above the Feedback button on a phone.
+
+**Scrolling screens** leave at least 60px under the last row (72px on the events list), so the Feedback button never covers it.
+
 ---
 
 ## 6. Component Specs & Patterns
@@ -260,9 +292,9 @@ Every modal in the app wears the same OrgKit frame: an emerald-tinted header str
 - **Mark tile:** 44px square, 12px radius, white surface, hairline of accent at 24%. The OrgKit mark inside (30 × 22px) is the silhouette `/orgkit-logo-mask.png` used as a CSS mask over `var(--color-accent)`, so it needs no extra image.
 - **Title:** 18px, weight 700, line-height 1.25, `-0.01em`, color `var(--color-brand-deep)`.
 - **Description:** 13px, `var(--color-muted-strong)` (needs 4.5:1 on the tint; muted is too light here). Keep it to about 90 characters, otherwise put the text in the body.
-- **Close button:** 32px round icon, `var(--color-muted-strong)`, hover accent at 12% with the title green. Disabled while something is saving.
+- **Close button:** 32px round icon (44px on phones and touch screens, see 5.4), `var(--color-muted-strong)`, hover accent at 12% with the title green. Disabled while something is saving.
 
-**Buttons** (`.orgkit-dialog-btn` in `globals.css`): 40px high, `0 20px` padding, 10px radius, 14px weight 600.
+**Buttons** (`.orgkit-dialog-btn` in `globals.css`): 40px high (44px on phones and touch screens, see 5.4), `0 20px` padding, 10px radius, 14px weight 600. On a phone the footer stacks the buttons full width with the main action on top (`.orgkit-dialog-footer`).
 
 | Variant | Fill | Hover | Use |
 | :--- | :--- | :--- | :--- |
@@ -275,7 +307,7 @@ Hover changes color only (no lift). Press is `scale(0.98)`. Disabled is 60% opac
 **Destructive dialogs** (deactivate member, remove officer) use the same frame, not a red one. Only the confirm button is `danger`, and the consequence sits in a warning note in the body: a 16px `AlertCircle` plus one sentence on `--color-danger-soft`, 1px `--color-danger-line` border, 10px radius, text `--color-danger-strong`.
 
 **Forms inside dialogs**
-- Labels 13px weight 500 in `--color-ink-soft`. Inputs 40px high, 10px radius, `1px solid var(--color-line-strong)`.
+- Labels 13px weight 500 in `--color-ink-soft`. Inputs 40px high (44px and 16px text on phones and touch screens, see 5.4), 10px radius, `1px solid var(--color-line-strong)`.
 - Focus uses the global emerald ring (`:focus-visible`, see 7.2).
 - A **field error** is the `FieldError` component (`src/components/ui/field-error.tsx`) directly under the input: a 14px `AlertCircle` and one 13px sentence in `--color-danger-strong`, with no box or fill. The input gets a `--color-danger-strong` border, `aria-invalid`, and `aria-describedby` pointing at the message's `id`. Clear it as soon as the user edits the field.
 - A **form error** (the save failed, not one field) is a banner at the top of the body: `--color-danger-soft` fill, 1px `--color-danger-line` border, 10px radius, `--color-danger-strong` text, `role="alert"`.
@@ -360,3 +392,4 @@ When building new views (e.g., dashboard, member directory, event manager):
 6. [ ] **Buttons:** Round interactive action buttons to `rounded-full` with micro-interaction hover lift.
 7. [ ] **Accessibility:** Maintain visible `focus-visible` double rings and screen reader notices.
 8. [ ] **Dialogs:** Build every modal from `Dialog`, `DialogHeader`, `DialogBody`, `DialogFooter` and `DialogButton` (section 6.5). Never hand-build a modal header or its buttons.
+9. [ ] **Phones:** Works at 360px with no sideways scroll; controls 44px on touch; `100dvh`; no fixed width over 328px; typed text wraps or truncates (section 5.4). Walk it through [mobile-qa.md](mobile-qa.md).

@@ -18,6 +18,15 @@ export interface SidebarProps {
   onToggleCollapse: () => void;
   /** Which entry is highlighted */
   activeSection?: SidebarSection;
+  /**
+   * On a phone or small tablet the sidebar is a drawer (see frame-styles.tsx).
+   * Then it is never collapsed, and its collapse button becomes Close menu.
+   */
+  isDrawer?: boolean;
+  isDrawerOpen?: boolean;
+  onCloseDrawer?: () => void;
+  /** Lets the frame move focus into the drawer and keep it there while it is open */
+  asideRef?: React.Ref<HTMLElement>;
 }
 
 export function Sidebar({
@@ -29,14 +38,25 @@ export function Sidebar({
   isCollapsed,
   onToggleCollapse,
   activeSection = "home",
+  isDrawer = false,
+  isDrawerOpen = false,
+  onCloseDrawer,
+  asideRef,
 }: SidebarProps) {
   return (
     <aside
+      ref={asideRef}
+      id="orgkit-sidebar"
+      className={`orgkit-aside${isDrawerOpen ? " is-open" : ""}`}
+      // As a drawer it is a modal menu; on a desktop it is just the side navigation
+      role={isDrawer ? "dialog" : undefined}
+      aria-modal={isDrawer && isDrawerOpen ? true : undefined}
+      aria-label={isDrawer ? "Menu" : undefined}
+      tabIndex={isDrawer ? -1 : undefined}
       style={{
         width: isCollapsed ? 70 : 256,
         minWidth: isCollapsed ? 70 : 256,
         maxWidth: isCollapsed ? 70 : 256,
-        height: "100vh",
         backgroundColor: "var(--color-surface)",
         borderRight: "1px solid var(--color-line)",
         display: "flex",
@@ -53,7 +73,13 @@ export function Sidebar({
       <SidebarStyles />
 
       {/* ── Top Brand Header & Sidebar Toggle ── */}
-      <BrandHeader rawId={rawId} isCollapsed={isCollapsed} onToggleCollapse={onToggleCollapse} />
+      <BrandHeader
+        rawId={rawId}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={onToggleCollapse}
+        isDrawer={isDrawer}
+        onCloseDrawer={onCloseDrawer}
+      />
 
       {/* ── Bespoke Workspace Card ── */}
       <WorkspaceCard orgName={orgName} schoolName={schoolName} isCollapsed={isCollapsed} />

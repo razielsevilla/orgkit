@@ -48,6 +48,10 @@ export function FeedbackButton() {
         @media (min-width: 640px) {
           .orgkit-feedback-btn-label { display: inline; }
         }
+        /* Screens that scroll leave 60px at the bottom: sit inside it so the last row is never covered */
+        @media (max-width: 1023px) {
+          .orgkit-feedback-btn { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+        }
       `}</style>
 
       <button
