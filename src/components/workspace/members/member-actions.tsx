@@ -1,12 +1,13 @@
 "use client";
 
 import React from "react";
-import { Check, Pencil, UserCheck, UserX, Loader2, type LucideIcon } from "lucide-react";
+import { Check, History, Pencil, UserCheck, UserX, Loader2, type LucideIcon } from "lucide-react";
 import type { WorkspaceMember } from "@/src/app/(workspace)/members-actions";
 
 interface MemberActionsProps {
   member: WorkspaceMember;
   onEdit: (member: WorkspaceMember) => void;
+  onViewHistory: (member: WorkspaceMember) => void;
   onDeactivate: (member: WorkspaceMember) => void;
   onReactivate: (member: WorkspaceMember) => void;
   onConfirm?: (member: WorkspaceMember) => void;
@@ -109,13 +110,14 @@ function ActionButton({
 
 /**
  * Action controls for individual members:
- * - Pending members: Confirm (primary), Edit, and Deactivate.
- * - Active members: Edit and Deactivate.
- * - Inactive members: Reactivate (primary) and Edit.
+ * - Pending members: Confirm (primary), Edit, Attendance history, and Deactivate.
+ * - Active members: Edit, Attendance history, and Deactivate.
+ * - Inactive members: Reactivate (primary), Edit, and Attendance history.
  */
 export function MemberActions({
   member,
   onEdit,
+  onViewHistory,
   onDeactivate,
   onReactivate,
   onConfirm,
@@ -126,6 +128,9 @@ export function MemberActions({
   const common = { member, showLabel: isMobile };
 
   const edit = <ActionButton {...common} label="Edit" icon={Pencil} variant="neutral" onClick={onEdit} />;
+  const history = (
+    <ActionButton {...common} label="Attendance history" icon={History} variant="neutral" onClick={onViewHistory} />
+  );
   const deactivate = (
     <ActionButton {...common} label="Deactivate" icon={UserX} variant="danger" onClick={onDeactivate} />
   );
@@ -167,6 +172,7 @@ export function MemberActions({
         <>
           {confirm}
           {edit}
+          {history}
           {deactivate}
         </>
       )}
@@ -174,6 +180,7 @@ export function MemberActions({
       {member.status === "active" && (
         <>
           {edit}
+          {history}
           {deactivate}
         </>
       )}
@@ -182,6 +189,7 @@ export function MemberActions({
         <>
           {reactivate}
           {edit}
+          {history}
         </>
       )}
     </div>
