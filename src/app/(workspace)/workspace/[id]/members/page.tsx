@@ -59,6 +59,9 @@ async function MembersContent({ params }: MembersPageProps) {
   }
 
   const canExport = isAdmin === true;
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  const siteUrl =
+    configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
 
   if (!membersRes.success || !membersRes.data) {
     if (membersRes.error === "not_authenticated") {
@@ -73,6 +76,9 @@ async function MembersContent({ params }: MembersPageProps) {
             initialData={EMPTY_MEMBERS_DATA}
             initialError={membersRes.errorMessage ?? "We couldn't load your members. Try again."}
             canExport={canExport}
+            orgName={org.name}
+            schoolName={org.school}
+            siteUrl={siteUrl}
           />
         </PageReveal>
       );
@@ -91,7 +97,15 @@ async function MembersContent({ params }: MembersPageProps) {
 
   return (
     <PageReveal>
-      <MembersClient rawId={rawId} initialData={membersRes.data} canExport={canExport} />
+      <MembersClient
+        rawId={rawId}
+        initialData={membersRes.data}
+        canExport={canExport}
+        orgName={org.name}
+        schoolName={org.school}
+        initialJoinToken={membersRes.data.joinLinkToken}
+        siteUrl={siteUrl}
+      />
     </PageReveal>
   );
 }
