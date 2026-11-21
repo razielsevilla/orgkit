@@ -42,3 +42,25 @@ export async function setJoinLink(
     return failed;
   }
 }
+
+/**
+ * Loads the org's current active join link token, if one is on.
+ * Returns null if the link is off or if the caller is not permitted.
+ */
+export async function getJoinLink(orgId: string): Promise<string | null> {
+  try {
+    if (!isUuid(orgId)) return null;
+    const supabase = await createClient();
+    const { data } = await supabase
+      .from("org_join_links")
+      .select("token")
+      .eq("org_id", orgId)
+      .eq("active", true)
+      .maybeSingle();
+
+    return data?.token ?? null;
+  } catch (err) {
+    console.error("Error fetching join link:", err);
+    return null;
+  }
+}
