@@ -6,7 +6,8 @@ with recorded consent.
 
 Built with Next.js (App Router), React, TypeScript and Supabase (Postgres, Auth
 with Google). This is the EP-1 foundation: accounts, org setup, officer roles,
-member join. Roster, attendance, dues and handover come in later epics.
+member join, roster, events with QR check-in and a live attendance list and
+per-member attendance history. Dues and handover come in later epics.
 
 > This project uses a Next.js version with breaking changes. Read
 > [AGENTS.md](AGENTS.md) and the guides in `node_modules/next/dist/docs/`
@@ -35,9 +36,11 @@ Set these in `.env.local` (never commit it). `.env.example` lists them all.
 | `PRIVACY_CONTACT_EMAIL` | Yes | The privacy contact shown in the member consent text and on `/privacy`. **While it is missing or not a valid email, the public join page stays closed.** The privacy page reads it at build time |
 | `RESEND_API_KEY` | In production | API key for Resend email service, used to send officer payment reminders. In development or test environments, an in-memory mock transport is used if unset |
 | `RESEND_FROM_EMAIL` | No | Sender address for reminder emails (default: `OrgKit <reminders@orgkit.ph>`). In production, use your Resend verified domain |
+| `CHECKIN_TOKEN_SECRET` | Yes, for check-in | Key that signs the rotating check-in QR tokens. Use a long random value (`openssl rand -base64 32`). It has no fallback, so check-in shows an error until it is set |
 | `JOIN_RATE_LIMIT_SECRET` | No | Secret for hashing IP addresses in rate limiting. Defaults to the service role key |
 | `JOIN_ATTEMPTS_PER_MINUTE` | No | Join attempts per device per minute. Default 30 |
 | `INVITE_ATTEMPTS_PER_MINUTE` | No | Invite page opens per device per minute. Default 20 |
+| `CHECKIN_ATTEMPTS_PER_MINUTE` | No | Member check-in attempts per device per minute. Default 30 |
 
 ## Set up Supabase
 
