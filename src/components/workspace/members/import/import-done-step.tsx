@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { AlertTriangle, Check, Copy } from "lucide-react";
-import { joinLinkPath, membersPath } from "@/src/lib/routes";
+import { joinLinkPath, joinPanelPath } from "@/src/lib/routes";
 import type { ImportDone } from "@/src/app/(workspace)/member-invites-actions";
 import { DialogButton } from "@/src/components/ui/dialog";
 import { ImportStepLayout } from "./import-step-layout";
@@ -107,8 +107,8 @@ export function ImportDoneStep({ indicator, orgId, result, onDone }: ImportDoneS
           />
           <span style={wrapText}>
             The join link is off, so invitees cannot join until the link is turned on.{" "}
-            <a href={membersPath(orgId)} style={{ color: "var(--color-accent-strong)", fontWeight: 600 }}>
-              Turn on under Add Members
+            <a href={joinPanelPath(orgId)} style={{ color: "var(--color-accent-strong)", fontWeight: 600 }}>
+              Open join link settings
             </a>
           </span>
         </div>
@@ -117,8 +117,8 @@ export function ImportDoneStep({ indicator, orgId, result, onDone }: ImportDoneS
       {result.joinLinkStatus === "unknown" && (
         <div style={noteBox}>
           We couldn&apos;t check the join link.{" "}
-          <a href={membersPath(orgId)} style={{ color: "var(--color-accent-strong)", fontWeight: 600 }}>
-            Check under Add Members
+          <a href={joinPanelPath(orgId)} style={{ color: "var(--color-accent-strong)", fontWeight: 600 }}>
+            Open join link settings
           </a>{" "}
           to copy it or turn it on.
         </div>
