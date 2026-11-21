@@ -12,12 +12,13 @@ vi.mock("@/src/app/auth/actions", () => ({ signOut: vi.fn() }));
 // next/font only works inside the Next compiler
 vi.mock("@/src/lib/fonts", () => ({ plusJakarta: { className: "font-test" } }));
 
+import type { WorkspaceFrameData } from "@/src/components/workspace/frame/workspace-frame";
 const { WorkspaceFrame } = await import("@/src/components/workspace/frame/workspace-frame");
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 const officer = { id: "u1", email: "ana@school.edu", full_name: "Ana Cruz" };
 
-const data = (isAdmin: boolean) =>
+const data = (isAdmin: boolean): Promise<WorkspaceFrameData | null> =>
   Promise.resolve({
     rawId: ORG,
     orgName: "Robotics Club",
@@ -26,12 +27,11 @@ const data = (isAdmin: boolean) =>
     isAdmin,
   });
 
-async function render(frameData: Promise<ReturnType<typeof Object> | null>) {
+async function render(frameData: Promise<WorkspaceFrameData | null>) {
   const stream = await renderToReadableStream(
     createElement(
       WorkspaceFrame,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { data: frameData as any },
+      { data: frameData },
       createElement("p", null, "PAGE CONTENT")
     )
   );
