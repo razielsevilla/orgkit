@@ -1,6 +1,8 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { payLinkPath } from "../routes.ts";
+import { requireSiteUrl } from "../site-url.ts";
+import { logger } from "../logger.ts";
 import { isEmailConfigured } from "../email/env.ts";
 import { getEmailSender, type EmailSender } from "../email/email-sender.ts";
 import {
@@ -56,9 +58,12 @@ export interface FetchReminderPreviewResult {
 export async function fetchDuesReminderPreview(
   supabase: SupabaseClient,
   periodId: string,
-  baseUrl = "http://localhost:3000"
+  baseUrl?: string
 ): Promise<FetchReminderPreviewResult> {
   try {
+    // Resolved per call and inside the try: in production an unset NEXT_PUBLIC_SITE_URL
+    // comes back as `error`, like every other failure here
+    const siteUrl = baseUrl ?? requireSiteUrl();
     const { data, error } = await supabase.rpc("get_dues_reminder_recipients", {
       p_period_id: periodId,
     });
@@ -72,7 +77,7 @@ export async function fetchDuesReminderPreview(
       return { data: null, error: new Error("Invalid reminder data returned from database") };
     }
 
-    const payUrl = `${baseUrl.replace(/\/+$/, "")}${payLinkPath(raw.period.pay_token)}`;
+    const payUrl = `${siteUrl.replace(/\/+$/, "")}${payLinkPath(raw.period.pay_token)}`;
 
     const periodInfo: ReminderPeriodInfo = {
       period_id: raw.period.id,
@@ -177,7 +182,7 @@ export async function executeSendRemindersBatch(
   const {
     supabase,
     periodId,
-    baseUrl = "http://localhost:3000",
+    baseUrl,
     targetMemberIds,
     chunkSize = 25,
     chunkDelayMs = 150,
@@ -185,6 +190,8 @@ export async function executeSendRemindersBatch(
   } = options;
 
   try {
+    // fetchDuesReminderPreview falls back to the configured site address when
+    // baseUrl is not given, and reports a missing one as `error`
     const previewResult = await fetchDuesReminderPreview(supabase, periodId, baseUrl);
     if (previewResult.error || !previewResult.data) {
       return {
@@ -255,16 +262,31 @@ export async function executeSendRemindersBatch(
           ? null
           : formatReminderErrorMessage(sendResult.error);
 
-        // Log result to database
+        // Log result to database. The reminder log drives the 24-hour cooldown, so a
+        // failed write must not be silent. supabase.rpc() reports failure in the
+        // returned `error` and does not throw, so check it as well as catching throws.
         try {
-          await supabase.rpc("log_dues_reminder", {
+          const { error: logError } = await supabase.rpc("log_dues_reminder", {
             p_period_id: period.period_id,
             p_member_id: recipient.member_id,
             p_status: status,
             p_error_message: errorMessage,
           });
+          if (logError) {
+            logger.error("dues_reminder.log_write_failed", {
+              periodId: period.period_id,
+              memberId: recipient.member_id,
+              status,
+              error: logError,
+            });
+          }
         } catch (logErr) {
-          console.error("Failed to log dues reminder to database:", logErr);
+          logger.error("dues_reminder.log_write_failed", {
+            periodId: period.period_id,
+            memberId: recipient.member_id,
+            status,
+            error: logErr,
+          });
         }
 
         if (sendResult.success) {

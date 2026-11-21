@@ -2,6 +2,8 @@ import "server-only";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { looksLikeToken } from "@/src/lib/dues/dues-pay";
 import { allowRequest } from "@/src/lib/rate-limit";
+import { logger } from "@/src/lib/logger";
+import { getDuesPayAttemptsPerMinute } from "@/src/lib/config";
 
 export interface DuesPayPublicInfo {
   orgId: string;
@@ -13,9 +15,6 @@ export interface DuesPayPublicInfo {
   payLinkActive: boolean;
   periodStatus: string;
 }
-
-export const DUES_PAY_ATTEMPTS_PER_MINUTE =
-  Number(process.env.DUES_PAY_ATTEMPTS_PER_MINUTE) || 30;
 
 /**
  * Loads public payment info for an active dues period token.
@@ -32,7 +31,7 @@ export async function getDuesPayInfo(
     });
 
     if (error) {
-      console.error("Error loading dues pay info:", error);
+      logger.error("dues_pay.load_info_failed", { error });
       return null;
     }
 
@@ -55,12 +54,12 @@ export async function getDuesPayInfo(
       periodStatus: row.period_status,
     };
   } catch (err) {
-    console.error("Unexpected error in getDuesPayInfo:", err);
+    logger.error("dues_pay.load_info_unexpected", { error: err });
     return null;
   }
 }
 
 /** Counts this attempt against the caller's device IP and returns whether it can proceed. */
 export function allowPayAttempt(): Promise<boolean> {
-  return allowRequest("pay", DUES_PAY_ATTEMPTS_PER_MINUTE);
+  return allowRequest("pay", getDuesPayAttemptsPerMinute());
 }

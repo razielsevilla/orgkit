@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { unstable_rethrow } from "next/navigation";
 import { getSessionUser } from "@/src/lib/auth/session-user";
 import { getOfficerRow } from "@/src/lib/auth/officer-profile";
@@ -79,10 +80,10 @@ export async function createWorkspace(
       return { success: false, fieldError: "Org name must be 2 to 80 characters." };
     }
 
-    console.error("Error creating org:", error);
+    logger.error("workspace.create_failed", { error });
     return { success: false, error: SAVE_FAILED };
   } catch (err) {
-    console.error("Unexpected error in createWorkspace:", err);
+    logger.error("workspace.create_unexpected", { error: err });
     return { success: false, error: SAVE_FAILED };
   }
 }
@@ -97,7 +98,7 @@ export async function getOrganizationById(orgId: string) {
   } catch (err) {
     // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
     unstable_rethrow(err);
-    console.error("Unexpected error in getOrganizationById:", err);
+    logger.error("workspace.load_unexpected", { error: err });
     return null;
   }
 }
@@ -130,7 +131,7 @@ export async function getOfficerDefaultWorkspace(): Promise<{
   } catch (err) {
     // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
     unstable_rethrow(err);
-    console.error("Unexpected error in getOfficerDefaultWorkspace:", err);
+    logger.error("workspace.default_unexpected", { error: err });
     return null;
   }
 }
@@ -161,7 +162,7 @@ export async function getCurrentOfficer(): Promise<{
   } catch (err) {
     // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
     unstable_rethrow(err);
-    console.error("Unexpected error in getCurrentOfficer:", err);
+    logger.error("officer.current_unexpected", { error: err });
     return null;
   }
 }
@@ -176,7 +177,7 @@ export async function isOrgAdmin(orgId: string): Promise<boolean> {
   } catch (err) {
     // Let Next.js handle its own control-flow errors (redirects, prerender bailouts)
     unstable_rethrow(err);
-    console.error("Unexpected error in isOrgAdmin:", err);
+    logger.error("workspace.is_admin_unexpected", { error: err });
     return false;
   }
 }

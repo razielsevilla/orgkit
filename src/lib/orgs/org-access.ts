@@ -3,6 +3,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { fail, type ActionResult } from "@/src/lib/action-result";
 import { can, isOfficerRole, type OfficerAction, type OfficerRole } from "@/src/lib/orgs/permissions";
 import { getSessionUser } from "@/src/lib/auth/session-user";
+import { logger } from "@/src/lib/logger";
 import { isUuid } from "@/src/lib/validation";
 
 export type OrgAccessError = "not_authenticated" | "access_revoked" | "not_authorized" | "failed";
@@ -84,7 +85,7 @@ export async function withOrgCaller<T, E extends string>(
 
     return await run(lookup.caller);
   } catch (err) {
-    console.error(`Unexpected error in ${messages.name}:`, err);
+    logger.error("org_action.unexpected_error", { action: messages.name, error: err });
     return fail("failed", messages.unexpected);
   }
 }

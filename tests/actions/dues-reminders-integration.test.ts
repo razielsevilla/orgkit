@@ -154,7 +154,7 @@ const {
   getDuesReminderPreviewAction,
   sendDuesRemindersAction,
   retryFailedRemindersAction,
-} = await import("@/src/app/(workspace)/dues-actions");
+} = await import("@/src/app/(workspace)/dues-reminders-actions");
 
 describe("Phase 10: Dues Reminders End-to-End Integration Flow", () => {
   beforeEach(() => {

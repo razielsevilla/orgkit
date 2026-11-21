@@ -6,11 +6,10 @@ import {
   getCurrentOfficer,
   getOfficerDefaultWorkspace,
 } from "@/src/app/(workspace)/actions";
-import {
-  getWorkspaceDuesPeriods,
-  getDuesDashboardData,
-} from "@/src/app/(workspace)/dues-actions";
+import { getWorkspaceDuesPeriods } from "@/src/app/(workspace)/dues-periods-actions";
+import { getDuesDashboardData } from "@/src/app/(workspace)/dues-dashboard-actions";
 import { isUuid } from "@/src/lib/validation";
+import { getSiteUrl } from "@/src/lib/site-url";
 import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
 import DuesLoading from "./loading";
@@ -59,9 +58,7 @@ async function DuesContent({ params }: DuesPageProps) {
     );
   }
 
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
-  const siteUrl =
-    configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
+  const siteUrl = getSiteUrl();
 
   const defaultPeriod =
     periodsRes.data.find((p) => p.status === "open") || periodsRes.data[0];

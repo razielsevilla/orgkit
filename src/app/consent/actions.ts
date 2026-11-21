@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/src/lib/auth/session-user";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
@@ -35,7 +36,7 @@ export async function acceptConsent(formData: FormData) {
 
   // 23505 = unique violation: this officer already exists (e.g. a double submit)
   if (error && error.code !== "23505") {
-    console.error("Error creating officer:", error);
+    logger.error("consent.create_officer_failed", { userId: user.id, error });
     await supabase.auth.signOut();
     redirect(signInPath("google_error"));
   }
@@ -51,14 +52,25 @@ export async function declineConsent() {
   if (user) {
     const admin = createAdminClient();
     // Only remove the sign-in record if there is no officer behind it
-    const { data: officer } = await admin
+    const { data: officer, error: lookupError } = await admin
       .from("officers")
       .select("id")
       .eq("id", user.id)
       .maybeSingle();
+
+    // Never delete when the lookup itself failed: a failed lookup looks the same as "no
+    // officer", and deleting the sign-in record of an existing officer would cascade to
+    // their officer row, org memberships and audit records. Same rule as the sign-in
+    // callback, which never treats a failed lookup as "new officer".
+    if (lookupError) {
+      logger.error("consent.decline_lookup_failed", { userId: user.id, error: lookupError });
+      await supabase.auth.signOut();
+      redirect(signInPath("google_error"));
+    }
+
     if (!officer) {
       const { error } = await admin.auth.admin.deleteUser(user.id);
-      if (error) console.error("Error removing declined sign-in:", error);
+      if (error) logger.error("consent.remove_declined_failed", { userId: user.id, error });
     }
   }
 

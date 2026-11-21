@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { logger } from "@/src/lib/logger";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { plusJakarta } from "@/src/lib/fonts";
@@ -84,7 +85,7 @@ async function CheckinContent({ params }: { params: Promise<{ token: string }> }
     event = await getCheckinEvent(token);
   } catch (err) {
     // A missing signing secret must look like a closed link, not a crash
-    console.error("Error loading the check-in page:", err);
+    logger.error("checkin_page.load_failed", { error: err });
   }
 
   if (!event) return <CheckinExpiredView />;

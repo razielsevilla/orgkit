@@ -373,9 +373,34 @@ describe("getCheckinTokenAction", () => {
     state.attendanceError = { message: "boom" };
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
     const res = await getCheckinTokenAction(ORG, EVENT);
+    const entries = spy.mock.calls.map(([line]) => JSON.parse(String(line)));
     spy.mockRestore();
     expect(res.success).toBe(true);
     expect(res.data?.count).toBe(0);
+    // the failure is still reported, with IDs only
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      level: "error",
+      event: "checkin_token.count_attendance_failed",
+      context: { orgId: ORG, eventId: EVENT, error: { message: "boom" } },
+    });
+  });
+
+  it("fails without a token, and says why in the log, when production has no site address", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
+    state.eventRow = openRow();
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await getCheckinTokenAction(ORG, EVENT);
+    const entries = spy.mock.calls.map(([line]) => JSON.parse(String(line)));
+    spy.mockRestore();
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("failed");
+    expect(res.errorMessage).toBe(CHECKIN_MESSAGES.tokenFailed);
+    expect(res.data).toBeUndefined();
+    expect(entries).toHaveLength(1);
+    expect(entries[0].event).toBe("checkin_token.site_url_missing");
+    expect(entries[0].context.variable).toBe("NEXT_PUBLIC_SITE_URL");
   });
 
   it("returns no token while the window is closed", async () => {

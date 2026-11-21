@@ -21,9 +21,6 @@ let payTokenA: string;
 
 let unpaidMember1: string;
 let unpaidMember2: string;
-let pendingMember: string;
-let paidMember: string;
-let inactiveMember: string;
 
 async function createMember(
   orgId: string,
@@ -89,9 +86,10 @@ before(async () => {
   // Setup members in Org A
   unpaidMember1 = await createMember(orgA, "unpaid1@school.edu", "Unpaid Alice");
   unpaidMember2 = await createMember(orgA, "unpaid2@school.edu", "Unpaid Bob");
-  pendingMember = await createMember(orgA, "pending@school.edu", "Pending Charlie");
-  paidMember = await createMember(orgA, "paid@school.edu", "Paid David");
-  inactiveMember = await createMember(orgA, "inactive@school.edu", "Inactive Eve", "inactive");
+  // Created only for the member counts the tests below assert on (4 active, 1 inactive)
+  await createMember(orgA, "pending@school.edu", "Pending Charlie");
+  await createMember(orgA, "paid@school.edu", "Paid David");
+  await createMember(orgA, "inactive@school.edu", "Inactive Eve", "inactive");
 
   // Charlie submits payment (status = submitted/pending)
   await submitPayment(payTokenA, "pending@school.edu", "111122223333");

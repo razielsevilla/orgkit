@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 
 interface ClosePeriodDialogProps {
   period: DuesPeriod | null;

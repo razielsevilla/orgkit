@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { createClient } from "@/src/lib/supabase/server";
 import { isUuid } from "@/src/lib/validation";
 
@@ -32,13 +33,13 @@ export async function setJoinLink(
       if (error.message.includes("not_admin")) {
         return { ok: false, token: null, error: "Only an admin of this org can change the join link." };
       }
-      console.error("Error updating join link:", error);
+      logger.error("join_link.update_failed", { orgId, error });
       return failed;
     }
 
     return { ok: true, token: typeof data === "string" ? data : null };
   } catch (err) {
-    console.error("Unexpected error in setJoinLink:", err);
+    logger.error("join_link.update_unexpected", { error: err });
     return failed;
   }
 }

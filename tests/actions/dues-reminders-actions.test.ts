@@ -50,15 +50,16 @@ vi.mock("next/cache", () => ({
   revalidatePath: (path: string) => mockRevalidatePath(path),
 }));
 
+const mockGetBaseUrl = vi.fn(async () => "https://test.orgkit.ph");
 vi.mock("@/src/lib/request", () => ({
-  getBaseUrl: async () => "https://test.orgkit.ph",
+  getBaseUrl: () => mockGetBaseUrl(),
 }));
 
 const {
   getDuesReminderPreviewAction,
   sendDuesRemindersAction,
   retryFailedRemindersAction,
-} = await import("@/src/app/(workspace)/dues-actions");
+} = await import("@/src/app/(workspace)/dues-reminders-actions");
 
 const ORG_ID = "11111111-1111-1111-1111-111111111111";
 const PERIOD_ID = "22222222-2222-2222-2222-222222222222";
@@ -114,6 +115,142 @@ describe("Dues Reminders Server Actions", () => {
       log_dues_reminder: { data: "reminder-log-id", error: null },
     };
     mockRevalidatePath.mockClear();
+    mockGetBaseUrl.mockReset();
+    mockGetBaseUrl.mockImplementation(async () => "https://test.orgkit.ph");
+  });
+
+  describe("when the site address is not configured (production)", () => {
+    beforeEach(() => {
+      mockGetBaseUrl.mockImplementation(async () => {
+        throw new Error("NEXT_PUBLIC_SITE_URL is not set. It is required in production to build links.");
+      });
+    });
+
+    it("fails the preview with the generic message and does not leak the configuration error", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const res = await getDuesReminderPreviewAction(ORG_ID, PERIOD_ID);
+        expect(res.success).toBe(false);
+        expect(res.error).toBe("failed");
+        expect(res.errorMessage).toBe("We couldn't load the reminder preview. Try again.");
+      } finally {
+        errorSpy.mockRestore();
+      }
+    });
+
+    it("sends nothing and logs nothing to the reminder log", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const res = await sendDuesRemindersAction(ORG_ID, PERIOD_ID);
+        expect(res.success).toBe(false);
+        expect(res.error).toBe("failed");
+        expect(res.errorMessage).toBe("We couldn't send the payment reminders. Try again.");
+        // It stopped before reading recipients, so no email and no log row
+        expect(state.rpcCalls).toEqual([]);
+        // ...and the problem is visible in the server log
+        expect(errorSpy).toHaveBeenCalled();
+      } finally {
+        errorSpy.mockRestore();
+      }
+    });
+
+    it("retry also stops before sending", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const res = await retryFailedRemindersAction(ORG_ID, PERIOD_ID, [MEMBER_1]);
+        expect(res.success).toBe(false);
+        expect(res.error).toBe("failed");
+        expect(state.rpcCalls).toEqual([]);
+      } finally {
+        errorSpy.mockRestore();
+      }
+    });
+  });
+
+  describe("failures never reach the officer as raw text", () => {
+    const RAW_DB_ERROR = 'connection to server at "10.0.0.5", port 5432 failed: FATAL password authentication';
+    const FIXED = {
+      preview: "We couldn't load the reminder preview. Try again.",
+      send: "We couldn't send the payment reminders. Try again.",
+      retry: "We couldn't retry sending reminders. Try again.",
+    };
+    const calls = {
+      preview: () => getDuesReminderPreviewAction(ORG_ID, PERIOD_ID),
+      send: () => sendDuesRemindersAction(ORG_ID, PERIOD_ID),
+      retry: () => retryFailedRemindersAction(ORG_ID, PERIOD_ID, [MEMBER_1]),
+    };
+    const logEvent = {
+      preview: "dues_reminders.preview_failed",
+      send: "dues_reminders.send_failed",
+      retry: "dues_reminders.retry_failed",
+    };
+
+    const run = async (kind: keyof typeof calls) => {
+      const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+      try {
+        const res = await calls[kind]();
+        const entries = spy.mock.calls.map(([line]) => JSON.parse(String(line)));
+        return { res, entries };
+      } finally {
+        spy.mockRestore();
+      }
+    };
+
+    for (const kind of ["preview", "send", "retry"] as const) {
+      it(`${kind}: an unexpected database error becomes a fixed message, and the cause is only logged`, async () => {
+        state.rpcResponses.get_dues_reminder_recipients = { data: null, error: { message: RAW_DB_ERROR } };
+
+        const { res, entries } = await run(kind);
+
+        expect(res.success).toBe(false);
+        expect(res.error).toBe("failed");
+        expect(res.errorMessage).toBe(FIXED[kind]);
+        expect(JSON.stringify(res)).not.toContain("10.0.0.5");
+        const entry = entries.find((e) => e.event === logEvent[kind]);
+        expect(entry).toMatchObject({
+          level: "error",
+          context: { orgId: ORG_ID, periodId: PERIOD_ID },
+        });
+        // the real cause is in the server log
+        expect(entry.context.error.message).toContain("connection to server");
+      });
+
+      it(`${kind}: malformed data from the database also becomes the fixed message`, async () => {
+        // used to be returned as "Invalid reminder data returned from database"
+        state.rpcResponses.get_dues_reminder_recipients = { data: { recipients: [] }, error: null };
+
+        const { res, entries } = await run(kind);
+
+        expect(res.success).toBe(false);
+        expect(res.errorMessage).toBe(FIXED[kind]);
+        expect(res.errorMessage).not.toContain("Invalid reminder data");
+        expect(entries.some((e) => e.event === logEvent[kind])).toBe(true);
+      });
+    }
+
+    it("keeps the existing messages for the cases that were already safe", async () => {
+      state.rpcResponses.get_dues_reminder_recipients = { data: null, error: { message: "period_not_found" } };
+      expect((await run("preview")).res).toMatchObject({ error: "not_found", errorMessage: "Dues period not found." });
+      expect((await run("send")).res).toMatchObject({ error: "not_found", errorMessage: "Dues period not found." });
+
+      state.rpcResponses.get_dues_reminder_recipients = { data: null, error: { message: "not_authorized" } };
+      expect((await run("preview")).res).toMatchObject({
+        error: "not_authorized",
+        errorMessage: "You are not authorized to view this period's reminders.",
+      });
+      for (const kind of ["send", "retry"] as const) {
+        expect((await run(kind)).res).toMatchObject({
+          error: "not_authorized",
+          errorMessage: "You are not authorized to send reminders for this organization.",
+        });
+      }
+    });
+
+    it("does not log a failure for the cases that were already mapped", async () => {
+      state.rpcResponses.get_dues_reminder_recipients = { data: null, error: { message: "not_authorized" } };
+      const { entries } = await run("send");
+      expect(entries.filter((e) => e.event === logEvent.send)).toHaveLength(0);
+    });
   });
 
   describe("getDuesReminderPreviewAction", () => {
@@ -196,6 +333,40 @@ describe("Dues Reminders Server Actions", () => {
       }
       expect(mockRevalidatePath).toHaveBeenCalledWith(`/workspace/${ORG_ID}/dues`);
       expect(state.rpcCalls.filter((c) => c.fn === "log_dues_reminder").length).toBe(2);
+    });
+
+    it("reports a rejected reminder log write instead of dropping it silently", async () => {
+      // supabase.rpc() returns { error } for a rejected call; it does not throw.
+      state.rpcResponses.log_dues_reminder = {
+        data: null,
+        error: { message: "not_authorized" },
+      };
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      try {
+        const res = await sendDuesRemindersAction(ORG_ID, PERIOD_ID);
+
+        // Emails already went out, so the send itself still reports as sent...
+        expect(res.success).toBe(true);
+        if (res.success && res.data) {
+          expect(res.data.sent_count).toBe(2);
+        }
+        // ...but each failed log write is reported, once per recipient.
+        const logFailures = errorSpy.mock.calls
+          .map(([line]) => JSON.parse(String(line)))
+          .filter((entry) => entry.event === "dues_reminder.log_write_failed");
+        expect(logFailures.length).toBe(2);
+        expect(logFailures[0].level).toBe("error");
+        expect(logFailures[0].context).toMatchObject({
+          periodId: PERIOD_ID,
+          memberId: MEMBER_1,
+          error: { message: "not_authorized" },
+        });
+        // No recipient address or name in the log
+        expect(JSON.stringify(logFailures)).not.toContain("school.edu");
+      } finally {
+        errorSpy.mockRestore();
+      }
     });
   });
 

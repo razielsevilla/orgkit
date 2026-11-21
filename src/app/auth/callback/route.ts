@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logger } from "@/src/lib/logger";
 import { createClient } from "@/src/lib/supabase/server";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { getGoogleSub } from "@/src/lib/auth/google-sub";
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
   const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
   if (exchangeError || !data.user) {
-    console.error("Auth exchange error:", exchangeError);
+    logger.error("auth_callback.exchange_failed", { error: exchangeError });
     return toSignIn("google_error");
   }
 
@@ -53,7 +54,7 @@ export async function GET(request: Request) {
   const googleSub = getGoogleSub(user);
 
   if (!googleSub) {
-    console.error("Missing Google sub claim for user:", user.id);
+    logger.error("auth_callback.missing_google_sub", { userId: user.id });
     return toSignIn("google_error");
   }
 
@@ -70,14 +71,14 @@ export async function GET(request: Request) {
   // Never fall through to "new officer" when the lookup itself failed,
   // or a returning officer could end up looking new
   if (officerQueryError) {
-    console.error("Error querying officers table:", officerQueryError);
+    logger.error("auth_callback.officer_lookup_failed", { error: officerQueryError });
     await supabase.auth.signOut();
     return toSignIn("google_error");
   }
 
   if (officer) {
     if (officer.id !== user.id) {
-      console.error("Officer row and auth user disagree:", officer.id, user.id);
+      logger.error("auth_callback.officer_id_mismatch", { officerId: officer.id, userId: user.id });
       await supabase.auth.signOut();
       return toSignIn("google_error");
     }
@@ -92,7 +93,7 @@ export async function GET(request: Request) {
       .eq("id", officer.id);
 
     if (updateError) {
-      console.error("Error updating officer:", updateError);
+      logger.error("auth_callback.officer_update_failed", { officerId: officer.id, error: updateError });
       await supabase.auth.signOut();
       return toSignIn("google_error");
     }

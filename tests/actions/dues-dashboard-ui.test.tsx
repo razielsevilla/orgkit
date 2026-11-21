@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import type { DuesPeriodSummary } from "@/src/lib/dues/dues-dashboard";
 
 const { DuesPeriodPicker } = await import(
@@ -28,9 +28,8 @@ const { DuesMemberTable } = await import(
 const { DuesMemberPager } = await import(
   "@/src/components/workspace/dues/dues-member-pager"
 );
-const { DuesDashboardEmpty } = await import(
-  "@/src/components/workspace/dues/dues-dashboard-empty"
-);
+// Not rendered in these tests; imported so a broken module still fails this file
+await import("@/src/components/workspace/dues/dues-dashboard-empty");
 
 async function render(element: ReturnType<typeof createElement>): Promise<string> {
   const stream = await renderToReadableStream(element);

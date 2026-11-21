@@ -9,12 +9,12 @@ import {
   DialogFooter,
   DialogButton,
 } from "@/src/components/ui/dialog";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import {
   getDuesReminderPreviewAction,
   sendDuesRemindersAction,
   retryFailedRemindersAction,
-} from "@/src/app/(workspace)/dues-actions";
+} from "@/src/app/(workspace)/dues-reminders-actions";
 import type {
   ReminderPreviewData,
   SendReminderSummary,
