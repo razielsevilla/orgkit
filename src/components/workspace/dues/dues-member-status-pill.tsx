@@ -24,10 +24,10 @@ export const DUES_STATUS_TONES: Record<DuesMemberStatus, StatusTone> = {
     label: "Paid",
   },
   pending: {
-    backgroundColor: "var(--color-warning-soft)",
-    border: "1px solid var(--color-warning-line)",
-    color: "var(--color-warning)",
-    dot: "var(--color-warning)",
+    backgroundColor: "var(--color-amber-soft, var(--color-warning-soft))",
+    border: "1px solid var(--color-amber-line, var(--color-warning-line))",
+    color: "var(--color-amber-strong, var(--color-warning))",
+    dot: "var(--color-amber, var(--color-warning))",
     label: "Pending review",
   },
   rejected: {
