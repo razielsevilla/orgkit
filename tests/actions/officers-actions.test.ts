@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createHash } from "node:crypto";
 
 /**
@@ -99,10 +99,40 @@ beforeEach(() => {
   state.profiles = [];
   state.rpcResult = { data: null, error: null };
   state.rpcCalls = [];
+  // The invite link prefers the configured address; keep the machine's value out of these tests
+  vi.stubEnv("NEXT_PUBLIC_SITE_URL", "");
   vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
+
 describe("createOfficerInvite", () => {
+  it("uses the configured site address for the link, not the request's host", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("NEXT_PUBLIC_SITE_URL", "https://orgkit.example/");
+    state.rpcResult = { data: { invite_id: "x" }, error: null };
+
+    const res = await createOfficerInvite(ORG, "x@school.edu", "officer");
+
+    expect(res.success).toBe(true);
+    // the fake request says host "orgkit.test"; production must ignore it
+    expect(res.data!.inviteUrl).toBe(`https://orgkit.example/invite/${res.data!.rawToken}`);
+  });
+
+  it("creates no invite when production has no site address, and returns a generic failure", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+
+    const res = await createOfficerInvite(ORG, "x@school.edu", "officer");
+
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("failed");
+    expect(res.errorMessage).toBe("An unexpected error occurred while creating the invite.");
+    // nothing was written, so there is no invite whose link could never be shown
+    expect(state.rpcCalls).toHaveLength(0);
+  });
+
   it("sends the hash and a normalized email to the database, and returns a one-time link", async () => {
     state.rpcResult = { data: { invite_id: "x" }, error: null };
     const res = await createOfficerInvite(ORG, "  New.Officer@School.EDU ", "finance");

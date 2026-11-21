@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
 import { withOrgCaller, type OrgCallerError } from "@/src/lib/orgs/org-access";
@@ -72,11 +73,11 @@ export async function getEventAttendanceAction(
       ]);
 
       if (attendance.error || !attendance.data) {
-        console.error("getEventAttendanceAction: could not read attendance:", attendance.error);
+        logger.error("attendance.read_failed", { orgId, eventId, error: attendance.error });
         return fail("failed", ATTENDANCE_MESSAGES.loadFailed);
       }
       if (active.error) {
-        console.error("getEventAttendanceAction: could not count members:", active.error);
+        logger.error("attendance.count_members_failed", { orgId, eventId, error: active.error });
         return fail("failed", ATTENDANCE_MESSAGES.loadFailed);
       }
 
@@ -123,7 +124,7 @@ export async function getMemberAttendanceHistoryAction(
 
       const history = parseHistory(data);
       if (!history) {
-        console.error("getMemberAttendanceHistoryAction: unexpected response shape");
+        logger.error("attendance_history.unexpected_shape", { orgId, memberId });
         return fail("failed", HISTORY_MESSAGES.loadFailed);
       }
       return ok(history);
@@ -156,7 +157,7 @@ export async function searchAttendeeCandidatesAction(
         .eq("org_id", orgId)
         .eq("event_id", eventId);
       if (presentError || !present) {
-        console.error("searchAttendeeCandidatesAction: could not read attendance:", presentError);
+        logger.error("attendance.search_read_failed", { orgId, eventId, error: presentError });
         return fail("failed", ATTENDANCE_MESSAGES.searchFailed);
       }
 
@@ -176,7 +177,7 @@ export async function searchAttendeeCandidatesAction(
 
       const { data: rows, error } = await query;
       if (error || !rows) {
-        console.error("searchAttendeeCandidatesAction: could not search members:", error);
+        logger.error("attendance.search_members_failed", { orgId, eventId, error });
         return fail("failed", ATTENDANCE_MESSAGES.searchFailed);
       }
 

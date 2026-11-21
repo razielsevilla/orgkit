@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { ZoomIn, AlertCircle, RefreshCw, X } from "lucide-react";
-import { getPaymentScreenshotUrl } from "@/src/app/(workspace)/dues-actions";
+import { getPaymentScreenshotUrl } from "@/src/app/(workspace)/dues-review-actions";
 
 interface DuesScreenshotViewerProps {
   orgId: string;

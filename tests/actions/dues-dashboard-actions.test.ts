@@ -50,7 +50,7 @@ vi.mock("next/cache", () => ({
 }));
 
 const { getDuesDashboardData } = await import(
-  "@/src/app/(workspace)/dues-actions"
+  "@/src/app/(workspace)/dues-dashboard-actions"
 );
 
 const ORG_ID = "11111111-1111-1111-1111-111111111111";
@@ -97,6 +97,30 @@ describe("getDuesDashboardData server action", () => {
     });
     expect(res.success).toBe(false);
     expect(res.error).toBe("access_revoked");
+  });
+
+  it("reports an unreadable database answer in the log, and keeps the existing message", async () => {
+    state.rpcResult = { data: "not an object", error: null };
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const res = await getDuesDashboardData(ORG_ID, { periodId: PERIOD_ID });
+
+      expect(res).toMatchObject({
+        success: false,
+        error: "failed",
+        errorMessage: "Failed to parse dues dashboard data.",
+      });
+      // this used to be swallowed without a trace
+      const entries = spy.mock.calls.map(([line]) => JSON.parse(String(line)));
+      expect(entries).toHaveLength(1);
+      expect(entries[0]).toMatchObject({
+        level: "error",
+        event: "dues_dashboard.parse_failed",
+        context: { orgId: ORG_ID, periodId: PERIOD_ID },
+      });
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("handles database RPC error gracefully", async () => {

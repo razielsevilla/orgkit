@@ -5,6 +5,7 @@
 
 import { getResendFromEmail, isEmailConfigured } from "./env.ts";
 import { getOptionalResendClient } from "./resend-client.ts";
+import { logger } from "../logger.ts";
 
 export interface SendEmailOptions {
   to: string;
@@ -39,7 +40,14 @@ export class MockEmailSender implements EmailSender {
 
     this.sent.push({ ...options });
 
-    if (process.env.NODE_ENV !== "test") {
+    if (process.env.NODE_ENV === "production") {
+      // Never print the recipient or the body in production: both are personal data
+      // that would end up in the hosting provider's logs.
+      logger.info("email.mock_dispatched", "Mock email dispatched (recipient and body withheld).");
+    } else if (process.env.NODE_ENV !== "test") {
+      // Local development only: show the whole message so it can be checked by eye.
+      // Deliberately plain console output and not the logger, which would redact the
+      // very thing this is for. It never runs in production or tests.
       console.log(`\n================== 📧 MOCK EMAIL DISPATCHED ==================`);
       console.log(`To: ${options.to}`);
       console.log(`Subject: ${options.subject}`);
@@ -76,6 +84,11 @@ export class ResendEmailSender implements EmailSender {
   async send(options: SendEmailOptions): Promise<SendEmailResult> {
     const client = getOptionalResendClient();
     if (!client) {
+      // Checked here, when an email is actually sent, and not at import time, so a
+      // build without the key still works. The caller gets a clear failure.
+      logger.error("email.not_configured", "Email not sent: RESEND_API_KEY is not configured.", {
+        variable: "RESEND_API_KEY",
+      });
       return {
         success: false,
         error: "RESEND_API_KEY is not configured.",
@@ -119,13 +132,16 @@ const mockSenderInstance = new MockEmailSender();
 
 /**
  * Returns the currently active email sender.
- * Defaults to MockEmailSender in test environment or when unconfigured, otherwise ResendEmailSender.
+ * Defaults to MockEmailSender in the test environment, and in development when no
+ * RESEND_API_KEY is set. In production it is always ResendEmailSender: without a
+ * key, its send() fails with a clear error instead of pretending the email went out.
  */
 export function getEmailSender(): EmailSender {
   if (activeSender) {
     return activeSender;
   }
-  if (process.env.NODE_ENV === "test" || !isEmailConfigured()) {
+  const isProduction = process.env.NODE_ENV === "production";
+  if (process.env.NODE_ENV === "test" || (!isEmailConfigured() && !isProduction)) {
     return mockSenderInstance;
   }
   return new ResendEmailSender();

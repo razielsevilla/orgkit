@@ -14,12 +14,20 @@ vi.mock("@/src/components/ui/dialog", () => ({
     createElement("button", { type: "button", ...props }, children),
 }));
 
-vi.mock("@/src/app/(workspace)/dues-actions", () => ({
+// The dues actions now live in four files. One factory serves all of them, so every
+// mocked name resolves from whichever file a component imports it from.
+function duesActionsMock() {
+  return {
   getPaymentScreenshotUrl: vi.fn().mockResolvedValue({
     success: true,
     data: { signedUrl: "https://storage.mock/receipt-123.png" },
   }),
-}));
+  };
+}
+vi.mock("@/src/app/(workspace)/dues-periods-actions", duesActionsMock);
+vi.mock("@/src/app/(workspace)/dues-review-actions", duesActionsMock);
+vi.mock("@/src/app/(workspace)/dues-dashboard-actions", duesActionsMock);
+vi.mock("@/src/app/(workspace)/dues-reminders-actions", duesActionsMock);
 
 const { DuesReviewEmptyState } = await import(
   "@/src/components/workspace/dues/dues-review-empty-state"

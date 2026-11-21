@@ -15,9 +15,6 @@ let orgB: string;
 let adminA: string;
 let officerA: string;
 let officerMemberA: string;
-let memberA1: string;
-let memberA2: string;
-let memberOfficerId: string;
 let adminB: string;
 let officerB: string;
 let periodAId: string;
@@ -72,11 +69,11 @@ before(async () => {
 
   // Officer who is also a member in Org A
   officerMemberA = await addMember(orgA, "officer.member.p3@school.edu", "officer");
-  memberOfficerId = await createMember(orgA, "officer.member.p3@school.edu", "Officer Who Is Member");
+  await createMember(orgA, "officer.member.p3@school.edu", "Officer Who Is Member");
 
   // Regular members in Org A
-  memberA1 = await createMember(orgA, "member.p3.1@school.edu", "Member P3 One");
-  memberA2 = await createMember(orgA, "member.p3.2@school.edu", "Member P3 Two");
+  await createMember(orgA, "member.p3.1@school.edu", "Member P3 One");
+  await createMember(orgA, "member.p3.2@school.edu", "Member P3 Two");
 
   // Setup Org B
   adminB = await addOfficer("admin.p3.b@school.edu", "Admin P3 B");

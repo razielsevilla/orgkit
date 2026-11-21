@@ -3,13 +3,13 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AlertCircle, Link as LinkIcon, SlidersHorizontal, Lock, Mail } from "lucide-react";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import {
   createDuesPeriod,
   updateDuesPeriod,
   closeDuesPeriod,
-  getDuesDashboardData,
-} from "@/src/app/(workspace)/dues-actions";
+} from "@/src/app/(workspace)/dues-periods-actions";
+import { getDuesDashboardData } from "@/src/app/(workspace)/dues-dashboard-actions";
 import type { DuesDashboardData, DuesStatusFilter } from "@/src/lib/dues/dues-dashboard";
 import { DUES_PAGE_SIZE } from "@/src/lib/dues/dues-dashboard";
 import { DuesHeader } from "./dues-header";

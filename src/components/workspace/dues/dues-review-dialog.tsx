@@ -9,12 +9,12 @@ import {
   DialogFooter,
   DialogButton,
 } from "@/src/components/ui/dialog";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import {
   getDuesReviewQueue,
   verifyDuesPayment,
   rejectDuesPayment,
-} from "@/src/app/(workspace)/dues-actions";
+} from "@/src/app/(workspace)/dues-review-actions";
 import type { DuesReviewQueueItem } from "@/src/lib/dues/dues-review";
 import { DuesReviewPane } from "./dues-review-pane";
 import { DuesReviewSkeleton } from "./dues-review-skeleton";

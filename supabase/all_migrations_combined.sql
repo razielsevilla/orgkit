@@ -876,7 +876,6 @@ revoke all on function public.cleanup_expired_invites() from public;
 grant execute on function public.cleanup_expired_invites() to service_role;
 
 
-
 -- >>> FILE: 20261103090000_a4_member_join.sql
 -- A4: members join an org through a public link or QR, with consent.
 -- Builds on the A1 (officers) and A2 (orgs, org_officers) migrations.
@@ -1340,6 +1339,91 @@ $$;
 grant execute on function public.get_org_join_link(uuid) to authenticated;
 
 
+-- >>> FILE: 20261108100000_r4_member_exports.sql
+-- R4: export the roster to CSV.
+--
+-- The file itself is made on the server from the admin's own session, so row
+-- level security still applies. This migration only adds the audit record of
+-- who exported what. Users never write to it directly: the only way in is
+-- record_member_export, which checks the caller is an admin of the org.
+
+create table if not exists public.member_exports (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs (id) on delete cascade,
+  officer_id uuid not null references public.officers (id) on delete cascade,
+  row_count integer not null check (row_count >= 0),
+  -- Which fields left the app, e.g. {full_name,email,status}
+  fields text[] not null check (cardinality(fields) > 0),
+  -- Which member statuses were included
+  statuses text[] not null default '{}',
+  created_at timestamptz not null default now()
+);
+
+create index if not exists member_exports_org_created_idx
+  on public.member_exports (org_id, created_at desc);
+
+alter table public.member_exports enable row level security;
+revoke all on public.member_exports from anon, authenticated;
+grant select on public.member_exports to authenticated;
+
+-- Admins of the org can read its export record. No insert, update or delete
+-- policies, and no write grants: writes happen only in record_member_export.
+drop policy if exists "Admins can read their org exports" on public.member_exports;
+create policy "Admins can read their org exports"
+  on public.member_exports
+  for select
+  to authenticated
+  using (public.is_org_admin(org_id));
+
+create or replace function public.record_member_export(
+  target_org uuid,
+  p_fields text[],
+  p_statuses text[],
+  p_row_count integer
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  new_id uuid;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_org_admin(target_org) then
+    raise exception 'Not permitted to export members of this organization';
+  end if;
+
+  if p_fields is null or cardinality(p_fields) = 0
+     or not (p_fields <@ array['full_name','email','status','created_at','consent_at','consent_language']) then
+    raise exception 'Invalid export fields';
+  end if;
+
+  if p_statuses is null
+     or not (p_statuses <@ array['pending','active','inactive']) then
+    raise exception 'Invalid export statuses';
+  end if;
+
+  if p_row_count is null or p_row_count < 0 then
+    raise exception 'Invalid row count';
+  end if;
+
+  insert into public.member_exports (org_id, officer_id, row_count, fields, statuses)
+  values (target_org, caller_id, p_row_count, p_fields, p_statuses)
+  returning id into new_id;
+
+  return new_id;
+end;
+$$;
+
+revoke all on function public.record_member_export(uuid, text[], text[], integer) from public, anon;
+grant execute on function public.record_member_export(uuid, text[], text[], integer) to authenticated;
+
 
 -- >>> FILE: 20261108120000_r2_member_edit_deactivate.sql
 -- R2: Member editing, deactivation, and reactivation
@@ -1506,6 +1590,337 @@ $$;
 
 revoke all on function public.set_member_status(uuid, text) from public, anon;
 grant execute on function public.set_member_status(uuid, text) to authenticated;
+
+
+-- >>> FILE: 20261108120000_r3_member_invites.sql
+-- R3: an admin imports a CSV roster as INVITATIONS, never as members.
+-- Builds on A4 (members, join_org, org_join_links) and A2 (is_org_admin).
+--
+-- Why invitations: A4's join page is the only place a student sees the consent
+-- wording, so someone who was never shown it can't be a member. An invitation
+-- holds an email (and a name if given) for 60 days, then it is deleted.
+--
+-- Access model: admins read their own org's rows through row level security.
+-- Nothing is writable directly; the import goes through import_member_invites
+-- and the link to a joining student goes through join_org.
+
+-- 1. Table --------------------------------------------------------------------
+create table if not exists public.member_invites (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs (id) on delete cascade,
+  email text not null check (char_length(email) <= 254),
+  -- Lowercased, trimmed email: the same person is invited once per org
+  email_key text not null,
+  name text null check (name is null or char_length(name) between 1 and 100),
+  created_at timestamptz not null default now(),
+  -- Kept to a minimum on purpose: gone 60 days after the invitation
+  expires_at timestamptz not null default (now() + interval '60 days'),
+  -- Set when the person joins through the org's join link with this email
+  joined_at timestamptz null,
+  unique (org_id, email_key)
+);
+
+create index if not exists member_invites_org_created_idx
+  on public.member_invites (org_id, created_at desc);
+
+create index if not exists member_invites_expires_idx
+  on public.member_invites (expires_at);
+
+alter table public.member_invites enable row level security;
+revoke all on public.member_invites from anon, authenticated;
+grant select on public.member_invites to authenticated;
+
+drop policy if exists "Admins can read their org invitations" on public.member_invites;
+create policy "Admins can read their org invitations"
+  on public.member_invites
+  for select
+  to authenticated
+  using (public.is_org_admin(org_id));
+
+-- 2. Import ---------------------------------------------------------------------
+-- p_rows: a JSON array of {"row": <line in the file>, "email": "...", "name": "..."}.
+-- Returns {invited, duplicates, invalid, invalid_rows: [{row, email, reason}], dry_run}.
+-- With p_dry_run = true nothing is written, so the preview and the real import
+-- share one set of rules and cannot disagree. Everything runs in one
+-- transaction: if anything fails, no row is saved.
+--
+-- Errors raised: not_admin, invalid_rows, no_rows, too_many_rows.
+-- Row reasons: missing_email, invalid_email, name_too_long, invalid_row.
+create or replace function public.import_member_invites(
+  target_org uuid,
+  p_rows jsonb,
+  p_dry_run boolean default false
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  max_rows constant int := 1000;
+  item jsonb;
+  ord bigint;
+  row_no int;
+  raw_email text;
+  raw_name text;
+  clean_email text;
+  clean_name text;
+  key text;
+  seen text[] := '{}';
+  invited int := 0;
+  duplicates int := 0;
+  invalid int := 0;
+  bad jsonb := '[]'::jsonb;
+  inserted int;
+  reason text;
+begin
+  if not public.is_org_admin(target_org) then
+    raise exception 'not_admin';
+  end if;
+
+  if p_rows is null or jsonb_typeof(p_rows) <> 'array' then
+    raise exception 'invalid_rows';
+  end if;
+  if jsonb_array_length(p_rows) = 0 then
+    raise exception 'no_rows';
+  end if;
+  if jsonb_array_length(p_rows) > max_rows then
+    raise exception 'too_many_rows';
+  end if;
+
+  -- Serialise concurrent imports for the same org (double press, two tabs)
+  perform 1 from public.orgs where id = target_org for update;
+
+  -- An expired invitation must not block inviting the same email again
+  if not p_dry_run then
+    delete from public.member_invites
+     where org_id = target_org and expires_at <= now();
+  end if;
+
+  for item, ord in
+    select value, ordinality from jsonb_array_elements(p_rows) with ordinality
+  loop
+    reason := null;
+    clean_email := null;
+    clean_name := null;
+    raw_email := null;
+    raw_name := null;
+    row_no := ord;
+
+    if jsonb_typeof(item) = 'object' then
+      if jsonb_typeof(item -> 'row') = 'number' then
+        row_no := (item ->> 'row')::numeric::int;
+      end if;
+      if jsonb_typeof(item -> 'email') in ('string', 'number') then
+        raw_email := item ->> 'email';
+      end if;
+      if jsonb_typeof(item -> 'name') in ('string', 'number') then
+        raw_name := item ->> 'name';
+      end if;
+    else
+      reason := 'invalid_row';
+    end if;
+
+    if reason is null then
+      clean_email := btrim(coalesce(raw_email, ''));
+      if clean_email = '' then
+        reason := 'missing_email';
+      elsif char_length(clean_email) > 254
+         or clean_email ~ '[[:cntrl:]]'
+         or clean_email !~ '^[^[:space:]@]+@[^[:space:]@.]+(\.[^[:space:]@.]+)*\.[a-zA-Z]{2,}$' then
+        reason := 'invalid_email';
+      end if;
+    end if;
+
+    if reason is null then
+      -- Odd characters become spaces or vanish; a name that is still too long is skipped
+      clean_name := regexp_replace(coalesce(raw_name, ''), '[[:cntrl:]]', ' ', 'g');
+      clean_name := regexp_replace(clean_name, '[​-‍⁠﻿]', '', 'g');
+      clean_name := nullif(btrim(regexp_replace(clean_name, '\s+', ' ', 'g')), '');
+      if clean_name is not null and char_length(clean_name) > 100 then
+        reason := 'name_too_long';
+      end if;
+    end if;
+
+    if reason is not null then
+      invalid := invalid + 1;
+      bad := bad || jsonb_build_array(jsonb_build_object(
+        'row', row_no,
+        'email', left(coalesce(raw_email, ''), 254),
+        'reason', reason
+      ));
+      continue;
+    end if;
+
+    key := lower(clean_email);
+
+    -- Same email twice in the file: counted once
+    if key = any (seen) then
+      duplicates := duplicates + 1;
+      continue;
+    end if;
+    seen := seen || key;
+
+    -- Already a member, or already invited and not expired
+    if exists (select 1 from public.members where org_id = target_org and email_key = key)
+       or exists (
+         select 1 from public.member_invites
+          where org_id = target_org and email_key = key and expires_at > now()
+       ) then
+      duplicates := duplicates + 1;
+      continue;
+    end if;
+
+    if p_dry_run then
+      invited := invited + 1;
+    else
+      insert into public.member_invites (org_id, email, email_key, name)
+      values (target_org, clean_email, key, clean_name)
+      on conflict (org_id, email_key) do nothing;
+      get diagnostics inserted = row_count;
+      if inserted = 1 then
+        invited := invited + 1;
+      else
+        duplicates := duplicates + 1;
+      end if;
+    end if;
+  end loop;
+
+  return jsonb_build_object(
+    'invited', invited,
+    'duplicates', duplicates,
+    'invalid', invalid,
+    'invalid_rows', bad,
+    'dry_run', p_dry_run
+  );
+end;
+$$;
+
+revoke all on function public.import_member_invites(uuid, jsonb, boolean) from public, anon;
+grant execute on function public.import_member_invites(uuid, jsonb, boolean) to authenticated;
+
+-- 3. Cleanup --------------------------------------------------------------------
+-- Deletes expired invitations, which removes the stored name and email.
+-- Scheduled by 20261108120100_r3_schedule_member_invite_cleanup.sql and also
+-- run when an admin opens the Members page.
+create or replace function public.cleanup_expired_member_invites()
+returns int
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  deleted_count int;
+begin
+  delete from public.member_invites where expires_at <= now();
+  get diagnostics deleted_count = row_count;
+  return deleted_count;
+end;
+$$;
+
+revoke all on function public.cleanup_expired_member_invites() from public, anon, authenticated;
+grant execute on function public.cleanup_expired_member_invites() to service_role;
+
+-- 4. join_org links an invitation when the student joins ---------------------------
+-- Same signature and return values as A4: it still answers 'ok' for everyone,
+-- so the page never reveals who was invited. Only the update at the end is new.
+create or replace function public.join_org(
+  p_token text,
+  p_name text,
+  p_email text,
+  p_language text,
+  p_consent_version text
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  target_org uuid;
+  clean_name text;
+  clean_email text;
+begin
+  select org_id into target_org
+    from public.org_join_links
+   where token = p_token and active;
+
+  if target_org is null then
+    return 'inactive';
+  end if;
+
+  clean_name := regexp_replace(btrim(coalesce(p_name, '')), '\s+', ' ', 'g');
+  clean_email := btrim(coalesce(p_email, ''));
+
+  if char_length(clean_name) < 2 or char_length(clean_name) > 100 then
+    raise exception 'invalid_name';
+  end if;
+  if char_length(clean_email) > 254 or clean_email !~ '^[^[:space:]@]+@[^[:space:]@.]+(\.[^[:space:]@.]+)*\.[a-zA-Z]{2,}$' then
+    raise exception 'invalid_email';
+  end if;
+  if p_language not in ('en', 'fil') then
+    raise exception 'invalid_language';
+  end if;
+
+  insert into public.members (
+    org_id, full_name, email, email_key,
+    consent_version, consent_language, consent_at
+  )
+  values (
+    target_org, clean_name, clean_email, lower(clean_email),
+    p_consent_version, p_language, now()
+  )
+  on conflict (org_id, email_key) do nothing;
+
+  -- R3: the student agreed through the join link, so their invitation (same
+  -- email, ignoring capitals) shows as joined. A different email changes nothing.
+  update public.member_invites
+     set joined_at = now()
+   where org_id = target_org
+     and email_key = lower(clean_email)
+     and joined_at is null
+     and expires_at > now();
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.join_org(text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.join_org(text, text, text, text, text) to service_role;
+
+
+-- >>> FILE: 20261108120100_r3_schedule_member_invite_cleanup.sql
+-- R3: delete expired member invitations daily, so the stored name and email
+-- are removed once the 60 days are up. Same approach as the A3 schedule.
+--
+-- pg_cron is a Supabase extension (Database > Extensions). Where it is not
+-- available, such as a plain local Postgres, this migration only prints a
+-- notice, so it never blocks the other migrations. The Members page also runs
+-- the cleanup when an admin opens it. Enable the extension and re-run this
+-- file to turn the schedule on.
+
+do $$
+begin
+  if not exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    raise notice 'pg_cron is not available: member invitation cleanup is NOT scheduled. Enable pg_cron and re-run this migration.';
+    return;
+  end if;
+
+  create extension if not exists pg_cron;
+
+  -- Re-running replaces the job instead of stacking a second one
+  perform cron.unschedule(jobid)
+  from cron.job
+  where jobname = 'r3-cleanup-expired-member-invites';
+
+  perform cron.schedule(
+    'r3-cleanup-expired-member-invites',
+    '15 3 * * *',  -- every day at 03:15 UTC
+    $job$select public.cleanup_expired_member_invites()$job$
+  );
+end
+$$;
+
 
 -- >>> FILE: 20261109120000_r2_stale_status_guard.sql
 -- R2: Stale-state guard for member edit / status changes
@@ -2173,6 +2588,7 @@ $$;
 revoke all on function public.checkin_member(uuid, text) from public, anon, authenticated;
 grant execute on function public.checkin_member(uuid, text) to service_role;
 
+
 -- >>> FILE: 20261113120000_e4_manual_attendance.sql
 -- E4: Manual attendance
 -- An officer adds or removes a member from an event's attendance list by hand.
@@ -2307,6 +2723,219 @@ $$;
 revoke all on function public.remove_attendance(uuid, uuid) from public, anon;
 grant execute on function public.remove_attendance(uuid, uuid) to authenticated;
 
+
+-- >>> FILE: 20261113120100_p1_dues_periods.sql
+-- P1: Dues Periods table, indexes, RLS, and security definer functions
+
+-- 1. Create dues_periods table
+create table if not exists public.dues_periods (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  name text not null check (char_length(trim(name)) between 2 and 100),
+  amount numeric(10,2) not null check (amount > 0 and amount <= 100000.00 and scale(amount) <= 2),
+  due_on date not null,
+  status text not null default 'open' check (status in ('open', 'closed')),
+  created_by uuid references auth.users(id) on delete set null default auth.uid(),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- 2. Indexes for efficient lookup and ordering
+create index if not exists dues_periods_org_created_idx
+  on public.dues_periods (org_id, created_at desc);
+
+create index if not exists dues_periods_org_status_idx
+  on public.dues_periods (org_id, status);
+
+-- 3. Row Level Security: Officers of the org can read dues_periods
+alter table public.dues_periods enable row level security;
+
+drop policy if exists "Officers can read dues periods in their org" on public.dues_periods;
+create policy "Officers can read dues periods in their org"
+  on public.dues_periods
+  for select
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- Direct writes (insert, update, delete) are prohibited from the client API.
+-- All mutations must go through the security definer functions below.
+revoke insert, update, delete on public.dues_periods from public, anon, authenticated;
+
+-- 4. Security Definer Function: create_dues_period
+create or replace function public.create_dues_period(
+  p_org_id uuid,
+  p_name text,
+  p_amount numeric,
+  p_due_on date
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  new_id uuid;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_org_member(p_org_id) then
+    raise exception 'Not permitted to create dues periods for this organization';
+  end if;
+
+  if p_name is null or char_length(trim(p_name)) < 2 or char_length(trim(p_name)) > 100 then
+    raise exception 'Name must be between 2 and 100 characters';
+  end if;
+
+  if p_amount is null or p_amount <= 0 or p_amount > 100000.00 or scale(p_amount) > 2 then
+    raise exception 'Amount must be above 0 and at most 100,000 with up to 2 decimal places';
+  end if;
+
+  if p_due_on is null then
+    raise exception 'Due date is required';
+  end if;
+
+  insert into public.dues_periods (
+    org_id,
+    name,
+    amount,
+    due_on,
+    status,
+    created_by
+  ) values (
+    p_org_id,
+    trim(p_name),
+    p_amount,
+    p_due_on,
+    'open',
+    caller_id
+  ) returning id into new_id;
+
+  return new_id;
+end;
+$$;
+
+revoke all on function public.create_dues_period(uuid, text, numeric, date) from public;
+grant execute on function public.create_dues_period(uuid, text, numeric, date) to authenticated;
+
+-- 5. Security Definer Function: update_dues_period
+create or replace function public.update_dues_period(
+  p_period_id uuid,
+  p_name text,
+  p_amount numeric,
+  p_due_on date
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  period_org uuid;
+  period_status text;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select org_id, status
+    into period_org, period_status
+    from public.dues_periods
+   where id = p_period_id;
+
+  if period_org is null then
+    raise exception 'Dues period not found';
+  end if;
+
+  if not public.is_org_member(period_org) then
+    raise exception 'Not permitted to update dues periods for this organization';
+  end if;
+
+  if period_status = 'closed' then
+    raise exception 'Cannot edit closed dues period';
+  end if;
+
+  if p_name is null or char_length(trim(p_name)) < 2 or char_length(trim(p_name)) > 100 then
+    raise exception 'Name must be between 2 and 100 characters';
+  end if;
+
+  if p_amount is null or p_amount <= 0 or p_amount > 100000.00 or scale(p_amount) > 2 then
+    raise exception 'Amount must be above 0 and at most 100,000 with up to 2 decimal places';
+  end if;
+
+  if p_due_on is null then
+    raise exception 'Due date is required';
+  end if;
+
+  update public.dues_periods
+     set name = trim(p_name),
+         amount = p_amount,
+         due_on = p_due_on,
+         updated_at = now()
+   where id = p_period_id;
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.update_dues_period(uuid, text, numeric, date) from public;
+grant execute on function public.update_dues_period(uuid, text, numeric, date) to authenticated;
+
+-- 6. Security Definer Function: close_dues_period
+create or replace function public.close_dues_period(
+  p_period_id uuid
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  period_org uuid;
+  period_status text;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  select org_id, status
+    into period_org, period_status
+    from public.dues_periods
+   where id = p_period_id;
+
+  if period_org is null then
+    raise exception 'Dues period not found';
+  end if;
+
+  if not public.is_org_member(period_org) then
+    raise exception 'Not permitted to close dues periods for this organization';
+  end if;
+
+  -- Idempotent: if already closed, return ok without error
+  if period_status = 'closed' then
+    return 'ok';
+  end if;
+
+  update public.dues_periods
+     set status = 'closed',
+         updated_at = now()
+   where id = p_period_id;
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.close_dues_period(uuid) from public;
+grant execute on function public.close_dues_period(uuid) to authenticated;
+
+
 -- >>> FILE: 20261113130000_e5_member_attendance_history.sql
 -- E5: Member attendance history
 -- One read function an officer calls from the roster to see how often a member
@@ -2396,3 +3025,1332 @@ $$;
 
 revoke all on function public.get_member_attendance_history(uuid) from public, anon;
 grant execute on function public.get_member_attendance_history(uuid) to authenticated;
+
+
+-- >>> FILE: 20261115120000_p2_dues_payments.sql
+-- P2: Submit GCash Reference with Screenshot
+-- Schema updates for dues_periods pay link, dues_payments table, partial unique indexes, RLS, and security definer functions.
+
+-- 1. Add pay_token and pay_link_active to public.dues_periods
+alter table public.dues_periods
+  add column if not exists pay_token text unique default replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''),
+  add column if not exists pay_link_active boolean not null default true;
+
+-- Backfill any existing rows where pay_token might be null
+update public.dues_periods
+   set pay_token = replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')
+ where pay_token is null;
+
+create index if not exists dues_periods_pay_token_active_idx
+  on public.dues_periods (pay_token)
+  where (pay_link_active and status = 'open');
+
+-- 2. Create public.dues_payments table
+create table if not exists public.dues_payments (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  period_id uuid not null references public.dues_periods(id) on delete cascade,
+  member_id uuid not null references public.members(id) on delete cascade,
+  amount numeric(10,2) not null check (amount > 0 and amount <= 100000.00 and scale(amount) <= 2),
+  reference_no text not null check (char_length(trim(reference_no)) between 4 and 50),
+  reference_key text not null,
+  screenshot_path text not null,
+  status text not null default 'submitted' check (status in ('submitted', 'verified', 'rejected')),
+  reject_reason text null,
+  submitted_at timestamptz not null default now(),
+  reviewed_by uuid references auth.users(id) on delete set null,
+  reviewed_at timestamptz null
+);
+
+-- Indexes for performance and lookup
+create index if not exists dues_payments_org_period_idx
+  on public.dues_payments (org_id, period_id, submitted_at desc);
+
+create index if not exists dues_payments_member_idx
+  on public.dues_payments (member_id);
+
+-- Partial Unique Index 1: Exactly one Submitted or Verified payment per member per period.
+-- Rejected payments do not block a subsequent submission.
+create unique index if not exists dues_payments_active_member_period_idx
+  on public.dues_payments (period_id, member_id)
+  where (status in ('submitted', 'verified'));
+
+-- Partial Unique Index 2: Exactly one non-rejected payment per reference in the organization.
+-- Normalizes spaces and casing via reference_key.
+create unique index if not exists dues_payments_org_reference_key_idx
+  on public.dues_payments (org_id, reference_key)
+  where (status in ('submitted', 'verified'));
+
+-- 3. Row Level Security for public.dues_payments
+alter table public.dues_payments enable row level security;
+
+drop policy if exists "Officers can read dues payments in their org" on public.dues_payments;
+create policy "Officers can read dues payments in their org"
+  on public.dues_payments
+  for select
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- Direct writes (insert, update, delete) are prohibited from the client API.
+revoke insert, update, delete on public.dues_payments from public, anon, authenticated;
+grant select on public.dues_payments to authenticated;
+grant all on public.dues_payments to service_role;
+
+-- 4. Storage Bucket Setup (for Supabase projects where storage schema is present)
+do $$
+begin
+  if exists (select 1 from information_schema.schemata where schema_name = 'storage') then
+    insert into storage.buckets (id, name, public)
+    values ('dues-screenshots', 'dues-screenshots', false)
+    on conflict (id) do update set public = false;
+  end if;
+end $$;
+
+-- 5. Security Definer Function: get_dues_period_pay_link
+-- Allows officers of the org to retrieve pay link information for an open period.
+-- If the period was created earlier without a token, a token is generated and persisted.
+create or replace function public.get_dues_period_pay_link(
+  p_org_id uuid,
+  p_period_id uuid
+)
+returns table (
+  period_id uuid,
+  pay_token text,
+  pay_link_active boolean,
+  status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_token text;
+  v_status text;
+begin
+  if not public.is_org_member(p_org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  select p.pay_token, p.status into v_token, v_status
+  from public.dues_periods p
+  where p.id = p_period_id and p.org_id = p_org_id;
+
+  if v_status is null then
+    raise exception 'not_found';
+  end if;
+
+  -- Ensure token exists if null
+  if v_token is null then
+    v_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+    update public.dues_periods
+       set pay_token = v_token
+     where id = p_period_id and org_id = p_org_id;
+  end if;
+
+  return query
+  select
+    p.id as period_id,
+    p.pay_token,
+    p.pay_link_active,
+    p.status
+  from public.dues_periods p
+  where p.id = p_period_id
+    and p.org_id = p_org_id;
+end;
+$$;
+
+revoke all on function public.get_dues_period_pay_link(uuid, uuid) from public, anon;
+grant execute on function public.get_dues_period_pay_link(uuid, uuid) to authenticated;
+grant execute on function public.get_dues_period_pay_link(uuid, uuid) to service_role;
+
+-- 6. Security Definer Function: set_dues_pay_link
+-- Officers can turn link on ('on'), off ('off'), or rotate/regenerate ('rotate').
+create or replace function public.set_dues_pay_link(
+  p_org_id uuid,
+  p_period_id uuid,
+  p_action text
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_new_token text;
+  v_current_status text;
+begin
+  if not public.is_org_member(p_org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  if p_action not in ('on', 'off', 'rotate') then
+    raise exception 'invalid_action';
+  end if;
+
+  select status into v_current_status
+  from public.dues_periods
+  where id = p_period_id and org_id = p_org_id
+  for update;
+
+  if v_current_status is null then
+    raise exception 'not_found';
+  end if;
+
+  if v_current_status = 'closed' then
+    raise exception 'period_closed';
+  end if;
+
+  if p_action = 'off' then
+    update public.dues_periods
+       set pay_link_active = false,
+           updated_at = now()
+     where id = p_period_id and org_id = p_org_id;
+    return null;
+  elsif p_action = 'on' then
+    update public.dues_periods
+       set pay_link_active = true,
+           pay_token = coalesce(pay_token, replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')),
+           updated_at = now()
+     where id = p_period_id and org_id = p_org_id;
+    select pay_token into v_new_token
+    from public.dues_periods
+    where id = p_period_id;
+    return v_new_token;
+  elsif p_action = 'rotate' then
+    v_new_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+    update public.dues_periods
+       set pay_token = v_new_token,
+           pay_link_active = true,
+           updated_at = now()
+     where id = p_period_id and org_id = p_org_id;
+    return v_new_token;
+  end if;
+
+  return null;
+end;
+$$;
+
+revoke all on function public.set_dues_pay_link(uuid, uuid, text) from public, anon;
+grant execute on function public.set_dues_pay_link(uuid, uuid, text) to authenticated;
+grant execute on function public.set_dues_pay_link(uuid, uuid, text) to service_role;
+
+-- 7. Update create_dues_period to generate pay_token on creation
+create or replace function public.create_dues_period(
+  p_org_id uuid,
+  p_name text,
+  p_amount numeric,
+  p_due_on date
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  new_id uuid;
+  new_pay_token text;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if not public.is_org_member(p_org_id) then
+    raise exception 'Not permitted to create dues periods for this organization';
+  end if;
+
+  if p_name is null or char_length(trim(p_name)) < 2 or char_length(trim(p_name)) > 100 then
+    raise exception 'Name must be between 2 and 100 characters';
+  end if;
+
+  if p_amount is null or p_amount <= 0 or p_amount > 100000.00 or scale(p_amount) > 2 then
+    raise exception 'Amount must be above 0 and at most 100,000 with up to 2 decimal places';
+  end if;
+
+  if p_due_on is null then
+    raise exception 'Due date is required';
+  end if;
+
+  new_pay_token := replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '');
+
+  insert into public.dues_periods (
+    org_id,
+    name,
+    amount,
+    due_on,
+    status,
+    created_by,
+    pay_token,
+    pay_link_active
+  ) values (
+    p_org_id,
+    trim(p_name),
+    p_amount,
+    p_due_on,
+    'open',
+    caller_id,
+    new_pay_token,
+    true
+  ) returning id into new_id;
+
+  return new_id;
+end;
+$$;
+
+revoke all on function public.create_dues_period(uuid, text, numeric, date) from public;
+grant execute on function public.create_dues_period(uuid, text, numeric, date) to authenticated;
+
+-- 7. Security Definer Function: get_dues_pay_info
+-- Server-only function called by /pay/:token to get org, period, amount and due date.
+create or replace function public.get_dues_pay_info(p_pay_token text)
+returns table (
+  org_id uuid,
+  org_name text,
+  period_id uuid,
+  period_name text,
+  amount numeric,
+  due_on date,
+  pay_link_active boolean,
+  period_status text
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  return query
+  select
+    p.org_id,
+    o.name as org_name,
+    p.id as period_id,
+    p.name as period_name,
+    p.amount,
+    p.due_on,
+    p.pay_link_active,
+    p.status as period_status
+  from public.dues_periods p
+  join public.orgs o on o.id = p.org_id
+  where p.pay_token = p_pay_token;
+end;
+$$;
+
+revoke all on function public.get_dues_pay_info(text) from public, anon, authenticated;
+grant execute on function public.get_dues_pay_info(text) to service_role;
+
+-- 8. Security Definer Function: submit_dues_payment
+-- Server-only function that executes with service_role after rate limit & screenshot upload.
+create or replace function public.submit_dues_payment(
+  p_pay_token text,
+  p_email text,
+  p_reference_no text,
+  p_screenshot_path text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_period record;
+  v_member record;
+  v_clean_email_key text;
+  v_clean_ref_key text;
+  v_clean_ref text;
+  v_new_payment_id uuid;
+begin
+  if p_pay_token is null or trim(p_pay_token) = '' then
+    raise exception 'invalid_or_closed_period';
+  end if;
+
+  -- 1. Validate period
+  select id, org_id, amount, status, pay_link_active
+    into v_period
+    from public.dues_periods
+   where pay_token = trim(p_pay_token);
+
+  if v_period.id is null or not v_period.pay_link_active or v_period.status <> 'open' then
+    raise exception 'invalid_or_closed_period';
+  end if;
+
+  -- 2. Validate email & active membership in the org
+  if p_email is null or trim(p_email) = '' then
+    raise exception 'member_not_eligible';
+  end if;
+
+  v_clean_email_key := lower(trim(p_email));
+
+  select id, org_id, status
+    into v_member
+    from public.members
+   where org_id = v_period.org_id
+     and email_key = v_clean_email_key;
+
+  if v_member.id is null or v_member.status <> 'active' then
+    raise exception 'member_not_eligible';
+  end if;
+
+  -- 3. Validate reference number
+  v_clean_ref := trim(p_reference_no);
+  if v_clean_ref is null or char_length(v_clean_ref) < 4 or char_length(v_clean_ref) > 50 then
+    raise exception 'invalid_reference_number';
+  end if;
+
+  -- Strip all whitespace and lowercase for uniqueness key
+  v_clean_ref_key := lower(regexp_replace(v_clean_ref, '\s+', '', 'g'));
+
+  -- 4. Validate screenshot path
+  if p_screenshot_path is null or trim(p_screenshot_path) = '' then
+    raise exception 'missing_screenshot';
+  end if;
+
+  -- 5. Check if member already has active submission for this period
+  if exists (
+    select 1
+      from public.dues_payments
+     where period_id = v_period.id
+       and member_id = v_member.id
+       and status in ('submitted', 'verified')
+  ) then
+    raise exception 'already_submitted';
+  end if;
+
+  -- 6. Check if reference number already used across non-rejected payments in org
+  if exists (
+    select 1
+      from public.dues_payments
+     where org_id = v_period.org_id
+       and reference_key = v_clean_ref_key
+       and status in ('submitted', 'verified')
+  ) then
+    raise exception 'reference_already_used';
+  end if;
+
+  -- 7. Insert payment record (amount copied from dues_periods to preserve history)
+  insert into public.dues_payments (
+    org_id,
+    period_id,
+    member_id,
+    amount,
+    reference_no,
+    reference_key,
+    screenshot_path,
+    status,
+    submitted_at
+  ) values (
+    v_period.org_id,
+    v_period.id,
+    v_member.id,
+    v_period.amount,
+    v_clean_ref,
+    v_clean_ref_key,
+    trim(p_screenshot_path),
+    'submitted',
+    now()
+  )
+  returning id into v_new_payment_id;
+
+  return v_new_payment_id;
+end;
+$$;
+
+revoke all on function public.submit_dues_payment(text, text, text, text) from public, anon, authenticated;
+grant execute on function public.submit_dues_payment(text, text, text, text) to service_role;
+
+
+-- >>> FILE: 20261116120000_e1_cancel_event_not_past.sql
+-- E1: an event that has already ended can no longer be cancelled.
+-- Cancelling is for events that haven't happened (or are still running). A past
+-- event stays in the list as it was, and its attendance is still correctable.
+-- Cancelling an already cancelled event is still a harmless no-op, and cancelling
+-- still closes the check-in window (as in E2).
+create or replace function public.cancel_event(
+  target_event uuid
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  event_org uuid;
+  current_status text;
+  event_end timestamptz;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, status, ends_at
+    into event_org, current_status, event_end
+    from public.events
+   where id = target_event;
+
+  if event_org is null then
+    raise exception 'event_not_found';
+  end if;
+
+  if not public.is_org_member(event_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  if current_status = 'cancelled' then
+    return 'ok';
+  end if;
+
+  if event_end < now() then
+    raise exception 'event_ended';
+  end if;
+
+  update public.events
+     set status = 'cancelled',
+         checkin_open = false,
+         updated_at = now()
+   where id = target_event;
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.cancel_event(uuid) from public, anon;
+grant execute on function public.cancel_event(uuid) to authenticated;
+
+
+-- >>> FILE: 20261116120100_p3_dues_reviews.sql
+-- P3: Verify or Reject Payment Submission
+-- 1. Create dues_payment_events table for audit history of reviews and undos
+
+create table if not exists public.dues_payment_events (
+  id uuid primary key default gen_random_uuid(),
+  payment_id uuid not null references public.dues_payments(id) on delete cascade,
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  action text not null check (action in ('verified', 'rejected', 'undone')),
+  actor_id uuid not null references auth.users(id) on delete cascade,
+  reason text null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists dues_payment_events_payment_idx
+  on public.dues_payment_events (payment_id, created_at desc);
+
+create index if not exists dues_payment_events_org_idx
+  on public.dues_payment_events (org_id, created_at desc);
+
+-- Row Level Security for dues_payment_events
+alter table public.dues_payment_events enable row level security;
+
+drop policy if exists "Officers can read dues payment events in their org" on public.dues_payment_events;
+create policy "Officers can read dues payment events in their org"
+  on public.dues_payment_events
+  for select
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- Direct writes (insert, update, delete) are prohibited from the client API.
+revoke insert, update, delete on public.dues_payment_events from public, anon, authenticated;
+grant select on public.dues_payment_events to authenticated;
+grant all on public.dues_payment_events to service_role;
+
+-- 2. Security Definer Function: verify_dues_payment
+-- Marks a submitted payment as verified, recording the reviewer and timestamp.
+-- Blocks self-review and prevents double-decisions via concurrency check.
+create or replace function public.verify_dues_payment(
+  p_payment_id uuid
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_email text;
+  v_payment record;
+  v_member_email_key text;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select id, org_id, member_id, status
+    into v_payment
+    from public.dues_payments
+   where id = p_payment_id;
+
+  if v_payment.id is null then
+    raise exception 'payment_not_found';
+  end if;
+
+  if not public.is_org_member(v_payment.org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  -- Self-review guard: Officer cannot verify their own payment
+  select email into v_caller_email
+    from public.officers
+   where id = v_caller_id;
+
+  select email_key into v_member_email_key
+    from public.members
+   where id = v_payment.member_id;
+
+  if v_caller_email is not null and lower(trim(v_caller_email)) = v_member_email_key then
+    raise exception 'cannot_review_own_payment';
+  end if;
+
+  -- Atomic transition from submitted -> verified
+  update public.dues_payments
+     set status = 'verified',
+         reviewed_by = v_caller_id,
+         reviewed_at = now()
+   where id = p_payment_id
+     and status = 'submitted';
+
+  if not found then
+    raise exception 'already_reviewed';
+  end if;
+
+  -- Record audit event
+  insert into public.dues_payment_events (
+    payment_id,
+    org_id,
+    action,
+    actor_id,
+    reason,
+    created_at
+  ) values (
+    p_payment_id,
+    v_payment.org_id,
+    'verified',
+    v_caller_id,
+    null,
+    now()
+  );
+end;
+$$;
+
+revoke all on function public.verify_dues_payment(uuid) from public, anon;
+grant execute on function public.verify_dues_payment(uuid) to authenticated;
+
+-- 3. Security Definer Function: reject_dues_payment
+-- Marks a submitted payment as rejected with a mandatory reason.
+-- Allows the member to subsequently submit a corrected payment.
+create or replace function public.reject_dues_payment(
+  p_payment_id uuid,
+  p_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_caller_email text;
+  v_payment record;
+  v_member_email_key text;
+  v_clean_reason text;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  v_clean_reason := trim(p_reason);
+  if v_clean_reason is null or char_length(v_clean_reason) < 3 then
+    raise exception 'reason_required';
+  end if;
+
+  if char_length(v_clean_reason) > 500 then
+    raise exception 'reason_too_long';
+  end if;
+
+  select id, org_id, member_id, status
+    into v_payment
+    from public.dues_payments
+   where id = p_payment_id;
+
+  if v_payment.id is null then
+    raise exception 'payment_not_found';
+  end if;
+
+  if not public.is_org_member(v_payment.org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  -- Self-review guard: Officer cannot reject their own payment
+  select email into v_caller_email
+    from public.officers
+   where id = v_caller_id;
+
+  select email_key into v_member_email_key
+    from public.members
+   where id = v_payment.member_id;
+
+  if v_caller_email is not null and lower(trim(v_caller_email)) = v_member_email_key then
+    raise exception 'cannot_review_own_payment';
+  end if;
+
+  -- Atomic transition from submitted -> rejected
+  update public.dues_payments
+     set status = 'rejected',
+         reject_reason = v_clean_reason,
+         reviewed_by = v_caller_id,
+         reviewed_at = now()
+   where id = p_payment_id
+     and status = 'submitted';
+
+  if not found then
+    raise exception 'already_reviewed';
+  end if;
+
+  -- Record audit event
+  insert into public.dues_payment_events (
+    payment_id,
+    org_id,
+    action,
+    actor_id,
+    reason,
+    created_at
+  ) values (
+    p_payment_id,
+    v_payment.org_id,
+    'rejected',
+    v_caller_id,
+    v_clean_reason,
+    now()
+  );
+end;
+$$;
+
+revoke all on function public.reject_dues_payment(uuid, text) from public, anon;
+grant execute on function public.reject_dues_payment(uuid, text) to authenticated;
+
+-- 4. Security Definer Function: undo_dues_payment_verification
+-- Allows an org admin to reverse a verified payment back to submitted with an audit reason.
+create or replace function public.undo_dues_payment_verification(
+  p_payment_id uuid,
+  p_reason text
+)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_payment record;
+  v_clean_reason text;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  v_clean_reason := trim(p_reason);
+  if v_clean_reason is null or char_length(v_clean_reason) < 3 then
+    raise exception 'reason_required';
+  end if;
+
+  if char_length(v_clean_reason) > 500 then
+    raise exception 'reason_too_long';
+  end if;
+
+  select id, org_id, member_id, status
+    into v_payment
+    from public.dues_payments
+   where id = p_payment_id;
+
+  if v_payment.id is null then
+    raise exception 'payment_not_found';
+  end if;
+
+  if not public.is_org_admin(v_payment.org_id) then
+    raise exception 'admin_only';
+  end if;
+
+  -- Atomic transition from verified -> submitted
+  update public.dues_payments
+     set status = 'submitted',
+         reviewed_by = null,
+         reviewed_at = null
+   where id = p_payment_id
+     and status = 'verified';
+
+  if not found then
+    raise exception 'invalid_status_transition';
+  end if;
+
+  -- Record audit event
+  insert into public.dues_payment_events (
+    payment_id,
+    org_id,
+    action,
+    actor_id,
+    reason,
+    created_at
+  ) values (
+    p_payment_id,
+    v_payment.org_id,
+    'undone',
+    v_caller_id,
+    v_clean_reason,
+    now()
+  );
+end;
+$$;
+
+revoke all on function public.undo_dues_payment_verification(uuid, text) from public, anon;
+grant execute on function public.undo_dues_payment_verification(uuid, text) to authenticated;
+
+-- 5. Security Definer Function: get_dues_review_queue
+-- Returns submitted payments for a period ordered oldest first with member details.
+create or replace function public.get_dues_review_queue(
+  p_org_id uuid,
+  p_period_id uuid
+)
+returns table (
+  payment_id uuid,
+  member_id uuid,
+  member_name text,
+  member_email text,
+  amount numeric,
+  reference_no text,
+  screenshot_path text,
+  submitted_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if not public.is_org_member(p_org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  return query
+  select
+    p.id as payment_id,
+    p.member_id,
+    m.full_name as member_name,
+    m.email as member_email,
+    p.amount,
+    p.reference_no,
+    p.screenshot_path,
+    p.submitted_at
+  from public.dues_payments p
+  join public.members m on m.id = p.member_id
+  where p.org_id = p_org_id
+    and p.period_id = p_period_id
+    and p.status = 'submitted'
+  order by p.submitted_at asc, p.id asc;
+end;
+$$;
+
+revoke all on function public.get_dues_review_queue(uuid, uuid) from public, anon;
+grant execute on function public.get_dues_review_queue(uuid, uuid) to authenticated;
+
+
+
+
+
+
+-- >>> FILE: 20261117120000_p4_dues_dashboard.sql
+-- P4: Dues Status Dashboard
+-- 1. Index on dues_payments for status-based dashboard filtering and counting
+create index if not exists dues_payments_org_period_status_idx
+  on public.dues_payments (org_id, period_id, status);
+
+create index if not exists dues_payments_period_member_status_idx
+  on public.dues_payments (period_id, member_id, status);
+
+-- 2. Security Definer Function: get_dues_period_dashboard
+-- Aggregates metrics (collected, expected, outstanding, status counts) and returns paged member dues records.
+create or replace function public.get_dues_period_dashboard(
+  p_period_id uuid,
+  p_search text default null,
+  p_status text default null,
+  p_page int default 1,
+  p_page_size int default 20
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_period record;
+  v_page int;
+  v_page_size int;
+  v_offset int;
+  v_result jsonb;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select id, org_id, name, amount, due_on, status, pay_token, pay_link_active
+    into v_period
+    from public.dues_periods
+   where id = p_period_id;
+
+  if v_period.id is null then
+    raise exception 'period_not_found';
+  end if;
+
+  if not public.is_org_member(v_period.org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  v_page := coalesce(p_page, 1);
+  if v_page < 1 then
+    v_page := 1;
+  end if;
+
+  v_page_size := coalesce(p_page_size, 20);
+  if v_page_size < 1 then
+    v_page_size := 20;
+  elsif v_page_size > 100 then
+    v_page_size := 100;
+  end if;
+
+  v_offset := (v_page - 1) * v_page_size;
+
+  with period_payments as (
+    -- For each member, find their primary payment for this period:
+    -- Verified > Submitted > Rejected (latest by submitted_at)
+    select distinct on (p.member_id)
+      p.id as payment_id,
+      p.member_id,
+      p.amount,
+      p.reference_no,
+      p.status as payment_status,
+      p.reject_reason,
+      p.submitted_at,
+      p.reviewed_at
+    from public.dues_payments p
+    where p.period_id = p_period_id
+    order by p.member_id,
+      case p.status
+        when 'verified' then 1
+        when 'submitted' then 2
+        when 'rejected' then 3
+        else 4
+      end,
+      p.submitted_at desc,
+      p.id desc
+  ),
+  candidate_members as (
+    -- Include:
+    -- 1. All active members of the organization
+    -- 2. Non-active members who made a payment for this period
+    select
+      m.id as member_id,
+      m.full_name,
+      m.email,
+      m.email_key,
+      m.status as member_status,
+      m.created_at as member_created_at,
+      pp.payment_id,
+      pp.amount as payment_amount,
+      pp.reference_no,
+      pp.payment_status,
+      pp.reject_reason,
+      pp.submitted_at,
+      pp.reviewed_at,
+      case
+        when pp.payment_status = 'verified' then 'paid'
+        when pp.payment_status = 'submitted' then 'pending'
+        when pp.payment_status = 'rejected' then 'rejected'
+        else 'unpaid'
+      end as dues_status
+    from public.members m
+    left join period_payments pp on pp.member_id = m.id
+    where m.org_id = v_period.org_id
+      and (m.status = 'active' or pp.payment_id is not null)
+  ),
+  summary_metrics as (
+    select
+      coalesce(count(*) filter (where member_status = 'active'), 0) as active_member_count,
+      coalesce(count(*), 0) as total_member_count,
+      coalesce(count(*) filter (where dues_status = 'paid'), 0) as paid_count,
+      coalesce(count(*) filter (where dues_status = 'pending'), 0) as pending_count,
+      coalesce(count(*) filter (where dues_status = 'rejected'), 0) as rejected_count,
+      coalesce(count(*) filter (where dues_status = 'unpaid'), 0) as unpaid_count,
+      -- Collected: verified payments only (including verified payments by deactivated members)
+      coalesce(sum(payment_amount) filter (where payment_status = 'verified'), 0.00)::numeric(10,2) as collected_amount,
+      -- Expected: active members * period amount
+      (coalesce(count(*) filter (where member_status = 'active'), 0) * v_period.amount)::numeric(10,2) as expected_amount,
+      -- Outstanding: active members who owe (unpaid, pending, or rejected) * period amount
+      (coalesce(count(*) filter (where member_status = 'active' and dues_status in ('unpaid', 'pending', 'rejected')), 0) * v_period.amount)::numeric(10,2) as outstanding_amount
+    from candidate_members
+  ),
+  filtered_members as (
+    select *
+    from candidate_members cm
+    where (
+      p_status is null
+      or trim(p_status) = ''
+      or lower(trim(p_status)) = 'all'
+      or cm.dues_status = lower(trim(p_status))
+    )
+    and (
+      p_search is null
+      or trim(p_search) = ''
+      or cm.full_name ilike '%' || trim(p_search) || '%'
+      or cm.email ilike '%' || trim(p_search) || '%'
+    )
+  ),
+  paged_members as (
+    select
+      member_id,
+      full_name,
+      email,
+      member_status,
+      dues_status,
+      payment_id,
+      payment_amount,
+      reference_no,
+      payment_status,
+      reject_reason,
+      submitted_at,
+      reviewed_at
+    from filtered_members
+    order by full_name asc, member_id asc
+    limit v_page_size offset v_offset
+  ),
+  filtered_count as (
+    select count(*) as total_matching from filtered_members
+  )
+  select jsonb_build_object(
+    'period', jsonb_build_object(
+      'id', v_period.id,
+      'org_id', v_period.org_id,
+      'name', v_period.name,
+      'amount', v_period.amount,
+      'due_on', v_period.due_on,
+      'status', v_period.status,
+      'pay_token', v_period.pay_token,
+      'pay_link_active', v_period.pay_link_active
+    ),
+    'summary', jsonb_build_object(
+      'collected_amount', sm.collected_amount,
+      'expected_amount', sm.expected_amount,
+      'outstanding_amount', sm.outstanding_amount,
+      'paid_count', sm.paid_count,
+      'pending_count', sm.pending_count,
+      'rejected_count', sm.rejected_count,
+      'unpaid_count', sm.unpaid_count,
+      'active_member_count', sm.active_member_count,
+      'total_member_count', sm.total_member_count
+    ),
+    'members', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'member_id', pm.member_id,
+          'full_name', pm.full_name,
+          'email', pm.email,
+          'member_status', pm.member_status,
+          'dues_status', pm.dues_status,
+          'payment_id', pm.payment_id,
+          'amount', pm.payment_amount,
+          'reference_no', pm.reference_no,
+          'payment_status', pm.payment_status,
+          'reject_reason', pm.reject_reason,
+          'submitted_at', pm.submitted_at,
+          'reviewed_at', pm.reviewed_at
+        )
+      )
+      from paged_members pm
+    ), '[]'::jsonb),
+    'pagination', jsonb_build_object(
+      'page', v_page,
+      'page_size', v_page_size,
+      'total_matching', fc.total_matching,
+      'total_pages', case
+        when fc.total_matching = 0 then 0
+        else ceil(fc.total_matching::numeric / v_page_size)::int
+      end
+    )
+  )
+  into v_result
+  from summary_metrics sm
+  cross join filtered_count fc;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_dues_period_dashboard(uuid, text, text, int, int) from public, anon;
+grant execute on function public.get_dues_period_dashboard(uuid, text, text, int, int) to authenticated;
+
+
+-- >>> FILE: 20261118120000_p5_dues_reminders.sql
+-- P5: Payment Reminders
+-- 1. Create dues_reminders log table to track sent, failed, bounced, or skipped reminders
+-- and enforce the 24-hour cooldown rule.
+
+create table if not exists public.dues_reminders (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  period_id uuid not null references public.dues_periods(id) on delete cascade,
+  member_id uuid not null references public.members(id) on delete cascade,
+  sent_by uuid not null references auth.users(id) on delete cascade,
+  sent_at timestamptz not null default now(),
+  status text not null check (status in ('sent', 'failed', 'bounced', 'skipped')),
+  error_message text null
+);
+
+-- Indexes for efficient recipient checking, cooldown queries, and status filtering
+create index if not exists dues_reminders_org_period_idx
+  on public.dues_reminders (org_id, period_id);
+
+create index if not exists dues_reminders_cooldown_idx
+  on public.dues_reminders (org_id, period_id, member_id, sent_at desc);
+
+create index if not exists dues_reminders_period_status_idx
+  on public.dues_reminders (period_id, status);
+
+-- 2. Row Level Security for dues_reminders
+alter table public.dues_reminders enable row level security;
+
+drop policy if exists "Officers can read dues reminders in their org" on public.dues_reminders;
+create policy "Officers can read dues reminders in their org"
+  on public.dues_reminders
+  for select
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- Direct client insert, update, and delete are prohibited.
+revoke insert, update, delete on public.dues_reminders from public, anon, authenticated;
+grant select on public.dues_reminders to authenticated;
+grant all on public.dues_reminders to service_role;
+
+-- 3. Security Definer Function: get_dues_reminder_recipients
+-- Gathers period details, counts, and recipient evaluations (Paid, Pending, Unpaid, and 24h cooldown).
+create or replace function public.get_dues_reminder_recipients(
+  p_period_id uuid
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_period record;
+  v_org_name text;
+  v_result jsonb;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select p.id, p.org_id, p.name, p.amount, p.due_on, p.status, p.pay_token
+    into v_period
+    from public.dues_periods p
+   where p.id = p_period_id;
+
+  if v_period.id is null then
+    raise exception 'period_not_found';
+  end if;
+
+  if not public.is_org_member(v_period.org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  select o.name into v_org_name
+    from public.orgs o
+   where o.id = v_period.org_id;
+
+  with period_payments as (
+    -- Primary payment status per member (verified > submitted > rejected)
+    select distinct on (p.member_id)
+      p.member_id,
+      p.status as payment_status
+      from public.dues_payments p
+     where p.period_id = p_period_id
+       and p.org_id = v_period.org_id
+     order by p.member_id,
+       case p.status
+         when 'verified' then 1
+         when 'submitted' then 2
+         when 'rejected' then 3
+         else 4
+       end asc,
+       p.submitted_at desc
+  ),
+  member_evaluations as (
+    select
+      m.id as member_id,
+      m.full_name,
+      m.email,
+      case
+        when pp.payment_status = 'verified' then 'paid'
+        when pp.payment_status = 'submitted' then 'pending'
+        else 'unpaid'
+      end as dues_status,
+      lr.sent_at as last_reminded_at,
+      case
+        when lr.sent_at is not null and lr.sent_at > (now() - interval '24 hours') then true
+        else false
+      end as is_recently_reminded
+    from public.members m
+    left join period_payments pp on pp.member_id = m.id
+    left join lateral (
+      select r.sent_at
+        from public.dues_reminders r
+       where r.org_id = v_period.org_id
+         and r.period_id = p_period_id
+         and r.member_id = m.id
+         and r.status = 'sent'
+         and r.sent_at > (now() - interval '24 hours')
+       order by r.sent_at desc
+       limit 1
+    ) lr on true
+    where m.org_id = v_period.org_id
+      and m.status = 'active'
+  ),
+  filtered_recipients as (
+    select
+      me.member_id,
+      me.full_name,
+      me.email,
+      me.dues_status,
+      (me.dues_status = 'unpaid' and not me.is_recently_reminded) as is_eligible,
+      case
+        when me.dues_status = 'paid' then 'paid'
+        when me.dues_status = 'pending' then 'pending'
+        when me.is_recently_reminded then 'recently_reminded'
+        else null
+      end as skip_reason,
+      me.last_reminded_at
+    from member_evaluations me
+  )
+  select jsonb_build_object(
+    'period', jsonb_build_object(
+      'id', v_period.id,
+      'org_id', v_period.org_id,
+      'org_name', coalesce(v_org_name, 'Organization'),
+      'period_name', v_period.name,
+      'amount', v_period.amount,
+      'due_on', v_period.due_on,
+      'pay_token', v_period.pay_token,
+      'status', v_period.status,
+      'is_closed', (v_period.status = 'closed')
+    ),
+    'counts', jsonb_build_object(
+      'total_active_members', (select count(*)::int from member_evaluations),
+      'total_unpaid', (select count(*)::int from member_evaluations where dues_status = 'unpaid'),
+      'eligible', (select count(*)::int from filtered_recipients where is_eligible = true),
+      'skipped_24h', (select count(*)::int from filtered_recipients where skip_reason = 'recently_reminded'),
+      'paid_or_pending', (select count(*)::int from member_evaluations where dues_status in ('paid', 'pending'))
+    ),
+    'recipients', coalesce((
+      select jsonb_agg(
+        jsonb_build_object(
+          'member_id', fr.member_id,
+          'full_name', fr.full_name,
+          'email', fr.email,
+          'is_eligible', fr.is_eligible,
+          'skip_reason', fr.skip_reason,
+          'last_reminded_at', fr.last_reminded_at
+        )
+        order by fr.is_eligible desc, fr.full_name asc
+      )
+      from filtered_recipients fr
+      where fr.dues_status = 'unpaid' or fr.is_eligible = true
+    ), '[]'::jsonb)
+  ) into v_result;
+
+  return v_result;
+end;
+$$;
+
+revoke all on function public.get_dues_reminder_recipients(uuid) from public, anon;
+grant execute on function public.get_dues_reminder_recipients(uuid) to authenticated;
+grant execute on function public.get_dues_reminder_recipients(uuid) to service_role;
+
+-- 4. Security Definer Function: log_dues_reminder
+-- Records a reminder dispatch attempt (sent, failed, bounced, skipped) in dues_reminders.
+create or replace function public.log_dues_reminder(
+  p_period_id uuid,
+  p_member_id uuid,
+  p_status text,
+  p_error_message text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_caller_id uuid;
+  v_period record;
+  v_member record;
+  v_reminder_id uuid;
+begin
+  v_caller_id := auth.uid();
+  if v_caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if p_status not in ('sent', 'failed', 'bounced', 'skipped') then
+    raise exception 'invalid_reminder_status';
+  end if;
+
+  select id, org_id, status
+    into v_period
+    from public.dues_periods
+   where id = p_period_id;
+
+  if v_period.id is null then
+    raise exception 'period_not_found';
+  end if;
+
+  if not public.is_org_member(v_period.org_id) then
+    raise exception 'not_authorized';
+  end if;
+
+  -- Ensure member belongs to the same org
+  select id, org_id
+    into v_member
+    from public.members
+   where id = p_member_id;
+
+  if v_member.id is null or v_member.org_id != v_period.org_id then
+    raise exception 'member_not_found';
+  end if;
+
+  insert into public.dues_reminders (
+    org_id,
+    period_id,
+    member_id,
+    sent_by,
+    sent_at,
+    status,
+    error_message
+  ) values (
+    v_period.org_id,
+    p_period_id,
+    p_member_id,
+    v_caller_id,
+    now(),
+    p_status,
+    p_error_message
+  )
+  returning id into v_reminder_id;
+
+  return v_reminder_id;
+end;
+$$;
+
+revoke all on function public.log_dues_reminder(uuid, uuid, text, text) from public, anon;
+grant execute on function public.log_dues_reminder(uuid, uuid, text, text) to authenticated;
+grant execute on function public.log_dues_reminder(uuid, uuid, text, text) to service_role;
