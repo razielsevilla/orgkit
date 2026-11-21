@@ -6,6 +6,7 @@ import { ROUTES } from "@/src/lib/routes";
 import { requireOwner } from "@/src/lib/auth/owner";
 import { getUsageReport } from "@/src/lib/owner/usage-queries";
 import { UsageTable } from "@/src/components/owner/usage-table";
+import { OwnerNav } from "@/src/components/owner/owner-nav";
 import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
 
 // Only the owner can open this, and there is nothing here for a search engine
@@ -69,6 +70,7 @@ export default function OwnerUsagePage() {
         >
           ← Back to OrgKit
         </Link>
+        <OwnerNav current="usage" />
 
         <h1
           style={{

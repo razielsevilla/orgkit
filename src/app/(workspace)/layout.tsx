@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { requireOfficer } from "@/src/lib/auth/officer";
+import { FeedbackButton } from "@/src/components/feedback/feedback-button";
 
 // Reads the session, so it streams in behind the Suspense boundary below.
 // Signed-out visitors go to sign-in; officers who haven't agreed to the
@@ -8,7 +9,13 @@ import { requireOfficer } from "@/src/lib/auth/officer";
 async function OfficerGate({ children }: { children: React.ReactNode }) {
   await connection();
   await requireOfficer();
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {/* Every workspace page, the new-org screen and the owner pages */}
+      <FeedbackButton />
+    </>
+  );
 }
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {

@@ -55,6 +55,15 @@ export function getDuesPayAttemptsPerMinute(): number {
   return positiveIntOrDefault(process.env.DUES_PAY_ATTEMPTS_PER_MINUTE, 30);
 }
 
+/**
+ * Feedback messages allowed per device per minute (FEEDBACK_ATTEMPTS_PER_MINUTE).
+ * Default 5: a person writes one message at a time, so this is generous for a
+ * person and low for a script. Counted per device, like the other limits.
+ */
+export function getFeedbackAttemptsPerMinute(): number {
+  return positiveIntOrDefault(process.env.FEEDBACK_ATTEMPTS_PER_MINUTE, 5);
+}
+
 /** Used outside production only, when no secret is configured at all. */
 const DEV_RATE_LIMIT_SECRET = "orgkit-dev-only-rate-limit-secret";
 

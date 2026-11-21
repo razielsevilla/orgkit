@@ -162,6 +162,13 @@ export default function PrivacyPage() {
                 per-minute attempt count. The address itself is not stored.
               </li>
               <li>
+                <strong style={{ color: "var(--color-ink)" }}>Feedback.</strong> When a signed-in officer sends
+                feedback from the app, we keep the message, the page they were on (the page name only, with
+                ids removed), their org, their name and email, and the time. Only the OrgKit product owner
+                can read it. It is kept until the owner deletes it, and it is removed if the officer&apos;s
+                record is removed.
+              </li>
+              <li>
                 <strong style={{ color: "var(--color-ink)" }}>Minimal permissions.</strong> OrgKit requests
                 only the minimal <code>openid</code>, <code>email</code>, and <code>profile</code> scopes.
                 We never request or access your Gmail, Google Drive, or Google Sheets.

@@ -34,6 +34,8 @@ describe("/privacy page", () => {
       "dues reminder email",
       "Exports and rate limiting",
       "hashed",
+      "Feedback",
+      "Only the OrgKit product owner",
     ]) {
       expect(html, phrase).toContain(phrase);
     }
