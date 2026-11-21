@@ -43,22 +43,25 @@ export function MemberJoinDialog({
   initialToken = null,
   onTokenChange,
 }: MemberJoinDialogProps) {
-  const [token, setToken] = useState<string | null>(initialToken);
+  const [token, setToken] = useState<string | null>(initialToken ?? null);
+  const [prevInitialToken, setPrevInitialToken] = useState(initialToken);
   const [confirming, setConfirming] = useState<Confirming>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [qr, setQr] = useState<{ forUrl: string; dataUrl: string } | null>(null);
   const [pending, startTransition] = useTransition();
 
+  if (initialToken !== prevInitialToken) {
+    setPrevInitialToken(initialToken);
+    setToken(initialToken ?? null);
+  }
+
   // If initial token wasn't provided, fetch the active link on mount
   useEffect(() => {
-    if (initialToken !== undefined && initialToken !== null) {
-      setToken(initialToken);
-      return;
-    }
+    if (initialToken) return;
     let cancelled = false;
     getJoinLink(orgId).then((activeToken) => {
-      if (!cancelled) {
+      if (!cancelled && activeToken) {
         setToken(activeToken);
         onTokenChange?.(activeToken);
       }
