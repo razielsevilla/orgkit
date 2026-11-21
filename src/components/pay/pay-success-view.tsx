@@ -83,12 +83,40 @@ export function PaySuccessView({
             fontSize: 14.5,
             lineHeight: 1.5,
             color: "var(--color-muted-strong)",
-            marginBottom: 20,
+            marginBottom: 16,
             maxWidth: 360,
           }}
         >
           {copy.successSubtitle}
         </CardDescription>
+
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 20 }}>
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "4px 12px",
+              borderRadius: 9999,
+              backgroundColor: "var(--color-amber-soft, #fef3c7)",
+              border: "1px solid var(--color-amber-line, #fde68a)",
+              color: "var(--color-amber-strong, #b45309)",
+              fontSize: 12.5,
+              fontWeight: 600,
+            }}
+          >
+            <span
+              aria-hidden="true"
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                backgroundColor: "var(--color-amber, #d97706)",
+              }}
+            />
+            {language === "fil" ? "Nasa pagsusuri ng ingat-yaman" : "Awaiting treasurer verification"}
+          </span>
+        </div>
 
         {/* Receipt Details Card */}
         <div
