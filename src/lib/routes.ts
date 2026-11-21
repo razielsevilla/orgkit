@@ -16,6 +16,8 @@ export const ROUTES = {
   authCallback: "/auth/callback",
   /** Where an officer with no org yet creates one */
   newWorkspace: "/workspace/new",
+  /** The product owner's weekly usage report (T3). Anyone else gets a 404 */
+  ownerUsage: "/owner/usage",
 } as const;
 
 /** An org's home. The only URL for it: /org/:id is redirected here. */
@@ -137,6 +139,7 @@ export function isPublicPath(pathname: string): boolean {
 export const PRIVATE_ROUTES: readonly string[] = [
   "/consent",
   "/workspace/new",
+  "/owner/usage",
   "/workspace/:id",
   "/workspace/:id/members",
   "/workspace/:id/dues",

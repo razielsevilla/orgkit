@@ -48,6 +48,7 @@ layout but is not part of the URL.
 | URL | Who | What it is | File |
 |---|---|---|---|
 | `/workspace/new` | Any officer | Create your org's workspace | `(workspace)/workspace/new/page.tsx` |
+| `/owner/usage` | **Product owner** only, listed in `platform_owners` (everyone else, including org admins, gets a 404). There is no link to it in the app; the owner opens it by URL | **Weekly usage** (T3): the last 4 completed weeks of active and inactive orgs, events created, check-ins and active officers, as a table (cards at 640px and below). Details in [usage-metrics.md](usage-metrics.md) | `(workspace)/owner/usage/page.tsx` |
 | `/workspace/:id` | Officer of that org | **Home**: workspace landing | `(workspace)/workspace/[id]/page.tsx` |
 | `/workspace/:id/members` | Officer of that org | **Members**: view and search roster. Admins also get **Import** (a CSV of people to invite, R3) and an **Invited** view. These are a dialog and a tab on this page, not separate URLs; the CSV upload goes through a Server Action, so `experimental.serverActions.bodySizeLimit` is set in `next.config.ts` | `(workspace)/workspace/[id]/members/page.tsx` |
 | `/workspace/:id/dues` | Officer of that org | **Dues**: set and track dues periods, manage payment links, and review submitted payments in the review queue | `(workspace)/workspace/[id]/dues/page.tsx` |

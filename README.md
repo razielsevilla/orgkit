@@ -59,8 +59,16 @@ Set these in `.env.local` (never commit it). `.env.example` lists them all.
    `http://localhost:3000/auth/callback`). The Google OAuth client must allow
    Supabase's own callback URL shown on the Google provider page.
 4. **Enable `pg_cron`** (Database, Extensions), then re-run
-   `20261103100000_a3_schedule_invite_cleanup.sql`. Without it the migration
-   only prints a notice, and old invite rows are never deleted.
+   `20261103100000_a3_schedule_invite_cleanup.sql`,
+   `20261108120100_r3_schedule_member_invite_cleanup.sql` and
+   `20261121120100_t3_schedule_weekly_usage_report.sql`. Without it these
+   migrations only print a notice: old invite rows are never deleted and the
+   weekly usage report is never produced.
+5. **Name the product owner** (once, in the SQL editor), so they can open
+   `/owner/usage`. Nobody else can, and the app has no screen for this:
+   `insert into public.platform_owners (officer_id) select id from public.officers where email = '<owner email>';`
+   The owner must have signed in once first. See
+   [docs/usage-metrics.md](docs/usage-metrics.md).
 
 The app only asks Google for the `openid`, `email` and `profile` scopes.
 
@@ -86,6 +94,7 @@ into `main`.
 | | |
 |---|---|
 | [docs/routes.md](docs/routes.md) | Every URL, who can open it, and what runs before it |
+| [docs/usage-metrics.md](docs/usage-metrics.md) | The weekly usage report: what it counts, how it runs, how to check it |
 | [docs/techstack.md](docs/techstack.md) | Stack choices and open decisions |
 | [docs/design.md](docs/design.md), [docs/palette.md](docs/palette.md) | Design notes and colors |
 | `src/app/` | Pages and server actions |
