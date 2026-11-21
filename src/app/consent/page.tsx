@@ -72,7 +72,7 @@ async function ConsentCard() {
           Before you continue
         </h2>
         <p style={{ marginTop: 14, marginBottom: 0, fontSize: 16, lineHeight: 1.5, color: "var(--color-muted-strong)" }}>
-          We use your name and email from Google to run OrgKit. Only the officers of your org can see them.
+          We use your name and email from Google to run OrgKit. Only the officers of your organization can see them.
         </p>
         <ConsentForm />
     </div>
