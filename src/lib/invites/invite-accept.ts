@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { logger } from "../logger.ts";
 
 /**
  * What happened when a signed-in officer tried to use an invite link.
@@ -20,7 +21,7 @@ export async function acceptInvite(
   tokenHash: string
 ): Promise<AcceptInviteOutcome> {
   const { data, error } = await supabase.rpc("accept_invite", { p_token_hash: tokenHash });
-  if (error) console.error("Error calling accept_invite:", error);
+  if (error) logger.error("invite.accept_rpc_failed", { error });
 
   switch (data?.status) {
     case "success":

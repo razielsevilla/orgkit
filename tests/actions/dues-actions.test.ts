@@ -70,7 +70,7 @@ const {
   closeDuesPeriod,
   getDuesPayLink,
   setDuesPayLink,
-} = await import("@/src/app/(workspace)/dues-actions");
+} = await import("@/src/app/(workspace)/dues-periods-actions");
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 const PERIOD_ID = "33333333-3333-4333-8333-333333333333";

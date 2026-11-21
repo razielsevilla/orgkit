@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { isUuid } from "@/src/lib/validation";
-import { DUES_PAGE_SIZE, DUES_STATUS_FILTERS, type DuesStatusFilter } from "./dues-dashboard";
+import { DUES_PAGE_SIZE, DUES_STATUS_FILTERS } from "./dues-dashboard";
 
 export const dashboardQuerySchema = z.object({
   periodId: z.string().refine(isUuid, { message: "Invalid period ID" }),

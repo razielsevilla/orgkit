@@ -150,10 +150,22 @@ describe("auth callback: session and officer lookup", () => {
   });
 
   it("signs out when the officer row and the auth user disagree", async () => {
+    vi.mocked(console.error).mockClear();
     state.officer = { id: "someone-else", email: "x@school.edu" };
     expect(destination(await callback("?code=abc"))).toBe("/signin?error=google_error");
     expect(state.signOutCalls).toBe(1);
     expect(state.updates).toHaveLength(0);
+
+    // The security-relevant case is logged at error level, with IDs and no email
+    const lines = vi.mocked(console.error).mock.calls.map(([line]) => String(line));
+    expect(lines).toHaveLength(1);
+    const entry = JSON.parse(lines[0]);
+    expect(entry).toMatchObject({
+      level: "error",
+      event: "auth_callback.officer_id_mismatch",
+      context: { officerId: "someone-else", userId: ME },
+    });
+    expect(lines[0]).not.toContain("school.edu");
   });
 
   it("signs out when recording the sign-in fails", async () => {

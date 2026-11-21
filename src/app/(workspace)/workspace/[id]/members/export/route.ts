@@ -1,4 +1,5 @@
 import { getCallerOrgMembership } from "@/src/lib/orgs/org-access";
+import { logger } from "@/src/lib/logger";
 import { can } from "@/src/lib/orgs/permissions";
 import { isUuid } from "@/src/lib/validation";
 import {
@@ -135,7 +136,7 @@ export async function POST(request: Request, { params }: RouteContext) {
           // A short page was the last one; the next pull records and closes
           page = page.length < EXPORT_PAGE_SIZE ? [] : null;
         } catch (err) {
-          console.error("Member export failed:", err instanceof Error ? err.message : "unknown");
+          logger.error("member_export.stream_failed", { orgId, error: err });
           controller.error(err);
         }
       },
@@ -154,7 +155,7 @@ export async function POST(request: Request, { params }: RouteContext) {
       },
     });
   } catch (err) {
-    console.error("Member export failed:", err instanceof Error ? err.message : "unknown");
+    logger.error("member_export.failed", { orgId, error: err });
     return problem(500, "failed", GENERIC);
   }
 }

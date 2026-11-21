@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
 import { withOrgPermission, type OrgAccessError, type OrgCaller } from "@/src/lib/orgs/org-access";
@@ -272,7 +273,7 @@ export async function getMemberInvites(
       try {
         await createAdminClient().rpc("cleanup_expired_member_invites");
       } catch (err) {
-        console.error("Could not clean up expired invitations:", err);
+        logger.error("member_invites.cleanup_failed", { error: err });
       }
 
       const nowIso = new Date().toISOString();

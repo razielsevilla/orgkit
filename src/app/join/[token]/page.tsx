@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { logger } from "@/src/lib/logger";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import Image from "next/image";
@@ -85,7 +86,11 @@ async function JoinContent({ params }: { params: Promise<{ token: string }> }) {
   // The consent text promises a privacy contact. Without one the page must not
   // collect anything, so it looks the same as an inactive link.
   const contactEmail = parseContactEmail(process.env.PRIVACY_CONTACT_EMAIL);
-  if (!contactEmail) console.error("PRIVACY_CONTACT_EMAIL is not set: the join page is closed.");
+  if (!contactEmail) {
+    logger.error("join_page.privacy_contact_missing", "The join page is closed: PRIVACY_CONTACT_EMAIL is not set.", {
+      variable: "PRIVACY_CONTACT_EMAIL",
+    });
+  }
 
   const orgName = contactEmail ? await getJoinOrgName(token) : null;
 

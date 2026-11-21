@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter, DialogButton } from "@/src/components/ui/dialog";
 import { FieldError } from "@/src/components/ui/field-error";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import { validateDuesPeriodInput } from "@/src/lib/dues/dues-validation";
 
 interface DuesPeriodDialogProps {

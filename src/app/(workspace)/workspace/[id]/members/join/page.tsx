@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/src/lib/supabase/server";
 import { requireOfficer } from "@/src/lib/auth/officer";
 import { isUuid } from "@/src/lib/validation";
+import { getSiteUrl } from "@/src/lib/site-url";
 import { JoinPanel } from "@/src/components/workspace/member-join/join-panel";
 import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
 import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
@@ -42,9 +43,7 @@ async function MemberJoinContent({ params }: { params: Promise<{ id: string }> }
 
   // Links are built from the configured address, never from the request, so a
   // link copied on a preview deployment can't point somewhere else.
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
-  const siteUrl =
-    configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
+  const siteUrl = getSiteUrl();
 
   return (
     <PageReveal>

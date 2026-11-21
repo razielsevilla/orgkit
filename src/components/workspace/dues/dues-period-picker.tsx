@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, Calendar, Layers, Check } from "lucide-react";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
 import { DuesStatusPill } from "./dues-status-pill";
 import { formatPeso } from "@/src/lib/dues/dues-dashboard";
 

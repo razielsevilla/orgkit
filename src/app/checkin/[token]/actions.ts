@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import type { ConsentLanguage } from "@/src/lib/members/member-consent";
 import { isValidEmail } from "@/src/lib/members/member-join";
@@ -47,7 +48,7 @@ export async function submitCheckin(
     });
 
     if (error) {
-      console.error("Error checking in:", error);
+      logger.error("checkin.submit_failed", { eventId, error });
       return { status: "error", formError: copy.saveFailed };
     }
 
@@ -70,7 +71,7 @@ export async function submitCheckin(
         return { status: "error", formError: copy.saveFailed };
     }
   } catch (err) {
-    console.error("Unexpected error in submitCheckin:", err);
+    logger.error("checkin.submit_unexpected", { error: err });
     return { status: "error", formError: copy.saveFailed };
   }
 }

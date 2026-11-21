@@ -30,7 +30,6 @@ async function render(frameData: Promise<ReturnType<typeof Object> | null>) {
   const stream = await renderToReadableStream(
     createElement(
       WorkspaceFrame,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       { data: frameData as any },
       createElement("p", null, "PAGE CONTENT")
     )

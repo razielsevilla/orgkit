@@ -1,6 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
+import { logger } from "@/src/lib/logger";
 import type { DuesReviewQueueItem } from "@/src/lib/dues/dues-review";
 
 interface DuesReviewQueueRow {
@@ -79,7 +80,7 @@ export async function createScreenshotSignedUrl(
           .from("dues-screenshots")
           .createSignedUrl(cleanPath, expiresIn);
       } catch (adminErr) {
-        console.error("Admin client signed URL fallback error:", adminErr);
+        logger.error("dues_review.signed_url_fallback_failed", { error: adminErr });
       }
     }
 

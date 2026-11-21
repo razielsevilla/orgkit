@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
  * The limiter keeps its counts in the database, so these tests check what it
@@ -26,6 +26,9 @@ vi.mock("next/headers", () => ({ headers: async () => new Headers(state.headers)
 
 const { allowRequest } = await import("@/src/lib/rate-limit");
 const { getClientIp } = await import("@/src/lib/request");
+const { allowJoinAttempt } = await import("@/src/lib/members/member-join-server");
+const { allowCheckinAttempt } = await import("@/src/lib/checkin/checkin-server");
+const { allowPayAttempt } = await import("@/src/lib/dues/dues-pay-server");
 
 beforeEach(() => {
   state.headers = { "x-forwarded-for": "203.0.113.7, 10.0.0.1" };
@@ -94,5 +97,96 @@ describe("getClientIp", () => {
 
     state.headers = {};
     expect(await getClientIp()).toBe("unknown");
+  });
+});
+
+describe("the hashing secret", () => {
+  const keyFor = async () => {
+    state.calls = [];
+    await allowRequest("invite", 20);
+    return state.calls[0]?.args.p_key as string | undefined;
+  };
+
+  beforeEach(() => {
+    vi.stubEnv("JOIN_RATE_LIMIT_SECRET", "");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("uses JOIN_RATE_LIMIT_SECRET when set", async () => {
+    vi.stubEnv("JOIN_RATE_LIMIT_SECRET", "secret-one");
+    const one = await keyFor();
+    vi.stubEnv("JOIN_RATE_LIMIT_SECRET", "secret-two");
+    const two = await keyFor();
+    expect(one).toMatch(/^[0-9a-f]{64}$/);
+    expect(one).not.toBe(two);
+  });
+
+  it("falls back to the service role key, as documented", async () => {
+    vi.stubEnv("JOIN_RATE_LIMIT_SECRET", "same-value");
+    const explicit = await keyFor();
+    vi.stubEnv("JOIN_RATE_LIMIT_SECRET", "");
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "same-value");
+    expect(await keyFor()).toBe(explicit);
+  });
+
+  it("in production with no secret at all, refuses the request and logs why, without calling the database", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    expect(await allowRequest("invite", 20)).toBe(false);
+
+    expect(state.calls).toHaveLength(0);
+    // The user only sees "too many attempts", so the log has to say why: at error
+    // level, naming the missing variable
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+    const entry = JSON.parse(String(errorSpy.mock.calls[0][0]));
+    expect(entry.level).toBe("error");
+    expect(entry.event).toBe("rate_limit.secret_missing");
+    expect(entry.context.variable).toBe("JOIN_RATE_LIMIT_SECRET");
+    expect(entry.context.scope).toBe("invite");
+  });
+
+  it("outside production with no secret, uses a development value instead of an empty one", async () => {
+    vi.stubEnv("NODE_ENV", "development");
+    expect(await allowRequest("invite", 20)).toBe(true);
+    expect(state.calls[0].args.p_key).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe("limits come from the environment", () => {
+  const limitFrom = async (attempt: () => Promise<boolean>) => {
+    state.calls = [];
+    await attempt();
+    return state.calls[0].args.p_limit;
+  };
+
+  beforeEach(() => {
+    vi.stubEnv("NODE_ENV", "development");
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("keeps today's defaults when nothing is set", async () => {
+    vi.stubEnv("JOIN_ATTEMPTS_PER_MINUTE", "");
+    vi.stubEnv("CHECKIN_ATTEMPTS_PER_MINUTE", "");
+    vi.stubEnv("DUES_PAY_ATTEMPTS_PER_MINUTE", "");
+    expect(await limitFrom(allowJoinAttempt)).toBe(30);
+    expect(await limitFrom(allowCheckinAttempt)).toBe(30);
+    expect(await limitFrom(allowPayAttempt)).toBe(30);
+  });
+
+  it("reads each limit when the attempt is checked, not when the module loads", async () => {
+    vi.stubEnv("JOIN_ATTEMPTS_PER_MINUTE", "7");
+    vi.stubEnv("CHECKIN_ATTEMPTS_PER_MINUTE", "8");
+    vi.stubEnv("DUES_PAY_ATTEMPTS_PER_MINUTE", "9");
+    expect(await limitFrom(allowJoinAttempt)).toBe(7);
+    expect(await limitFrom(allowCheckinAttempt)).toBe(8);
+    expect(await limitFrom(allowPayAttempt)).toBe(9);
   });
 });

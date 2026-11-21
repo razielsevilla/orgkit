@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { revalidatePath } from "next/cache";
 import { fail, ok, type ActionResult } from "@/src/lib/action-result";
 import { withOrgCaller, type OrgCallerError } from "@/src/lib/orgs/org-access";
@@ -8,6 +9,7 @@ import { checkinLinkPath, eventPath, eventsPath } from "@/src/lib/routes";
 import { SLOT_SECONDS, signCheckinToken, slotEndsAtMs, slotFor } from "@/src/lib/checkin/token";
 import { getCheckinSecret } from "@/src/lib/checkin/secret";
 import { CHECKIN_MESSAGES, getCheckinBlock, type CheckinBlock } from "@/src/lib/events/checkin-eligibility";
+import { getSiteUrl } from "@/src/lib/site-url";
 import { isUuid } from "@/src/lib/validation";
 import {
   EVENT_MESSAGES,
@@ -84,7 +86,7 @@ export async function getWorkspaceEvents(
         .order("id", { ascending: false });
 
       if (error || !rows) {
-        console.error("getWorkspaceEvents: could not read events:", error);
+        logger.error("events.list_failed", { orgId, error });
         return fail("failed", EVENT_MESSAGES.loadFailed);
       }
       return ok((rows as EventRow[]).map(toWorkspaceEvent));
@@ -114,7 +116,7 @@ export async function getWorkspaceEvent(
         .maybeSingle();
 
       if (error) {
-        console.error("getWorkspaceEvent: could not read event:", error);
+        logger.error("events.read_failed", { orgId, eventId, error });
         return fail("failed", EVENT_MESSAGES.loadFailed);
       }
       if (!row) return fail("not_found", EVENT_MESSAGES.notFound);
@@ -269,12 +271,6 @@ export interface CheckinToken {
   count: number;
 }
 
-/** The address check-in links are built on, never taken from the request */
-function getSiteUrl(): string | null {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
-  return configured || (process.env.NODE_ENV === "production" ? null : "http://localhost:3000");
-}
-
 /**
  * The current QR token for an event. Answers only for an officer of the event's
  * org, for an event whose window is open and can still be checked into; every
@@ -298,7 +294,7 @@ export async function getCheckinTokenAction(
         .maybeSingle();
 
       if (error) {
-        console.error("getCheckinTokenAction: could not read event:", error);
+        logger.error("checkin_token.read_event_failed", { orgId, eventId, error });
         return fail("failed", CHECKIN_MESSAGES.tokenFailed);
       }
       if (!row) return fail("not_found", EVENT_MESSAGES.notFound);
@@ -313,7 +309,9 @@ export async function getCheckinTokenAction(
 
       const siteUrl = getSiteUrl();
       if (!siteUrl) {
-        console.error("getCheckinTokenAction: NEXT_PUBLIC_SITE_URL is not set");
+        logger.error("checkin_token.site_url_missing", "Check-in link not built: NEXT_PUBLIC_SITE_URL is not set.", {
+          variable: "NEXT_PUBLIC_SITE_URL",
+        });
         return fail("failed", CHECKIN_MESSAGES.tokenFailed);
       }
 
@@ -324,7 +322,9 @@ export async function getCheckinTokenAction(
         .select("id", { count: "exact", head: true })
         .eq("org_id", orgId)
         .eq("event_id", eventId);
-      if (countError) console.error("getCheckinTokenAction: could not count attendance:", countError);
+      if (countError) {
+        logger.error("checkin_token.count_attendance_failed", { orgId, eventId, error: countError });
+      }
 
       const slot = slotFor(now);
       const token = signCheckinToken(eventId, slot, getCheckinSecret());

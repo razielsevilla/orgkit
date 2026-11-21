@@ -1,5 +1,6 @@
 "use server";
 
+import { logger } from "@/src/lib/logger";
 import { createAdminClient } from "@/src/lib/supabase/service-role";
 import { CURRENT_MEMBER_CONSENT, type ConsentLanguage } from "@/src/lib/members/member-consent";
 import { allowJoinAttempt } from "@/src/lib/members/member-join-server";
@@ -66,7 +67,7 @@ export async function submitJoin(
     });
 
     if (error) {
-      console.error("Error joining org:", error);
+      logger.error("join.submit_failed", { error });
       return { status: "error", formError: JOIN_MESSAGES.saveFailed };
     }
     if (data === "inactive") return { status: "inactive" };
@@ -74,7 +75,7 @@ export async function submitJoin(
 
     return { status: "error", formError: JOIN_MESSAGES.saveFailed };
   } catch (err) {
-    console.error("Unexpected error in submitJoin:", err);
+    logger.error("join.submit_unexpected", { error: err });
     return { status: "error", formError: JOIN_MESSAGES.saveFailed };
   }
 }

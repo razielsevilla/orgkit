@@ -21,8 +21,8 @@ import {
   DialogFooter,
   DialogButton,
 } from "@/src/components/ui/dialog";
-import type { DuesPeriod } from "@/src/app/(workspace)/dues-actions";
-import { getDuesPayLink, setDuesPayLink } from "@/src/app/(workspace)/dues-actions";
+import type { DuesPeriod } from "@/src/app/(workspace)/dues-shared";
+import { getDuesPayLink, setDuesPayLink } from "@/src/app/(workspace)/dues-periods-actions";
 import { payLinkPath } from "@/src/lib/routes";
 import { formatDueDate, formatPesos } from "./dues-table";
 
