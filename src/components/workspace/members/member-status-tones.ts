@@ -17,10 +17,10 @@ export interface StatusTone {
  */
 export const STATUS_TONES: Record<MemberStatus, StatusTone> = {
   pending: {
-    background: "var(--color-warning-soft)",
-    border: "1px solid var(--color-warning-line)",
-    text: "var(--color-warning)",
-    dot: "var(--color-warning)",
+    background: "var(--color-amber-soft, var(--color-warning-soft))",
+    border: "1px solid var(--color-amber-line, var(--color-warning-line))",
+    text: "var(--color-amber-strong, var(--color-warning))",
+    dot: "var(--color-amber, var(--color-warning))",
   },
   active: {
     background: "color-mix(in srgb, var(--color-accent) 12%, transparent)",
