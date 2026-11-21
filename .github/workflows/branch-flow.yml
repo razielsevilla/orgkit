@@ -15,7 +15,7 @@ jobs:
         run: |
           case "$BASE" in
             main)    ok=$([ "$HEAD" = "develop" ] && echo 1) ;;
-            develop) ok=$(echo "$HEAD" | grep -E '^(epic/|refactor/epic/)' >/dev/null && echo 1) ;;
+            develop) ok=$(echo "$HEAD" | grep -E '^(epic/|refactor/epic/|refactor/)' >/dev/null && echo 1) ;;
             epic/*)  ok=$(echo "$HEAD" | grep -E '^(ticket/|refactor/epic/|refactor/)' >/dev/null && echo 1) ;;
           esac
           if [ -z "$ok" ]; then
