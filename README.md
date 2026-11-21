@@ -94,6 +94,7 @@ into `main`.
 | | |
 |---|---|
 | [docs/routes.md](docs/routes.md) | Every URL, who can open it, and what runs before it |
+| [docs/backup-and-access.md](docs/backup-and-access.md) | Backups, the restore runbook, who can reach production data, and the service role key |
 | [docs/usage-metrics.md](docs/usage-metrics.md) | The weekly usage report: what it counts, how it runs, how to check it |
 | [docs/techstack.md](docs/techstack.md) | Stack choices and open decisions |
 | [docs/design.md](docs/design.md), [docs/palette.md](docs/palette.md) | Design notes and colors |
@@ -106,3 +107,9 @@ into `main`.
 - Replace any stopgap value of `PRIVACY_CONTACT_EMAIL` with a monitored privacy
   address, in the deployment environment.
 - Set `NEXT_PUBLIC_SITE_URL` to the real address.
+- Decide how the database is backed up (the Free plan has no automatic backups),
+  take a backup and test a restore, as in
+  [docs/backup-and-access.md](docs/backup-and-access.md).
+- Complete the access review in that document: who can reach the database, its
+  keys and the hosting settings, and that the service role key is set for
+  Production only.
