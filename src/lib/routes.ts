@@ -31,6 +31,10 @@ export function membersPath(orgId: string): string {
   return `${workspacePath(orgId)}/members`;
 }
 
+export function duesPath(orgId: string): string {
+  return `${workspacePath(orgId)}/dues`;
+}
+
 export function eventsPath(orgId: string): string {
   return `${workspacePath(orgId)}/events`;
 }
@@ -75,6 +79,11 @@ export function joinLinkPath(token: string): string {
   return `/join/${token}`;
 }
 
+/** The public link members open to pay dues for a period. The token is a secret. */
+export function payLinkPath(token: string): string {
+  return `/pay/${token}`;
+}
+
 /** The sign-in page, optionally showing an error (see docs/routes.md for the codes) */
 export function signInPath(error?: string): string {
   return error ? `${ROUTES.signIn}?error=${error}` : ROUTES.signIn;
@@ -112,8 +121,8 @@ const PUBLIC_EXACT: readonly string[] = [
   "/invite",
 ];
 
-// Member join links (A4), invites and check-in links (E3) open with no account
-const PUBLIC_PREFIXES: readonly string[] = ["/auth/", "/join/", "/invite/", "/checkin/"];
+// Member join links (A4), invites, public dues payment links and check-in links (E3) open with no account
+const PUBLIC_PREFIXES: readonly string[] = ["/auth/", "/join/", "/invite/", "/pay/", "/checkin/"];
 
 /** Pages a signed-out visitor may open. Everything else needs a session. */
 export function isPublicPath(pathname: string): boolean {
@@ -130,6 +139,7 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/workspace/new",
   "/workspace/:id",
   "/workspace/:id/members",
+  "/workspace/:id/dues",
   "/workspace/:id/officers",
   "/workspace/:id/events",
   "/workspace/:id/events/:eventId",
@@ -142,4 +152,4 @@ export const PRIVATE_ROUTES: readonly string[] = [
  * URL prefixes whose path holds a secret token. They are sent without a
  * Referer and marked noindex (see next.config.ts, which lists the same ones).
  */
-export const SECRET_URL_PREFIXES: readonly string[] = ["/join/", "/invite/", "/checkin/"];
+export const SECRET_URL_PREFIXES: readonly string[] = ["/join/", "/invite/", "/pay/", "/checkin/"];

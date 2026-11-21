@@ -6,6 +6,7 @@ import {
   checkinLinkPath,
   PRIVATE_ROUTES,
   SECRET_URL_PREFIXES,
+  duesPath,
   inviteStartPath,
   invitePath,
   isPublicPath,
@@ -16,6 +17,7 @@ import {
   eventPath,
   officerLandingPath,
   officersPath,
+  payLinkPath,
   signInPath,
   workspacePath,
 } from "../../src/lib/routes.ts";
@@ -105,6 +107,7 @@ describe("path helpers", () => {
   it("builds one URL per page", () => {
     assert.equal(workspacePath(id), `/workspace/${id}`);
     assert.equal(membersPath(id), `/workspace/${id}/members`);
+    assert.equal(duesPath(id), `/workspace/${id}/dues`);
     assert.equal(officersPath(id), `/workspace/${id}/officers`);
     assert.equal(joinPanelPath(id), `/workspace/${id}/members/join`);
     assert.equal(eventsPath(id), `/workspace/${id}/events`);
@@ -112,6 +115,7 @@ describe("path helpers", () => {
     assert.equal(invitePath("t"), "/invite/t");
     assert.equal(inviteStartPath("t"), "/invite/t/start");
     assert.equal(joinLinkPath("t"), "/join/t");
+    assert.equal(payLinkPath("t"), "/pay/t");
     assert.equal(checkinLinkPath("t"), "/checkin/t");
   });
 
@@ -124,6 +128,7 @@ describe("path helpers", () => {
     const built = [
       workspacePath(id),
       membersPath(id),
+      duesPath(id),
       officersPath(id),
       joinPanelPath(id),
       eventsPath(id),
@@ -131,6 +136,7 @@ describe("path helpers", () => {
       invitePath("t"),
       inviteStartPath("t"),
       joinLinkPath("t"),
+      payLinkPath("t"),
       checkinLinkPath("t"),
     ];
     for (const path of built) {
@@ -166,6 +172,7 @@ describe("isPublicPath", () => {
       assert.equal(isPublicPath(path), true, path);
     }
     assert.equal(isPublicPath("/join/abc"), true);
+    assert.equal(isPublicPath("/pay/abc"), true);
     assert.equal(isPublicPath("/invite/abc"), true);
     assert.equal(isPublicPath("/invite/abc/start"), true);
     assert.equal(isPublicPath("/checkin/abc.1.sig"), true);

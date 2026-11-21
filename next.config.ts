@@ -5,18 +5,16 @@ const nextConfig: NextConfig = {
   experimental: {
     agentUpgrade: "security",
     agentFeedback: true,
-    // The member-list import (R3) uploads a CSV of up to 1 MB through a Server
-    // Action. The default 1 MB cap, which also counts the multipart overhead,
-    // would refuse a file at the limit before our code could show a clear
-    // message. So allow a little more here and enforce the real limit
-    // (MAX_CSV_BYTES) in the action.
+    // The member-list import (R3) uploads a CSV and dues payment screenshot
+    // (P2) uploads proof of up to 5 MB through a Server Action. Allow up to 7 MB
+    // here to safely account for multipart overhead.
     serverActions: {
-      bodySizeLimit: "1300kb",
+      bodySizeLimit: "7mb",
     },
   },
   cacheComponents: true,
   partialPrefetching: true,
-  // Join, invite and check-in links carry a secret in the URL: don't pass it on through
+  // Join, invite, payment and check-in links carry a secret in the URL: don't pass it on through
   // Referer, and keep it out of search engines. Keep this list in step with
   // SECRET_URL_PREFIXES in src/lib/routes.ts (a test checks it).
   async headers() {
@@ -27,6 +25,7 @@ const nextConfig: NextConfig = {
     return [
       { source: "/join/:path*", headers: secretUrlHeaders },
       { source: "/invite/:path*", headers: secretUrlHeaders },
+      { source: "/pay/:path*", headers: secretUrlHeaders },
       { source: "/checkin/:path*", headers: secretUrlHeaders },
     ];
   },

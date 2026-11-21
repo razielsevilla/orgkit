@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { fail, type ActionResult } from "@/src/lib/action-result";
 import { can, isOfficerRole, type OfficerAction, type OfficerRole } from "@/src/lib/orgs/permissions";
@@ -19,9 +20,10 @@ type CallerLookup =
 /**
  * Validates the caller's session and reads their membership fresh from the
  * database. Roles are never cached in sessions or claims, so a removed officer
- * loses access on their very next request.
+ * loses access on their very next request. Memoized per request so multiple
+ * actions within the same server pass share one execution.
  */
-export async function getCallerOrgMembership(orgId: string): Promise<CallerLookup> {
+export const getCallerOrgMembership = cache(async (orgId: string): Promise<CallerLookup> => {
   const { supabase, user } = await getSessionUser();
   if (!user) return { ok: false, error: "not_authenticated" };
 
@@ -40,7 +42,7 @@ export async function getCallerOrgMembership(orgId: string): Promise<CallerLooku
   }
 
   return { ok: true, caller: { supabase, user, role: membership.role } };
-}
+});
 
 /** The failure for a caller who is signed out or no longer in the org. */
 export function accessFailure(error: "not_authenticated" | "access_revoked") {

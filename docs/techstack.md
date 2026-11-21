@@ -85,6 +85,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 DATABASE_URL=
 RESEND_API_KEY=
+RESEND_FROM_EMAIL=
 SENTRY_DSN=
 ```
 
@@ -98,3 +99,4 @@ SENTRY_DSN=
 - **Manual attendance:** officers add or remove a row from the event page through the `authenticated` functions `mark_attendance_manual` (writes `method = 'manual'` and `marked_by`, `on conflict do nothing`, active members of the same org only) and `remove_attendance`. Both check `is_org_member`, refuse a cancelled event and allow an ended one. The list refreshes by polling a server action every 5 seconds rather than Supabase Realtime, which keeps it working with the existing RLS and needs no extra setup.
 - **Member attendance history:** the members-page dialog reads one member's history through the `authenticated` function `get_member_attendance_history(target_member)`, which returns `{ org_id, joined_at, events[] }` (ended events only; cancelled ones included with their status). It checks `is_org_member` on the member's org and raises a single `member_not_found` for a missing member, another org's member and a non-officer, so the answer never confirms a member exists elsewhere; the action also checks the returned `org_id` against the request. "Joined" is `members.created_at`. The "Attended X of Y" count is done in `src/lib/members/attendance-history.ts` so it is unit tested. An index on `attendance (member_id)` keeps the per-member read fast.
 - **Payments:** GCash references are stored as records only. OrgKit never holds money.
+- **Email notifications:** Resend sends transactional payment reminders initiated by officers. Outbound sends are chunked (25 per batch with 150ms delays) to respect API rate limits. Development and automated test runs fall back to an in-memory mock transport when `RESEND_API_KEY` is omitted.

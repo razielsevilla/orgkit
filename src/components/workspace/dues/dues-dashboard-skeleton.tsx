@@ -1,0 +1,213 @@
+import React from "react";
+
+function SkeletonBar({
+  width,
+  height,
+  radius = 8,
+  style,
+}: {
+  width: string | number;
+  height: number;
+  radius?: number;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className="orgkit-skeleton"
+      style={{
+        width,
+        height,
+        flexShrink: 0,
+        borderRadius: radius,
+        backgroundColor: "color-mix(in srgb, var(--color-line) 85%, transparent)",
+        ...style,
+      }}
+    />
+  );
+}
+
+export function DuesDashboardSkeleton({ rowCount = 5 }: { rowCount?: number }) {
+  return (
+    <div
+      role="status"
+      aria-label="Loading dues dashboard"
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        width: "100%",
+        maxWidth: 960,
+        margin: "0 auto",
+      }}
+    >
+      <style>{`
+        @keyframes pulseSkeleton {
+          0%, 100% { opacity: 0.95; }
+          50% { opacity: 0.45; }
+        }
+        .orgkit-skeleton {
+          animation: pulseSkeleton 1.8s ease-in-out infinite;
+        }
+      `}</style>
+
+      {/* Period Picker Skeleton */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "18px 24px",
+          backgroundColor: "var(--color-surface)",
+          border: "1px solid var(--color-line)",
+          borderRadius: 24,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <SkeletonBar width={240} height={42} radius={12} />
+          <SkeletonBar width={90} height={24} radius={9999} />
+          <SkeletonBar width={120} height={18} />
+        </div>
+      </div>
+
+      {/* Collection Progress Banner Skeleton */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 16,
+          padding: "20px 24px",
+          backgroundColor: "var(--color-surface)",
+          border: "1px solid var(--color-line)",
+          borderRadius: 24,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0, flex: "1 1 420px" }}>
+          <SkeletonBar width={96} height={96} radius={9999} />
+          <div
+            style={{
+              width: 1,
+              height: 64,
+              backgroundColor: "var(--color-line)",
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <SkeletonBar width={120} height={13} style={{ marginBottom: 6 }} />
+            <SkeletonBar width={280} height={26} style={{ marginBottom: 6 }} />
+            <SkeletonBar width={160} height={14} />
+          </div>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
+          <div
+            style={{
+              width: 1,
+              height: 64,
+              backgroundColor: "var(--color-line)",
+              flexShrink: 0,
+            }}
+          />
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
+            <SkeletonBar width={80} height={13} />
+            <SkeletonBar width={110} height={26} />
+          </div>
+        </div>
+      </div>
+
+      {/* 4 Status Breakdown Tiles Skeleton */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: 14,
+          width: "100%",
+        }}
+      >
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              padding: "20px 22px",
+              backgroundColor: "var(--color-surface)",
+              border: "1px solid var(--color-line)",
+              borderRadius: 20,
+              display: "flex",
+              flexDirection: "column",
+              gap: 14,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <SkeletonBar width={18} height={18} radius={9999} />
+              <SkeletonBar width={70} height={14} />
+            </div>
+            <SkeletonBar width={50} height={32} />
+            <SkeletonBar width={100} height={12} />
+          </div>
+        ))}
+      </div>
+
+      {/* Filter Tabs & Search Bar Skeleton */}
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          marginTop: 8,
+        }}
+      >
+        <div style={{ display: "flex", gap: 8 }}>
+          <SkeletonBar width={60} height={36} radius={9999} />
+          <SkeletonBar width={70} height={36} radius={9999} />
+          <SkeletonBar width={100} height={36} radius={9999} />
+          <SkeletonBar width={80} height={36} radius={9999} />
+        </div>
+        <SkeletonBar width={240} height={42} radius={9999} />
+      </div>
+
+      {/* Table Rows Skeleton */}
+      <div
+        style={{
+          backgroundColor: "var(--color-surface)",
+          border: "1px solid var(--color-line)",
+          borderRadius: 24,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            padding: "16px 24px",
+            borderBottom: "1px solid var(--color-line)",
+            backgroundColor: "color-mix(in srgb, var(--color-surface) 95%, var(--color-line) 5%)",
+          }}
+        >
+          <SkeletonBar width={120} height={14} />
+        </div>
+        {Array.from({ length: rowCount }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "16px 24px",
+              borderBottom: i < rowCount - 1 ? "1px solid var(--color-line)" : "none",
+            }}
+          >
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <SkeletonBar width={160} height={16} />
+              <SkeletonBar width={200} height={13} />
+            </div>
+            <SkeletonBar width={80} height={24} radius={9999} />
+            <SkeletonBar width={110} height={14} />
+            <SkeletonBar width={90} height={14} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
