@@ -58,10 +58,11 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
       `/workspace/${ORG}`,
       `/workspace/${ORG}/members`,
       `/workspace/${ORG}/dues`,
+      `/workspace/${ORG}/events`,
       `/workspace/${ORG}/members/join`,
       `/workspace/${ORG}/officers`,
     ]);
-    for (const label of ["Home", "Members", "Dues", "Join", "Invite"]) {
+    for (const label of ["Home", "Members", "Dues", "Events", "Join", "Invite"]) {
       expect(html).toContain(`<span>${label}</span>`);
     }
   });
@@ -71,6 +72,7 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
     expect(html).toContain("<span>Home</span>");
     expect(html).toContain("<span>Members</span>");
     expect(html).toContain("<span>Dues</span>");
+    expect(html).toContain("<span>Events</span>");
     expect(html).toContain("<span>Invite</span>");
     expect(html).not.toContain("<span>Join</span>");
     expect(html).toContain(`/workspace/${ORG}/members`);
@@ -90,6 +92,8 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
     [`/workspace/${ORG}/members`, "Members"],
     [`/workspace/${ORG}/dues`, "Dues"],
     [`/workspace/${ORG}/officers`, "Invite"],
+    [`/workspace/${ORG}/events`, "Events"],
+    [`/workspace/${ORG}/events/22222222-2222-4222-8222-222222222222`, "Events"],
     [`/workspace/${ORG}/members/join`, "Join"],
   ])("highlights %s as active when on %s", async (path, label) => {
     pathname = path;

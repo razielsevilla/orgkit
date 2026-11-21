@@ -1670,3 +1670,729 @@ $$;
 
 revoke all on function public.set_member_status(uuid, text, text) from public, anon;
 grant execute on function public.set_member_status(uuid, text, text) to authenticated;
+
+
+-- >>> FILE: 20261110120000_e1_events.sql
+-- E1: Events
+-- Officers create, edit and cancel events for their org. Events are never
+-- deleted (cancel only), so attendance history survives.
+--
+-- Reads go through RLS (is_org_member). Writes only happen through the
+-- security-definer functions below, so no insert/update/delete policies exist.
+
+-- 1. Table
+create table if not exists public.events (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs (id) on delete cascade,
+  title text not null,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  location text,
+  status text not null default 'scheduled',
+  -- Kept if the creating account is removed, so history is not lost
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.events drop constraint if exists events_status_check;
+alter table public.events
+  add constraint events_status_check check (status in ('scheduled', 'cancelled'));
+
+alter table public.events drop constraint if exists events_title_length;
+alter table public.events
+  add constraint events_title_length check (char_length(btrim(title)) between 2 and 100);
+
+alter table public.events drop constraint if exists events_location_length;
+alter table public.events
+  add constraint events_location_length check (location is null or char_length(location) between 1 and 200);
+
+alter table public.events drop constraint if exists events_time_order;
+alter table public.events
+  add constraint events_time_order check (ends_at > starts_at);
+
+create index if not exists events_org_starts_idx
+  on public.events (org_id, starts_at desc);
+
+-- 2. Row level security: officers of the org can read; nobody writes directly
+alter table public.events enable row level security;
+
+revoke all on public.events from anon, authenticated;
+grant select on public.events to authenticated;
+
+drop policy if exists "Officers can read events of their org" on public.events;
+create policy "Officers can read events of their org"
+  on public.events
+  for select
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- 3. create_event
+-- Validates: caller is an officer of the org; title 2 to 100 characters;
+-- end after start; location optional (blank becomes null), up to 200 characters.
+create or replace function public.create_event(
+  target_org uuid,
+  new_title text,
+  new_starts_at timestamptz,
+  new_ends_at timestamptz,
+  new_location text default null
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  clean_title text;
+  clean_location text;
+  new_id uuid;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if target_org is null or not public.is_org_member(target_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  clean_title := regexp_replace(btrim(coalesce(new_title, '')), '\s+', ' ', 'g');
+  clean_location := nullif(regexp_replace(btrim(coalesce(new_location, '')), '\s+', ' ', 'g'), '');
+
+  if char_length(clean_title) < 2 or char_length(clean_title) > 100 then
+    raise exception 'invalid_title';
+  end if;
+
+  if new_starts_at is null or new_ends_at is null or new_ends_at <= new_starts_at then
+    raise exception 'invalid_time_range';
+  end if;
+
+  if clean_location is not null and char_length(clean_location) > 200 then
+    raise exception 'invalid_location';
+  end if;
+
+  insert into public.events (org_id, title, starts_at, ends_at, location, created_by)
+  values (target_org, clean_title, new_starts_at, new_ends_at, clean_location, caller_id)
+  returning id into new_id;
+
+  return new_id;
+end;
+$$;
+
+revoke all on function public.create_event(uuid, text, timestamptz, timestamptz, text) from public, anon;
+grant execute on function public.create_event(uuid, text, timestamptz, timestamptz, text) to authenticated;
+
+-- 4. update_event
+-- Same validation as create_event. A cancelled event can no longer be edited.
+create or replace function public.update_event(
+  target_event uuid,
+  new_title text,
+  new_starts_at timestamptz,
+  new_ends_at timestamptz,
+  new_location text default null
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  event_org uuid;
+  current_status text;
+  clean_title text;
+  clean_location text;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, status
+    into event_org, current_status
+    from public.events
+   where id = target_event;
+
+  if event_org is null then
+    raise exception 'event_not_found';
+  end if;
+
+  if not public.is_org_member(event_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  if current_status = 'cancelled' then
+    raise exception 'event_cancelled';
+  end if;
+
+  clean_title := regexp_replace(btrim(coalesce(new_title, '')), '\s+', ' ', 'g');
+  clean_location := nullif(regexp_replace(btrim(coalesce(new_location, '')), '\s+', ' ', 'g'), '');
+
+  if char_length(clean_title) < 2 or char_length(clean_title) > 100 then
+    raise exception 'invalid_title';
+  end if;
+
+  if new_starts_at is null or new_ends_at is null or new_ends_at <= new_starts_at then
+    raise exception 'invalid_time_range';
+  end if;
+
+  if clean_location is not null and char_length(clean_location) > 200 then
+    raise exception 'invalid_location';
+  end if;
+
+  update public.events
+     set title = clean_title,
+         starts_at = new_starts_at,
+         ends_at = new_ends_at,
+         location = clean_location,
+         updated_at = now()
+   where id = target_event;
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.update_event(uuid, text, timestamptz, timestamptz, text) from public, anon;
+grant execute on function public.update_event(uuid, text, timestamptz, timestamptz, text) to authenticated;
+
+-- 5. cancel_event
+-- Idempotent: cancelling an already cancelled event succeeds and changes nothing.
+create or replace function public.cancel_event(
+  target_event uuid
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  event_org uuid;
+  current_status text;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, status
+    into event_org, current_status
+    from public.events
+   where id = target_event;
+
+  if event_org is null then
+    raise exception 'event_not_found';
+  end if;
+
+  if not public.is_org_member(event_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  if current_status = 'cancelled' then
+    return 'ok';
+  end if;
+
+  update public.events
+     set status = 'cancelled',
+         updated_at = now()
+   where id = target_event;
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.cancel_event(uuid) from public, anon;
+grant execute on function public.cancel_event(uuid) to authenticated;
+
+
+-- >>> FILE: 20261112120000_e2_checkin_open.sql
+-- E2: Event check-in window
+-- An officer opens and closes the check-in window of an event. Tokens for the
+-- rotating QR are signed by the app and never stored, so the only thing the
+-- database holds is whether the window is open.
+--
+-- authenticated has no UPDATE on events (see E1), so checkin_open can only
+-- change through the security-definer functions below.
+
+-- 1. Column
+alter table public.events
+  add column if not exists checkin_open boolean not null default false;
+
+-- 2. set_event_checkin
+-- Opening is refused for a cancelled event and for one that ended more than
+-- 1 hour ago. Closing always works, so a window can never be stuck open.
+create or replace function public.set_event_checkin(
+  target_event uuid,
+  should_open boolean
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  event_org uuid;
+  current_status text;
+  event_ends timestamptz;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, status, ends_at
+    into event_org, current_status, event_ends
+    from public.events
+   where id = target_event;
+
+  if event_org is null then
+    raise exception 'event_not_found';
+  end if;
+
+  if not public.is_org_member(event_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  if should_open is distinct from true then
+    update public.events
+       set checkin_open = false,
+           updated_at = now()
+     where id = target_event
+       and checkin_open;
+    return 'ok';
+  end if;
+
+  if current_status = 'cancelled' then
+    raise exception 'event_cancelled';
+  end if;
+
+  if event_ends < now() - interval '1 hour' then
+    raise exception 'event_ended';
+  end if;
+
+  update public.events
+     set checkin_open = true,
+         updated_at = now()
+   where id = target_event
+     and not checkin_open;
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.set_event_checkin(uuid, boolean) from public, anon;
+grant execute on function public.set_event_checkin(uuid, boolean) to authenticated;
+
+-- 3. cancel_event
+-- Same as E1, and a cancelled event also closes its check-in window.
+create or replace function public.cancel_event(
+  target_event uuid
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  event_org uuid;
+  current_status text;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, status
+    into event_org, current_status
+    from public.events
+   where id = target_event;
+
+  if event_org is null then
+    raise exception 'event_not_found';
+  end if;
+
+  if not public.is_org_member(event_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  if current_status = 'cancelled' then
+    return 'ok';
+  end if;
+
+  update public.events
+     set status = 'cancelled',
+         checkin_open = false,
+         updated_at = now()
+   where id = target_event;
+
+  return 'ok';
+end;
+$$;
+
+revoke all on function public.cancel_event(uuid) from public, anon;
+grant execute on function public.cancel_event(uuid) to authenticated;
+
+
+-- >>> FILE: 20261112130000_e3_attendance.sql
+-- E3: Member QR check-in
+-- A member scans the rotating QR and confirms with the email they joined with.
+-- They have no account, so the app server does the work with the service-role
+-- key, like /join. Students never touch the tables: the functions below are
+-- callable only by service_role.
+--
+-- Events are never deleted (see E1), so attendance history survives.
+
+-- 1. attendance
+create table if not exists public.attendance (
+  id uuid primary key default gen_random_uuid(),
+  org_id uuid not null references public.orgs (id) on delete cascade,
+  event_id uuid not null references public.events (id) on delete cascade,
+  member_id uuid not null references public.members (id) on delete cascade,
+  method text not null check (method in ('qr', 'manual')),
+  marked_by uuid references auth.users (id) on delete set null,
+  checked_in_at timestamptz not null default now(),
+  unique (event_id, member_id)
+);
+
+create index if not exists attendance_org_event_idx
+  on public.attendance (org_id, event_id);
+
+-- Officers can read their org's attendance. Nobody else can do anything, and
+-- there are no write policies: rows are written only by checkin_member().
+alter table public.attendance enable row level security;
+
+revoke all on public.attendance from anon, authenticated;
+grant select on public.attendance to authenticated;
+
+drop policy if exists attendance_select_officers on public.attendance;
+create policy attendance_select_officers on public.attendance
+  for select to authenticated
+  using (public.is_org_member(org_id));
+
+-- 2. get_checkin_event
+-- What the check-in page shows. A row only comes back while the window is open:
+-- same rule as set_event_checkin and getCheckinBlock (not cancelled, ended
+-- less than 1 hour ago).
+create or replace function public.get_checkin_event(
+  p_event uuid
+)
+returns table (org_name text, event_title text)
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select o.name, e.title
+    from public.events e
+    join public.orgs o on o.id = e.org_id
+   where e.id = p_event
+     and e.checkin_open
+     and e.status <> 'cancelled'
+     and e.ends_at >= now() - interval '1 hour';
+$$;
+
+revoke all on function public.get_checkin_event(uuid) from public, anon, authenticated;
+grant execute on function public.get_checkin_event(uuid) to service_role;
+
+-- 3. checkin_member
+-- result is one of:
+--   closed       the window is closed, the event is cancelled or it ended
+--   not_found    no ACTIVE member of the event's org has this email. One result
+--                for unknown, pending, inactive and other-org emails, so the
+--                page cannot be used to learn who is on the roster.
+--   checked_in   a new attendance row was saved
+--   already      the member was already checked in, nothing was added
+-- first_name is the first word of the member's name and is only set for
+-- checked_in and already. The full name never leaves the database.
+create or replace function public.checkin_member(
+  p_event uuid,
+  p_email text
+)
+returns table (result text, first_name text)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  event_org uuid;
+  event_status text;
+  event_ends timestamptz;
+  event_open boolean;
+  clean_email text;
+  found_member uuid;
+  found_name text;
+  inserted_count integer;
+begin
+  select org_id, status, ends_at, checkin_open
+    into event_org, event_status, event_ends, event_open
+    from public.events
+   where id = p_event;
+
+  if event_org is null
+     or event_open is distinct from true
+     or event_status = 'cancelled'
+     or event_ends < now() - interval '1 hour' then
+    return query select 'closed'::text, null::text;
+    return;
+  end if;
+
+  clean_email := lower(btrim(coalesce(p_email, '')));
+
+  if clean_email = '' or length(clean_email) > 254 then
+    return query select 'not_found'::text, null::text;
+    return;
+  end if;
+
+  select m.id, m.full_name
+    into found_member, found_name
+    from public.members m
+   where m.org_id = event_org
+     and m.email_key = clean_email
+     and m.status = 'active';
+
+  if found_member is null then
+    return query select 'not_found'::text, null::text;
+    return;
+  end if;
+
+  insert into public.attendance (org_id, event_id, member_id, method)
+  values (event_org, p_event, found_member, 'qr')
+  on conflict (event_id, member_id) do nothing;
+
+  get diagnostics inserted_count = row_count;
+
+  return query select
+    case when inserted_count > 0 then 'checked_in' else 'already' end,
+    split_part(btrim(found_name), ' ', 1);
+end;
+$$;
+
+revoke all on function public.checkin_member(uuid, text) from public, anon, authenticated;
+grant execute on function public.checkin_member(uuid, text) to service_role;
+
+-- >>> FILE: 20261113120000_e4_manual_attendance.sql
+-- E4: Manual attendance
+-- An officer adds or removes a member from an event's attendance list by hand.
+-- authenticated has no INSERT or DELETE on attendance (see E3), so both writes
+-- go through the security-definer functions below.
+--
+-- Rules:
+--   * the caller must be an officer of the event's org (is_org_member);
+--   * a cancelled event is read-only;
+--   * an ended event can still be corrected (no check-in grace here, since
+--     fixing the list after the event is the point of manual add);
+--   * only an active member of the same org can be added.
+
+-- 1. mark_attendance_manual
+-- Returns 'added', or 'already' when the member is already present (for example
+-- another officer, or a QR scan, got there first). Never creates a duplicate.
+create or replace function public.mark_attendance_manual(
+  target_event uuid,
+  target_member uuid
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  event_org uuid;
+  current_status text;
+  inserted_count integer;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, status
+    into event_org, current_status
+    from public.events
+   where id = target_event;
+
+  if event_org is null then
+    raise exception 'event_not_found';
+  end if;
+
+  if not public.is_org_member(event_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  if current_status = 'cancelled' then
+    raise exception 'event_cancelled';
+  end if;
+
+  if not exists (
+    select 1
+      from public.members
+     where id = target_member
+       and org_id = event_org
+       and status = 'active'
+  ) then
+    raise exception 'member_not_found';
+  end if;
+
+  insert into public.attendance (org_id, event_id, member_id, method, marked_by)
+  values (event_org, target_event, target_member, 'manual', caller_id)
+  on conflict (event_id, member_id) do nothing;
+
+  get diagnostics inserted_count = row_count;
+
+  if inserted_count > 0 then
+    return 'added';
+  end if;
+  return 'already';
+end;
+$$;
+
+revoke all on function public.mark_attendance_manual(uuid, uuid) from public, anon;
+grant execute on function public.mark_attendance_manual(uuid, uuid) to authenticated;
+
+-- 2. remove_attendance
+-- Returns 'removed', or 'already' when the row was already gone.
+create or replace function public.remove_attendance(
+  target_event uuid,
+  target_member uuid
+)
+returns text
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  event_org uuid;
+  current_status text;
+  deleted_count integer;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, status
+    into event_org, current_status
+    from public.events
+   where id = target_event;
+
+  if event_org is null then
+    raise exception 'event_not_found';
+  end if;
+
+  if not public.is_org_member(event_org) then
+    raise exception 'not_permitted';
+  end if;
+
+  if current_status = 'cancelled' then
+    raise exception 'event_cancelled';
+  end if;
+
+  delete from public.attendance
+   where event_id = target_event
+     and member_id = target_member;
+
+  get diagnostics deleted_count = row_count;
+
+  if deleted_count > 0 then
+    return 'removed';
+  end if;
+  return 'already';
+end;
+$$;
+
+revoke all on function public.remove_attendance(uuid, uuid) from public, anon;
+grant execute on function public.remove_attendance(uuid, uuid) to authenticated;
+
+-- >>> FILE: 20261113130000_e5_member_attendance_history.sql
+-- E5: Member attendance history
+-- One read function an officer calls from the roster to see how often a member
+-- has attended. No new tables.
+--
+-- Rules:
+--   * the caller must be an officer of the member's org (is_org_member);
+--   * a member of another org, a missing member and a non-officer caller all get
+--     the same 'member_not_found', so the answer never confirms that a member
+--     exists somewhere else;
+--   * only events that have ended are listed (ends_at < now());
+--   * an event is listed when it ended after the member joined (members.created_at)
+--     or when the member has an attendance row for it, so a record is never hidden;
+--   * cancelled events are listed with their status. Whether they count is
+--     decided by the caller (the app never counts them);
+--   * inactive and pending members can be viewed.
+
+-- 1. Per-member lookups (the unique (event_id, member_id) index leads with event)
+create index if not exists attendance_member_idx
+  on public.attendance (member_id);
+
+-- 2. get_member_attendance_history
+-- Returns { org_id, joined_at, events: [{ event_id, title, starts_at, ends_at, status,
+-- attended, method, checked_in_at }] }, newest event first.
+create or replace function public.get_member_attendance_history(
+  target_member uuid
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  caller_id uuid;
+  member_org uuid;
+  member_joined timestamptz;
+  history jsonb;
+begin
+  caller_id := auth.uid();
+  if caller_id is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  select org_id, created_at
+    into member_org, member_joined
+    from public.members
+   where id = target_member;
+
+  -- One answer for "no such member" and "not your org's member"
+  if member_org is null or not public.is_org_member(member_org) then
+    raise exception 'member_not_found';
+  end if;
+
+  select coalesce(
+           jsonb_agg(
+             jsonb_build_object(
+               'event_id', e.id,
+               'title', e.title,
+               'starts_at', e.starts_at,
+               'ends_at', e.ends_at,
+               'status', e.status,
+               'attended', a.id is not null,
+               'method', a.method,
+               'checked_in_at', a.checked_in_at
+             )
+             order by e.starts_at desc, e.id
+           ),
+           '[]'::jsonb
+         )
+    into history
+    from public.events e
+    left join public.attendance a
+      on a.event_id = e.id
+     and a.member_id = target_member
+   where e.org_id = member_org
+     and e.ends_at < now()
+     and (e.ends_at > member_joined or a.id is not null);
+
+  return jsonb_build_object(
+    'org_id', member_org,
+    'joined_at', member_joined,
+    'events', history
+  );
+end;
+$$;
+
+revoke all on function public.get_member_attendance_history(uuid) from public, anon;
+grant execute on function public.get_member_attendance_history(uuid) to authenticated;

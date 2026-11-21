@@ -4,8 +4,8 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Banknote, Home, QrCode, UserPlus, Users } from "lucide-react";
-import { duesPath, joinPanelPath, membersPath, officersPath, workspacePath } from "@/src/lib/routes";
+import { Banknote, CalendarDays, Home, QrCode, UserPlus, Users } from "lucide-react";
+import { duesPath, eventsPath, joinPanelPath, membersPath, officersPath, workspacePath } from "@/src/lib/routes";
 
 interface NavLinkItemProps {
   href: string;
@@ -58,7 +58,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "join" | "invite";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "join" | "invite";
 
 interface NavListProps {
   rawId: string;
@@ -76,6 +76,7 @@ export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListP
       router.prefetch(workspacePath(rawId));
       router.prefetch(membersPath(rawId));
       router.prefetch(duesPath(rawId));
+      router.prefetch(eventsPath(rawId));
       router.prefetch(officersPath(rawId));
       if (isAdmin) {
         router.prefetch(joinPanelPath(rawId));
@@ -128,6 +129,16 @@ export function NavList({ rawId, isAdmin, isCollapsed, activeSection }: NavListP
         icon={Banknote}
         strokeWidth={2.2}
         isActive={activeSection === "dues"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={eventsPath(rawId)}
+        title="Events: create and manage events"
+        label="Events"
+        icon={CalendarDays}
+        strokeWidth={2.2}
+        isActive={activeSection === "events"}
         isCollapsed={isCollapsed}
       />
 

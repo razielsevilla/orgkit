@@ -42,7 +42,7 @@ beforeEach(() => {
 describe("proxy: signed out", () => {
   beforeEach(signedOut);
 
-  it.each(["/", "/signin", "/register", "/privacy", "/terms", "/auth/callback", "/join/abc", "/invite/abc", "/invite/abc/start"])(
+  it.each(["/", "/signin", "/register", "/privacy", "/terms", "/auth/callback", "/join/abc", "/checkin/abc", "/invite/abc", "/invite/abc/start"])(
     "lets a visitor open %s",
     async (path) => {
       expect(await visit(path)).toBeNull();
