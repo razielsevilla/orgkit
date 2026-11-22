@@ -9,6 +9,8 @@ import { logger } from "@/src/lib/logger";
 import {
   DOCUMENT_CATEGORIES,
   DOCUMENTS_ERROR_MESSAGES,
+  addDocumentLinkSchema,
+  type AddDocumentLinkInput,
   type DocumentCategory,
   type DocumentsActionError,
 } from "@/src/lib/documents/documents-validation";
@@ -97,3 +99,69 @@ export async function getWorkspaceDocuments(
     }
   );
 }
+
+/**
+ * Creates an external link document.
+ * Accessible to all officers in the organization.
+ */
+export async function addDocumentLinkAction(
+  orgId: string,
+  input: AddDocumentLinkInput
+): Promise<ActionResult<WorkspaceDocument, DocumentsActionError>> {
+  return withOrgCaller(
+    orgId,
+    {
+      name: "documents.add_link",
+      unexpected: "Failed to add document link.",
+    },
+    async (caller) => {
+      const parsed = addDocumentLinkSchema.safeParse(input);
+      if (!parsed.success) {
+        const firstIssue = parsed.error.issues[0];
+        let errCode: DocumentsActionError = "failed";
+        if (firstIssue.path[0] === "title") errCode = "invalid_title";
+        else if (firstIssue.path[0] === "category") errCode = "invalid_category";
+        else if (firstIssue.path[0] === "url") errCode = "invalid_url";
+
+        return fail(errCode, firstIssue.message);
+      }
+
+      const { title, category, url } = parsed.data;
+
+      const { data: newRow, error: insertError } = await caller.supabase
+        .from("documents")
+        .insert({
+          org_id: orgId,
+          title,
+          category,
+          kind: "link",
+          url,
+          created_by: caller.user.id,
+        })
+        .select()
+        .single();
+
+      if (insertError || !newRow) {
+        logger.error("documents.add_link_failed", { orgId, error: insertError });
+        return fail("failed", "Failed to add link document.");
+      }
+
+      revalidatePath(documentsPath(orgId));
+
+      return ok({
+        id: newRow.id,
+        orgId: newRow.org_id,
+        title: newRow.title,
+        category: newRow.category as DocumentCategory,
+        kind: "link",
+        storagePath: null,
+        url: newRow.url,
+        fileSize: null,
+        mimeType: null,
+        createdBy: newRow.created_by,
+        createdAt: newRow.created_at,
+      });
+    }
+  );
+}
+
