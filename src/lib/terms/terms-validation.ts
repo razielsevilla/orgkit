@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isUuid } from "@/src/lib/validation";
+import { isUuid } from "../validation.ts";
 
 /** Date format string: YYYY-MM-DD */
 export const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
