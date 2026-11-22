@@ -58,6 +58,7 @@ layout but is not part of the URL.
 | `/workspace/:id/events/:eventId/checkin` | Officer of that org | **Check-in**: a full-screen view with a QR that rotates every 30 seconds, the event title, a live count and Open / Close check-in. A cancelled event, or one that ended over an hour ago, can't be opened and the screen says why. Same "We can't find that page" card as the event page | `(workspace)/workspace/[id]/events/[eventId]/checkin/page.tsx` |
 | `/workspace/:id/officers` | Officer of that org | **Invite**: officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
 | `/workspace/:id/terms` | Officer of that org | **Terms**: record officer roles and leadership terms (H1), grouped by term | `(workspace)/workspace/[id]/terms/page.tsx` |
+| `/workspace/:id/documents` | Officer of that org | **Documents**: store key documents and external links (H2), organized by category | `(workspace)/workspace/[id]/documents/page.tsx` |
 | `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | **Join**: manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
 | `/workspace/:id/members/export` | **Admin** of that org (others get 403) | **Export**: `POST` streams the roster as a CSV download | `(workspace)/workspace/[id]/members/export/route.ts` |
 
@@ -87,7 +88,7 @@ Do not link to these. They exist for people who saved an old address.
 | Need | Use |
 |---|---|
 | A fixed page | `ROUTES.home`, `.signIn`, `.register`, `.privacy`, `.terms`, `.consent`, `.authCallback`, `.newWorkspace` |
-| An org's pages | `workspacePath(id)`, `membersPath(id)`, `duesPath(id)`, `eventsPath(id)`, `eventPath(id, eventId)`, `checkinPath(id, eventId)`, `officersPath(id)`, `termsPath(id)`, `joinPanelPath(id)` |
+| An org's pages | `workspacePath(id)`, `membersPath(id)`, `duesPath(id)`, `eventsPath(id)`, `eventPath(id, eventId)`, `checkinPath(id, eventId)`, `officersPath(id)`, `termsPath(id)`, `documentsPath(id)`, `joinPanelPath(id)` |
 | An invite | `invitePath(token)`, `inviteStartPath(encodedToken)` |
 | A student join link | `joinLinkPath(token)` |
 | Sign-in with an error | `signInPath("google_error")` |
