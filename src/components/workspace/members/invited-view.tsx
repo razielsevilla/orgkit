@@ -125,39 +125,140 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
         role="region"
         aria-label="No one is invited"
         style={{
+          position: "relative",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          textAlign: "center",
-          padding: "clamp(40px, 6vw, 60px) clamp(20px, 4vw, 36px)",
+          justifyContent: "center",
+          padding: "clamp(48px, 6vw, 72px) clamp(24px, 4vw, 48px)",
           backgroundColor: "var(--color-surface)",
-          borderRadius: 24,
+          borderRadius: 28,
           border: "1px solid var(--color-line)",
-          boxShadow: "0 10px 30px rgba(24, 24, 27, 0.04)",
+          textAlign: "center",
+          boxShadow: "0 20px 50px rgba(24, 24, 27, 0.05)",
+          overflow: "hidden",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
+        {/* Decorative Geometric Background Circles */}
         <div
           aria-hidden="true"
           style={{
-            width: 56,
-            height: 56,
+            position: "absolute",
+            top: -60,
+            left: -60,
+            width: 220,
+            height: 220,
             borderRadius: "50%",
-            backgroundColor: "color-mix(in srgb, var(--color-accent) 10%, transparent)",
-            color: "var(--color-accent)",
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 4%, transparent)",
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            bottom: -80,
+            right: -80,
+            width: 260,
+            height: 260,
+            borderRadius: "50%",
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 5%, transparent)",
+            pointerEvents: "none",
+          }}
+        />
+
+        {/* Floating Accent Badges (docs/design.md floating icons pattern) */}
+        <div
+          aria-hidden="true"
+          className="orgkit-float-a"
+          style={{
+            position: "absolute",
+            top: 24,
+            left: 32,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: 16,
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 10%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--color-accent) 20%, transparent)",
+            color: "var(--color-accent)",
+            boxShadow: "0 8px 20px rgba(5, 150, 105, 0.08)",
+            transform: "rotate(-6deg)",
           }}
         >
-          <UserPlus size={26} strokeWidth={1.8} />
+          <UserPlus size={20} strokeWidth={2} />
         </div>
-        <h3 style={{ fontSize: 19, fontWeight: 700, color: "var(--color-ink)", margin: "0 0 6px 0" }}>
+
+        <div
+          aria-hidden="true"
+          className="orgkit-float-b"
+          style={{
+            position: "absolute",
+            bottom: 28,
+            right: 36,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 44,
+            height: 44,
+            borderRadius: 14,
+            backgroundColor: "var(--color-surface)",
+            border: "1px solid var(--color-line)",
+            color: "var(--color-accent)",
+            boxShadow: "0 10px 25px rgba(24, 24, 27, 0.06)",
+            transform: "rotate(8deg)",
+          }}
+        >
+          <Upload size={20} strokeWidth={2} />
+        </div>
+
+        {/* Main Center Icon */}
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: "50%",
+            backgroundColor: "color-mix(in srgb, var(--color-accent) 10%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--color-accent) 22%, transparent)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "var(--color-accent)",
+            marginBottom: 20,
+            boxShadow: "0 8px 24px rgba(5, 150, 105, 0.12)",
+          }}
+        >
+          <UserPlus size={28} strokeWidth={2.2} />
+        </div>
+
+        {/* Title & Copy */}
+        <h2
+          style={{
+            fontSize: "clamp(22px, 2.2vw, 28px)",
+            fontWeight: 700,
+            color: "var(--color-ink)",
+            letterSpacing: "-0.015em",
+            margin: "0 0 10px 0",
+          }}
+        >
           No one is invited
-        </h3>
-        <p style={{ fontSize: 14, color: "var(--color-muted)", maxWidth: 380, lineHeight: 1.5, margin: "0 0 22px 0" }}>
+        </h2>
+        <p
+          style={{
+            fontSize: 15,
+            color: "var(--color-muted)",
+            maxWidth: 420,
+            lineHeight: 1.5,
+            margin: "0 0 28px 0",
+          }}
+        >
           No one is invited. Import a list to get started.
         </p>
+
         <button
           type="button"
           onClick={onImport}
@@ -174,10 +275,12 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
             fontWeight: 600,
             border: "none",
             cursor: "pointer",
+            boxShadow: "0 2px 8px color-mix(in srgb, var(--color-accent) 25%, transparent)",
+            transition: "all 0.15s ease",
           }}
         >
           <Upload size={15} aria-hidden="true" />
-          Import
+          <span>Import</span>
         </button>
       </div>
     );
