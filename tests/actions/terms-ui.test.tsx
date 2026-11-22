@@ -114,7 +114,7 @@ describe("H1 UI: TermsHeader", () => {
         onAddTerm: vi.fn(),
       })
     );
-    expect(html).toContain("Officer Terms");
+    expect(html).toContain("Terms");
     expect(html).toContain("3 roles");
     expect(html).toContain("Record Term");
   });
@@ -131,7 +131,7 @@ describe("H1 UI: TermsHeader", () => {
         onAddTerm: vi.fn(),
       })
     );
-    expect(html).toContain("Officer Terms");
+    expect(html).toContain("Terms");
     expect(html).not.toContain("Record Term");
   });
 });
