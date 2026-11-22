@@ -31,6 +31,10 @@ export function officersPath(orgId: string): string {
   return `${workspacePath(orgId)}/officers`;
 }
 
+export function termsPath(orgId: string): string {
+  return `${workspacePath(orgId)}/terms`;
+}
+
 export function membersPath(orgId: string): string {
   return `${workspacePath(orgId)}/members`;
 }
@@ -147,6 +151,7 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/workspace/:id/members",
   "/workspace/:id/dues",
   "/workspace/:id/officers",
+  "/workspace/:id/terms",
   "/workspace/:id/events",
   "/workspace/:id/events/:eventId",
   "/workspace/:id/events/:eventId/checkin",
