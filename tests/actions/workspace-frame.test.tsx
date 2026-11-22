@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("workspace frame navigation for Ticket R1 & P1", () => {
-  it("shows Home, Members, Dues, Events and Officers to an admin", async () => {
+  it("shows Home, Members, Dues, Events, Officers and Terms to an admin", async () => {
     const html = await render(data(true));
     expect(navHrefs(html)).toEqual([
       `/workspace/${ORG}`,
@@ -60,23 +60,26 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
       `/workspace/${ORG}/dues`,
       `/workspace/${ORG}/events`,
       `/workspace/${ORG}/officers`,
+      `/workspace/${ORG}/terms`,
     ]);
-    for (const label of ["Home", "Members", "Dues", "Events", "Officers"]) {
+    for (const label of ["Home", "Members", "Dues", "Events", "Officers", "Terms"]) {
       expect(html).toContain(`<span>${label}</span>`);
     }
     expect(html).not.toContain("<span>Join</span>");
   });
 
-  it("shows Members and Dues to regular officers, but hides Join", async () => {
+  it("shows Members, Dues, Events, Officers and Terms to regular officers, but hides Join", async () => {
     const html = await render(data(false));
     expect(html).toContain("<span>Home</span>");
     expect(html).toContain("<span>Members</span>");
     expect(html).toContain("<span>Dues</span>");
     expect(html).toContain("<span>Events</span>");
     expect(html).toContain("<span>Officers</span>");
+    expect(html).toContain("<span>Terms</span>");
     expect(html).not.toContain("<span>Join</span>");
     expect(html).toContain(`/workspace/${ORG}/members`);
     expect(html).toContain(`/workspace/${ORG}/dues`);
+    expect(html).toContain(`/workspace/${ORG}/terms`);
     expect(html).not.toContain("/members/join");
   });
 
