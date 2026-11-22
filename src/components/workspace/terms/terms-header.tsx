@@ -2,6 +2,7 @@ import React from "react";
 import { Plus, Award, History, Layers } from "lucide-react";
 
 interface TermsHeaderProps {
+  orgName?: string;
   totalTerms: number;
   currentCount: number;
   pastCount: number;
@@ -12,6 +13,7 @@ interface TermsHeaderProps {
 }
 
 export function TermsHeader({
+  orgName,
   totalTerms,
   currentCount,
   pastCount,
@@ -72,7 +74,7 @@ export function TermsHeader({
               margin: 0,
             }}
           >
-            Record and review who held each officer role and during what period.
+            {orgName ? `Leadership and officer history for ${orgName}.` : "Record and review who held each officer role and during what period."}
           </p>
         </div>
 

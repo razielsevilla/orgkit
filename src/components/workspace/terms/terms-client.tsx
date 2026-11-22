@@ -200,6 +200,7 @@ export function TermsClient({ initialData }: TermsClientProps) {
 
       {/* Header */}
       <TermsHeader
+        orgName={initialData.orgName}
         totalTerms={terms.length}
         currentCount={currentCount}
         pastCount={pastCount}
