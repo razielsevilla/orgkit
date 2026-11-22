@@ -130,6 +130,7 @@ export function InvitedView({ data, isLoading, isLoadingMore, error, onRetry, on
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          minHeight: 360,
           padding: "clamp(48px, 6vw, 72px) clamp(24px, 4vw, 48px)",
           backgroundColor: "var(--color-surface)",
           borderRadius: 28,
