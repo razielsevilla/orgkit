@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 
-// The workspace frame: one sidebar for Home, Members, Join and Invite.
+// The workspace frame: one sidebar for Home, Members, Join and Officers.
 let pathname = "/";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("workspace frame navigation for Ticket R1 & P1", () => {
-  it("shows Home, Members, Dues, Events and Invite to an admin", async () => {
+  it("shows Home, Members, Dues, Events and Officers to an admin", async () => {
     const html = await render(data(true));
     expect(navHrefs(html)).toEqual([
       `/workspace/${ORG}`,
@@ -61,7 +61,7 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
       `/workspace/${ORG}/events`,
       `/workspace/${ORG}/officers`,
     ]);
-    for (const label of ["Home", "Members", "Dues", "Events", "Invite"]) {
+    for (const label of ["Home", "Members", "Dues", "Events", "Officers"]) {
       expect(html).toContain(`<span>${label}</span>`);
     }
     expect(html).not.toContain("<span>Join</span>");
@@ -73,7 +73,7 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
     expect(html).toContain("<span>Members</span>");
     expect(html).toContain("<span>Dues</span>");
     expect(html).toContain("<span>Events</span>");
-    expect(html).toContain("<span>Invite</span>");
+    expect(html).toContain("<span>Officers</span>");
     expect(html).not.toContain("<span>Join</span>");
     expect(html).toContain(`/workspace/${ORG}/members`);
     expect(html).toContain(`/workspace/${ORG}/dues`);
@@ -91,7 +91,7 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
     [`/workspace/${ORG}`, "Home"],
     [`/workspace/${ORG}/members`, "Members"],
     [`/workspace/${ORG}/dues`, "Dues"],
-    [`/workspace/${ORG}/officers`, "Invite"],
+    [`/workspace/${ORG}/officers`, "Officers"],
     [`/workspace/${ORG}/events`, "Events"],
     [`/workspace/${ORG}/events/22222222-2222-4222-8222-222222222222`, "Events"],
   ])("highlights %s as active when on %s", async (path, label) => {

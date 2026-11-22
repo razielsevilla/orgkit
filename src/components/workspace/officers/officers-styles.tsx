@@ -1,6 +1,12 @@
 export function OfficersStyles() {
   return (
     <style>{`
+      .orgkit-role-option:hover {
+        background-color: var(--color-base) !important;
+      }
+      .orgkit-officer-pill-trigger:hover:not(:disabled) {
+        filter: brightness(0.96);
+      }
       @media (max-width: 1200px) {
         .orgkit-floating-decor {
           display: none !important;
