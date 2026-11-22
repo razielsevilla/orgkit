@@ -27,7 +27,7 @@ function sectionFor(pathname: string, rawId: string): SidebarSection {
   if (pathname.startsWith(membersPath(rawId))) return "members";
   if (pathname.startsWith(duesPath(rawId))) return "dues";
   if (pathname.startsWith(eventsPath(rawId))) return "events";
-  if (pathname.startsWith(officersPath(rawId))) return "invite";
+  if (pathname.startsWith(officersPath(rawId))) return "officer";
   return "home";
 }
 
@@ -36,7 +36,7 @@ const SECTION_LABELS: Record<SidebarSection, string> = {
   members: "Members",
   dues: "Dues",
   events: "Events",
-  invite: "Invite",
+  officer: "Officer",
 };
 
 const FOCUSABLE =

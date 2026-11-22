@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Banknote, CalendarDays, Home, UserPlus, Users } from "lucide-react";
+import { Banknote, CalendarDays, Home, Shield, Users } from "lucide-react";
 import {
   duesPath,
   eventsPath,
@@ -64,7 +64,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "events" | "invite";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "officers";
 
 interface NavListProps {
   rawId: string;
@@ -147,11 +147,11 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
 
       <NavLinkItem
         href={officersPath(rawId)}
-        title="Invite: officers and invites"
-        label="Invite"
-        icon={UserPlus}
+        title="Officer: manage team and invites"
+        label="Officer"
+        icon={Shield}
         strokeWidth={2.2}
-        isActive={activeSection === "invite"}
+        isActive={activeSection === "officers"}
         isCollapsed={isCollapsed}
       />
     </nav>

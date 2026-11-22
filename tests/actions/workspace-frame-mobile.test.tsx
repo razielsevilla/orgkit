@@ -165,7 +165,7 @@ describe("the sidebar drawer", () => {
 
     narrow = true;
     const phone = await renderFrame();
-    for (const label of ["Home", "Members", "Dues", "Events", "Invite"]) {
+    for (const label of ["Home", "Members", "Dues", "Events", "Officer"]) {
       expect(phone).toContain(`<span>${label}</span>`);
     }
     expect(phone).not.toContain('title="Expand sidebar"');
