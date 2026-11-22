@@ -33,15 +33,18 @@ export function DocumentsHeader({
           gap: 16,
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <h1
+              tabIndex={-1}
               style={{
-                fontSize: "clamp(22px, 3vw, 28px)",
+                outline: "none",
+                fontSize: "clamp(26px, 2.6vw, 34px)",
                 fontWeight: 800,
                 color: "var(--color-ink)",
+                letterSpacing: "-0.025em",
                 margin: 0,
-                letterSpacing: "-0.02em",
+                lineHeight: 1.15,
               }}
             >
               Documents
@@ -50,10 +53,10 @@ export function DocumentsHeader({
               style={{
                 backgroundColor: "color-mix(in srgb, var(--color-accent) 12%, transparent)",
                 color: "var(--color-accent-strong)",
-                fontSize: 12,
+                fontSize: 12.5,
                 fontWeight: 700,
                 padding: "2px 10px",
-                borderRadius: 20,
+                borderRadius: 999,
               }}
             >
               {totalDocuments} {totalDocuments === 1 ? "item" : "items"}
@@ -62,10 +65,10 @@ export function DocumentsHeader({
 
           <p
             style={{
+              margin: "6px 0 0 0",
               fontSize: 14,
-              color: "var(--color-muted-strong)",
-              margin: 0,
-              lineHeight: 1.5,
+              color: "var(--color-muted)",
+              lineHeight: 1.4,
             }}
           >
             {orgName

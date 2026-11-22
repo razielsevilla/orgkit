@@ -41,15 +41,18 @@ export function TermsHeader({
           gap: 16,
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+        <div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <h1
+              tabIndex={-1}
               style={{
-                fontSize: "clamp(22px, 3vw, 28px)",
+                outline: "none",
+                fontSize: "clamp(26px, 2.6vw, 34px)",
                 fontWeight: 800,
                 color: "var(--color-ink)",
+                letterSpacing: "-0.025em",
                 margin: 0,
-                letterSpacing: "-0.02em",
+                lineHeight: 1.15,
               }}
             >
               Terms
@@ -69,9 +72,10 @@ export function TermsHeader({
           </div>
           <p
             style={{
+              margin: "6px 0 0 0",
               fontSize: 14,
               color: "var(--color-muted)",
-              margin: 0,
+              lineHeight: 1.4,
             }}
           >
             {orgName ? `Leadership and officer history for ${orgName}.` : "Record and review who held each officer role and during what period."}
