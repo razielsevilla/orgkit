@@ -10,7 +10,7 @@ export function TermsSkeleton() {
         flexDirection: "column",
         gap: 28,
         width: "100%",
-        maxWidth: 1200,
+        maxWidth: 960,
         margin: "0 auto",
       }}
     >
