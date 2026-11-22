@@ -52,7 +52,7 @@ export function TermsHeader({
                 letterSpacing: "-0.02em",
               }}
             >
-              Officer Terms
+              Terms
             </h1>
             <span
               style={{
