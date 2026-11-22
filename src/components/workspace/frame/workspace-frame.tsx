@@ -4,7 +4,7 @@ import { use, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { plusJakarta } from "@/src/lib/fonts";
-import { duesPath, eventsPath, membersPath, officersPath } from "@/src/lib/routes";
+import { duesPath, eventsPath, membersPath, officersPath, termsPath } from "@/src/lib/routes";
 import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
 import { useNarrowScreen } from "@/src/lib/use-narrow-screen";
 import { Sidebar } from "@/src/components/layout/sidebar";
@@ -28,6 +28,7 @@ function sectionFor(pathname: string, rawId: string): SidebarSection {
   if (pathname.startsWith(duesPath(rawId))) return "dues";
   if (pathname.startsWith(eventsPath(rawId))) return "events";
   if (pathname.startsWith(officersPath(rawId))) return "officers";
+  if (pathname.startsWith(termsPath(rawId))) return "terms";
   return "home";
 }
 
@@ -37,6 +38,7 @@ const SECTION_LABELS: Record<SidebarSection, string> = {
   dues: "Dues",
   events: "Events",
   officers: "Officers",
+  terms: "Terms",
 };
 
 const FOCUSABLE =
