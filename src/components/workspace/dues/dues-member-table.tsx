@@ -144,6 +144,8 @@ export function DuesMemberTable({
           style={{
             width: "100%",
             borderCollapse: "collapse",
+            // Fixed columns, so a long email shortens with "..." instead of widening the table
+            tableLayout: "fixed",
             textAlign: "left",
           }}
         >
@@ -228,8 +230,9 @@ export function DuesMemberTable({
                   {/* Reference # */}
                   <td style={{ padding: "16px 24px", width: "22%" }}>
                     {member.referenceNo ? (
-                      <div style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
                         <code
+                          title={member.referenceNo}
                           style={{
                             fontSize: 12.5,
                             fontFamily: "monospace",
@@ -238,6 +241,11 @@ export function DuesMemberTable({
                             backgroundColor: "color-mix(in srgb, var(--color-ink) 5%, transparent)",
                             padding: "3px 7px",
                             borderRadius: 6,
+                            // A long reference shortens instead of spilling into the Date column
+                            minWidth: 0,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
                           }}
                         >
                           {member.referenceNo}
@@ -256,6 +264,7 @@ export function DuesMemberTable({
                             background: "transparent",
                             border: "none",
                             borderRadius: 4,
+                            flexShrink: 0,
                             cursor: "pointer",
                             color: copiedRef === member.referenceNo ? "var(--color-accent)" : "var(--color-muted)",
                             transition: "color 0.15s ease",

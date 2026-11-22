@@ -7,7 +7,8 @@ import { plusJakarta } from "@/src/lib/fonts";
 import { Link2Off } from "lucide-react";
 import { Card, CardBadge, CardTitle, CardDescription } from "@/src/components/ui/card";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
-import { JOIN_MESSAGES, parseContactEmail } from "@/src/lib/members/member-join";
+import { JOIN_MESSAGES } from "@/src/lib/members/member-join";
+import { getPrivacyContactEmail } from "@/src/lib/config";
 import { getJoinOrgName } from "@/src/lib/members/member-join-server";
 import { JoinForm } from "@/src/components/join/join-form";
 import { JoinBackdrop } from "@/src/components/join/join-backdrop";
@@ -25,7 +26,7 @@ export default function JoinPage({ params }: { params: Promise<{ token: string }
       className={`${plusJakarta.className} orgkit-join-page`}
       style={{
         position: "relative",
-        minHeight: "100vh",
+        minHeight: "100dvh",
         backgroundColor: "var(--color-base)",
         color: "var(--color-ink)",
         display: "flex",
@@ -85,7 +86,7 @@ async function JoinContent({ params }: { params: Promise<{ token: string }> }) {
 
   // The consent text promises a privacy contact. Without one the page must not
   // collect anything, so it looks the same as an inactive link.
-  const contactEmail = parseContactEmail(process.env.PRIVACY_CONTACT_EMAIL);
+  const contactEmail = getPrivacyContactEmail();
   if (!contactEmail) {
     logger.error("join_page.privacy_contact_missing", "The join page is closed: PRIVACY_CONTACT_EMAIL is not set.", {
       variable: "PRIVACY_CONTACT_EMAIL",

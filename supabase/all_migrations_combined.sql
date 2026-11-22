@@ -4354,3 +4354,508 @@ $$;
 revoke all on function public.log_dues_reminder(uuid, uuid, text, text) from public, anon;
 grant execute on function public.log_dues_reminder(uuid, uuid, text, text) to authenticated;
 grant execute on function public.log_dues_reminder(uuid, uuid, text, text) to service_role;
+
+
+
+-- >>> FILE: 20261121120000_t3_weekly_usage_metrics.sql
+-- T3: Weekly usage metrics
+--
+-- A weekly snapshot of how much OrgKit is used, for the product owner only:
+-- orgs (active and inactive), events created, check-ins and active officers.
+--
+-- Weeks run Monday to Sunday, UTC. Only aggregate counts are stored: nothing
+-- about individual members and no page views.
+--
+-- An org is ACTIVE in a week if, that week, an event was created, someone
+-- checked in, a dues reminder was sent, or a dues payment was verified,
+-- rejected or undone. Every other org counts as inactive, so the two always add
+-- up to the orgs that existed (an org with no activity is never left out).
+--
+-- An ACTIVE OFFICER is a distinct officer who did one of those officer actions
+-- that week. The app has no sign-in history, so this is based on actions.
+--
+-- 1. platform_owners: who the product owner is (checked in the database)
+-- 2. usage_weekly: one snapshot row per week
+-- 3. usage_report_runs: records failed runs so they can be retried
+-- 4. compute_usage_week, run_weekly_usage_report: service role only (cron)
+-- 5. get_usage_report: the owner's read access
+
+-- 1. Product owners ---------------------------------------------------------
+
+create table if not exists public.platform_owners (
+  officer_id uuid primary key references public.officers(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+alter table public.platform_owners enable row level security;
+
+-- No policies and no client access: the table is read only through
+-- is_platform_owner(). Add an owner with an insert run as the database owner:
+--   insert into public.platform_owners (officer_id)
+--   select id from public.officers where email = 'owner@example.com';
+revoke all on public.platform_owners from public, anon, authenticated;
+grant all on public.platform_owners to service_role;
+
+create or replace function public.is_platform_owner()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.platform_owners where officer_id = auth.uid()
+  );
+$$;
+
+revoke all on function public.is_platform_owner() from public, anon;
+grant execute on function public.is_platform_owner() to authenticated;
+grant execute on function public.is_platform_owner() to service_role;
+
+-- 2. Weekly snapshots -------------------------------------------------------
+
+create table if not exists public.usage_weekly (
+  week_start date primary key,
+  orgs_total integer not null check (orgs_total >= 0),
+  orgs_active integer not null check (orgs_active >= 0),
+  orgs_inactive integer not null check (orgs_inactive >= 0),
+  events_created integer not null check (events_created >= 0),
+  check_ins integer not null check (check_ins >= 0),
+  active_officers integer not null check (active_officers >= 0),
+  computed_at timestamptz not null default now(),
+  constraint usage_weekly_monday check (extract(isodow from week_start) = 1),
+  constraint usage_weekly_orgs_add_up check (orgs_active + orgs_inactive = orgs_total)
+);
+
+alter table public.usage_weekly enable row level security;
+revoke all on public.usage_weekly from public, anon, authenticated;
+grant all on public.usage_weekly to service_role;
+
+-- 3. Run log ----------------------------------------------------------------
+
+create table if not exists public.usage_report_runs (
+  week_start date primary key,
+  status text not null check (status in ('succeeded', 'failed')),
+  attempts integer not null default 1 check (attempts >= 1),
+  error_message text null,
+  next_retry_at timestamptz null,
+  last_attempt_at timestamptz not null default now()
+);
+
+alter table public.usage_report_runs enable row level security;
+revoke all on public.usage_report_runs from public, anon, authenticated;
+grant all on public.usage_report_runs to service_role;
+
+-- 4a. Compute one week ------------------------------------------------------
+-- Safe to run again for the same week: it replaces that week's row.
+
+create or replace function public.compute_usage_week(p_week_start date)
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_from timestamptz;
+  v_to timestamptz;
+  v_orgs_total integer;
+  v_orgs_active integer;
+  v_events integer;
+  v_check_ins integer;
+  v_officers integer;
+begin
+  if extract(isodow from p_week_start) <> 1 then
+    raise exception 'week_start_must_be_a_monday';
+  end if;
+
+  v_from := p_week_start::timestamp at time zone 'utc';
+  v_to := v_from + interval '7 days';
+
+  select count(*)::int into v_orgs_total
+    from public.orgs o
+   where o.created_at < v_to;
+
+  select count(*)::int into v_events
+    from public.events e
+   where e.created_at >= v_from and e.created_at < v_to;
+
+  select count(*)::int into v_check_ins
+    from public.attendance a
+   where a.checked_in_at >= v_from and a.checked_in_at < v_to;
+
+  with activity as (
+    select e.org_id, e.created_by as officer_id
+      from public.events e
+     where e.created_at >= v_from and e.created_at < v_to
+    union all
+    select a.org_id, a.marked_by
+      from public.attendance a
+     where a.checked_in_at >= v_from and a.checked_in_at < v_to
+    union all
+    select r.org_id, r.sent_by
+      from public.dues_reminders r
+     where r.sent_at >= v_from and r.sent_at < v_to
+    union all
+    select pe.org_id, pe.actor_id
+      from public.dues_payment_events pe
+     where pe.created_at >= v_from and pe.created_at < v_to
+  )
+  select
+    (select count(distinct act.org_id)::int
+       from activity act
+       join public.orgs o on o.id = act.org_id and o.created_at < v_to),
+    (select count(distinct act.officer_id)::int
+       from activity act
+      where act.officer_id is not null)
+    into v_orgs_active, v_officers;
+
+  insert into public.usage_weekly (
+    week_start, orgs_total, orgs_active, orgs_inactive,
+    events_created, check_ins, active_officers, computed_at
+  ) values (
+    p_week_start, v_orgs_total, v_orgs_active, v_orgs_total - v_orgs_active,
+    v_events, v_check_ins, v_officers, now()
+  )
+  on conflict (week_start) do update set
+    orgs_total = excluded.orgs_total,
+    orgs_active = excluded.orgs_active,
+    orgs_inactive = excluded.orgs_inactive,
+    events_created = excluded.events_created,
+    check_ins = excluded.check_ins,
+    active_officers = excluded.active_officers,
+    computed_at = excluded.computed_at;
+end;
+$$;
+
+revoke all on function public.compute_usage_week(date) from public, anon, authenticated;
+grant execute on function public.compute_usage_week(date) to service_role;
+
+-- 4b. The scheduled run -----------------------------------------------------
+-- Makes sure each of the last 4 completed weeks has a snapshot. The first run
+-- therefore fills in the past weeks from existing data. A week that fails is
+-- recorded and tried again later (15 minutes, then doubling, up to 5 attempts);
+-- one failing week never stops the others. Does nothing when nothing is due.
+
+create or replace function public.run_weekly_usage_report()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_current_week date := date_trunc('week', now() at time zone 'utc')::date;
+  v_week date;
+  v_run public.usage_report_runs%rowtype;
+begin
+  for v_week in
+    select v_current_week - n * 7 from generate_series(1, 4) as n order by 1
+  loop
+    if exists (select 1 from public.usage_weekly where week_start = v_week) then
+      continue;
+    end if;
+
+    select * into v_run from public.usage_report_runs where week_start = v_week;
+    if found and v_run.status = 'failed'
+       and (v_run.attempts >= 5 or v_run.next_retry_at > now()) then
+      continue;
+    end if;
+
+    begin
+      perform public.compute_usage_week(v_week);
+
+      insert into public.usage_report_runs (week_start, status, attempts, last_attempt_at)
+      values (v_week, 'succeeded', 1, now())
+      on conflict (week_start) do update set
+        status = 'succeeded',
+        attempts = public.usage_report_runs.attempts + 1,
+        error_message = null,
+        next_retry_at = null,
+        last_attempt_at = now();
+    exception when others then
+      insert into public.usage_report_runs (
+        week_start, status, attempts, error_message, next_retry_at, last_attempt_at
+      ) values (
+        v_week, 'failed', 1, sqlerrm, now() + interval '15 minutes', now()
+      )
+      on conflict (week_start) do update set
+        status = 'failed',
+        attempts = public.usage_report_runs.attempts + 1,
+        error_message = sqlerrm,
+        next_retry_at = now() + interval '15 minutes'
+          * power(2, least(public.usage_report_runs.attempts, 4)),
+        last_attempt_at = now();
+    end;
+  end loop;
+end;
+$$;
+
+revoke all on function public.run_weekly_usage_report() from public, anon, authenticated;
+grant execute on function public.run_weekly_usage_report() to service_role;
+
+-- 5. The owner's report -----------------------------------------------------
+-- The last completed weeks, newest first. A week with no snapshot is still
+-- listed, as 'failed' (with the attempt count) or 'pending', so the page can
+-- say so instead of showing nothing.
+
+create or replace function public.get_usage_report(p_weeks integer default 4)
+returns table (
+  week_start date,
+  week_end date,
+  status text,
+  orgs_total integer,
+  orgs_active integer,
+  orgs_inactive integer,
+  events_created integer,
+  check_ins integer,
+  active_officers integer,
+  computed_at timestamptz,
+  attempts integer,
+  error_message text,
+  next_retry_at timestamptz
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_current_week date := date_trunc('week', now() at time zone 'utc')::date;
+  v_weeks integer := least(greatest(coalesce(p_weeks, 4), 1), 12);
+begin
+  if auth.uid() is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if not public.is_platform_owner() then
+    raise exception 'not_authorized';
+  end if;
+
+  return query
+  select
+    w.week_start,
+    (w.week_start + 6),
+    case
+      when u.week_start is not null then 'ready'
+      when r.status = 'failed' then 'failed'
+      else 'pending'
+    end,
+    u.orgs_total,
+    u.orgs_active,
+    u.orgs_inactive,
+    u.events_created,
+    u.check_ins,
+    u.active_officers,
+    u.computed_at,
+    r.attempts,
+    case when u.week_start is null then r.error_message end,
+    case when u.week_start is null and r.status = 'failed' then r.next_retry_at end
+  from (
+    select (v_current_week - n * 7) as week_start
+      from generate_series(1, v_weeks) as n
+  ) w
+  left join public.usage_weekly u on u.week_start = w.week_start
+  left join public.usage_report_runs r on r.week_start = w.week_start
+  order by w.week_start desc;
+end;
+$$;
+
+revoke all on function public.get_usage_report(integer) from public, anon;
+grant execute on function public.get_usage_report(integer) to authenticated;
+grant execute on function public.get_usage_report(integer) to service_role;
+
+
+
+-- >>> FILE: 20261121120100_t3_schedule_weekly_usage_report.sql
+-- T3: run the weekly usage report on a schedule.
+--
+-- Two jobs call the same function, run_weekly_usage_report():
+--   t3-weekly-usage-report        Mondays 01:00 UTC, when a week has just ended
+--   t3-weekly-usage-report-retry  every hour, to retry a week that failed
+-- The function only does work for a week that has no snapshot yet and whose
+-- retry time has passed, so the hourly run costs almost nothing.
+--
+-- pg_cron is a Supabase extension (Database > Extensions). Where it is not
+-- available, such as a plain local Postgres, this migration only prints a
+-- notice and never blocks the other migrations. Enable the extension and
+-- re-run this file to turn the schedule on. Until then an owner can run
+--   select public.run_weekly_usage_report();
+-- by hand as the database owner.
+
+do $$
+begin
+  if not exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    raise notice 'pg_cron is not available: the weekly usage report is NOT scheduled. Enable pg_cron and re-run this migration.';
+    return;
+  end if;
+
+  create extension if not exists pg_cron;
+
+  -- Re-running replaces the jobs instead of stacking duplicates
+  perform cron.unschedule(jobid)
+  from cron.job
+  where jobname in ('t3-weekly-usage-report', 't3-weekly-usage-report-retry');
+
+  perform cron.schedule(
+    't3-weekly-usage-report',
+    '0 1 * * 1',  -- Mondays at 01:00 UTC
+    $job$select public.run_weekly_usage_report()$job$
+  );
+
+  perform cron.schedule(
+    't3-weekly-usage-report-retry',
+    '5 * * * *',  -- every hour at :05
+    $job$select public.run_weekly_usage_report()$job$
+  );
+end
+$$;
+
+
+
+-- >>> FILE: 20261122120000_t5_feedback.sql
+-- T5: In-app feedback
+--
+-- A signed-in officer can send a message from any workspace page. It is saved
+-- with the page they were on (and their org, when they were inside one), and
+-- the product owner reads it in an owner-only inbox.
+--
+-- Users get NO direct access to the table. A direct insert policy would let a
+-- signed-in browser call the database API itself and skip the app's rate limit,
+-- so writes go through submit_feedback(), which only the app server (service
+-- role) can call, after it has checked the session and the limit. This is the
+-- same approach as join and check-in. Reads go through get_feedback(), which
+-- only the product owner may call (see T3, platform_owners).
+--
+-- Feedback is personal data (it carries the sender and what they wrote): it is
+-- deleted with the officer, and the owner can delete a row once it is handled.
+
+create table if not exists public.feedback (
+  id uuid primary key default gen_random_uuid(),
+  officer_id uuid not null references public.officers(id) on delete cascade,
+  -- Kept as null if the org is later removed, so the message is not lost
+  org_id uuid null references public.orgs(id) on delete set null,
+  page text not null check (char_length(page) between 1 and 200),
+  message text not null check (char_length(btrim(message, E' \t\r\n')) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+
+create index if not exists feedback_created_idx
+  on public.feedback (created_at desc);
+
+create index if not exists feedback_officer_created_idx
+  on public.feedback (officer_id, created_at desc);
+
+alter table public.feedback enable row level security;
+
+-- No policies and no client access, not even to read the sender's own messages
+revoke all on public.feedback from public, anon, authenticated;
+grant all on public.feedback to service_role;
+
+-- Save one message. Service role only: the app checks the signed-in user and
+-- the per-device rate limit first, then passes the officer's id in.
+create or replace function public.submit_feedback(
+  p_officer_id uuid,
+  p_org_id uuid,
+  p_message text,
+  p_page text
+)
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_message text;
+  v_page text;
+  v_org uuid;
+  v_id uuid;
+begin
+  if p_officer_id is null
+     or not exists (select 1 from public.officers o where o.id = p_officer_id) then
+    raise exception 'officer_not_found';
+  end if;
+
+  -- Trim spaces and line breaks at the ends; keep line breaks inside the text
+  v_message := btrim(coalesce(p_message, ''), E' \t\r\n');
+  if char_length(v_message) < 1 or char_length(v_message) > 2000 then
+    raise exception 'invalid_message';
+  end if;
+
+  v_page := left(coalesce(nullif(btrim(p_page), ''), '/'), 200);
+
+  -- A backstop behind the per-device limit: one officer cannot flood the inbox
+  if (
+    select count(*) from public.feedback f
+     where f.officer_id = p_officer_id
+       and f.created_at > now() - interval '1 hour'
+  ) >= 20 then
+    raise exception 'rate_limited';
+  end if;
+
+  -- Only keep the org if this officer really belongs to it
+  if p_org_id is not null and exists (
+    select 1 from public.org_officers oo
+     where oo.org_id = p_org_id and oo.officer_id = p_officer_id
+  ) then
+    v_org := p_org_id;
+  end if;
+
+  insert into public.feedback (officer_id, org_id, page, message)
+  values (p_officer_id, v_org, v_page, v_message)
+  returning id into v_id;
+
+  return v_id;
+end;
+$$;
+
+revoke all on function public.submit_feedback(uuid, uuid, text, text) from public, anon, authenticated;
+grant execute on function public.submit_feedback(uuid, uuid, text, text) to service_role;
+
+-- The owner's inbox, newest first. Refuses everyone who is not a platform owner.
+create or replace function public.get_feedback(p_limit integer default 100)
+returns table (
+  id uuid,
+  created_at timestamptz,
+  message text,
+  page text,
+  org_id uuid,
+  org_name text,
+  officer_name text,
+  officer_email text
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+declare
+  v_limit integer := least(greatest(coalesce(p_limit, 100), 1), 200);
+begin
+  if auth.uid() is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  if not public.is_platform_owner() then
+    raise exception 'not_authorized';
+  end if;
+
+  return query
+  select
+    f.id,
+    f.created_at,
+    f.message,
+    f.page,
+    f.org_id,
+    org.name,
+    o.full_name,
+    o.email
+  from public.feedback f
+  join public.officers o on o.id = f.officer_id
+  left join public.orgs org on org.id = f.org_id
+  order by f.created_at desc
+  limit v_limit;
+end;
+$$;
+
+revoke all on function public.get_feedback(integer) from public, anon;
+grant execute on function public.get_feedback(integer) to authenticated;
+grant execute on function public.get_feedback(integer) to service_role;

@@ -5,7 +5,7 @@ export default function RootLoading() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         width: "100%",
         position: "relative",
         overflow: "hidden",

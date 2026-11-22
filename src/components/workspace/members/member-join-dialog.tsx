@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { X } from "lucide-react";
-import { Dialog } from "@/src/components/ui/dialog";
+import { Dialog, DialogBody } from "@/src/components/ui/dialog";
 import { setJoinLink, getJoinLink } from "@/src/app/(workspace)/workspace/[id]/members/join/actions";
 import { ErrorToast } from "@/src/components/error-toast";
 import { JoinPanelHeader } from "@/src/components/workspace/member-join/join-panel-header";
@@ -125,17 +125,24 @@ export function MemberJoinDialog({
   const qrFileName = `${orgName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "org"}-join-qr.png`;
 
   return (
+    <>
     <Dialog
       labelledBy="member-join-title"
       onDismiss={onClose}
       maxWidth={token && joinUrl ? 740 : 500}
-      padding="clamp(24px, 4vw, 36px) clamp(20px, 4vw, 36px)"
       cardStyle={{
         position: "relative",
         transition: "max-width 0.25s ease",
       }}
     >
       <style>{`
+        /* The content scrolls inside the dialog (DialogBody), so the buttons at the
+           bottom are always reachable on a short phone. On a phone the top gets extra
+           room for the close button, which floats in the corner. */
+        .mj-body { padding: clamp(24px, 4vw, 36px) clamp(20px, 4vw, 36px); }
+        @media (max-width: 640px) {
+          .mj-body { padding-top: 64px; }
+        }
         .mj-btn:hover:not(:disabled) { filter: brightness(0.96); }
         .mj-primary:hover:not(:disabled) {
           background-color: var(--color-accent-strong) !important;
@@ -149,14 +156,15 @@ export function MemberJoinDialog({
         }
         .mj-dialog-grid {
           display: grid;
-          grid-template-columns: 1fr;
+          /* minmax(0, 1fr): a wide link or input cannot stretch the column past the dialog */
+          grid-template-columns: minmax(0, 1fr);
           gap: 28px;
           align-items: center;
           width: 100%;
         }
         @media (min-width: 640px) {
           .mj-dialog-grid-on {
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
             gap: 36px;
           }
         }
@@ -197,6 +205,8 @@ export function MemberJoinDialog({
         <X size={16} />
       </button>
 
+      <DialogBody style={{ padding: 0 }}>
+      <div className="mj-body">
       {/* Two columns when active, centered single column when off */}
       <div className={token && joinUrl ? "mj-dialog-grid mj-dialog-grid-on" : "mj-dialog-grid"}>
         <JoinPanelHeader orgName={orgName} schoolName={schoolName} token={token} />
@@ -234,8 +244,12 @@ export function MemberJoinDialog({
           )}
         </div>
       </div>
-
-      <ErrorToast message={error} onDismiss={() => setError(null)} />
+      </div>
+      </DialogBody>
     </Dialog>
+
+    {/* Outside the dialog: the dialog card keeps a transform, which would pin a fixed toast to the card */}
+    <ErrorToast message={error} onDismiss={() => setError(null)} />
+    </>
   );
 }

@@ -38,6 +38,7 @@ function Bar({
       style={{
         width,
         height,
+        maxWidth: "100%",
         flexShrink: 0,
         borderRadius: radius,
         backgroundColor: `color-mix(in srgb, var(--color-line) ${strength}%, transparent)`,

@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { pageNumbers } from "@/src/lib/pagination";
+import { PagerStatus, PagerStyles } from "@/src/components/ui/pager-styles";
 
 interface MemberPagerProps {
   /** The page on screen, counted from 1 */
@@ -49,17 +50,27 @@ export function MemberPager({ page, pageCount, onPageChange, disabled = false }:
   };
 
   return (
-    <nav aria-label="Pagination" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <nav
+      aria-label="Pagination"
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 6 }}
+    >
+      <PagerStyles />
       {arrow("Previous page", page - 1, <ChevronLeft size={16} strokeWidth={2} />)}
 
       {pageNumbers(page, pageCount).map((entry, i) =>
         entry === "gap" ? (
-          <span key={`gap-${i}`} aria-hidden="true" style={{ color: "var(--color-muted)", padding: "0 2px" }}>
+          <span
+            key={`gap-${i}`}
+            className="orgkit-pager-num"
+            aria-hidden="true"
+            style={{ color: "var(--color-muted)", padding: "0 2px" }}
+          >
             …
           </span>
         ) : (
           <button
             key={entry}
+            className="orgkit-pager-num"
             type="button"
             aria-label={`Page ${entry}`}
             aria-current={entry === page ? "page" : undefined}
@@ -79,6 +90,8 @@ export function MemberPager({ page, pageCount, onPageChange, disabled = false }:
           </button>
         )
       )}
+
+      <PagerStatus page={page} pageCount={pageCount} />
 
       {arrow("Next page", page + 1, <ChevronRight size={16} strokeWidth={2} />)}
     </nav>

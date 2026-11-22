@@ -27,7 +27,8 @@ export default function SignInPage() {
         role="region"
         aria-label="Welcome back"
         style={{
-          width: "clamp(380px, 33.85vw, 566px)",
+          // min(100%, ...) keeps the card inside a phone: the 380px floor alone made it wider than a 360px screen
+          width: "min(100%, clamp(380px, 33.85vw, 566px))",
           maxWidth: 566,
           backgroundColor: "var(--color-surface)",
           borderRadius: "clamp(20px, 1.67vw, 28px)",
@@ -85,10 +86,9 @@ export default function SignInPage() {
             fontWeight: 400,
           }}
         >
-          <span style={{ whiteSpace: "nowrap" }}>
-            Sign in with Google to access your organizations,
-          </span>
-          <br />
+          {/* On a desktop the sentence breaks after the comma; on a phone it simply wraps */}
+          <span className="orgkit-nowrap-desktop">Sign in with Google to access your organizations,</span>{" "}
+          <br className="orgkit-br-desktop" />
           <span>events, and campus community.</span>
         </p>
 

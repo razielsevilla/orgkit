@@ -89,6 +89,7 @@ export function PendingInvitesSection({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                gap: 12,
                 padding: "16px 24px",
                 borderBottom:
                   idx < data.pendingInvites.length - 1
@@ -98,11 +99,12 @@ export function PendingInvitesSection({
               }}
             >
               {/* Left: Role, Date, Email (Admin) */}
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: "1 1 auto" }}>
                 <span
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
+                    flexShrink: 0,
                     gap: 5,
                     fontSize: 11,
                     fontWeight: 700,
@@ -127,8 +129,9 @@ export function PendingInvitesSection({
                   Pending
                 </span>
 
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {/* minWidth: 0 lets a long email wrap instead of widening the row */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                     <span
                       style={{
                         fontSize: 13.5,
@@ -146,6 +149,7 @@ export function PendingInvitesSection({
                         style={{
                           fontSize: 12.5,
                           color: "var(--color-muted-strong)",
+                          overflowWrap: "anywhere",
                         }}
                       >
                         • {invite.email}
@@ -176,6 +180,7 @@ export function PendingInvitesSection({
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    flexWrap: "wrap",
                     gap: 8,
                   }}
                 >

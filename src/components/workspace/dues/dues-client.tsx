@@ -303,7 +303,8 @@ export function DuesClient({
           display: none !important;
           width: 100%;
         }
-        @media (max-width: 640px) {
+        /* The desktop table needs about 650px: show the cards up to 800px, where it fits the page */
+        @media (max-width: 800px) {
           .orgkit-dues-desktop {
             display: none !important;
           }

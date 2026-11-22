@@ -28,7 +28,8 @@ export default function RegisterPage() {
         role="region"
         aria-label="Create Your Account"
         style={{
-          width: "clamp(380px, 33.85vw, 566px)",
+          // min(100%, ...) keeps the card inside a phone: the 380px floor alone made it wider than a 360px screen
+          width: "min(100%, clamp(380px, 33.85vw, 566px))",
           maxWidth: 566,
           backgroundColor: "var(--color-surface)",
           borderRadius: "clamp(20px, 1.67vw, 28px)",
@@ -86,10 +87,9 @@ export default function RegisterPage() {
             fontWeight: 400,
           }}
         >
-          <span style={{ whiteSpace: "nowrap" }}>
-            Join OrgKit and be part of a more connected
-          </span>
-          <br />
+          {/* On a desktop the sentence breaks after "connected"; on a phone it simply wraps */}
+          <span className="orgkit-nowrap-desktop">Join OrgKit and be part of a more connected</span>{" "}
+          <br className="orgkit-br-desktop" />
           <span>student community.</span>
         </p>
 

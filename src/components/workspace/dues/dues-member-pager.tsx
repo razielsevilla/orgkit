@@ -3,6 +3,7 @@
 import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { pageNumbers } from "@/src/lib/pagination";
+import { PagerStatus, PagerStyles } from "@/src/components/ui/pager-styles";
 
 interface DuesMemberPagerProps {
   page: number;
@@ -56,13 +57,18 @@ export function DuesMemberPager({
   };
 
   return (
-    <nav aria-label="Pagination" style={{ display: "flex", alignItems: "center", gap: 6 }}>
+    <nav
+      aria-label="Pagination"
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", flexWrap: "wrap", gap: 6 }}
+    >
+      <PagerStyles />
       {arrow("Previous page", page - 1, <ChevronLeft size={16} strokeWidth={2} />)}
 
       {pageNumbers(page, totalPages).map((entry, i) =>
         entry === "gap" ? (
           <span
             key={`gap-${i}`}
+            className="orgkit-pager-num"
             aria-hidden="true"
             style={{ color: "var(--color-muted)", padding: "0 2px" }}
           >
@@ -71,6 +77,7 @@ export function DuesMemberPager({
         ) : (
           <button
             key={entry}
+            className="orgkit-pager-num"
             type="button"
             aria-label={`Page ${entry}`}
             aria-current={entry === page ? "page" : undefined}
@@ -90,6 +97,8 @@ export function DuesMemberPager({
           </button>
         )
       )}
+
+      <PagerStatus page={page} pageCount={totalPages} />
 
       {arrow("Next page", page + 1, <ChevronRight size={16} strokeWidth={2} />)}
     </nav>

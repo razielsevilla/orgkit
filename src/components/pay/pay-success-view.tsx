@@ -163,6 +163,9 @@ export function PaySuccessView({
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              // A long reference or org name wraps below its label instead of pushing past the card
+              flexWrap: "wrap",
+              gap: 4,
             }}
           >
             <span style={{ color: "var(--color-muted)", fontSize: 12 }}>
@@ -177,6 +180,8 @@ export function PaySuccessView({
                 padding: "3px 8px",
                 borderRadius: 6,
                 border: "1px solid var(--color-line)",
+                overflowWrap: "anywhere",
+                minWidth: 0,
               }}
             >
               {referenceNo}
@@ -188,12 +193,15 @@ export function PaySuccessView({
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              // A long reference or org name wraps below its label instead of pushing past the card
+              flexWrap: "wrap",
+              gap: 4,
             }}
           >
             <span style={{ color: "var(--color-muted)", fontSize: 12 }}>
               {copy.successOrg}
             </span>
-            <span style={{ fontWeight: 600, color: "var(--color-ink)" }}>
+            <span style={{ fontWeight: 600, color: "var(--color-ink)", overflowWrap: "anywhere", minWidth: 0 }}>
               {orgName}
             </span>
           </div>
@@ -203,12 +211,15 @@ export function PaySuccessView({
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
+              // A long reference or org name wraps below its label instead of pushing past the card
+              flexWrap: "wrap",
+              gap: 4,
             }}
           >
             <span style={{ color: "var(--color-muted)", fontSize: 12 }}>
               {copy.successPeriod}
             </span>
-            <span style={{ color: "var(--color-muted-strong)" }}>
+            <span style={{ color: "var(--color-muted-strong)", overflowWrap: "anywhere", minWidth: 0 }}>
               {periodName}
             </span>
           </div>

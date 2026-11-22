@@ -293,6 +293,7 @@ export function CheckinScreen({
         <div style={{ width: "100%", maxWidth: 960, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
           <Link
             href={eventPath(orgId, event.id)}
+            className="orgkit-tap-link"
             style={{
               display: "inline-flex",
               alignItems: "center",

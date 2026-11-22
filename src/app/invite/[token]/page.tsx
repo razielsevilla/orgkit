@@ -79,7 +79,7 @@ async function InviteContent({ params }: InvitePageProps) {
               YOU&apos;RE INVITED TO JOIN
             </div>
 
-            <CardTitle style={{ fontSize: "clamp(22px, 2.2vw, 30px)", marginBottom: 4 }}>
+            <CardTitle style={{ fontSize: "clamp(22px, 2.2vw, 30px)", marginBottom: 4, overflowWrap: "anywhere" }}>
               {orgName}
             </CardTitle>
 
@@ -89,6 +89,7 @@ async function InviteContent({ params }: InvitePageProps) {
                   fontSize: 13,
                   color: "var(--color-muted)",
                   margin: "0 0 14px 0",
+                  overflowWrap: "anywhere",
                 }}
               >
                 {orgSchool}
@@ -215,6 +216,8 @@ async function InviteContent({ params }: InvitePageProps) {
                   textAlign: "center",
                   boxSizing: "border-box",
                   marginBottom: 4,
+                  // A long email wraps inside the box instead of running past the card
+                  overflowWrap: "anywhere",
                 }}
               >
                 Signed in as: <strong style={{ color: "var(--color-ink)" }}>{user.email}</strong>

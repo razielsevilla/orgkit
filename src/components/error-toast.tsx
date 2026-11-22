@@ -185,12 +185,17 @@ export function ErrorToast({
             animation-duration: 0.01ms !important;
           }
         }
+
+        /* On a phone the Feedback button sits in the bottom corner: keep the toast above it */
+        @media (max-width: 1023px) {
+          .orgkit-error-toast-box { bottom: 72px !important; }
+        }
       `}</style>
 
       <div
         role="alert"
         aria-live="assertive"
-        className={isExiting ? "orgkit-error-toast-exit" : "orgkit-error-toast-enter"}
+        className={`orgkit-error-toast-box ${isExiting ? "orgkit-error-toast-exit" : "orgkit-error-toast-enter"}`}
         onMouseEnter={clearTimer}
         onMouseLeave={startTimer}
         style={{

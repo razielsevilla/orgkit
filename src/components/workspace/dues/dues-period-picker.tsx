@@ -164,7 +164,8 @@ export function DuesPeriodPicker({
                 left: 0,
                 width: "max-content",
                 minWidth: "100%",
-                maxWidth: 320,
+                // Never wider than the screen, whatever the period is called
+                maxWidth: "min(320px, calc(100vw - 48px))",
                 backgroundColor: "var(--color-surface)",
                 border: "1px solid var(--color-line)",
                 borderRadius: 14,

@@ -2,16 +2,16 @@ import Link from "next/link";
 import Image from "next/image";
 import { plusJakarta } from "@/src/lib/fonts";
 import { ROUTES } from "@/src/lib/routes";
-import { parseContactEmail } from "@/src/lib/members/member-join";
+import { getPrivacyContactEmail } from "@/src/lib/config";
 
 export default function PrivacyPage() {
-  const contactEmail = parseContactEmail(process.env.PRIVACY_CONTACT_EMAIL);
+  const contactEmail = getPrivacyContactEmail();
 
   return (
     <main
       className={plusJakarta.className}
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         backgroundColor: "var(--color-base)",
         color: "var(--color-ink)",
         padding: "clamp(24px, 5vh, 48px) clamp(16px, 3vw, 24px)",
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             marginBottom: "clamp(20px, 3.5vh, 32px)",
           }}
         >
-          <Link href={ROUTES.signIn} style={{ display: "inline-flex", textDecoration: "none" }}>
+          <Link href={ROUTES.signIn} className="orgkit-tap-link" style={{ display: "inline-flex", textDecoration: "none" }}>
             <Image
               src="/orgkit-text-logo.png"
               alt="OrgKit"
@@ -47,6 +47,7 @@ export default function PrivacyPage() {
           </Link>
           <Link
             href={ROUTES.signIn}
+            className="orgkit-tap-link"
             style={{
               fontSize: 14,
               fontWeight: 600,
@@ -80,7 +81,7 @@ export default function PrivacyPage() {
               marginBottom: 0,
             }}
           >
-            Last updated: November 7, 2026
+            Last updated: November 21, 2026
           </p>
         </div>
 
@@ -142,8 +143,31 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong style={{ color: "var(--color-ink)" }}>Organizational data.</strong> Student organization
-                rosters, officer roles, event schedules, and activity records are securely stored within
-                your organization&apos;s workspace and accessible only to authorized officers.
+                rosters, officer roles, and event schedules (title, time, location) are stored within your
+                organization&apos;s workspace and accessible only to its authorized officers.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Attendance.</strong> Which member checked in to
+                which event, when, and whether it was by QR code or marked by an officer.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Dues.</strong> Dues periods and each member&apos;s
+                payment: the amount, the payment reference number, the screenshot a member uploads (kept in
+                private storage), its status, and the officer&apos;s verification or rejection, including any
+                reason given. We also keep a log of each dues reminder email sent and whether it was delivered.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Exports and rate limiting.</strong> When an officer
+                exports member data we record who exported it, when, and which fields. To limit abuse of the
+                public join page we keep a scrambled (hashed) form of your device&apos;s IP address with a
+                per-minute attempt count. The address itself is not stored.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>Feedback.</strong> When a signed-in officer sends
+                feedback from the app, we keep the message, the page they were on (the page name only, with
+                ids removed), their org, their name and email, and the time. Only the OrgKit product owner
+                can read it. It is kept until the owner deletes it, and it is removed if the officer&apos;s
+                record is removed.
               </li>
               <li>
                 <strong style={{ color: "var(--color-ink)" }}>Minimal permissions.</strong> OrgKit requests
@@ -242,12 +266,20 @@ export default function PrivacyPage() {
             >
               <li>
                 <strong style={{ color: "var(--color-ink)" }}>What we collect.</strong> Your full name and
-                email address. We also record which consent wording you saw, in which language, and when you
-                agreed, and that you confirmed you are 18 or older. We do not collect anything else when you join.
+                email address. We also record which consent wording you saw (its version), in which language,
+                and when you agreed, and that you confirmed you are 18 or older. We do not collect anything
+                else when you join. Later, the org records your event attendance and your dues payments,
+                including any payment reference number or screenshot you send.
               </li>
               <li>
                 <strong style={{ color: "var(--color-ink)" }}>Why.</strong> So the org can manage its
-                membership, attendance and dues. Your details are not used for advertising and are never sold.
+                membership, attendance and dues, and so OrgKit can email you dues reminders on the org&apos;s
+                behalf. Your details are not used for advertising and are never sold.
+              </li>
+              <li>
+                <strong style={{ color: "var(--color-ink)" }}>If you agreed to an earlier wording.</strong> Your
+                consent stays valid. We keep the version you accepted, and you are asked to agree to the
+                current wording only if you join another org.
               </li>
               <li>
                 <strong style={{ color: "var(--color-ink)" }}>Who can see it.</strong> Only the officers of the

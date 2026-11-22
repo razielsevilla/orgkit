@@ -250,7 +250,16 @@ export function DialogHeader({
           {title}
         </h2>
         {description && (
-          <p style={{ margin: "2px 0 0", fontSize: 13, lineHeight: 1.4, color: "var(--color-muted-strong)" }}>
+          <p
+            style={{
+              margin: "2px 0 0",
+              fontSize: 13,
+              lineHeight: 1.4,
+              color: "var(--color-muted-strong)",
+              // A description can hold a name someone typed, such as an event title
+              overflowWrap: "anywhere",
+            }}
+          >
             {description}
           </p>
         )}
@@ -270,10 +279,24 @@ export function DialogHeader({
   );
 }
 
-/** The dialog's content. It scrolls on its own when the window is short. */
+/**
+ * The dialog's content. It scrolls up and down on its own when the window is
+ * short, never sideways, and a long unbroken name or link wraps instead of
+ * widening it.
+ */
 export function DialogBody({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ flex: "1 1 auto", minHeight: 0, overflowY: "auto", padding: "20px 24px", ...style }}>
+    <div
+      style={{
+        flex: "1 1 auto",
+        minHeight: 0,
+        overflowY: "auto",
+        overflowX: "hidden",
+        overflowWrap: "anywhere",
+        padding: "20px 24px",
+        ...style,
+      }}
+    >
       {children}
     </div>
   );
@@ -283,6 +306,8 @@ export function DialogBody({ children, style }: { children: React.ReactNode; sty
 export function DialogFooter({ children }: { children: React.ReactNode }) {
   return (
     <footer
+      // On a phone the buttons stack full width, main action on top (globals.css)
+      className="orgkit-dialog-footer"
       style={{
         display: "flex",
         flexWrap: "wrap",
