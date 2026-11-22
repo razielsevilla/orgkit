@@ -42,7 +42,7 @@ const TERM_ERROR_RULES: ErrorRule<TermsActionError>[] = [
   { match: "invalid_dates", error: "invalid_dates", message: TERMS_ERROR_MESSAGES.invalid_dates },
   { match: "not_admin", error: "not_admin", message: TERMS_ERROR_MESSAGES.not_admin },
   { match: "member_not_found", error: "member_not_found", message: TERMS_ERROR_MESSAGES.member_not_found },
-  { match: "not_found", error: "not_found", message: TERMS_ERROR_MESSAGES.not_found },
+  { match: "term_not_found", error: "not_found", message: TERMS_ERROR_MESSAGES.not_found },
   { match: "invalid_term_name", error: "invalid_term_name", message: TERMS_ERROR_MESSAGES.invalid_term_name },
   { match: "invalid_role_title", error: "invalid_role_title", message: TERMS_ERROR_MESSAGES.invalid_role_title },
   { match: "invalid_holder_name", error: "invalid_holder_name", message: TERMS_ERROR_MESSAGES.invalid_holder_name },
@@ -169,11 +169,7 @@ export async function createOfficerTermAction(
       });
 
       if (error) {
-        return rpcFailure("terms.create_failed", error, TERM_ERROR_RULES, {
-          fallback: "failed",
-          message: TERMS_ERROR_MESSAGES.failed,
-          context: { orgId, roleTitle: validated.roleTitle },
-        });
+        return rpcFailure("record_officer_term", error, TERM_ERROR_RULES, TERMS_ERROR_MESSAGES.failed, { orgId });
       }
 
       revalidatePath(termsPath(orgId));
@@ -224,11 +220,7 @@ export async function updateOfficerTermAction(
       });
 
       if (error) {
-        return rpcFailure("terms.update_failed", error, TERM_ERROR_RULES, {
-          fallback: "failed",
-          message: TERMS_ERROR_MESSAGES.failed,
-          context: { orgId, termId },
-        });
+        return rpcFailure("update_officer_term", error, TERM_ERROR_RULES, TERMS_ERROR_MESSAGES.failed, { orgId, termId });
       }
 
       revalidatePath(termsPath(orgId));
@@ -264,11 +256,7 @@ export async function deleteOfficerTermAction(
       });
 
       if (error) {
-        return rpcFailure("terms.delete_failed", error, TERM_ERROR_RULES, {
-          fallback: "failed",
-          message: TERMS_ERROR_MESSAGES.failed,
-          context: { orgId, termId },
-        });
+        return rpcFailure("delete_officer_term", error, TERM_ERROR_RULES, TERMS_ERROR_MESSAGES.failed, { orgId, termId });
       }
 
       revalidatePath(termsPath(orgId));
