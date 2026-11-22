@@ -5,8 +5,8 @@ import type { WorkspaceTermsData } from "@/src/app/(workspace)/terms-actions";
 
 vi.mock("@/src/components/ui/dialog", () => ({
   Dialog: ({ children }: { children: ReactNode }) => createElement("div", { role: "dialog" }, children),
-  DialogHeader: ({ title, subtitle }: { title: string; subtitle?: string }) =>
-    createElement("div", null, createElement("h2", null, title), subtitle && createElement("p", null, subtitle)),
+  DialogHeader: ({ title, description }: { title: string; description?: string }) =>
+    createElement("div", null, createElement("h2", null, title), description && createElement("p", null, description)),
   DialogBody: ({ children }: { children: ReactNode }) => createElement("div", null, children),
   DialogFooter: ({ children }: { children: ReactNode }) => createElement("div", null, children),
 }));

@@ -111,8 +111,9 @@ export function TermFormDialog({
   return (
     <Dialog onDismiss={onClose} labelledBy="term-dialog-title" maxWidth={500}>
       <DialogHeader
+        titleId="term-dialog-title"
         title={editingTerm ? "Edit Officer Term" : "Record Officer Term"}
-        subtitle="Record who held which officer role and the exact term dates."
+        description="Record who held which officer role and the exact term dates."
         onClose={onClose}
       />
 

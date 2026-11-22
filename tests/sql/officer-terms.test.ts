@@ -1,6 +1,6 @@
 import { describe, it, before } from "node:test";
 import assert from "node:assert/strict";
-import { as, addMember, addOfficer, addOrg, errorOf, getDb, newUuid, startDb } from "./helpers.ts";
+import { as, addMember, addOfficer, addOrg, errorOf, getDb, startDb } from "./helpers.ts";
 
 let orgA: string;
 let orgB: string;

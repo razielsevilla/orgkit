@@ -122,7 +122,7 @@ export function TermsClient({ initialData }: TermsClientProps) {
       return { success: true };
     } else {
       const res = await createOfficerTermAction(initialData.orgId, input);
-      if (!res.success) {
+      if (!res.success || !res.data) {
         return { success: false, error: res.errorMessage };
       }
       const today = new Date().toISOString().split("T")[0];
@@ -275,8 +275,9 @@ export function TermsClient({ initialData }: TermsClientProps) {
           maxWidth={440}
         >
           <DialogHeader
+            titleId="delete-term-title"
             title="Delete Officer Term?"
-            subtitle="Are you sure you want to delete this recorded term?"
+            description="Are you sure you want to delete this recorded term?"
             onClose={() => setDeletingTerm(null)}
           />
           <DialogBody>

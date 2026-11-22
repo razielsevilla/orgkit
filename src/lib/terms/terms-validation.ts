@@ -13,6 +13,7 @@ export const TERMS_ERROR_MESSAGES = {
   member_not_found: "The selected member was not found in this organization.",
   not_admin: "Only organization admins can record or manage officer terms.",
   not_authenticated: "You must be signed in to perform this action.",
+  access_revoked: "You no longer have access to this organization.",
   not_found: "The requested officer term was not found.",
   failed: "An unexpected error occurred. Please try again.",
 } as const;
