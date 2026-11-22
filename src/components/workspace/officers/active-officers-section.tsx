@@ -13,6 +13,7 @@ import {
   formatDate,
   roleBadgeStyles,
 } from "./officers-helpers";
+import { OfficerRoleDropdown } from "./role-dropdown";
 
 interface ActiveOfficersSectionProps {
   data: WorkspaceOfficersData;
@@ -36,7 +37,7 @@ export function ActiveOfficersSection({
         borderRadius: 22,
         border: "1px solid var(--color-line)",
         boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
-        overflow: "hidden",
+        overflow: "visible",
         marginBottom: 32,
       }}
     >
@@ -47,6 +48,7 @@ export function ActiveOfficersSection({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          borderRadius: "22px 22px 0 0",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -95,6 +97,7 @@ export function ActiveOfficersSection({
                 borderBottom:
                   idx < data.officers.length - 1 ? "1px solid var(--color-base)" : "none",
                 backgroundColor: "var(--color-surface)",
+                borderRadius: idx === data.officers.length - 1 ? "0 0 22px 22px" : undefined,
                 transition: "background-color 0.15s ease",
               }}
             >
@@ -210,33 +213,13 @@ export function ActiveOfficersSection({
                   }}
                 >
                   {/* Role select */}
-                  <div style={{ position: "relative" }}>
-                    <select
-                      aria-label={`Role for ${officer.fullName}`}
-                      className="orgkit-officer-select"
-                      value={officer.role}
-                      onChange={(e) =>
-                        handleRoleChange(officer, e.target.value as OfficerRole)
-                      }
-                      disabled={loading}
-                      title={isSoleAdmin ? LAST_ADMIN_MESSAGE : undefined}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: 9999,
-                        border: `1px solid ${badgeStyle.border}`,
-                        backgroundColor: badgeStyle.bg,
-                        color: badgeStyle.text,
-                        fontSize: 12.5,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        outline: "none",
-                      }}
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="finance">Finance</option>
-                      <option value="officer">Officer</option>
-                    </select>
-                  </div>
+                  <OfficerRoleDropdown
+                    officer={officer}
+                    isSoleAdmin={isSoleAdmin}
+                    disabled={loading}
+                    onChangeRole={handleRoleChange}
+                    onBlockedSoleAdmin={() => setPageError(LAST_ADMIN_MESSAGE)}
+                  />
 
                   {/* Remove button */}
                   {data.canRemove && (
