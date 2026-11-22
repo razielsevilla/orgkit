@@ -165,17 +165,30 @@ export function TermsClient({ initialData }: TermsClientProps) {
   return (
     <div
       style={{
+        height: "100%",
+        overflowY: "auto",
+        padding: "36px clamp(16px, 4vw, 36px) 60px clamp(16px, 4vw, 36px)",
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
-        gap: 24,
+        alignItems: "center",
         width: "100%",
-        maxWidth: 1200,
-        margin: "0 auto",
-        padding: "clamp(16px, 3vw, 32px)",
-        boxSizing: "border-box",
       }}
     >
-      <TermsStyles />
+      <div
+        className="orgkit-terms-shell"
+        style={{
+          width: "100%",
+          maxWidth: 960,
+          margin: "0 auto",
+          position: "relative",
+          animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
+          display: "flex",
+          flexDirection: "column",
+          gap: 24,
+        }}
+      >
+        <TermsStyles />
 
       {/* Global Error Banner */}
       {actionError && (
@@ -332,6 +345,7 @@ export function TermsClient({ initialData }: TermsClientProps) {
           </DialogFooter>
         </Dialog>
       )}
+      </div>
     </div>
   );
 }
