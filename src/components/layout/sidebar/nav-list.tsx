@@ -4,8 +4,9 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Award, Banknote, CalendarDays, Home, Shield, Users } from "lucide-react";
+import { Award, Banknote, CalendarDays, Files, Home, Shield, Users } from "lucide-react";
 import {
+  documentsPath,
   duesPath,
   eventsPath,
   membersPath,
@@ -65,7 +66,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "events" | "officers" | "terms";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "officers" | "terms" | "documents";
 
 interface NavListProps {
   rawId: string;
@@ -86,6 +87,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
       router.prefetch(eventsPath(rawId));
       router.prefetch(officersPath(rawId));
       router.prefetch(termsPath(rawId));
+      router.prefetch(documentsPath(rawId));
     };
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
@@ -164,6 +166,16 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         icon={Award}
         strokeWidth={2.2}
         isActive={activeSection === "terms"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={documentsPath(rawId)}
+        title="Documents: store key documents and links"
+        label="Documents"
+        icon={Files}
+        strokeWidth={2.2}
+        isActive={activeSection === "documents"}
         isCollapsed={isCollapsed}
       />
     </nav>
