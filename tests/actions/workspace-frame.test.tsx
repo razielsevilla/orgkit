@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 
-// The workspace frame: one sidebar for Home, Members, Join and Officer.
+// The workspace frame: one sidebar for Home, Members, Join and Officers.
 let pathname = "/";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
