@@ -57,3 +57,44 @@ create index if not exists documents_org_created_idx
 
 create index if not exists documents_org_category_idx
   on public.documents (org_id, category);
+
+-- Row Level Security for documents table
+alter table public.documents enable row level security;
+
+revoke all on public.documents from anon, authenticated;
+grant select, insert, delete on public.documents to authenticated;
+
+-- Officers can view documents in their orgs
+drop policy if exists "Officers can read documents in their orgs" on public.documents;
+create policy "Officers can read documents in their orgs"
+  on public.documents
+  for select
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- Officers can insert documents in their orgs
+drop policy if exists "Officers can insert documents in their orgs" on public.documents;
+create policy "Officers can insert documents in their orgs"
+  on public.documents
+  for insert
+  to authenticated
+  with check (public.is_org_member(org_id));
+
+-- Officers can delete documents in their orgs
+drop policy if exists "Officers can delete documents in their orgs" on public.documents;
+create policy "Officers can delete documents in their orgs"
+  on public.documents
+  for delete
+  to authenticated
+  using (public.is_org_member(org_id));
+
+-- Storage Bucket Setup for Handover Documents (org-documents)
+do $$
+begin
+  if exists (select 1 from information_schema.schemata where schema_name = 'storage') then
+    insert into storage.buckets (id, name, public)
+    values ('org-documents', 'org-documents', false)
+    on conflict (id) do update set public = false;
+  end if;
+end $$;
+
