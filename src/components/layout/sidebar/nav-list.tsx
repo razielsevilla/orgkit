@@ -64,7 +64,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "events" | "officers";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "officer";
 
 interface NavListProps {
   rawId: string;
@@ -151,7 +151,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Officer"
         icon={Shield}
         strokeWidth={2.2}
-        isActive={activeSection === "officers"}
+        isActive={activeSection === "officer"}
         isCollapsed={isCollapsed}
       />
     </nav>
