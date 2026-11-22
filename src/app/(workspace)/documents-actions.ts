@@ -74,6 +74,20 @@ export async function getWorkspaceDocuments(
         .order("created_at", { ascending: false });
 
       if (docError) {
+        if ((docError as { code?: string }).code === "PGRST205") {
+          logger.warn("documents.table_not_found_in_schema_cache", {
+            orgId,
+            message:
+              "Table public.documents not found in schema cache. Apply migration 20261124120000_h2_documents.sql in Supabase.",
+          });
+          return ok({
+            orgId,
+            orgName: orgData.name,
+            isAdmin: caller.role === "admin",
+            documents: [],
+            categories: DOCUMENT_CATEGORIES,
+          });
+        }
         logger.error("documents.query_failed", { orgId, error: docError });
         return fail("failed", "Failed to retrieve documents.");
       }
@@ -145,6 +159,12 @@ export async function addDocumentLinkAction(
         .single();
 
       if (insertError || !newRow) {
+        if ((insertError as { code?: string })?.code === "PGRST205") {
+          return fail(
+            "failed",
+            "Database table 'documents' is not yet created. Please run migration 20261124120000_h2_documents.sql in your Supabase SQL editor."
+          );
+        }
         logger.error("documents.add_link_failed", { orgId, error: insertError });
         return fail("failed", "Failed to add link document.");
       }
@@ -235,7 +255,13 @@ export async function uploadDocumentFileAction(
 
       if (uploadError) {
         logger.error("documents.storage_upload_failed", { orgId, storagePath, error: uploadError });
-        return fail("storage_error", DOCUMENTS_ERROR_MESSAGES.storage_error);
+        const isBucketMissing = (uploadError as { message?: string }).message?.includes("Bucket not found");
+        return fail(
+          "storage_error",
+          isBucketMissing
+            ? "Storage bucket 'org-documents' not found. Please apply the migration in your Supabase dashboard."
+            : DOCUMENTS_ERROR_MESSAGES.storage_error
+        );
       }
 
       // 6. Record metadata in documents table
@@ -262,6 +288,12 @@ export async function uploadDocumentFileAction(
           error: insertError,
         });
         await caller.supabase.storage.from("org-documents").remove([storagePath]);
+        if ((insertError as { code?: string })?.code === "PGRST205") {
+          return fail(
+            "failed",
+            "Database table 'documents' is not yet created. Please run migration 20261124120000_h2_documents.sql in your Supabase SQL editor."
+          );
+        }
         return fail("failed", "Failed to save document record.");
       }
 

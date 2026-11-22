@@ -5,6 +5,7 @@ interface FakeState {
   callerRole: string | null;
   org: { id: string; name: string } | null;
   documents: Record<string, unknown>[];
+  documentsQueryError: { message: string; code: string } | null;
   uploaded: { path: string; buffer: unknown }[];
   removed: string[][];
   uploadResult: { error: { message: string } | null };
@@ -17,6 +18,7 @@ const state: FakeState = {
   callerRole: null,
   org: null,
   documents: [],
+  documentsQueryError: null,
   uploaded: [],
   removed: [],
   uploadResult: { error: null },
@@ -89,6 +91,9 @@ function query(table: string) {
     },
     then: (resolve: (v: unknown) => unknown) => {
       if (table === "documents") {
+        if (state.documentsQueryError) {
+          return Promise.resolve({ data: null, error: state.documentsQueryError }).then(resolve);
+        }
         const docs = filterOrgId
           ? state.documents.filter((d) => d.org_id === filterOrgId)
           : state.documents;
@@ -143,6 +148,7 @@ beforeEach(() => {
   state.removed = [];
   state.uploadResult = { error: null };
   state.insertResultError = null;
+  state.documentsQueryError = null;
   state.signedUrlResult = { data: { signedUrl: "https://signed.mock/doc.pdf" }, error: null };
   state.documents = [
     {
@@ -200,6 +206,18 @@ describe("documents-actions: getWorkspaceDocuments", () => {
     expect(res.success).toBe(false);
     if (res.success) return;
     expect(res.error).toBe("access_revoked");
+  });
+
+  it("gracefully falls back to empty documents if schema cache does not have the table yet (PGRST205)", async () => {
+    state.documentsQueryError = {
+      message: "Could not find the table 'public.documents' in the schema cache",
+      code: "PGRST205",
+    };
+    const res = await getWorkspaceDocuments(ORG);
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+    expect(res.data.documents).toEqual([]);
+    expect(res.data.orgName).toBe("Robotics Club");
   });
 });
 
