@@ -200,7 +200,7 @@ declare
 begin
   select org_id into target_org from public.officer_terms where id = p_term_id;
   if target_org is null then
-    raise exception 'not_found';
+    raise exception 'term_not_found';
   end if;
 
   if not public.is_org_admin(target_org) then
@@ -280,7 +280,7 @@ declare
 begin
   select org_id into target_org from public.officer_terms where id = p_term_id;
   if target_org is null then
-    raise exception 'not_found';
+    raise exception 'term_not_found';
   end if;
 
   if not public.is_org_admin(target_org) then
