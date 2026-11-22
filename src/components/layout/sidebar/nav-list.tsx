@@ -4,12 +4,13 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Banknote, CalendarDays, Home, Shield, Users } from "lucide-react";
+import { Award, Banknote, CalendarDays, Home, Shield, Users } from "lucide-react";
 import {
   duesPath,
   eventsPath,
   membersPath,
   officersPath,
+  termsPath,
   workspacePath,
 } from "@/src/lib/routes";
 
@@ -64,7 +65,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "events" | "officers";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "officers" | "terms";
 
 interface NavListProps {
   rawId: string;
@@ -84,6 +85,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
       router.prefetch(duesPath(rawId));
       router.prefetch(eventsPath(rawId));
       router.prefetch(officersPath(rawId));
+      router.prefetch(termsPath(rawId));
     };
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
@@ -152,6 +154,16 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         icon={Shield}
         strokeWidth={2.2}
         isActive={activeSection === "officers"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={termsPath(rawId)}
+        title="Terms: record officer roles and terms"
+        label="Terms"
+        icon={Award}
+        strokeWidth={2.2}
+        isActive={activeSection === "terms"}
         isCollapsed={isCollapsed}
       />
     </nav>
