@@ -19,6 +19,7 @@ import { DocumentMobileCard } from "./document-mobile-card";
 import { AddFileDialog } from "./add-file-dialog";
 import { AddLinkDialog } from "./add-link-dialog";
 import { DeleteDocumentDialog } from "./delete-document-dialog";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 
 interface DocumentsClientProps {
   initialData: WorkspaceDocumentsData;
@@ -92,24 +93,38 @@ export function DocumentsClient({ initialData }: DocumentsClientProps) {
   return (
     <div
       style={{
+        height: "100%",
+        overflowY: "auto",
+        padding: "36px clamp(16px, 4vw, 36px) 60px clamp(16px, 4vw, 36px)",
+        boxSizing: "border-box",
         display: "flex",
         flexDirection: "column",
-        gap: 24,
+        alignItems: "center",
         width: "100%",
-        maxWidth: 960,
-        margin: "0 auto",
-        boxSizing: "border-box",
       }}
     >
-      <DocumentsStyles />
+      <div
+        className="orgkit-documents-shell"
+        style={{
+          width: "100%",
+          maxWidth: 960,
+          margin: "0 auto",
+          position: "relative",
+          animation: "cardPopout 0.45s cubic-bezier(0.16, 1.25, 0.38, 1) both",
+          display: "flex",
+          flexDirection: "column",
+          gap: 24,
+        }}
+      >
+        <DocumentsStyles />
 
-      {/* Header with Title and Add Action Buttons */}
-      <DocumentsHeader
-        orgName={initialData.orgName}
-        totalDocuments={documents.length}
-        onAddFile={() => setIsAddFileOpen(true)}
-        onAddLink={() => setIsAddLinkOpen(true)}
-      />
+        {/* Header with Title and Add Action Buttons */}
+        <DocumentsHeader
+          orgName={initialData.orgName}
+          totalDocuments={documents.length}
+          onAddFile={() => setIsAddFileOpen(true)}
+          onAddLink={() => setIsAddLinkOpen(true)}
+        />
 
       {/* Filter and Search Bar */}
       {documents.length > 0 && (
@@ -244,55 +259,73 @@ export function DocumentsClient({ initialData }: DocumentsClientProps) {
         </div>
       )}
 
-      {/* Main Content Area: Empty State or Document List */}
-      {documents.length === 0 ? (
-        <DocumentsEmptyState
-          onAddFile={() => setIsAddFileOpen(true)}
-          onAddLink={() => setIsAddLinkOpen(true)}
-        />
-      ) : filteredDocuments.length === 0 ? (
-        <DocumentsEmptyState
-          isFiltered={true}
-          onAddFile={() => setIsAddFileOpen(true)}
-          onAddLink={() => setIsAddLinkOpen(true)}
-          onClearFilter={() => {
-            setSearchQuery("");
-            setSelectedCategory("All");
-            setSelectedKind("All");
+      {/* Main Content Area: Empty State or Document List with Floating Decor */}
+      <div style={{ position: "relative", width: "100%" }}>
+        {/* Floating Icons Decor positioned behind the cards */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 0,
           }}
-        />
-      ) : (
-        <>
-          {/* Desktop Table View */}
-          <DocumentTable
-            documents={filteredDocuments}
-            onDownload={handleDownload}
-            onDelete={(doc) => setDocToDelete(doc)}
-            downloadingId={downloadingId}
-          />
+        >
+          <FloatingIconsDecor />
+        </div>
 
-          {/* Mobile Cards View */}
-          <div
-            className="orgkit-documents-mobile-cards"
-            style={{
-              display: "none",
-              flexDirection: "column",
-              gap: 12,
-              width: "100%",
-            }}
-          >
-            {filteredDocuments.map((doc) => (
-              <DocumentMobileCard
-                key={doc.id}
-                document={doc}
+        {/* Foreground Content & Cards */}
+        <div style={{ position: "relative", zIndex: 2, width: "100%" }}>
+          {documents.length === 0 ? (
+            <DocumentsEmptyState
+              onAddFile={() => setIsAddFileOpen(true)}
+              onAddLink={() => setIsAddLinkOpen(true)}
+            />
+          ) : filteredDocuments.length === 0 ? (
+            <DocumentsEmptyState
+              isFiltered={true}
+              onAddFile={() => setIsAddFileOpen(true)}
+              onAddLink={() => setIsAddLinkOpen(true)}
+              onClearFilter={() => {
+                setSearchQuery("");
+                setSelectedCategory("All");
+                setSelectedKind("All");
+              }}
+            />
+          ) : (
+            <>
+              {/* Desktop Table View */}
+              <DocumentTable
+                documents={filteredDocuments}
                 onDownload={handleDownload}
-                onDelete={(d) => setDocToDelete(d)}
-                isDownloading={downloadingId === doc.id}
+                onDelete={(doc) => setDocToDelete(doc)}
+                downloadingId={downloadingId}
               />
-            ))}
-          </div>
-        </>
-      )}
+
+              {/* Mobile Cards View */}
+              <div
+                className="orgkit-documents-mobile-cards"
+                style={{
+                  display: "none",
+                  flexDirection: "column",
+                  gap: 12,
+                  width: "100%",
+                }}
+              >
+                {filteredDocuments.map((doc) => (
+                  <DocumentMobileCard
+                    key={doc.id}
+                    document={doc}
+                    onDownload={handleDownload}
+                    onDelete={(d) => setDocToDelete(d)}
+                    isDownloading={downloadingId === doc.id}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
 
       {/* Dialogs */}
       <AddFileDialog
@@ -316,6 +349,7 @@ export function DocumentsClient({ initialData }: DocumentsClientProps) {
         onClose={() => setDocToDelete(null)}
         onSuccess={handleDocumentDeleted}
       />
+      </div>
     </div>
   );
 }

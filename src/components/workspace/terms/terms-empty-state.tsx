@@ -109,7 +109,7 @@ export function TermsEmptyState({ isAdmin, onAddTerm }: TermsEmptyStateProps) {
             fontWeight: 600,
             fontSize: 14,
             padding: "10px 20px",
-            borderRadius: 12,
+            borderRadius: 9999,
             border: "none",
             cursor: "pointer",
             boxShadow: "0 4px 12px color-mix(in srgb, var(--color-accent) 25%, transparent)",

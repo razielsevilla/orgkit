@@ -1,6 +1,15 @@
 export function TermsStyles() {
   return (
     <style>{`
+      @keyframes cardPopout {
+        0% { opacity: 0; transform: translateY(8px) scale(0.99); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+      }
+      @media (max-width: 1200px) {
+        .orgkit-floating-decor {
+          display: none !important;
+        }
+      }
       .orgkit-term-card {
         transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
       }
