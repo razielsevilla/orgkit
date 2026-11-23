@@ -67,10 +67,10 @@ export function DocumentsClient({ initialData }: DocumentsClientProps) {
     setDownloadingId(doc.id);
     try {
       const res = await getDocumentDownloadUrlAction(initialData.orgId, doc.id);
-      if (res.success && res.data.signedUrl) {
+      if (res.success && res.data?.signedUrl) {
         window.open(res.data.signedUrl, "_blank", "noopener,noreferrer");
       } else {
-        alert(res.message || "Failed to download document.");
+        alert(res.errorMessage || "Failed to download document.");
       }
     } catch {
       alert("Failed to download document.");

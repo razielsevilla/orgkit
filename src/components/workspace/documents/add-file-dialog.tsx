@@ -76,8 +76,8 @@ export function AddFileDialog({ orgId, isOpen, onClose, onSuccess }: AddFileDial
 
     startTransition(async () => {
       const res = await uploadDocumentFileAction(orgId, formData);
-      if (!res.success) {
-        setErrorMessage(res.message);
+      if (!res.success || !res.data) {
+        setErrorMessage(res.errorMessage ?? DOCUMENTS_ERROR_MESSAGES.failed);
         return;
       }
       onSuccess(res.data);
@@ -88,10 +88,10 @@ export function AddFileDialog({ orgId, isOpen, onClose, onSuccess }: AddFileDial
   return (
     <Dialog onDismiss={onClose} labelledBy="add-file-dialog-title" maxWidth={480}>
       <DialogHeader
+        titleId="add-file-dialog-title"
         title="Upload Document"
-        subtitle="Keep constitutions, permits, and forms organized"
-        icon={<Upload size={20} strokeWidth={2.2} />}
-        onDismiss={onClose}
+        description="Keep constitutions, permits, and forms organized"
+        onClose={onClose}
       />
 
       <form onSubmit={handleSubmit}>

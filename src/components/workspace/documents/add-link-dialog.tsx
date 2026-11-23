@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Link as LinkIcon, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from "@/src/components/ui/dialog";
 import {
   DOCUMENT_CATEGORIES,
@@ -50,8 +50,8 @@ export function AddLinkDialog({ orgId, isOpen, onClose, onSuccess }: AddLinkDial
         url: cleanUrl,
       });
 
-      if (!res.success) {
-        setErrorMessage(res.message);
+      if (!res.success || !res.data) {
+        setErrorMessage(res.errorMessage ?? DOCUMENTS_ERROR_MESSAGES.failed);
         return;
       }
 
@@ -63,10 +63,10 @@ export function AddLinkDialog({ orgId, isOpen, onClose, onSuccess }: AddLinkDial
   return (
     <Dialog onDismiss={onClose} labelledBy="add-link-dialog-title" maxWidth={480}>
       <DialogHeader
+        titleId="add-link-dialog-title"
         title="Add External Link"
-        subtitle="Keep shared drives, folders, and resources accessible"
-        icon={<LinkIcon size={20} strokeWidth={2.2} />}
-        onDismiss={onClose}
+        description="Keep shared drives, folders, and resources accessible"
+        onClose={onClose}
       />
 
       <form onSubmit={handleSubmit}>
