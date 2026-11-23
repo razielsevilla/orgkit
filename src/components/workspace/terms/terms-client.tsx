@@ -15,6 +15,7 @@ import { TermFormDialog } from "./term-form-dialog";
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from "@/src/components/ui/dialog";
 import { AlertCircle, AlertTriangle, Loader2 } from "lucide-react";
 import type { OfficerTermInput } from "@/src/lib/terms/terms-validation";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 
 interface TermsClientProps {
   initialData: WorkspaceTermsData;
@@ -224,38 +225,56 @@ export function TermsClient({ initialData }: TermsClientProps) {
       />
 
       {/* Terms Content: Empty State vs Grouped List */}
-      {terms.length === 0 ? (
-        <TermsEmptyState
-          isAdmin={initialData.isAdmin}
-          onAddTerm={handleOpenAddDialog}
-        />
-      ) : filteredGroups.length === 0 ? (
+      <div style={{ position: "relative", width: "100%" }}>
+        {/* Floating Icons Decor positioned behind the cards */}
         <div
+          aria-hidden
           style={{
-            padding: 40,
-            textAlign: "center",
-            backgroundColor: "var(--color-surface)",
-            borderRadius: 20,
-            border: "1px solid var(--color-line)",
-            color: "var(--color-muted)",
-            fontSize: 14,
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 0,
           }}
         >
-          No terms found matching the current filter.
+          <FloatingIconsDecor />
         </div>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          {filteredGroups.map((group) => (
-            <TermGroupCard
-              key={group.termName}
-              group={group}
+
+        {/* Foreground Content & Cards */}
+        <div style={{ position: "relative", zIndex: 2, width: "100%" }}>
+          {terms.length === 0 ? (
+            <TermsEmptyState
               isAdmin={initialData.isAdmin}
-              onEditTerm={handleOpenEditDialog}
-              onDeleteTerm={setDeletingTerm}
+              onAddTerm={handleOpenAddDialog}
             />
-          ))}
+          ) : filteredGroups.length === 0 ? (
+            <div
+              style={{
+                padding: 40,
+                textAlign: "center",
+                backgroundColor: "var(--color-surface)",
+                borderRadius: 20,
+                border: "1px solid var(--color-line)",
+                color: "var(--color-muted)",
+                fontSize: 14,
+              }}
+            >
+              No terms found matching the current filter.
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              {filteredGroups.map((group) => (
+                <TermGroupCard
+                  key={group.termName}
+                  group={group}
+                  isAdmin={initialData.isAdmin}
+                  onEditTerm={handleOpenEditDialog}
+                  onDeleteTerm={setDeletingTerm}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
 
       {/* Form Dialog for Record / Edit */}
       <TermFormDialog

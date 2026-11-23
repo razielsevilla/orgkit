@@ -84,6 +84,9 @@ describe("the top bar", () => {
 
     pathname = `/workspace/${ORG}/terms`;
     expect(await renderFrame()).toContain('<span class="orgkit-topbar-section">Terms</span>');
+
+    pathname = `/workspace/${ORG}/documents`;
+    expect(await renderFrame()).toContain('<span class="orgkit-topbar-section">Documents</span>');
   });
 
   it("is in the markup on every screen size, and hidden on a desktop by CSS, so it never flickers", async () => {
@@ -94,11 +97,11 @@ describe("the top bar", () => {
 });
 
 describe("the sidebar drawer", () => {
-  it("is the sidebar rendered once: the same six links, in order, whatever the screen", async () => {
+  it("is the sidebar rendered once: the same seven links, in order, whatever the screen", async () => {
     for (const isNarrow of [false, true]) {
       narrow = isNarrow;
       const links = navHrefs(await renderFrame());
-      expect(links).toHaveLength(6);
+      expect(links).toHaveLength(7);
       expect(links.map((tag) => /href="([^"]+)"/.exec(tag)?.[1])).toEqual([
         `/workspace/${ORG}`,
         `/workspace/${ORG}/members`,
@@ -106,6 +109,7 @@ describe("the sidebar drawer", () => {
         `/workspace/${ORG}/events`,
         `/workspace/${ORG}/officers`,
         `/workspace/${ORG}/terms`,
+        `/workspace/${ORG}/documents`,
       ]);
     }
   });
