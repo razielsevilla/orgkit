@@ -95,6 +95,40 @@ begin
     insert into storage.buckets (id, name, public)
     values ('org-documents', 'org-documents', false)
     on conflict (id) do update set public = false;
+
+    -- Drop existing storage policies if present
+    drop policy if exists "Officers can upload handover documents" on storage.objects;
+    drop policy if exists "Officers can read handover documents" on storage.objects;
+    drop policy if exists "Officers can delete handover documents" on storage.objects;
+
+    -- Officers can upload files to their organization folder
+    create policy "Officers can upload handover documents"
+      on storage.objects for insert
+      to authenticated
+      with check (
+        bucket_id = 'org-documents'
+        and public.is_org_member((storage.foldername(name))[1]::uuid)
+      );
+
+    -- Officers can read/download files in their organization folder
+    create policy "Officers can read handover documents"
+      on storage.objects for select
+      to authenticated
+      using (
+        bucket_id = 'org-documents'
+        and public.is_org_member((storage.foldername(name))[1]::uuid)
+      );
+
+    -- Officers can delete files in their organization folder
+    create policy "Officers can delete handover documents"
+      on storage.objects for delete
+      to authenticated
+      using (
+        bucket_id = 'org-documents'
+        and public.is_org_member((storage.foldername(name))[1]::uuid)
+      );
   end if;
+exception when others then
+  null;
 end $$;
 

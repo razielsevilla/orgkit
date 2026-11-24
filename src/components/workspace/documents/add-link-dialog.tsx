@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Link as LinkIcon, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from "@/src/components/ui/dialog";
 import {
   DOCUMENT_CATEGORIES,
@@ -50,12 +50,12 @@ export function AddLinkDialog({ orgId, isOpen, onClose, onSuccess }: AddLinkDial
         url: cleanUrl,
       });
 
-      if (!res.success) {
-        setErrorMessage(res.errorMessage ?? "Failed to add link.");
+      if (!res.success || !res.data) {
+        setErrorMessage(res.errorMessage ?? DOCUMENTS_ERROR_MESSAGES.failed);
         return;
       }
 
-      if (res.data) onSuccess(res.data);
+      onSuccess(res.data);
       onClose();
     });
   };

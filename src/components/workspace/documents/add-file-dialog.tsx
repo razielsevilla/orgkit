@@ -76,11 +76,11 @@ export function AddFileDialog({ orgId, isOpen, onClose, onSuccess }: AddFileDial
 
     startTransition(async () => {
       const res = await uploadDocumentFileAction(orgId, formData);
-      if (!res.success) {
-        setErrorMessage(res.errorMessage ?? "Failed to upload file.");
+      if (!res.success || !res.data) {
+        setErrorMessage(res.errorMessage ?? DOCUMENTS_ERROR_MESSAGES.failed);
         return;
       }
-      if (res.data) onSuccess(res.data);
+      onSuccess(res.data);
       onClose();
     });
   };
