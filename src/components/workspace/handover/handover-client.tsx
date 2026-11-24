@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { HandoverStyles } from "./handover-styles";
 import { HandoverHeader } from "./handover-header";
 import { HandoverSectionCard } from "./handover-section-card";
@@ -223,8 +224,21 @@ export function HandoverClient({
       >
         <HandoverStyles />
 
-        {/* Floating Decorative Icons for brand consistency */}
-        <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Floating Icons Decor positioned behind the cards */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          <FloatingIconsDecor />
+        </div>
+
+        {/* Foreground Content */}
+        <div style={{ position: "relative", zIndex: 2 }}>
           <HandoverHeader
             guide={guide}
             completeness={completeness}
