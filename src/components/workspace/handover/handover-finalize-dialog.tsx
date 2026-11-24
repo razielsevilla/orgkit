@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useTransition } from "react";
-import { AlertCircle, CheckCircle2, Lock, RotateCcw } from "lucide-react";
+import { CheckCircle2, Lock, RotateCcw } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from "@/src/components/ui/dialog";
 
 interface HandoverFinalizeDialogProps {
@@ -206,3 +206,4 @@ export function HandoverReopenDialog({
     </Dialog>
   );
 }
+
