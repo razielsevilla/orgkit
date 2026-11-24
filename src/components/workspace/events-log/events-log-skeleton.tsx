@@ -30,7 +30,7 @@ export function EventsLogSkeleton() {
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <div className="log-shimmer" style={{ width: 140, height: 16, borderRadius: 6 }} />
         <div className="log-shimmer" style={{ width: 220, height: 32, borderRadius: 10 }} />
-        <div className="log-shimmer" style={{ width: 340, height: 16, borderRadius: 6 }} />
+        <div className="log-shimmer" style={{ width: "min(320px, 100%)", height: 16, borderRadius: 6 }} />
       </div>
 
       {/* Summary Tiles Skeleton */}
