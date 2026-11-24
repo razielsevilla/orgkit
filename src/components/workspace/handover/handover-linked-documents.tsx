@@ -75,7 +75,7 @@ export function HandoverLinkedDocuments({
             Attached Documents &amp; Shared Links
           </h2>
           <p style={{ fontSize: 13, color: "var(--color-muted)", margin: "3px 0 0 0" }}>
-            Key constitutions, templates, bank files, or spreadsheets from the org's document repository.
+            Key constitutions, templates, bank files, or spreadsheets from the org&apos;s document repository.
           </p>
         </div>
 
@@ -334,3 +334,4 @@ export function HandoverLinkedDocuments({
     </div>
   );
 }
+
