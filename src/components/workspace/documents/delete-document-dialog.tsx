@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useTransition } from "react";
-import { AlertTriangle, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from "@/src/components/ui/dialog";
 import { deleteDocumentAction, type WorkspaceDocument } from "@/src/app/(workspace)/documents-actions";
 

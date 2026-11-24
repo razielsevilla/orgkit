@@ -3,10 +3,9 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, CheckCircle2, Clock, Plus, ArrowRight, Shield } from "lucide-react";
+import { CheckCircle2, Clock, Plus, ArrowRight } from "lucide-react";
 import { HandoverStyles } from "./handover-styles";
 import { HandoverEmptyState } from "./handover-empty-state";
-import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { Select } from "@/src/components/ui/select";
 import { handoverGuidePath } from "@/src/lib/routes";
 import type { HandoverGuidesSummary } from "@/src/app/(workspace)/handover-actions";
@@ -16,7 +15,7 @@ interface HandoverOverviewClientProps {
   isAdmin: boolean;
 }
 
-export function HandoverOverviewClient({ summary, isAdmin }: HandoverOverviewClientProps) {
+export function HandoverOverviewClient({ summary, isAdmin: _isAdmin }: HandoverOverviewClientProps) {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState(
     summary.activeRoles[0] || "President"
