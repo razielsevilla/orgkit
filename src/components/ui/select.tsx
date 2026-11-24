@@ -29,6 +29,7 @@ export interface SelectProps {
   popoverStyle?: React.CSSProperties;
   fullWidth?: boolean;
   size?: "sm" | "md" | "lg";
+  direction?: "auto" | "down" | "up";
 }
 
 export function Select({
@@ -48,13 +49,42 @@ export function Select({
   popoverStyle,
   fullWidth = true,
   size = "md",
+  direction = "auto",
 }: SelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(direction === "up");
   const containerRef = useRef<HTMLDivElement>(null);
   const generatedId = useId();
   const selectId = id || generatedId;
 
   useDismissable(containerRef, () => setIsOpen(false));
+
+  const toggleOpen = () => {
+    if (disabled) return;
+    if (!isOpen) {
+      if (direction === "up") {
+        setOpenUpward(true);
+      } else if (direction === "down") {
+        setOpenUpward(false);
+      } else {
+        if (typeof window !== "undefined" && containerRef.current) {
+          const rect = containerRef.current.getBoundingClientRect();
+          const dialogParent = containerRef.current.closest(".orgkit-card, [role='dialog'], [role='alertdialog']");
+          if (dialogParent) {
+            const dialogRect = dialogParent.getBoundingClientRect();
+            const spaceBelowInDialog = dialogRect.bottom - rect.bottom;
+            const spaceAboveInDialog = rect.top - dialogRect.top;
+            setOpenUpward(spaceBelowInDialog < 220 && spaceAboveInDialog > spaceBelowInDialog);
+          } else {
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const spaceAbove = rect.top;
+            setOpenUpward(spaceBelow < 220 && spaceAbove > spaceBelow);
+          }
+        }
+      }
+    }
+    setIsOpen((prev) => !prev);
+  };
 
   const normalizedOptions: SelectOption[] = options.map((opt) =>
     typeof opt === "string" ? { value: opt, label: opt } : opt
@@ -73,11 +103,11 @@ export function Select({
 
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      setIsOpen((prev) => !prev);
+      toggleOpen();
     } else if (e.key === "ArrowDown") {
       e.preventDefault();
       if (!isOpen) {
-        setIsOpen(true);
+        toggleOpen();
         return;
       }
       const currentIndex = normalizedOptions.findIndex((opt) => opt.value === value);
@@ -88,7 +118,7 @@ export function Select({
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       if (!isOpen) {
-        setIsOpen(true);
+        toggleOpen();
         return;
       }
       const currentIndex = normalizedOptions.findIndex((opt) => opt.value === value);
@@ -142,7 +172,7 @@ export function Select({
         aria-required={required}
         aria-invalid={hasError}
         disabled={disabled}
-        onClick={() => !disabled && setIsOpen((prev) => !prev)}
+        onClick={toggleOpen}
         onKeyDown={handleKeyDown}
         className="orgkit-select-trigger"
         style={{
@@ -209,7 +239,9 @@ export function Select({
           aria-label={ariaLabel || placeholder}
           style={{
             position: "absolute",
-            top: "calc(100% + 6px)",
+            ...(openUpward
+              ? { bottom: "calc(100% + 6px)", top: "auto" }
+              : { top: "calc(100% + 6px)", bottom: "auto" }),
             left: 0,
             width: "100%",
             minWidth: 180,
