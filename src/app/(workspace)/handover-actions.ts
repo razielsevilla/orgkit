@@ -62,8 +62,7 @@ export async function getHandoverGuidesListAction(
           status,
           term_id,
           author_id,
-          updated_at,
-          officer_terms:term_id (term_name)
+          updated_at
         `)
         .eq("org_id", orgId)
         .order("updated_at", { ascending: false });
@@ -85,23 +84,33 @@ export async function getHandoverGuidesListAction(
         return r.author_id === caller.user.id;
       });
 
-      // 2. Fetch distinct active officer roles for convenience
+      // 2. Fetch distinct active officer roles and term names for convenience
       const { data: termsData } = await caller.supabase
         .from("officer_terms")
-        .select("role_title")
+        .select("id, role_title, term_name")
         .eq("org_id", orgId);
 
-      const activeRoles = Array.from(
-        new Set((termsData || []).map((t) => t.role_title).filter(Boolean))
-      );
+      const termMap = new Map<string, string>();
+      const activeRolesSet = new Set<string>();
+
+      for (const t of termsData || []) {
+        if (t.id && t.term_name) {
+          termMap.set(t.id, t.term_name);
+        }
+        if (t.role_title) {
+          activeRolesSet.add(t.role_title);
+        }
+      }
+
+      const activeRoles = Array.from(activeRolesSet);
 
       const guides = visibleRows.map((r) => {
-        const termRel = r.officer_terms as { term_name?: string } | null;
+        const termName = r.term_id ? termMap.get(r.term_id) || null : null;
         return {
           id: r.id,
           roleTitle: r.role_title,
           status: r.status as "draft" | "ready",
-          termName: termRel?.term_name || null,
+          termName,
           authorName: null,
           updatedAt: r.updated_at,
         };
@@ -137,27 +146,26 @@ export async function getHandoverGuideAction(
       if (isUuid(guideIdOrRole)) {
         const { data, error } = await caller.supabase
           .from("handover_guides")
-          .select(`
-            *,
-            officer_terms:term_id (term_name)
-          `)
+          .select("*")
           .eq("id", guideIdOrRole)
           .eq("org_id", orgId)
           .maybeSingle();
 
         if (error) {
-          logger.error("handover.get_by_id_failed", { orgId, guideId: guideIdOrRole, error });
-          return fail("failed", "Failed to load handover guide.");
+          if ((error as { code?: string })?.code === "PGRST205") {
+            logger.warn("handover.table_not_found_in_schema_cache", { orgId });
+          } else {
+            logger.warn("handover.get_by_id_warn", { orgId, guideId: guideIdOrRole, error });
+          }
+          guideRow = null;
+        } else {
+          guideRow = data;
         }
-        guideRow = data;
       } else {
         // Query by role title (most recent)
         const { data, error } = await caller.supabase
           .from("handover_guides")
-          .select(`
-            *,
-            officer_terms:term_id (term_name)
-          `)
+          .select("*")
           .eq("org_id", orgId)
           .eq("role_title", guideIdOrRole)
           .order("updated_at", { ascending: false })
@@ -165,10 +173,15 @@ export async function getHandoverGuideAction(
           .maybeSingle();
 
         if (error) {
-          logger.error("handover.get_by_role_failed", { orgId, roleTitle: guideIdOrRole, error });
-          return fail("failed", "Failed to load handover guide.");
+          if ((error as { code?: string })?.code === "PGRST205") {
+            logger.warn("handover.table_not_found_in_schema_cache", { orgId });
+          } else {
+            logger.warn("handover.get_by_role_warn", { orgId, roleTitle: guideIdOrRole, error });
+          }
+          guideRow = null;
+        } else {
+          guideRow = data;
         }
-        guideRow = data;
       }
 
       // If no guide exists yet, return an unpersisted initial template for that role
@@ -234,13 +247,21 @@ export async function getHandoverGuideAction(
         }
       }
 
-      const termRel = guideRow.officer_terms as { term_name?: string } | null;
+      let termName: string | null = null;
+      if (guideRow.term_id) {
+        const { data: termData } = await caller.supabase
+          .from("officer_terms")
+          .select("term_name")
+          .eq("id", guideRow.term_id)
+          .maybeSingle();
+        termName = termData?.term_name || null;
+      }
 
       const guide: HandoverGuide = {
         id: String(guideRow.id),
         orgId: String(guideRow.org_id),
         termId: guideRow.term_id ? String(guideRow.term_id) : null,
-        termName: termRel?.term_name || null,
+        termName,
         roleTitle: String(guideRow.role_title),
         status,
         sections: sectionsData,
