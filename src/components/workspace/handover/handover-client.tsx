@@ -199,69 +199,82 @@ export function HandoverClient({
 
   return (
     <div
+      className="orgkit-handover-scroll-container"
       style={{
-        position: "relative",
-        minHeight: "100%",
-        padding: "clamp(24px, 2.5vw, 36px) clamp(16px, 2.5vw, 32px)",
-        maxWidth: 920,
-        margin: "0 auto",
-        width: "100%",
+        height: "100%",
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+        padding: "clamp(24px, 3vw, 40px) clamp(16px, 3vw, 36px) 100px clamp(16px, 3vw, 36px)",
         boxSizing: "border-box",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
-      <HandoverStyles />
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 920,
+          margin: "0 auto",
+        }}
+      >
+        <HandoverStyles />
 
-      {/* Floating Decorative Icons for brand consistency */}
-      <div style={{ position: "relative", zIndex: 1 }}>
-        <HandoverHeader
-          guide={guide}
-          completeness={completeness}
-          saveStatus={saveStatus}
-          isSavingManual={isSavingManual}
-          onSaveManual={handleSaveManual}
-          onOpenFinalize={() => setIsFinalizeOpen(true)}
-          onOpenReopen={() => setIsReopenOpen(true)}
-        />
+        {/* Floating Decorative Icons for brand consistency */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <HandoverHeader
+            guide={guide}
+            completeness={completeness}
+            saveStatus={saveStatus}
+            isSavingManual={isSavingManual}
+            onSaveManual={handleSaveManual}
+            onOpenFinalize={() => setIsFinalizeOpen(true)}
+            onOpenReopen={() => setIsReopenOpen(true)}
+          />
 
-        {/* Section Accordions */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
-          {HANDOVER_SECTION_DEFINITIONS.map((def, idx) => (
-            <HandoverSectionCard
-              key={def.key}
-              definition={def}
-              content={sections[def.key] || ""}
-              isReadOnly={isReadOnly}
-              onChange={(val) => handleSectionChange(def.key, val)}
-              defaultExpanded={idx === 0 || Boolean(sections[def.key])}
-            />
-          ))}
+          {/* Section Accordions */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, marginBottom: 20 }}>
+            {HANDOVER_SECTION_DEFINITIONS.map((def, idx) => (
+              <HandoverSectionCard
+                key={def.key}
+                definition={def}
+                content={sections[def.key] || ""}
+                isReadOnly={isReadOnly}
+                onChange={(val) => handleSectionChange(def.key, val)}
+                defaultExpanded={idx === 0 || Boolean(sections[def.key])}
+              />
+            ))}
+          </div>
+
+          {/* Attached Documents Section */}
+          <HandoverLinkedDocuments
+            orgId={guide.orgId}
+            linkedDocuments={guide.linkedDocuments}
+            availableDocuments={availableDocuments}
+            isReadOnly={isReadOnly}
+            onAttachDocument={handleAttachDocument}
+            onDetachDocument={handleDetachDocument}
+          />
         </div>
 
-        {/* Attached Documents Section */}
-        <HandoverLinkedDocuments
-          orgId={guide.orgId}
-          linkedDocuments={guide.linkedDocuments}
-          availableDocuments={availableDocuments}
-          isReadOnly={isReadOnly}
-          onAttachDocument={handleAttachDocument}
-          onDetachDocument={handleDetachDocument}
+        {/* Dialogs */}
+        <HandoverFinalizeDialog
+          isOpen={isFinalizeOpen}
+          onClose={() => setIsFinalizeOpen(false)}
+          onConfirm={handleConfirmFinalize}
+          roleTitle={guide.roleTitle}
+        />
+
+        <HandoverReopenDialog
+          isOpen={isReopenOpen}
+          onClose={() => setIsReopenOpen(false)}
+          onConfirm={handleConfirmReopen}
+          roleTitle={guide.roleTitle}
         />
       </div>
-
-      {/* Dialogs */}
-      <HandoverFinalizeDialog
-        isOpen={isFinalizeOpen}
-        onClose={() => setIsFinalizeOpen(false)}
-        onConfirm={handleConfirmFinalize}
-        roleTitle={guide.roleTitle}
-      />
-
-      <HandoverReopenDialog
-        isOpen={isReopenOpen}
-        onClose={() => setIsReopenOpen(false)}
-        onConfirm={handleConfirmReopen}
-        roleTitle={guide.roleTitle}
-      />
     </div>
   );
 }
