@@ -76,4 +76,19 @@ describe("Select component", () => {
 
     expect(html).toContain("disabled");
   });
+
+  it("supports direction prop for upward opening in constrained containers", async () => {
+    const html = await render(
+      createElement(Select, {
+        id: "test-direction-select",
+        value: "legal",
+        onChange: vi.fn(),
+        options,
+        direction: "up",
+      })
+    );
+
+    expect(html).toContain('id="test-direction-select-trigger"');
+    expect(html).toContain("Legal");
+  });
 });
