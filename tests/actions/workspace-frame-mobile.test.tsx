@@ -97,11 +97,11 @@ describe("the top bar", () => {
 });
 
 describe("the sidebar drawer", () => {
-  it("is the sidebar rendered once: the same seven links, in order, whatever the screen", async () => {
+  it("is the sidebar rendered once: the same eight links, in order, whatever the screen", async () => {
     for (const isNarrow of [false, true]) {
       narrow = isNarrow;
       const links = navHrefs(await renderFrame());
-      expect(links).toHaveLength(7);
+      expect(links).toHaveLength(8);
       expect(links.map((tag) => /href="([^"]+)"/.exec(tag)?.[1])).toEqual([
         `/workspace/${ORG}`,
         `/workspace/${ORG}/members`,
@@ -110,6 +110,7 @@ describe("the sidebar drawer", () => {
         `/workspace/${ORG}/officers`,
         `/workspace/${ORG}/terms`,
         `/workspace/${ORG}/documents`,
+        `/workspace/${ORG}/handover`,
       ]);
     }
   });
