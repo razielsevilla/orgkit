@@ -1,5 +1,6 @@
 import React from "react";
 import { Search, Calendar, RotateCcw, Filter } from "lucide-react";
+import { Select } from "@/src/components/ui/select";
 import type {
   PastEventsFilterState,
   TermFilterOption,
@@ -99,29 +100,24 @@ export function EventsLogFilterBar({
             >
               Term:
             </label>
-            <select
+            <Select
               id="term-filter"
               value={filter.term}
-              onChange={(e) => onFilterChange({ term: e.target.value })}
-              style={{
-                padding: "8px 12px",
+              onChange={(term) => onFilterChange({ term })}
+              fullWidth={false}
+              size="sm"
+              options={[
+                { value: "all", label: "All Terms" },
+                ...terms.map((t) => ({ value: t.termName, label: t.termName })),
+              ]}
+              triggerStyle={{
+                minWidth: 140,
+                height: 38,
                 borderRadius: 12,
-                border: "1px solid var(--color-line)",
                 backgroundColor: "var(--color-base)",
-                fontSize: 13,
                 fontWeight: 600,
-                color: "var(--color-ink)",
-                cursor: "pointer",
-                outline: "none",
               }}
-            >
-              <option value="all">All Terms</option>
-              {terms.map((t) => (
-                <option key={t.termName} value={t.termName}>
-                  {t.termName}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         )}
 
