@@ -39,20 +39,32 @@ export function HandoverOverviewClient({ summary, isAdmin: _isAdmin }: HandoverO
 
   return (
     <div
+      className="orgkit-handover-scroll-container"
       style={{
-        position: "relative",
-        minHeight: "100%",
-        padding: "clamp(24px, 2.5vw, 36px) clamp(16px, 2.5vw, 32px)",
-        maxWidth: 960,
-        margin: "0 auto",
-        width: "100%",
+        height: "100%",
+        overflowY: "auto",
+        overflowX: "hidden",
+        WebkitOverflowScrolling: "touch",
+        padding: "clamp(24px, 3vw, 40px) clamp(16px, 3vw, 36px) 100px clamp(16px, 3vw, 36px)",
         boxSizing: "border-box",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
-      <HandoverStyles />
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          maxWidth: 960,
+          margin: "0 auto",
+        }}
+      >
+        <HandoverStyles />
 
-      {/* Floating Decorative Icons for brand consistency */}
-      <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Floating Decorative Icons for brand consistency */}
+        <div style={{ position: "relative", zIndex: 1 }}>
         {/* Header Section */}
         <div
           style={{
@@ -277,5 +289,6 @@ export function HandoverOverviewClient({ summary, isAdmin: _isAdmin }: HandoverO
         )}
       </div>
     </div>
-  );
+  </div>
+);
 }
