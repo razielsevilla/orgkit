@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, Plus, ArrowRight } from "lucide-react";
 import { HandoverStyles } from "./handover-styles";
 import { HandoverEmptyState } from "./handover-empty-state";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { Select } from "@/src/components/ui/select";
 import { handoverGuidePath } from "@/src/lib/routes";
 import type { HandoverGuidesSummary } from "@/src/app/(workspace)/handover-actions";
@@ -63,8 +64,21 @@ export function HandoverOverviewClient({ summary, isAdmin: _isAdmin }: HandoverO
       >
         <HandoverStyles />
 
-        {/* Floating Decorative Icons for brand consistency */}
-        <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Floating Icons Decor positioned behind the cards */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        >
+          <FloatingIconsDecor />
+        </div>
+
+        {/* Foreground Content */}
+        <div style={{ position: "relative", zIndex: 2 }}>
         {/* Header Section */}
         <div
           style={{
