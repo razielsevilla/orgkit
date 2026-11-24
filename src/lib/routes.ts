@@ -51,6 +51,11 @@ export function eventsPath(orgId: string): string {
   return `${workspacePath(orgId)}/events`;
 }
 
+/** Past events log page (H3) */
+export function eventsLogPath(orgId: string): string {
+  return `${workspacePath(orgId)}/events/log`;
+}
+
 /** One event's page */
 export function eventPath(orgId: string, eventId: string): string {
   return `${eventsPath(orgId)}/${eventId}`;
@@ -158,6 +163,7 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/workspace/:id/terms",
   "/workspace/:id/documents",
   "/workspace/:id/events",
+  "/workspace/:id/events/log",
   "/workspace/:id/events/:eventId",
   "/workspace/:id/events/:eventId/checkin",
   "/workspace/:id/members/join",
