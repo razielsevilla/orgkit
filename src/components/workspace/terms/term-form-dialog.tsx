@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from "@/src/components/ui/dialog";
+import { Select } from "@/src/components/ui/select";
 import { AlertCircle, Loader2 } from "lucide-react";
 import type { OfficerTerm } from "@/src/app/(workspace)/terms-actions";
 import {
@@ -45,8 +46,7 @@ export function TermFormDialog({
 
   if (!isOpen) return null;
 
-  const handleMemberSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
+  const handleMemberSelect = (val: string) => {
     setSelectedMemberId(val);
     if (val) {
       const match = members.find((m) => m.id === val);
@@ -224,29 +224,21 @@ export function TermFormDialog({
                 Holder
               </label>
               {members.length > 0 && (
-                <select
-                  id="holder-select"
-                  value={selectedMemberId}
-                  onChange={handleMemberSelect}
-                  style={{
-                    width: "100%",
-                    padding: "9px 12px",
-                    borderRadius: 10,
-                    border: "1px solid var(--color-line)",
-                    backgroundColor: "var(--color-surface)",
-                    color: "var(--color-ink)",
-                    fontSize: 14,
-                    marginBottom: 8,
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <option value="">Select from organization roster (optional)...</option>
-                  {members.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.fullName} ({m.email})
-                    </option>
-                  ))}
-                </select>
+                <div style={{ marginBottom: 8 }}>
+                  <Select
+                    id="holder-select"
+                    value={selectedMemberId}
+                    onChange={handleMemberSelect}
+                    placeholder="Select from organization roster (optional)..."
+                    options={[
+                      { value: "", label: "Select from organization roster (optional)..." },
+                      ...members.map((m) => ({
+                        value: m.id,
+                        label: `${m.fullName} (${m.email})`,
+                      })),
+                    ]}
+                  />
+                </div>
               )}
               <input
                 id="holder-name"
