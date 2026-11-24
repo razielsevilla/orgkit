@@ -25,6 +25,25 @@ export function HandoverStyles() {
         animation: shimmerWave 1.8s infinite;
       }
 
+      .orgkit-handover-scroll-container {
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--color-ink) 20%, transparent) transparent;
+        scroll-behavior: smooth;
+      }
+      .orgkit-handover-scroll-container::-webkit-scrollbar {
+        width: 6px;
+      }
+      .orgkit-handover-scroll-container::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      .orgkit-handover-scroll-container::-webkit-scrollbar-thumb {
+        background-color: color-mix(in srgb, var(--color-ink) 20%, transparent);
+        border-radius: 9999px;
+      }
+      .orgkit-handover-scroll-container::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-accent);
+      }
+
       .orgkit-handover-accordion {
         transition: border-color 0.15s ease, box-shadow 0.15s ease;
       }
