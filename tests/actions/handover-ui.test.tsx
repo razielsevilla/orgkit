@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
-import type { HandoverGuide, LinkedDocumentItem } from "@/src/lib/handover/handover-types";
+import type { HandoverGuide } from "@/src/lib/handover/handover-types";
 import { HANDOVER_SECTION_DEFINITIONS } from "@/src/lib/handover/handover-helpers";
 
 vi.mock("next/navigation", () => ({
