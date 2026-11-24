@@ -160,9 +160,10 @@ export function Navbar({ officer, logoHref = ROUTES.home }: NavbarProps) {
               border: "1px solid var(--color-line)",
               backgroundColor: "var(--color-surface)",
               padding: 6,
-              boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
-              zIndex: 50,
+              boxShadow: "0 12px 30px rgba(24, 24, 27, 0.1), 0 2px 8px rgba(24, 24, 27, 0.04)",
+              zIndex: 60,
               boxSizing: "border-box",
+              animation: "cardPopout 0.15s cubic-bezier(0.16, 1, 0.3, 1) both",
             }}
           >
             <div
