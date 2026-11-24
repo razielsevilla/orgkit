@@ -191,6 +191,7 @@ export function AddLinkDialog({ orgId, isOpen, onClose, onSuccess }: AddLinkDial
               onChange={(val) => setCategory(val as DocumentCategory)}
               options={DOCUMENT_CATEGORIES}
               placeholder="Select category..."
+              direction="up"
             />
           </div>
         </DialogBody>
