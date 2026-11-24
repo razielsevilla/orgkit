@@ -247,8 +247,9 @@ export function HandoverLinkedDocuments({
 
       {/* Document Picker Dialog */}
       {isPickerOpen && (
-        <Dialog onDismiss={() => setIsPickerOpen(false)} maxWidth={500}>
+        <Dialog onDismiss={() => setIsPickerOpen(false)} maxWidth={500} labelledBy="attach-document-dialog-title">
           <DialogHeader
+            titleId="attach-document-dialog-title"
             title="Attach Stored Document"
             description="Select records from your organization repository to include in this handover guide."
             onClose={() => setIsPickerOpen(false)}

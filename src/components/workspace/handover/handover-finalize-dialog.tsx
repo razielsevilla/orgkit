@@ -29,8 +29,9 @@ export function HandoverFinalizeDialog({
   };
 
   return (
-    <Dialog onDismiss={onClose} maxWidth={460}>
+    <Dialog onDismiss={onClose} maxWidth={460} labelledBy="finalize-guide-dialog-title">
       <DialogHeader
+        titleId="finalize-guide-dialog-title"
         title="Mark Handover Guide as Ready"
         description={`Lock and publish your transition notes for ${roleTitle}.`}
         onClose={onClose}
@@ -147,8 +148,9 @@ export function HandoverReopenDialog({
   };
 
   return (
-    <Dialog onDismiss={onClose} maxWidth={460}>
+    <Dialog onDismiss={onClose} maxWidth={460} labelledBy="reopen-guide-dialog-title">
       <DialogHeader
+        titleId="reopen-guide-dialog-title"
         title="Reopen Handover Guide"
         description={`Allow new edits to the ${roleTitle} transition guide.`}
         onClose={onClose}
