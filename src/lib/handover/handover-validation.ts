@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { isUuid } from "@/src/lib/validation";
+import { isUuid } from "../validation.ts";
 
 export const HANDOVER_ERROR_MESSAGES = {
   not_found: "Handover guide not found.",
