@@ -6,7 +6,9 @@ import {
   getAvailableHandoverDocumentsAction,
 } from "@/src/app/(workspace)/handover-actions";
 import { HandoverClient } from "@/src/components/workspace/handover/handover-client";
+import { createEmptyHandoverSections } from "@/src/lib/handover/handover-helpers";
 import { signInPath, handoverPath } from "@/src/lib/routes";
+import { isUuid } from "@/src/lib/validation";
 
 interface PageProps {
   params: Promise<{ id: string; guideId: string }>;
@@ -38,14 +40,38 @@ export default async function HandoverGuideDetailPage({ params }: PageProps) {
     getAvailableHandoverDocumentsAction(id),
   ]);
 
+  const availableDocuments = docsRes.success && docsRes.data ? docsRes.data : [];
+
   if (!guideRes.success || !guideRes.data) {
     if (guideRes.error === "not_authorized") {
       redirect(handoverPath(id));
     }
-    notFound();
+    const roleTitle = isUuid(decodedGuideIdOrRole) ? "General Officer" : decodedGuideIdOrRole;
+    return (
+      <HandoverClient
+        initialGuide={{
+          id: "",
+          orgId: id,
+          termId: null,
+          termName: null,
+          roleTitle,
+          status: "draft",
+          sections: createEmptyHandoverSections(),
+          linkedDocuments: [],
+          authorId: lookup.caller.user.id,
+          finalizedBy: null,
+          finalizedAt: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          canEdit: true,
+          canReopen: false,
+          canFinalize: true,
+        }}
+        availableDocuments={availableDocuments}
+        isAdmin={lookup.caller.role === "admin"}
+      />
+    );
   }
-
-  const availableDocuments = docsRes.success && docsRes.data ? docsRes.data : [];
 
   return (
     <HandoverClient
