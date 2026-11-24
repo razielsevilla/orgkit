@@ -28,7 +28,7 @@ export default async function HandoverOverviewPage({ params }: PageProps) {
   }
 
   const res = await getHandoverGuidesListAction(id);
-  const summary = res.success
+  const summary = res.success && res.data
     ? res.data
     : { orgId: id, guides: [], activeRoles: [] };
 

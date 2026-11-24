@@ -38,14 +38,14 @@ export default async function HandoverGuideDetailPage({ params }: PageProps) {
     getAvailableHandoverDocumentsAction(id),
   ]);
 
-  if (!guideRes.success) {
+  if (!guideRes.success || !guideRes.data) {
     if (guideRes.error === "not_authorized") {
       redirect(handoverPath(id));
     }
     notFound();
   }
 
-  const availableDocuments = docsRes.success ? docsRes.data : [];
+  const availableDocuments = docsRes.success && docsRes.data ? docsRes.data : [];
 
   return (
     <HandoverClient
