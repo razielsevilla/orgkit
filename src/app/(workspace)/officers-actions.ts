@@ -17,6 +17,10 @@ import { rpcFailure, type ErrorRule } from "@/src/lib/rpc-errors";
 import { MAX_OFFICERS_PER_ORG, MAX_PENDING_INVITES_PER_ORG } from "@/src/lib/orgs/org-limits";
 import { getBaseUrl } from "@/src/lib/request";
 import { isUuid } from "@/src/lib/validation";
+import {
+  transferAdminSchema,
+  type CallerTransferRole,
+} from "@/src/lib/orgs/transfer-admin-validation";
 
 export interface ActiveOfficer {
   id: string; // officer_id
@@ -400,3 +404,89 @@ export async function removeWorkspaceOfficer(
     }
   );
 }
+
+const TRANSFER_ADMIN_ERRORS: ErrorRule<ActionError>[] = [
+  LAST_ADMIN_RULE,
+  {
+    match: "cannot_transfer_to_self",
+    error: "failed",
+    message: "You are already an admin. Please select another officer to transfer rights to.",
+  },
+  {
+    match: "officer_not_found",
+    error: "officer_not_found",
+    message: "The selected officer was not found in this organization.",
+  },
+  {
+    match: "not_authorized",
+    error: "not_authorized",
+    message: "Only organization admins can transfer admin rights.",
+  },
+  {
+    match: "invalid_role",
+    error: "invalid_role",
+    message: "Invalid role selected for your new position.",
+  },
+];
+
+/**
+ * Transfers admin rights to another officer and steps down the caller.
+ * Admin only. Runs in an atomic database transaction.
+ */
+export async function transferAdminRightsAction(
+  orgId: string,
+  input: {
+    targetOfficerId: string;
+    callerNewRole: CallerTransferRole;
+    confirmOrgName: string;
+  }
+): Promise<ActionResult<{ callerNewRole: CallerTransferRole }>> {
+  const parsed = transferAdminSchema.safeParse(input);
+  if (!parsed.success) {
+    return fail("failed", parsed.error.issues[0]?.message || INVALID_REQUEST);
+  }
+
+  return withOrgPermission(
+    orgId,
+    "officer:transfer_admin",
+    {
+      name: "transferAdminRightsAction",
+      denied: "Only admins can transfer admin rights.",
+      unexpected: "An unexpected error occurred while transferring admin rights.",
+    },
+    async ({ supabase }) => {
+      // Fetch org to verify name
+      const { data: orgData, error: orgError } = await supabase
+        .from("orgs")
+        .select("name")
+        .eq("id", orgId)
+        .maybeSingle();
+
+      if (orgError || !orgData) {
+        return fail("failed", "Organization not found.");
+      }
+
+      if (orgData.name.trim().toLowerCase() !== parsed.data.confirmOrgName.trim().toLowerCase()) {
+        return fail("failed", "The typed organization name does not match.");
+      }
+
+      const { error } = await supabase.rpc("transfer_admin_rights", {
+        p_org_id: orgId,
+        p_target_officer_id: parsed.data.targetOfficerId,
+        p_caller_new_role: parsed.data.callerNewRole,
+      });
+
+      if (error) {
+        return rpcFailure(
+          "transfer_admin_rights",
+          error,
+          TRANSFER_ADMIN_ERRORS,
+          "Failed to transfer admin rights. Please try again."
+        );
+      }
+
+      return ok({ callerNewRole: parsed.data.callerNewRole });
+    }
+  );
+}
+
