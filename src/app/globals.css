@@ -157,6 +157,88 @@ body {
 .orgkit-dialog-close:disabled { cursor: not-allowed; opacity: 0.5; }
 
 /*
+ * Touch screens (T2, docs/design.md "Phones and touch").
+ *
+ * On a phone, or on any touch screen, every control is at least 44px: the
+ * smallest comfortable thumb target. A mouse on a desktop keeps the denser
+ * sizes above. Most control sizes are written inline, and an inline min-height
+ * beats a stylesheet one, so these rules need !important.
+ *
+ * Inputs are also 16px: iOS zooms the whole page in when a field is focused with
+ * text any smaller, and the zoomed page then pans sideways.
+ *
+ * Not covered on purpose: a link inside a sentence (it stays text-sized), and
+ * checkboxes and radios (their label row is the target, see docs/mobile-qa.md).
+ */
+@media (max-width: 640px), (pointer: coarse) {
+  .orgkit-dialog-btn { height: auto; }
+  .orgkit-dialog-close { width: 44px; height: 44px; }
+
+  button,
+  [role="button"],
+  [role="option"],
+  [role="tab"],
+  [role="menuitem"],
+  select,
+  summary {
+    min-height: 44px !important;
+  }
+  button,
+  [role="button"] {
+    min-width: 44px !important;
+  }
+  input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="file"]),
+  select,
+  textarea {
+    min-height: 44px !important;
+    font-size: 16px !important;
+  }
+
+  /* A link on its own line (a back link, a logo), not one inside a sentence */
+  .orgkit-tap-link {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 44px !important;
+  }
+
+  /* A checkbox or radio is tiny: its whole label row is the touch target */
+  .orgkit-check-row {
+    min-height: 44px;
+    align-items: center !important;
+  }
+  .orgkit-check-row input[type="checkbox"],
+  .orgkit-check-row input[type="radio"] {
+    width: 22px !important;
+    height: 22px !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* A dialog's buttons go full width and stack on a phone, the main action on top */
+@media (max-width: 640px) {
+  .orgkit-dialog-footer {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .orgkit-dialog-footer > .orgkit-dialog-btn,
+  .orgkit-dialog-footer > button {
+    width: 100%;
+  }
+}
+
+/* Long names, emails and links wrap or shorten instead of widening the page */
+.orgkit-wrap {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.orgkit-truncate {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/*
  * Scrollbars: a slim rounded thumb on a clear track, no arrow buttons. The thumb
  * is a quiet ink tint and turns emerald under the pointer. The 3px transparent
  * border insets it from the edge. Firefox gets the standard properties.

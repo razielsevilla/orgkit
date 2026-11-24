@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 
-// The workspace frame: one sidebar for Home, Members, Join and Invite.
+// The workspace frame: one sidebar for Home, Members, Join and Officers.
 let pathname = "/";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
@@ -52,7 +52,7 @@ beforeEach(() => {
 });
 
 describe("workspace frame navigation for Ticket R1 & P1", () => {
-  it("shows Home, Members, Dues, Events and Invite to an admin", async () => {
+  it("shows Home, Members, Dues, Events, Officers, Terms, Documents and Handover to an admin", async () => {
     const html = await render(data(true));
     expect(navHrefs(html)).toEqual([
       `/workspace/${ORG}`,
@@ -60,23 +60,32 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
       `/workspace/${ORG}/dues`,
       `/workspace/${ORG}/events`,
       `/workspace/${ORG}/officers`,
+      `/workspace/${ORG}/terms`,
+      `/workspace/${ORG}/documents`,
+      `/workspace/${ORG}/handover`,
     ]);
-    for (const label of ["Home", "Members", "Dues", "Events", "Invite"]) {
+    for (const label of ["Home", "Members", "Dues", "Events", "Officers", "Terms", "Documents", "Handover"]) {
       expect(html).toContain(`<span>${label}</span>`);
     }
     expect(html).not.toContain("<span>Join</span>");
   });
 
-  it("shows Members and Dues to regular officers, but hides Join", async () => {
+  it("shows Members, Dues, Events, Officers, Terms, Documents and Handover to regular officers, but hides Join", async () => {
     const html = await render(data(false));
     expect(html).toContain("<span>Home</span>");
     expect(html).toContain("<span>Members</span>");
     expect(html).toContain("<span>Dues</span>");
     expect(html).toContain("<span>Events</span>");
-    expect(html).toContain("<span>Invite</span>");
+    expect(html).toContain("<span>Officers</span>");
+    expect(html).toContain("<span>Terms</span>");
+    expect(html).toContain("<span>Documents</span>");
+    expect(html).toContain("<span>Handover</span>");
     expect(html).not.toContain("<span>Join</span>");
     expect(html).toContain(`/workspace/${ORG}/members`);
     expect(html).toContain(`/workspace/${ORG}/dues`);
+    expect(html).toContain(`/workspace/${ORG}/terms`);
+    expect(html).toContain(`/workspace/${ORG}/documents`);
+    expect(html).toContain(`/workspace/${ORG}/handover`);
     expect(html).not.toContain("/members/join");
   });
 
@@ -91,7 +100,7 @@ describe("workspace frame navigation for Ticket R1 & P1", () => {
     [`/workspace/${ORG}`, "Home"],
     [`/workspace/${ORG}/members`, "Members"],
     [`/workspace/${ORG}/dues`, "Dues"],
-    [`/workspace/${ORG}/officers`, "Invite"],
+    [`/workspace/${ORG}/officers`, "Officers"],
     [`/workspace/${ORG}/events`, "Events"],
     [`/workspace/${ORG}/events/22222222-2222-4222-8222-222222222222`, "Events"],
   ])("highlights %s as active when on %s", async (path, label) => {

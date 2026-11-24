@@ -33,7 +33,7 @@ Set these in `.env.local` (never commit it). `.env.example` lists them all.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | The project's anon (public) key |
 | `SUPABASE_SERVICE_ROLE_KEY` | Yes | Server-only key. Never expose it to the browser |
 | `NEXT_PUBLIC_SITE_URL` | In production | The app's public address, for example `https://orgkit.example`. Join links and QR codes are built from it, so it is required in production. It is read at build time, so changing it needs a rebuild |
-| `PRIVACY_CONTACT_EMAIL` | Yes | The privacy contact shown in the member consent text and on `/privacy`. **While it is missing or not a valid email, the public join page stays closed.** The privacy page reads it at build time |
+| `PRIVACY_CONTACT_EMAIL` | Yes | The privacy contact shown in the member consent text and on `/privacy`. **While it is missing or not a valid email, the public join page stays closed, and the join form refuses submissions.** The privacy page reads it at build time |
 | `RESEND_API_KEY` | In production | API key for Resend email service, used to send officer payment reminders. In development or test environments, an in-memory mock transport is used if unset |
 | `RESEND_FROM_EMAIL` | In production | Sender address for reminder emails (default: `OrgKit Reminders <onboarding@resend.dev>`, which Resend only delivers to your own account). In production, set it to an address on your Resend verified domain |
 | `CHECKIN_TOKEN_SECRET` | Yes, for check-in | Key that signs the rotating check-in QR tokens. Use a long random value (`openssl rand -base64 32`). It has no fallback, so check-in shows an error until it is set |
@@ -42,6 +42,7 @@ Set these in `.env.local` (never commit it). `.env.example` lists them all.
 | `INVITE_ATTEMPTS_PER_MINUTE` | No | Invite page opens per device per minute. Default 20 |
 | `CHECKIN_ATTEMPTS_PER_MINUTE` | No | Member check-in attempts per device per minute. Default 30 |
 | `DUES_PAY_ATTEMPTS_PER_MINUTE` | No | Dues payment submissions per device per minute. Default 30 |
+| `FEEDBACK_ATTEMPTS_PER_MINUTE` | No | In-app feedback messages per device per minute. Default 5 |
 
 ## Set up Supabase
 
@@ -59,8 +60,16 @@ Set these in `.env.local` (never commit it). `.env.example` lists them all.
    `http://localhost:3000/auth/callback`). The Google OAuth client must allow
    Supabase's own callback URL shown on the Google provider page.
 4. **Enable `pg_cron`** (Database, Extensions), then re-run
-   `20261103100000_a3_schedule_invite_cleanup.sql`. Without it the migration
-   only prints a notice, and old invite rows are never deleted.
+   `20261103100000_a3_schedule_invite_cleanup.sql`,
+   `20261108120100_r3_schedule_member_invite_cleanup.sql` and
+   `20261121120100_t3_schedule_weekly_usage_report.sql`. Without it these
+   migrations only print a notice: old invite rows are never deleted and the
+   weekly usage report is never produced.
+5. **Name the product owner** (once, in the SQL editor), so they can open
+   `/owner/usage`. Nobody else can, and the app has no screen for this:
+   `insert into public.platform_owners (officer_id) select id from public.officers where email = '<owner email>';`
+   The owner must have signed in once first. See
+   [docs/usage-metrics.md](docs/usage-metrics.md).
 
 The app only asks Google for the `openid`, `email` and `profile` scopes.
 
@@ -86,6 +95,10 @@ into `main`.
 | | |
 |---|---|
 | [docs/routes.md](docs/routes.md) | Every URL, who can open it, and what runs before it |
+| [docs/backup-and-access.md](docs/backup-and-access.md) | Backups, the restore runbook, who can reach production data, and the service role key |
+| [docs/mobile-qa.md](docs/mobile-qa.md) | The phone checklist: how to test every screen at 360px, on a real phone too |
+| [docs/feedback.md](docs/feedback.md) | In-app feedback: what is saved, who reads it, limits, cleaning up |
+| [docs/usage-metrics.md](docs/usage-metrics.md) | The weekly usage report: what it counts, how it runs, how to check it |
 | [docs/techstack.md](docs/techstack.md) | Stack choices and open decisions |
 | [docs/design.md](docs/design.md), [docs/palette.md](docs/palette.md) | Design notes and colors |
 | `src/app/` | Pages and server actions |
@@ -97,3 +110,9 @@ into `main`.
 - Replace any stopgap value of `PRIVACY_CONTACT_EMAIL` with a monitored privacy
   address, in the deployment environment.
 - Set `NEXT_PUBLIC_SITE_URL` to the real address.
+- Decide how the database is backed up (the Free plan has no automatic backups),
+  take a backup and test a restore, as in
+  [docs/backup-and-access.md](docs/backup-and-access.md).
+- Complete the access review in that document: who can reach the database, its
+  keys and the hosting settings, and that the service role key is set for
+  Production only.

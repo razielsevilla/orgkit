@@ -10,6 +10,7 @@ import {
   type ParsedRoster,
 } from "@/src/lib/members/csv-import";
 import { DialogButton } from "@/src/components/ui/dialog";
+import { Select } from "@/src/components/ui/select";
 import { ImportStepLayout } from "./import-step-layout";
 import { bodyText, errorBox, fieldLabel, noteBox, selectField, spinnerStyle, tabular, wrapText } from "./import-styles";
 
@@ -132,38 +133,41 @@ export function ImportMatchStep({
           <label htmlFor="orgkit-import-email-col" style={fieldLabel}>
             Email column (required)
           </label>
-          <select
+          <Select
             id="orgkit-import-email-col"
             value={emailColumn === null ? "" : String(emailColumn)}
-            onChange={(e) => onEmailColumnChange(e.target.value === "" ? null : Number(e.target.value))}
-            style={selectField}
-            aria-required="true"
-          >
-            <option value="">Choose a column…</option>
-            {Array.from({ length: width }, (_, col) => (
-              <option key={col} value={col}>
-                {optionLabel(col)}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => onEmailColumnChange(val === "" ? null : Number(val))}
+            placeholder="Choose a column…"
+            required
+            ariaLabel="Email column (required)"
+            options={[
+              { value: "", label: "Choose a column…" },
+              ...Array.from({ length: width }, (_, col) => ({
+                value: String(col),
+                label: optionLabel(col),
+              })),
+            ]}
+          />
         </div>
         <div>
           <label htmlFor="orgkit-import-name-col" style={fieldLabel}>
             Name column (optional)
           </label>
-          <select
+          <Select
             id="orgkit-import-name-col"
             value={nameColumn === null ? "" : String(nameColumn)}
-            onChange={(e) => onNameColumnChange(e.target.value === "" ? null : Number(e.target.value))}
-            style={selectField}
-          >
-            <option value="">No name column</option>
-            {Array.from({ length: width }, (_, col) => (
-              <option key={col} value={col} disabled={col === emailColumn}>
-                {optionLabel(col)}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => onNameColumnChange(val === "" ? null : Number(val))}
+            placeholder="No name column"
+            ariaLabel="Name column (optional)"
+            options={[
+              { value: "", label: "No name column" },
+              ...Array.from({ length: width }, (_, col) => ({
+                value: String(col),
+                label: optionLabel(col),
+                disabled: col === emailColumn,
+              })),
+            ]}
+          />
         </div>
       </div>
 

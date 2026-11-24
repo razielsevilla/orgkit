@@ -112,7 +112,7 @@ export function ConsentCheckboxes({
 }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      <label style={checkRowStyle}>
+      <label className="orgkit-check-row" style={checkRowStyle}>
         <input
           type="checkbox"
           name="agree"
@@ -123,7 +123,7 @@ export function ConsentCheckboxes({
         <span style={{ fontSize: 13.5, lineHeight: 1.45 }}>{agreeLabel}</span>
       </label>
 
-      <label style={checkRowStyle}>
+      <label className="orgkit-check-row" style={checkRowStyle}>
         <input
           type="checkbox"
           name="adult"

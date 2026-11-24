@@ -18,8 +18,8 @@ export function NewOrgScreen({ officer, children }: NewOrgScreenProps) {
       className={plusJakarta.className}
       style={{
         position: "relative",
-        height: "100vh",
-        maxHeight: "100vh",
+        height: "100dvh",
+        maxHeight: "100dvh",
         width: "100%",
         overflow: "hidden",
         backgroundColor: "var(--color-base)",

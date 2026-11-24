@@ -16,7 +16,7 @@ export function InviteContainer({ children }: { children: React.ReactNode }) {
     <main
       className={plusJakarta.className}
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -125,7 +125,7 @@ export function InviteContainer({ children }: { children: React.ReactNode }) {
         <FloatingIconsDecor />
 
         <div style={{ marginBottom: 22, zIndex: 10 }}>
-          <Link href={ROUTES.home} aria-label="OrgKit Home">
+          <Link href={ROUTES.home} aria-label="OrgKit Home" className="orgkit-tap-link">
             <Image
               src="/orgkit-text-logo.png"
               alt="OrgKit"
@@ -180,6 +180,7 @@ function WarningCard({
       <div style={{ textAlign: "center" }}>
         <Link
           href={ROUTES.home}
+          className="orgkit-tap-link"
           style={{
             display: "inline-block",
             padding: "12px 24px",

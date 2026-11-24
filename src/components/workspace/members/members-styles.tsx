@@ -67,6 +67,8 @@ export function MembersStyles() {
         .orgkit-search-bar {
           max-width: 100% !important;
           width: 100% !important;
+          /* In a column the row's "1 1 280px" would mean 280px TALL: size by content instead */
+          flex: 0 0 auto !important;
         }
         .orgkit-status-tabs {
           width: 100% !important;

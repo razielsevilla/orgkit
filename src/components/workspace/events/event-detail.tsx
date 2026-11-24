@@ -83,6 +83,7 @@ export function EventDetail({
 
         <Link
           href={eventsPath(rawId)}
+          className="orgkit-tap-link"
           style={{
             display: "inline-flex",
             alignItems: "center",

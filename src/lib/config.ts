@@ -6,6 +6,18 @@
  * Each variable is documented in `.env.example`.
  */
 
+// Relative with an extension (not "@/"), because the node:test unit tests import this file directly
+import { parseContactEmail } from "./members/member-join.ts";
+
+/**
+ * The monitored privacy contact (PRIVACY_CONTACT_EMAIL), or null when it is
+ * missing or isn't a valid email. The join page and the join action refuse to
+ * collect member data while this is null.
+ */
+export function getPrivacyContactEmail(): string | null {
+  return parseContactEmail(process.env.PRIVACY_CONTACT_EMAIL);
+}
+
 /** The largest value the database's `int` rate-limit argument can take. */
 const MAX_LIMIT = 2_147_483_647;
 
@@ -41,6 +53,15 @@ export function getCheckinAttemptsPerMinute(): number {
 /** Dues payment submissions allowed per device per minute (DUES_PAY_ATTEMPTS_PER_MINUTE). Default 30. */
 export function getDuesPayAttemptsPerMinute(): number {
   return positiveIntOrDefault(process.env.DUES_PAY_ATTEMPTS_PER_MINUTE, 30);
+}
+
+/**
+ * Feedback messages allowed per device per minute (FEEDBACK_ATTEMPTS_PER_MINUTE).
+ * Default 5: a person writes one message at a time, so this is generous for a
+ * person and low for a script. Counted per device, like the other limits.
+ */
+export function getFeedbackAttemptsPerMinute(): number {
+  return positiveIntOrDefault(process.env.FEEDBACK_ATTEMPTS_PER_MINUTE, 5);
 }
 
 /** Used outside production only, when no secret is configured at all. */

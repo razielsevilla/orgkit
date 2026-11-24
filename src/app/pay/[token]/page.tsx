@@ -26,7 +26,7 @@ export default function PayPage({
       className={`${plusJakarta.className} orgkit-pay-page`}
       style={{
         position: "relative",
-        minHeight: "100vh",
+        minHeight: "100dvh",
         backgroundColor: "var(--color-base)",
         color: "var(--color-ink)",
         display: "flex",

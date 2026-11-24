@@ -5,6 +5,7 @@ import { WorkspaceOfficersData } from "@/src/app/(workspace)/officers-actions";
 import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import { InviteDialog, SuccessPanel } from "./invite-dialog";
 import { RemoveDialog } from "./remove-dialog";
+import { TransferAdminDialog } from "./transfer-admin-dialog";
 import { useOfficers } from "./use-officers";
 import { OfficersStyles } from "./officers-styles";
 import { AccessRevokedDialog } from "./access-revoked-dialog";
@@ -29,6 +30,9 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
     inviteDialogSession,
     invitePrefill,
     openInvite,
+    transferModalOpen,
+    setTransferModalOpen,
+    handleTransferSuccess,
     successData,
     setSuccessData,
     removeTarget,
@@ -59,6 +63,7 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
         data={data}
         pageError={pageError}
         onInvite={openInvite}
+        onTransferAdmin={() => setTransferModalOpen(true)}
         onClearError={() => setPageError(null)}
       />
 
@@ -128,6 +133,15 @@ export function OfficersClient({ initialData, orgId }: OfficersClientProps) {
         isOpen={removeTarget !== null}
         onClose={() => setRemoveTarget(null)}
         onRemoved={refreshData}
+      />
+
+      <TransferAdminDialog
+        orgId={orgId}
+        orgName={data.orgName}
+        officers={data.officers}
+        isOpen={transferModalOpen}
+        onClose={() => setTransferModalOpen(false)}
+        onSuccess={handleTransferSuccess}
       />
     </div>
   );

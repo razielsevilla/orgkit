@@ -13,6 +13,7 @@ import {
   formatDate,
   roleBadgeStyles,
 } from "./officers-helpers";
+import { OfficerRoleDropdown } from "./role-dropdown";
 
 interface ActiveOfficersSectionProps {
   data: WorkspaceOfficersData;
@@ -36,7 +37,7 @@ export function ActiveOfficersSection({
         borderRadius: 22,
         border: "1px solid var(--color-line)",
         boxShadow: "0 4px 18px color-mix(in srgb, var(--color-ink) 3%, transparent)",
-        overflow: "hidden",
+        overflow: "visible",
         marginBottom: 32,
       }}
     >
@@ -47,6 +48,7 @@ export function ActiveOfficersSection({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
+          borderRadius: "22px 22px 0 0",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -90,15 +92,17 @@ export function ActiveOfficersSection({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                gap: 12,
                 padding: "16px 24px",
                 borderBottom:
                   idx < data.officers.length - 1 ? "1px solid var(--color-base)" : "none",
                 backgroundColor: "var(--color-surface)",
+                borderRadius: idx === data.officers.length - 1 ? "0 0 22px 22px" : undefined,
                 transition: "background-color 0.15s ease",
               }}
             >
               {/* Left: Avatar + Details */}
-              <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 14, minWidth: 0, flex: "1 1 auto" }}>
                 <div
                   style={{
                     width: 40,
@@ -118,14 +122,16 @@ export function ActiveOfficersSection({
                   {getInitials(officer.fullName)}
                 </div>
 
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {/* minWidth: 0 lets a long name or email wrap instead of widening the row */}
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
                     <span
                       style={{
                         fontSize: 14,
                         fontWeight: 600,
                         color: "var(--color-ink)",
                         lineHeight: 1.2,
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {officer.fullName}
@@ -175,6 +181,7 @@ export function ActiveOfficersSection({
                         fontSize: 12,
                         color: "var(--color-muted)",
                         marginTop: 3,
+                        overflowWrap: "anywhere",
                       }}
                     >
                       {officer.email}
@@ -201,37 +208,18 @@ export function ActiveOfficersSection({
                   style={{
                     display: "flex",
                     alignItems: "center",
+                    flexWrap: "wrap",
                     gap: 12,
                   }}
                 >
                   {/* Role select */}
-                  <div style={{ position: "relative" }}>
-                    <select
-                      aria-label={`Role for ${officer.fullName}`}
-                      className="orgkit-officer-select"
-                      value={officer.role}
-                      onChange={(e) =>
-                        handleRoleChange(officer, e.target.value as OfficerRole)
-                      }
-                      disabled={loading}
-                      title={isSoleAdmin ? LAST_ADMIN_MESSAGE : undefined}
-                      style={{
-                        padding: "6px 12px",
-                        borderRadius: 9999,
-                        border: `1px solid ${badgeStyle.border}`,
-                        backgroundColor: badgeStyle.bg,
-                        color: badgeStyle.text,
-                        fontSize: 12.5,
-                        fontWeight: 600,
-                        cursor: "pointer",
-                        outline: "none",
-                      }}
-                    >
-                      <option value="admin">Admin</option>
-                      <option value="finance">Finance</option>
-                      <option value="officer">Officer</option>
-                    </select>
-                  </div>
+                  <OfficerRoleDropdown
+                    officer={officer}
+                    isSoleAdmin={isSoleAdmin}
+                    disabled={loading}
+                    onChangeRole={handleRoleChange}
+                    onBlockedSoleAdmin={() => setPageError(LAST_ADMIN_MESSAGE)}
+                  />
 
                   {/* Remove button */}
                   {data.canRemove && (

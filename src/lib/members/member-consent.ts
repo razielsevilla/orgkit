@@ -36,7 +36,35 @@ export const MEMBER_CONSENT_V1: MemberConsentVersion = {
   },
 };
 
-export const CURRENT_MEMBER_CONSENT = MEMBER_CONSENT_V1;
+/**
+ * Adds the records that come after joining: event attendance and dues payments
+ * (including any payment reference number or screenshot), and dues reminder emails.
+ * Members who agreed to v1 keep their v1 record; it is not invalidated.
+ */
+export const MEMBER_CONSENT_V2: MemberConsentVersion = {
+  version: "member-consent-v2",
+  text: {
+    en:
+      "By joining, you agree that {orgName} may collect and keep your full name and email address " +
+      "using {appName}, together with the records that come from your membership: your attendance at " +
+      "events, and your dues payments, including any payment reference number or screenshot you send. " +
+      "They will use them only to manage membership, attendance and dues, and {appName} may email you " +
+      "dues reminders for {orgName}. Officers of {orgName} can see your details; nobody else can. " +
+      "We do not collect anything else when you join, and your details are not sold or used for " +
+      "advertising. You can ask to see, correct or delete your details by emailing {contactEmail}.",
+    fil:
+      "Sa pagsali, sumasang-ayon ka na maaaring kolektahin at itago ng {orgName} ang iyong buong pangalan " +
+      "at email address gamit ang {appName}, kasama ang mga talaang nagmumula sa iyong membership: ang iyong " +
+      "attendance sa mga event, at ang iyong mga bayad sa dues, kasama ang anumang reference number o " +
+      "screenshot ng bayad na ipinadala mo. Gagamitin lamang ang mga ito para sa pamamahala ng membership, " +
+      "attendance at dues, at maaari kang padalhan ng {appName} ng email na paalala sa dues para sa {orgName}. " +
+      "Ang mga opisyal ng {orgName} lamang ang makakakita ng iyong mga detalye. Wala nang ibang impormasyong " +
+      "kokolektahin kapag sumali ka, at hindi ibebenta o gagamitin sa advertising ang iyong mga detalye. " +
+      "Maaari kang humiling na makita, itama o burahin ang iyong mga detalye sa pamamagitan ng pag-email sa {contactEmail}.",
+  },
+};
+
+export const CURRENT_MEMBER_CONSENT = MEMBER_CONSENT_V2;
 
 export function fillConsentText(
   template: string,

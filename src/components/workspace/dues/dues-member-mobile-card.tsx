@@ -134,6 +134,8 @@ export function DuesMemberMobileCard({ member }: DuesMemberMobileCardProps) {
             border: "1px solid var(--color-danger-line)",
             color: "var(--color-danger-strong)",
             lineHeight: 1.4,
+            // A reason someone typed can be one long unbroken string
+            overflowWrap: "anywhere",
           }}
         >
           <span style={{ fontWeight: 600 }}>Rejected:</span> {member.rejectReason}

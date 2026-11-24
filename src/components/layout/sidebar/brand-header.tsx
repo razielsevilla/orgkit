@@ -3,16 +3,25 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { PanelLeft } from "lucide-react";
+import { PanelLeft, X } from "lucide-react";
 import { workspacePath } from "@/src/lib/routes";
 
 interface BrandHeaderProps {
   rawId: string;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  /** In the phone drawer the collapse button is replaced by a Close menu button */
+  isDrawer?: boolean;
+  onCloseDrawer?: () => void;
 }
 
-export function BrandHeader({ rawId, isCollapsed, onToggleCollapse }: BrandHeaderProps) {
+export function BrandHeader({
+  rawId,
+  isCollapsed,
+  onToggleCollapse,
+  isDrawer = false,
+  onCloseDrawer,
+}: BrandHeaderProps) {
   const [isBrandHovered, setIsBrandHovered] = useState(false);
 
   return !isCollapsed ? (
@@ -51,27 +60,52 @@ export function BrandHeader({ rawId, isCollapsed, onToggleCollapse }: BrandHeade
         />
       </Link>
 
-      <button
-        type="button"
-        onClick={onToggleCollapse}
-        className="orgkit-sidebar-toggle"
-        title="Collapse sidebar"
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 32,
-          height: 32,
-          borderRadius: 8,
-          border: "none",
-          backgroundColor: "transparent",
-          color: "var(--color-muted)",
-          cursor: "pointer",
-          transition: "all 0.15s ease",
-        }}
-      >
-        <PanelLeft size={18} strokeWidth={1.8} />
-      </button>
+      {isDrawer ? (
+        <button
+          type="button"
+          onClick={onCloseDrawer}
+          className="orgkit-sidebar-toggle"
+          aria-label="Close menu"
+          data-drawer-close
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 44,
+            height: 44,
+            marginRight: -8,
+            borderRadius: 12,
+            border: "none",
+            backgroundColor: "transparent",
+            color: "var(--color-muted-strong)",
+            cursor: "pointer",
+          }}
+        >
+          <X size={20} strokeWidth={2} aria-hidden="true" />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={onToggleCollapse}
+          className="orgkit-sidebar-toggle"
+          title="Collapse sidebar"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            border: "none",
+            backgroundColor: "transparent",
+            color: "var(--color-muted)",
+            cursor: "pointer",
+            transition: "all 0.15s ease",
+          }}
+        >
+          <PanelLeft size={18} strokeWidth={1.8} />
+        </button>
+      )}
     </div>
   ) : (
     /* Collapsed: Show OrgKit icon by default; switch to PanelLeft open icon ONLY when hovered */

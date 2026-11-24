@@ -4,12 +4,15 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Banknote, CalendarDays, Home, UserPlus, Users } from "lucide-react";
+import { Award, Banknote, BookOpen, CalendarDays, Files, Home, Shield, Users } from "lucide-react";
 import {
+  documentsPath,
   duesPath,
   eventsPath,
+  handoverPath,
   membersPath,
   officersPath,
+  termsPath,
   workspacePath,
 } from "@/src/lib/routes";
 
@@ -64,7 +67,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "events" | "invite";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "officers" | "terms" | "documents" | "handover";
 
 interface NavListProps {
   rawId: string;
@@ -84,6 +87,9 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
       router.prefetch(duesPath(rawId));
       router.prefetch(eventsPath(rawId));
       router.prefetch(officersPath(rawId));
+      router.prefetch(termsPath(rawId));
+      router.prefetch(documentsPath(rawId));
+      router.prefetch(handoverPath(rawId));
     };
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
@@ -147,11 +153,41 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
 
       <NavLinkItem
         href={officersPath(rawId)}
-        title="Invite: officers and invites"
-        label="Invite"
-        icon={UserPlus}
+        title="Officers: manage team and invites"
+        label="Officers"
+        icon={Shield}
         strokeWidth={2.2}
-        isActive={activeSection === "invite"}
+        isActive={activeSection === "officers"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={termsPath(rawId)}
+        title="Terms: record officer roles and terms"
+        label="Terms"
+        icon={Award}
+        strokeWidth={2.2}
+        isActive={activeSection === "terms"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={documentsPath(rawId)}
+        title="Documents: store key documents and links"
+        label="Documents"
+        icon={Files}
+        strokeWidth={2.2}
+        isActive={activeSection === "documents"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={handoverPath(rawId)}
+        title="Handover: transition guide for incoming officers"
+        label="Handover"
+        icon={BookOpen}
+        strokeWidth={2.2}
+        isActive={activeSection === "handover"}
         isCollapsed={isCollapsed}
       />
     </nav>

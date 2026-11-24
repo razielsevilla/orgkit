@@ -1,4 +1,4 @@
-import { UserPlus } from "lucide-react";
+import { UserPlus, ShieldAlert } from "lucide-react";
 import { WorkspaceOfficersData } from "@/src/app/(workspace)/officers-actions";
 import { ErrorToast } from "@/src/components/error-toast";
 
@@ -6,10 +6,11 @@ interface OfficersHeaderProps {
   data: WorkspaceOfficersData;
   pageError: string | null;
   onInvite: () => void;
+  onTransferAdmin?: () => void;
   onClearError?: () => void;
 }
 
-export function OfficersHeader({ data, pageError, onInvite, onClearError }: OfficersHeaderProps) {
+export function OfficersHeader({ data, pageError, onInvite, onTransferAdmin, onClearError }: OfficersHeaderProps) {
   return (
     <>
       {/* ── Page Header ── */}
@@ -47,9 +48,45 @@ export function OfficersHeader({ data, pageError, onInvite, onClearError }: Offi
           </p>
         </div>
 
-        {/* Admin-only "Invite an officer" button */}
+        {/* Admin Actions Group */}
         {data.canInvite && (
-          <div className="orgkit-header-actions">
+          <div
+            className="orgkit-header-actions"
+            style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}
+          >
+            {onTransferAdmin && data.currentRole === "admin" && (
+              <button
+                type="button"
+                onClick={onTransferAdmin}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "9px 18px",
+                  borderRadius: 9999,
+                  border: "1px solid var(--color-line)",
+                  backgroundColor: "var(--color-surface)",
+                  color: "var(--color-ink)",
+                  fontSize: 13.5,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.15s ease",
+                  boxShadow: "0 1px 3px rgba(0, 0, 0, 0.04)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-ink)";
+                  e.currentTarget.style.backgroundColor = "var(--color-base)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "var(--color-line)";
+                  e.currentTarget.style.backgroundColor = "var(--color-surface)";
+                }}
+              >
+                <ShieldAlert size={16} color="var(--color-muted-strong)" />
+                <span>Transfer admin rights</span>
+              </button>
+            )}
+
             <button
               type="button"
               onClick={onInvite}

@@ -18,8 +18,8 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
         position: "relative",
         width: "100vw",
         minWidth: "100%",
-        height: "100vh",
-        maxHeight: "100vh",
+        height: "100dvh",
+        maxHeight: "100dvh",
         overflow: "hidden",
         boxSizing: "border-box",
       }}

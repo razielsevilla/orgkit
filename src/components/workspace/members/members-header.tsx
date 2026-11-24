@@ -159,6 +159,9 @@ export function MembersHeader({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            // The message and the Try again button stack on a narrow screen instead of crushing the text
+            flexWrap: "wrap",
+            gap: 10,
             padding: "12px 18px",
             backgroundColor: "#FEF2F2",
             border: "1px solid #FCA5A5",
@@ -169,9 +172,9 @@ export function MembersHeader({
             marginTop: 4,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <AlertCircle size={18} aria-hidden="true" />
-            <span>{errorMessage}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flex: "1 1 200px", minWidth: 0 }}>
+            <AlertCircle size={18} aria-hidden="true" style={{ flexShrink: 0 }} />
+            <span style={{ overflowWrap: "anywhere" }}>{errorMessage}</span>
           </div>
           {onRetry && (
             <button
