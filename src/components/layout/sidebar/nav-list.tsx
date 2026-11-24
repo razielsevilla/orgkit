@@ -4,11 +4,12 @@ import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
-import { Award, Banknote, CalendarDays, Files, Home, Shield, Users } from "lucide-react";
+import { Award, Banknote, BookOpen, CalendarDays, Files, Home, Shield, Users } from "lucide-react";
 import {
   documentsPath,
   duesPath,
   eventsPath,
+  handoverPath,
   membersPath,
   officersPath,
   termsPath,
@@ -66,7 +67,7 @@ function NavLinkItem({
 }
 
 /** The sidebar entries. Only features that exist are listed. */
-export type SidebarSection = "home" | "members" | "dues" | "events" | "officers" | "terms" | "documents";
+export type SidebarSection = "home" | "members" | "dues" | "events" | "officers" | "terms" | "documents" | "handover";
 
 interface NavListProps {
   rawId: string;
@@ -88,6 +89,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
       router.prefetch(officersPath(rawId));
       router.prefetch(termsPath(rawId));
       router.prefetch(documentsPath(rawId));
+      router.prefetch(handoverPath(rawId));
     };
 
     if (typeof window !== "undefined" && "requestIdleCallback" in window) {
@@ -176,6 +178,16 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         icon={Files}
         strokeWidth={2.2}
         isActive={activeSection === "documents"}
+        isCollapsed={isCollapsed}
+      />
+
+      <NavLinkItem
+        href={handoverPath(rawId)}
+        title="Handover: transition guide for incoming officers"
+        label="Handover"
+        icon={BookOpen}
+        strokeWidth={2.2}
+        isActive={activeSection === "handover"}
         isCollapsed={isCollapsed}
       />
     </nav>
