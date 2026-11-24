@@ -8,6 +8,8 @@ export const HANDOVER_ERROR_MESSAGES = {
   invalid_role: "Please specify a valid officer role title.",
   section_too_long: "Section text cannot exceed 5000 characters.",
   invalid_document_link: "One or more attached document links are invalid.",
+  not_authenticated: "You must be signed in to perform this action.",
+  access_revoked: "You no longer have access to this organization.",
   failed: "An unexpected error occurred. Please try again.",
 } as const;
 

@@ -176,7 +176,7 @@ export async function getHandoverGuideAction(
         const role = isUuid(guideIdOrRole) ? "General Officer" : guideIdOrRole;
         const emptySections = createEmptyHandoverSections();
 
-        return ok({
+        const initialGuide: HandoverGuide = {
           id: "",
           orgId,
           termId: null,
@@ -193,7 +193,9 @@ export async function getHandoverGuideAction(
           canEdit: true,
           canReopen: false,
           canFinalize: true,
-        });
+        };
+
+        return ok(initialGuide);
       }
 
       const status = guideRow.status as "draft" | "ready";
