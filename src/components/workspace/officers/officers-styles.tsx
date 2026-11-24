@@ -35,6 +35,9 @@ export function OfficersStyles() {
         .orgkit-header-actions {
           width: 100% !important;
           margin-top: 12px !important;
+          display: flex !important;
+          flex-direction: column !important;
+          gap: 8px !important;
         }
         .orgkit-header-actions button {
           width: 100% !important;

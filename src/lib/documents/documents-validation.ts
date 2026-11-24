@@ -44,7 +44,7 @@ export const addDocumentLinkSchema = z.object({
     .min(2, "Title must be at least 2 characters.")
     .max(150, "Title cannot exceed 150 characters."),
   category: z.enum(DOCUMENT_CATEGORIES, {
-    error: "Please select a valid category.",
+    message: "Please select a valid category.",
   }),
   url: z
     .string()
@@ -131,7 +131,7 @@ export const addDocumentFileMetadataSchema = z.object({
     .min(2, DOCUMENTS_ERROR_MESSAGES.invalid_title)
     .max(150, DOCUMENTS_ERROR_MESSAGES.invalid_title),
   category: z.enum(DOCUMENT_CATEGORIES, {
-    error: DOCUMENTS_ERROR_MESSAGES.invalid_category,
+    message: DOCUMENTS_ERROR_MESSAGES.invalid_category,
   }),
 });
 

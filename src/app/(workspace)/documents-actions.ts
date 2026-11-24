@@ -6,6 +6,7 @@ import { withOrgCaller } from "@/src/lib/orgs/org-access";
 import { documentsPath } from "@/src/lib/routes";
 import { isUuid } from "@/src/lib/validation";
 import { logger } from "@/src/lib/logger";
+import { createAdminClient } from "@/src/lib/supabase/service-role";
 import {
   DOCUMENT_CATEGORIES,
   DOCUMENTS_ERROR_MESSAGES,
@@ -189,6 +190,27 @@ export async function addDocumentLinkAction(
 }
 
 /**
+ * Helper to get a private storage client for org-documents bucket using service-role.
+ * Verifies or auto-creates the private bucket if needed so uploads never fail with missing bucket or RLS errors.
+ */
+async function getDocumentsStorage() {
+  const admin = createAdminClient();
+  try {
+    if (typeof admin.storage?.getBucket === "function") {
+      const { data: bucket, error } = await admin.storage.getBucket("org-documents");
+      if (error || !bucket) {
+        if (typeof admin.storage?.createBucket === "function") {
+          await admin.storage.createBucket("org-documents", { public: false });
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn("documents.bucket_check_failed", { error: err });
+  }
+  return admin.storage.from("org-documents");
+}
+
+/**
  * Uploads a document file to private Supabase storage and stores its record.
  * Rejects oversized and disallowed file types with clear feedback.
  * Automatically cleans up orphaned storage files if the database write fails.
@@ -246,12 +268,11 @@ export async function uploadDocumentFileAction(
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
 
-      const { error: uploadError } = await caller.supabase.storage
-        .from("org-documents")
-        .upload(storagePath, buffer, {
-          contentType: file.type || "application/octet-stream",
-          upsert: false,
-        });
+      const storage = await getDocumentsStorage();
+      const { error: uploadError } = await storage.upload(storagePath, buffer, {
+        contentType: file.type || "application/octet-stream",
+        upsert: false,
+      });
 
       if (uploadError) {
         logger.error("documents.storage_upload_failed", { orgId, storagePath, error: uploadError });
@@ -287,7 +308,7 @@ export async function uploadDocumentFileAction(
           storagePath,
           error: insertError,
         });
-        await caller.supabase.storage.from("org-documents").remove([storagePath]);
+        await storage.remove([storagePath]);
         if ((insertError as { code?: string })?.code === "PGRST205") {
           return fail(
             "failed",
@@ -346,9 +367,8 @@ export async function getDocumentDownloadUrlAction(
         return fail("not_found", DOCUMENTS_ERROR_MESSAGES.not_found);
       }
 
-      const { data, error } = await caller.supabase.storage
-        .from("org-documents")
-        .createSignedUrl(doc.storage_path, 300);
+      const storage = await getDocumentsStorage();
+      const { data, error } = await storage.createSignedUrl(doc.storage_path, 300);
 
       if (error || !data?.signedUrl) {
         logger.error("documents.signed_url_failed", { orgId, documentId, error });
@@ -405,9 +425,8 @@ export async function deleteDocumentAction(
 
       // 3. Purge storage file if applicable
       if (doc.kind === "file" && doc.storage_path) {
-        const { error: storageRemoveError } = await caller.supabase.storage
-          .from("org-documents")
-          .remove([doc.storage_path]);
+        const storage = await getDocumentsStorage();
+        const { error: storageRemoveError } = await storage.remove([doc.storage_path]);
 
         if (storageRemoveError) {
           logger.error("documents.storage_cleanup_failed", {

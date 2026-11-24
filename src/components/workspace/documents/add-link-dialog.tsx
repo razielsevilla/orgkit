@@ -3,6 +3,7 @@
 import React, { useState, useTransition } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from "@/src/components/ui/dialog";
+import { Select } from "@/src/components/ui/select";
 import {
   DOCUMENT_CATEGORIES,
   DOCUMENTS_ERROR_MESSAGES,
@@ -183,29 +184,15 @@ export function AddLinkDialog({ orgId, isOpen, onClose, onSuccess }: AddLinkDial
             >
               Category <span style={{ color: "#dc2626" }}>*</span>
             </label>
-            <select
+            <Select
               id="document-link-category"
               disabled={isPending}
               value={category}
-              onChange={(e) => setCategory(e.target.value as DocumentCategory)}
-              style={{
-                width: "100%",
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid var(--color-line)",
-                backgroundColor: "var(--color-surface)",
-                fontSize: 13.5,
-                color: "var(--color-ink)",
-                boxSizing: "border-box",
-                outline: "none",
-              }}
-            >
-              {DOCUMENT_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setCategory(val as DocumentCategory)}
+              options={DOCUMENT_CATEGORIES}
+              placeholder="Select category..."
+              direction="up"
+            />
           </div>
         </DialogBody>
 

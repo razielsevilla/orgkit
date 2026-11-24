@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { OfficerRole } from "@/src/lib/orgs/permissions";
+import type { CallerTransferRole } from "@/src/lib/orgs/transfer-admin-validation";
 import {
   WorkspaceOfficersData,
   ActiveOfficer,
@@ -22,6 +23,9 @@ export function useOfficers(initialData: WorkspaceOfficersData, orgId: string) {
   const [inviteModalOpen, setInviteModalOpen] = useState(false);
   const [inviteDialogSession, setInviteDialogSession] = useState(0);
   const [invitePrefill, setInvitePrefill] = useState<{ email?: string; role?: OfficerRole }>({});
+
+  // Transfer admin modal state
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
 
   // Success panel state
   const [successData, setSuccessData] = useState<{
@@ -123,6 +127,15 @@ export function useOfficers(initialData: WorkspaceOfficersData, orgId: string) {
     setInviteModalOpen(true);
   }
 
+  // Handle successful admin transfer
+  async function handleTransferSuccess(newRole: CallerTransferRole) {
+    if (newRole === "remove") {
+      setAccessRevoked(true);
+    } else {
+      await refreshData();
+    }
+  }
+
   return {
     data,
     loading,
@@ -134,6 +147,9 @@ export function useOfficers(initialData: WorkspaceOfficersData, orgId: string) {
     inviteDialogSession,
     invitePrefill,
     openInvite,
+    transferModalOpen,
+    setTransferModalOpen,
+    handleTransferSuccess,
     successData,
     setSuccessData,
     removeTarget,

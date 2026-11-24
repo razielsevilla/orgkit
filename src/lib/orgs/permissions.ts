@@ -16,6 +16,7 @@ export type OfficerAction =
   | "invite:recreate"
   | "member:import"
   | "officer:change_role"
+  | "officer:transfer_admin"
   | "officer:remove"
   | "officer:view_emails"
   | "officer:view_list"
@@ -29,6 +30,7 @@ const ROLE_PERMISSIONS: Record<OfficerRole, readonly OfficerAction[]> = {
     "invite:recreate",
     "member:import",
     "officer:change_role",
+    "officer:transfer_admin",
     "officer:remove",
     "officer:view_emails",
     "officer:view_list",

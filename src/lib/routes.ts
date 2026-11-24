@@ -51,6 +51,21 @@ export function eventsPath(orgId: string): string {
   return `${workspacePath(orgId)}/events`;
 }
 
+/** Past events log page (H3) */
+export function eventsLogPath(orgId: string): string {
+  return `${workspacePath(orgId)}/events/log`;
+}
+
+/** Handover guides overview (H4) */
+export function handoverPath(orgId: string): string {
+  return `${workspacePath(orgId)}/handover`;
+}
+
+/** Specific handover guide page (H4) */
+export function handoverGuidePath(orgId: string, guideId: string): string {
+  return `${workspacePath(orgId)}/handover/${guideId}`;
+}
+
 /** One event's page */
 export function eventPath(orgId: string, eventId: string): string {
   return `${eventsPath(orgId)}/${eventId}`;
@@ -158,8 +173,11 @@ export const PRIVATE_ROUTES: readonly string[] = [
   "/workspace/:id/terms",
   "/workspace/:id/documents",
   "/workspace/:id/events",
+  "/workspace/:id/events/log",
   "/workspace/:id/events/:eventId",
   "/workspace/:id/events/:eventId/checkin",
+  "/workspace/:id/handover",
+  "/workspace/:id/handover/:guideId",
   "/workspace/:id/members/join",
   "/workspace/:id/members/export",
 ];

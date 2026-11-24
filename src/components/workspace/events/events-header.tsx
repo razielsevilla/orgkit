@@ -1,7 +1,10 @@
 import React from "react";
-import { AlertCircle, Plus, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { AlertCircle, History, Plus, RefreshCw } from "lucide-react";
+import { eventsLogPath } from "@/src/lib/routes";
 
 interface EventsHeaderProps {
+  orgId?: string;
   eventCount: number;
   onNewEvent: () => void;
   errorMessage?: string | null;
@@ -10,7 +13,7 @@ interface EventsHeaderProps {
 }
 
 /** Title, "New event" button and the load-error banner, laid out like `MembersHeader` */
-export function EventsHeader({ eventCount, onNewEvent, errorMessage, onRetry, isRetrying = false }: EventsHeaderProps) {
+export function EventsHeader({ orgId, eventCount, onNewEvent, errorMessage, onRetry, isRetrying = false }: EventsHeaderProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", marginBottom: 8 }}>
       <div
@@ -47,6 +50,32 @@ export function EventsHeader({ eventCount, onNewEvent, errorMessage, onRetry, is
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          {orgId && (
+            <Link
+              href={eventsLogPath(orgId)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                minHeight: 42,
+                padding: "10px 18px",
+                borderRadius: 9999,
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-ink)",
+                border: "1px solid var(--color-line)",
+                fontSize: 13.5,
+                fontWeight: 600,
+                textDecoration: "none",
+                cursor: "pointer",
+                boxShadow: "0 1px 2px rgba(0, 0, 0, 0.04)",
+                transition: "all 0.15s ease",
+              }}
+            >
+              <History size={16} aria-hidden="true" color="var(--color-muted-strong)" />
+              <span>Past events log</span>
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={onNewEvent}
