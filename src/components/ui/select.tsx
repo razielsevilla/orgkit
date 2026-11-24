@@ -137,6 +137,7 @@ export function Select({
         role="combobox"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        aria-controls={`${selectId}-listbox`}
         aria-label={ariaLabel || placeholder}
         aria-required={required}
         aria-invalid={hasError}
