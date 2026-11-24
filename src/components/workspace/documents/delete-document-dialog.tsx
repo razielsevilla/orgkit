@@ -37,10 +37,10 @@ export function DeleteDocumentDialog({
   return (
     <Dialog onDismiss={onClose} role="alertdialog" labelledBy="delete-doc-dialog-title" maxWidth={440}>
       <DialogHeader
+        titleId="delete-doc-dialog-title"
         title="Delete Document"
-        subtitle="This action cannot be undone"
-        icon={<Trash2 size={20} color="#dc2626" />}
-        onDismiss={onClose}
+        description="This action cannot be undone"
+        onClose={onClose}
       />
 
       <DialogBody>

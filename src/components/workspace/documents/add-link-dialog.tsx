@@ -51,11 +51,11 @@ export function AddLinkDialog({ orgId, isOpen, onClose, onSuccess }: AddLinkDial
       });
 
       if (!res.success) {
-        setErrorMessage(res.message);
+        setErrorMessage(res.errorMessage ?? "Failed to add link.");
         return;
       }
 
-      onSuccess(res.data);
+      if (res.data) onSuccess(res.data);
       onClose();
     });
   };
@@ -63,10 +63,10 @@ export function AddLinkDialog({ orgId, isOpen, onClose, onSuccess }: AddLinkDial
   return (
     <Dialog onDismiss={onClose} labelledBy="add-link-dialog-title" maxWidth={480}>
       <DialogHeader
+        titleId="add-link-dialog-title"
         title="Add External Link"
-        subtitle="Keep shared drives, folders, and resources accessible"
-        icon={<LinkIcon size={20} strokeWidth={2.2} />}
-        onDismiss={onClose}
+        description="Keep shared drives, folders, and resources accessible"
+        onClose={onClose}
       />
 
       <form onSubmit={handleSubmit}>
