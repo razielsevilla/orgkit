@@ -7,7 +7,6 @@ import { HandoverHeader } from "./handover-header";
 import { HandoverSectionCard } from "./handover-section-card";
 import { HandoverLinkedDocuments } from "./handover-linked-documents";
 import { HandoverFinalizeDialog, HandoverReopenDialog } from "./handover-finalize-dialog";
-import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 import {
   HANDOVER_SECTION_DEFINITIONS,
   calculateGuideCompleteness,

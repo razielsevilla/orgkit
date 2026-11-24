@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, Clock, Lock, RotateCcw, Save } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock, RotateCcw, Save } from "lucide-react";
 import type { HandoverGuide } from "@/src/lib/handover/handover-types";
 import { handoverPath } from "@/src/lib/routes";
 
