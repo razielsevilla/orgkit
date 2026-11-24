@@ -1,5 +1,6 @@
 import React from "react";
 import { BookOpen, Plus } from "lucide-react";
+import { FloatingIconsDecor } from "@/src/components/decor/floating-decor";
 
 interface HandoverEmptyStateProps {
   onStartGuide?: () => void;
@@ -10,6 +11,8 @@ export function HandoverEmptyState({ onStartGuide, canStart = true }: HandoverEm
   return (
     <div
       style={{
+        position: "relative",
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
@@ -22,8 +25,11 @@ export function HandoverEmptyState({ onStartGuide, canStart = true }: HandoverEm
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
       }}
     >
+      <FloatingIconsDecor />
       <div
         style={{
+          position: "relative",
+          zIndex: 1,
           width: 58,
           height: 58,
           borderRadius: 18,
