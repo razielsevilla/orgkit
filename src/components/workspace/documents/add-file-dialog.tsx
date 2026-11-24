@@ -241,6 +241,7 @@ export function AddFileDialog({ orgId, isOpen, onClose, onSuccess }: AddFileDial
               onChange={(val) => setCategory(val as DocumentCategory)}
               options={DOCUMENT_CATEGORIES}
               placeholder="Select category..."
+              direction="up"
             />
           </div>
         </DialogBody>
