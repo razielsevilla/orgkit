@@ -60,6 +60,8 @@ layout but is not part of the URL.
 | `/workspace/:id/officers` | Officer of that org | **Invite**: officers, invites, roles | `(workspace)/workspace/[id]/officers/page.tsx` |
 | `/workspace/:id/terms` | Officer of that org | **Terms**: record officer roles and leadership terms (H1), grouped by term | `(workspace)/workspace/[id]/terms/page.tsx` |
 | `/workspace/:id/documents` | Officer of that org | **Documents**: store key documents and external links (H2), organized by category | `(workspace)/workspace/[id]/documents/page.tsx` |
+| `/workspace/:id/handover` | Officer of that org | **Handover**: outgoing officer guide template (H4), with role sections and linked stored documents | `(workspace)/workspace/[id]/handover/page.tsx` |
+| `/workspace/:id/handover/:guideId` | Officer of that org | **Handover Guide**: specific role handover guide, read or edit view (H4) | `(workspace)/workspace/[id]/handover/[guideId]/page.tsx` |
 | `/workspace/:id/members/join` | **Admin** of that org (others get a 404) | **Join**: manage the join link and QR code | `(workspace)/workspace/[id]/members/join/page.tsx` |
 | `/workspace/:id/members/export` | **Admin** of that org (others get 403) | **Export**: `POST` streams the roster as a CSV download | `(workspace)/workspace/[id]/members/export/route.ts` |
 
