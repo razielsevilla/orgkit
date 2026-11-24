@@ -332,4 +332,13 @@ describe("handover-actions: setHandoverStatusAction", () => {
     expect(res.success).toBe(true);
     expect(state.guides[0].status).toBe("draft");
   });
+
+  it("retrieves handover guides list and distinct roles", async () => {
+    state.callerRole = "officer";
+    const res = await getHandoverGuidesListAction(ORG);
+    expect(res.success).toBe(true);
+    if (!res.success) return;
+    expect(res.data?.orgId).toBe(ORG);
+    expect(Array.isArray(res.data?.guides)).toBe(true);
+  });
 });
