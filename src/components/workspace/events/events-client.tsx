@@ -94,6 +94,7 @@ export function EventsClient({ rawId, events, initialError = null }: EventsClien
         />
 
         <EventsHeader
+          orgId={rawId}
           eventCount={events.length}
           onNewEvent={() => setCreateOpen(true)}
           errorMessage={initialError}
