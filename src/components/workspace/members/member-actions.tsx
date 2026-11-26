@@ -159,6 +159,7 @@ export function MemberActions({
 
   return (
     <div
+      data-tour="member-row-actions"
       style={{
         display: "flex",
         alignItems: "center",

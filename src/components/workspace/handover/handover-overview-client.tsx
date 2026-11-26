@@ -16,7 +16,7 @@ interface HandoverOverviewClientProps {
   isAdmin: boolean;
 }
 
-export function HandoverOverviewClient({ summary, isAdmin: _isAdmin }: HandoverOverviewClientProps) {
+export function HandoverOverviewClient({ summary }: HandoverOverviewClientProps) {
   const router = useRouter();
   const [selectedRole, setSelectedRole] = useState(
     summary.activeRoles[0] || "President"
@@ -132,6 +132,7 @@ export function HandoverOverviewClient({ summary, isAdmin: _isAdmin }: HandoverO
 
           {/* Quick Start Role Selector */}
           <div
+            data-tour="handover-start"
             style={{
               display: "flex",
               alignItems: "center",

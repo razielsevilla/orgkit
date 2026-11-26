@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "skills": {
+    "user-onboarding": {
+      "source": "manojbajaj95/claude-gtm-plugin",
+      "commit": "0830a46f4cfbbc8642c07b5c3748afd8efd24571",
+      "sourceType": "github",
+      "skillPath": "skills/user-onboarding/SKILL.md",
+      "computedHash": "3cfe8c160bac9d82dc3ee897fb2676a692b8d76e0cc153471ea49f414f78f1e9"
+    }
+  }
+}

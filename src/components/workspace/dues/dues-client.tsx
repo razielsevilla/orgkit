@@ -51,6 +51,8 @@ interface DuesClientProps {
   rawId: string;
   initialPeriods: DuesPeriod[];
   initialDashboardData?: DuesDashboardData | null;
+  /** Example data for the officer tour: the page fetches nothing of its own */
+  demo?: boolean;
   siteUrl?: string | null;
 }
 
@@ -59,6 +61,7 @@ export function DuesClient({
   initialPeriods,
   initialDashboardData = null,
   siteUrl,
+  demo = false,
 }: DuesClientProps) {
   const [periods, setPeriods] = useState<DuesPeriod[]>(initialPeriods);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(
@@ -136,14 +139,18 @@ export function DuesClient({
 
   // Initial and reactive load on filter / search / period changes
   useEffect(() => {
+    // React's development double-run of effects would otherwise fetch the example period by its made-up id
+    if (demo) return;
     if (isFirstMountRef.current) {
       isFirstMountRef.current = false;
       return;
     }
     if (selectedPeriodId) {
+      // Fetch-on-change: the loading flag is set when the request starts, which is the point.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchDashboard(page, false);
     }
-  }, [selectedPeriodId, searchQuery, statusFilter, page, fetchDashboard]);
+  }, [selectedPeriodId, searchQuery, statusFilter, page, fetchDashboard, demo]);
 
   // Handle period switch
   const handleSelectPeriod = (newPeriodId: string) => {
@@ -396,6 +403,7 @@ export function DuesClient({
                   >
                     <button
                       type="button"
+                      data-tour="dues-reminders"
                       onClick={() => setReminderPeriod(currentSelectedPeriod)}
                       aria-label="Send payment reminders"
                       title={
@@ -435,6 +443,7 @@ export function DuesClient({
                     </button>
                     <button
                       type="button"
+                      data-tour="dues-paylink"
                       onClick={() => setPayLinkPeriod(currentSelectedPeriod)}
                       style={{
                         display: "inline-flex",

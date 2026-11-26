@@ -224,6 +224,49 @@ export async function confirmMemberAction(
   );
 }
 
+/**
+ * Confirms every pending student in one step. Only pending members change, and
+ * the database function checks that the caller is an officer of this org.
+ */
+export async function confirmAllPendingMembersAction(
+  orgId: string
+): Promise<ActionResult<{ confirmed: number }, MembersActionError>> {
+  if (!isUuid(orgId)) return fail("invalid_request", INVALID_REQUEST);
+
+  const failedMessage = "Could not confirm members. Please try again.";
+
+  return withOrgCaller<{ confirmed: number }, MembersActionError>(
+    orgId,
+    { name: "confirmAllPendingMembersAction", unexpected: failedMessage },
+    async ({ supabase }) => {
+      const { data, error } = await supabase.rpc("confirm_all_pending_members", { target_org: orgId });
+      if (error) return rpcFailure("confirm_all_pending_members", error, MEMBER_WRITE_ERRORS, failedMessage);
+
+      revalidatePath(membersPath(orgId));
+      return ok({ confirmed: typeof data === "number" ? data : 0 });
+    }
+  );
+}
+
+/**
+ * How many students are waiting to be confirmed. Event screens use it to tell an
+ * officer that those students can't check in yet. A count only: no names.
+ */
+export async function getPendingMemberCountAction(
+  orgId: string
+): Promise<ActionResult<{ count: number }, MembersActionError>> {
+  if (!isUuid(orgId)) return fail("invalid_request", INVALID_REQUEST);
+
+  return withOrgCaller<{ count: number }, MembersActionError>(
+    orgId,
+    { name: "getPendingMemberCountAction", unexpected: LOAD_FAILED },
+    async (caller) => {
+      const count = await countMembers(caller, orgId, { status: "pending" });
+      return count === null ? fail("failed", LOAD_FAILED) : ok({ count });
+    }
+  );
+}
+
 export async function updateMemberAction(
   orgId: string,
   memberId: string,

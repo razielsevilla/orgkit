@@ -1,5 +1,5 @@
 import React from "react";
-import { Upload, Link as LinkIcon, Files } from "lucide-react";
+import { Upload, Link as LinkIcon } from "lucide-react";
 
 interface DocumentsHeaderProps {
   orgName?: string;
@@ -88,6 +88,7 @@ export function DocumentsHeader({
         >
           <button
             type="button"
+            data-tour="documents-add-file"
             onClick={onAddFile}
             style={{
               display: "inline-flex",
@@ -111,6 +112,7 @@ export function DocumentsHeader({
 
           <button
             type="button"
+            data-tour="documents-add-link"
             onClick={onAddLink}
             style={{
               display: "inline-flex",

@@ -12,7 +12,6 @@ interface DuesReminderStatsBadgeProps {
 export function DuesReminderStatsBadge({
   eligibleCount,
   skipped24hCount,
-  totalUnpaidCount,
 }: DuesReminderStatsBadgeProps) {
   const memberPlural = eligibleCount === 1 ? "member" : "members";
 

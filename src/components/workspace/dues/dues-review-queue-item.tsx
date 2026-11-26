@@ -35,7 +35,7 @@ export function DuesReviewQueueItemRow({
     <button
       type="button"
       onClick={() => onSelect(item)}
-      aria-selected={isSelected}
+      aria-pressed={isSelected}
       style={{
         display: "flex",
         alignItems: "center",

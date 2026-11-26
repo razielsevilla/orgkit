@@ -1,5 +1,5 @@
 import React from "react";
-import { CalendarDays, CheckCircle2, Users, TrendingUp, XCircle } from "lucide-react";
+import { CalendarDays, CheckCircle2, Users, TrendingUp } from "lucide-react";
 import type { PastEventsSummary } from "@/src/lib/events/past-events-types";
 
 interface EventsLogSummaryTilesProps {

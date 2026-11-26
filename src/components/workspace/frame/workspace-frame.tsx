@@ -1,18 +1,22 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { plusJakarta } from "@/src/lib/fonts";
 import { documentsPath, duesPath, eventsPath, handoverPath, membersPath, officersPath, termsPath } from "@/src/lib/routes";
 import { useSidebarCollapsed } from "@/src/lib/use-sidebar-collapsed";
 import { useNarrowScreen } from "@/src/lib/use-narrow-screen";
+import { useOfficerTour } from "@/src/lib/tour/use-officer-tour";
+import { registerTourStarter } from "@/src/lib/tour/tour-request";
+import { TourDemoProvider } from "@/src/lib/tour/tour-demo";
 import { Sidebar } from "@/src/components/layout/sidebar";
 import type { SidebarSection } from "@/src/components/layout/sidebar/nav-list";
 import type { OfficerProfile } from "@/src/components/layout/navbar";
 import { ZeroScrollLock } from "@/src/components/ui/zero-scroll-lock";
 import { WorkspaceBackdrop } from "./workspace-backdrop";
 import { FrameStyles } from "./frame-styles";
+import { OfficerTour } from "@/src/components/workspace/tour/officer-tour";
 
 /** What the frame needs to know about the org and the signed-in officer */
 export interface WorkspaceFrameData {
@@ -73,12 +77,27 @@ export function WorkspaceFrame({
   const pathname = usePathname();
   const [isSidebarCollapsed, toggleSidebar] = useSidebarCollapsed();
   const isNarrow = useNarrowScreen();
+  // Opens by itself the first time this officer reaches a workspace, and from the profile menu
+  const tour = useOfficerTour(frame?.officer?.id);
 
   // The drawer is open for the page it was opened on, so moving to another page
   // closes it without any effect or extra state.
   const [openOnPath, setOpenOnPath] = useState<string | null>(null);
   const isDrawerOpen = isNarrow && openOnPath === pathname;
   const closeDrawer = () => setOpenOnPath(null);
+  // The drawer closes first: two things trapping Tab and Escape at once would fight
+  const { start: openTour } = tour;
+  const startFullTour = useCallback(() => {
+    setOpenOnPath(null);
+    openTour("all");
+  }, [openTour]);
+  // The "?" button in the corner (beside Feedback) is the guide to the page the officer is on
+  const orgId = frame?.rawId;
+  const startPageGuide = useCallback(() => {
+    setOpenOnPath(null);
+    openTour(orgId ? sectionFor(pathname, orgId) : "all");
+  }, [openTour, orgId, pathname]);
+  useEffect(() => registerTourStarter(startPageGuide), [startPageGuide]);
 
   const drawerRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
@@ -151,6 +170,7 @@ export function WorkspaceFrame({
           ref={menuButtonRef}
           type="button"
           className="orgkit-topbar-menu"
+          data-tour="menu-button"
           aria-label="Open menu"
           aria-expanded={isDrawerOpen}
           aria-controls="orgkit-sidebar"
@@ -180,6 +200,7 @@ export function WorkspaceFrame({
         isDrawerOpen={isDrawerOpen}
         onCloseDrawer={closeDrawer}
         asideRef={drawerRef}
+        onStartTour={startFullTour}
       />
 
       <main
@@ -194,8 +215,13 @@ export function WorkspaceFrame({
       >
         <WorkspaceBackdrop />
         {/* Each screen fills this area and decides for itself how to centre or scroll */}
-        <div style={{ position: "relative", zIndex: 1, height: "100%" }}>{children}</div>
+        <div data-tour="page" style={{ position: "relative", zIndex: 1, height: "100%" }}>
+          {/* While the tour is open, an empty page shows example data (src/lib/tour/tour-demo.ts) */}
+          <TourDemoProvider value={tour.isOpen}>{children}</TourDemoProvider>
+        </div>
       </main>
+
+      {tour.isOpen && <OfficerTour orgId={frame.rawId} isAdmin={frame.isAdmin} scope={tour.scope} onClose={tour.close} />}
     </div>
   );
 }

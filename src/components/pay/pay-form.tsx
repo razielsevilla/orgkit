@@ -10,12 +10,7 @@ import {
   Lock,
   X,
 } from "lucide-react";
-import {
-  Card,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/src/components/ui/card";
+import { Card } from "@/src/components/ui/card";
 import {
   DUES_PAY_MESSAGES,
   MAX_SCREENSHOT_BYTES,
@@ -61,45 +56,48 @@ export function PayForm({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const copy = DUES_PAY_MESSAGES[language];
 
-  // Update object URL for image preview and clean up memory on unmount/change
-  useEffect(() => {
-    if (!selectedFile) {
-      setPreviewUrl(null);
-      return;
-    }
-    const url = URL.createObjectURL(selectedFile);
+  // The preview URL is created and revoked where the file changes (not in an effect),
+  // and the ref lets one unmount cleanup free whatever is still held.
+  const previewUrlRef = useRef<string | null>(null);
+  const applyFile = (file: File | null) => {
+    if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    const url = file ? URL.createObjectURL(file) : null;
+    previewUrlRef.current = url;
+    setSelectedFile(file);
     setPreviewUrl(url);
+  };
+  useEffect(() => {
     return () => {
-      URL.revokeObjectURL(url);
+      if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
     };
-  }, [selectedFile]);
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFileError(null);
     setScreenshotErrorDismissed(true);
     const files = e.target.files;
     if (!files || files.length === 0) {
-      setSelectedFile(null);
+      applyFile(null);
       return;
     }
     const file = files[0];
     if (file.size > MAX_SCREENSHOT_BYTES) {
       setFileError(copy.screenshotTooLarge);
-      setSelectedFile(null);
+      applyFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
     if (file.type && !ALLOWED_IMAGE_TYPES.includes(file.type as AllowedImageType)) {
       setFileError(copy.screenshotInvalidType);
-      setSelectedFile(null);
+      applyFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;
     }
-    setSelectedFile(file);
+    applyFile(file);
   };
 
   const handleRemoveFile = () => {
-    setSelectedFile(null);
+    applyFile(null);
     setFileError(null);
     setScreenshotErrorDismissed(true);
     if (fileInputRef.current) {

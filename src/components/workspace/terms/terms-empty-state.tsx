@@ -98,6 +98,7 @@ export function TermsEmptyState({ isAdmin, onAddTerm }: TermsEmptyStateProps) {
       {isAdmin ? (
         <button
           type="button"
+          data-tour="terms-record"
           onClick={onAddTerm}
           className="orgkit-primary-btn"
           style={{

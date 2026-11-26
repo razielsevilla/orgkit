@@ -264,7 +264,7 @@ Not URLs, but how pages change data.
 | `consent/actions.ts` | `acceptConsent`, `declineConsent` |
 | `(workspace)/actions.ts` | `createWorkspace`, plus readers `getOrganizationById`, `getOfficerDefaultWorkspace`, `getCurrentOfficer`, `isOrgAdmin` |
 | `(workspace)/officers-actions.ts` | `getWorkspaceOfficers`, `createOfficerInvite`, `revokeOfficerInvite`, `updateOfficerRole`, `removeWorkspaceOfficer` |
-| `(workspace)/members-actions.ts` | `getWorkspaceMembers`, `confirmMemberAction` |
+| `(workspace)/members-actions.ts` | `getWorkspaceMembers`, `confirmMemberAction`, `confirmAllPendingMembersAction`, `getPendingMemberCountAction` (a count, used by the event and check-in screens) |
 | `(workspace)/dues-actions.ts` | `getWorkspaceDuesPeriods`, `createDuesPeriod`, `updateDuesPeriod`, `closeDuesPeriod`, `getDuesPayLink`, `setDuesPayLink` |
 | `pay/[token]/actions.ts` | `submitDuesPayment` |
 | `(workspace)/attendance-actions.ts` | `getEventAttendanceAction`, `searchAttendeeCandidatesAction`, `addAttendanceAction`, `removeAttendanceAction`, `getMemberAttendanceHistoryAction` |

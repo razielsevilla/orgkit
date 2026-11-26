@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import {
+  confirmAllPendingMembersAction,
   confirmMemberAction,
   getWorkspaceMembers,
   setMemberStatusAction,
@@ -46,6 +47,8 @@ interface Options {
   initialError: string | null;
   /** Shows a message as a toast */
   notify: (message: string) => void;
+  /** Example data for the officer tour: never fetch, or the real (empty) roster would replace it */
+  demo?: boolean;
 }
 
 /**
@@ -55,7 +58,7 @@ interface Options {
  *
  * Changes show on screen at once and are undone if the server refuses them.
  */
-export function useMemberRoster({ orgId, initialData, initialError, notify }: Options) {
+export function useMemberRoster({ orgId, initialData, initialError, notify, demo = false }: Options) {
   const [data, setData] = useState(initialData);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -76,6 +79,9 @@ export function useMemberRoster({ orgId, initialData, initialError, notify }: Op
 
   const confirming = useBusyIds();
   const reactivating = useBusyIds();
+  const [confirmingAll, setConfirmingAll] = useState(false);
+  // How many students the last "confirm all" confirmed, for the message that follows it
+  const [confirmedAllCount, setConfirmedAllCount] = useState<number | null>(null);
 
   // Skip the refetch on mount only when the server already gave us data
   const isFirstRender = useRef(!initialError);
@@ -116,6 +122,8 @@ export function useMemberRoster({ orgId, initialData, initialError, notify }: Op
 
   // Reload when the (debounced) search, the status filter or the page changes
   useEffect(() => {
+    // React's development double-run of effects would otherwise fetch right after mounting
+    if (demo) return;
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
@@ -123,7 +131,7 @@ export function useMemberRoster({ orgId, initialData, initialError, notify }: Op
     startTransition(() => {
       fetchMembers();
     });
-  }, [debouncedSearch, statusFilter, page, fetchMembers]);
+  }, [debouncedSearch, statusFilter, page, fetchMembers, demo]);
 
   function goToPage(next: number) {
     if (isLoading || next === page || next < 1 || next > lastPage) return;
@@ -169,6 +177,21 @@ export function useMemberRoster({ orgId, initialData, initialError, notify }: Op
         notify(res.errorMessage || "Could not confirm member. Please try again.");
       }
     });
+
+  /** Confirms every pending student, then reloads so the list and counters come from the server */
+  async function confirmAll() {
+    if (confirmingAll) return;
+    setConfirmingAll(true);
+    const res = await confirmAllPendingMembersAction(orgId);
+    setConfirmingAll(false);
+
+    if (res.success && res.data) {
+      setConfirmedAllCount(res.data.confirmed);
+      await fetchMembers();
+      return;
+    }
+    notify(res.errorMessage || "Could not confirm members. Please try again.");
+  }
 
   const reactivate = (member: WorkspaceMember) =>
     reactivating.track(member.id, async () => {
@@ -245,6 +268,9 @@ export function useMemberRoster({ orgId, initialData, initialError, notify }: Op
     confirmingIds: confirming.ids,
     reactivatingIds: reactivating.ids,
     confirm,
+    confirmAll,
+    confirmingAll,
+    confirmedAllCount,
     reactivate,
     saveEdit,
     deactivate,

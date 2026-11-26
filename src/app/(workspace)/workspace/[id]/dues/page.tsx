@@ -14,7 +14,7 @@ import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
 import DuesLoading from "./loading";
 import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
-import { DuesClient } from "@/src/components/workspace/dues/dues-client";
+import { DuesWithDemo } from "@/src/components/workspace/tour/demo/page-demos";
 
 interface DuesPageProps {
   params: Promise<{ id: string }>;
@@ -72,7 +72,7 @@ async function DuesContent({ params }: DuesPageProps) {
 
   return (
     <PageReveal>
-      <DuesClient
+      <DuesWithDemo
         rawId={rawId}
         initialPeriods={periodsRes.data}
         initialDashboardData={initialDashboardData}

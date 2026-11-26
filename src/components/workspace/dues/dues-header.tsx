@@ -59,6 +59,7 @@ export function DuesHeader({
       {totalCount > 0 && (
         <button
           type="button"
+          data-tour="dues-new-period"
           onClick={onCreatePeriod}
           className="orgkit-btn-accent"
           style={{

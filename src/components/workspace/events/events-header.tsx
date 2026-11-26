@@ -52,6 +52,7 @@ export function EventsHeader({ orgId, eventCount, onNewEvent, errorMessage, onRe
         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
           {orgId && (
             <Link
+              data-tour="events-log"
               href={eventsLogPath(orgId)}
               style={{
                 display: "inline-flex",
@@ -78,6 +79,7 @@ export function EventsHeader({ orgId, eventCount, onNewEvent, errorMessage, onRe
 
           <button
             type="button"
+            data-tour="events-new"
             onClick={onNewEvent}
             className="orgkit-btn-accent"
             style={{

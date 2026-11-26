@@ -36,6 +36,7 @@ export function DocumentMobileCard({
 
   return (
     <div
+      data-tour="documents-list"
       className="orgkit-doc-card"
       style={{
         display: "flex",

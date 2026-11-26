@@ -125,6 +125,7 @@ export function MembersHeader({
           {onExport && (
             <button
               type="button"
+              data-tour="members-export"
               onClick={onExport}
               className="orgkit-btn-export"
               style={{

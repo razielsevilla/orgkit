@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { isUuid } from "@/src/lib/validation";
 import { ROUTES } from "@/src/lib/routes";
 import { getWorkspaceEvent } from "@/src/app/(workspace)/events-actions";
+import { getPendingMemberCountAction } from "@/src/app/(workspace)/members-actions";
 import { getCheckinBlock } from "@/src/lib/events/checkin-eligibility";
 import { EVENT_MESSAGES } from "@/src/lib/events/event-validation";
 import { CheckinScreen } from "@/src/components/workspace/events/checkin-screen";
@@ -23,6 +24,8 @@ async function CheckinContent({ params }: CheckinPageProps) {
   // A malformed org or event ID can't match anything, so no query runs
   if (!rawId || !eventId || !isUuid(rawId) || !isUuid(eventId)) return <EventsNotFound />;
 
+  // Started together: the count is a courtesy, so a failed read just hides the notice
+  const pending = getPendingMemberCountAction(rawId);
   const res = await getWorkspaceEvent(rawId, eventId);
 
   if (!res.success || !res.data) {
@@ -39,7 +42,17 @@ async function CheckinContent({ params }: CheckinPageProps) {
     return <EventsNotFound />;
   }
 
-  return <CheckinScreen orgId={rawId} event={res.data} initialBlock={getCheckinBlock(res.data)} />;
+  const pendingRes = await pending;
+  const pendingMembers = pendingRes.success && pendingRes.data ? pendingRes.data.count : 0;
+
+  return (
+    <CheckinScreen
+      orgId={rawId}
+      event={res.data}
+      initialBlock={getCheckinBlock(res.data)}
+      pendingMembers={pendingMembers}
+    />
+  );
 }
 
 export default function CheckinPage(props: CheckinPageProps) {

@@ -12,7 +12,7 @@ import {
 import { DialogButton } from "@/src/components/ui/dialog";
 import { Select } from "@/src/components/ui/select";
 import { ImportStepLayout } from "./import-step-layout";
-import { bodyText, errorBox, fieldLabel, noteBox, selectField, spinnerStyle, tabular, wrapText } from "./import-styles";
+import { bodyText, errorBox, fieldLabel, noteBox, spinnerStyle, tabular, wrapText } from "./import-styles";
 
 interface ImportMatchStepProps {
   /** The steps indicator, placed at the top of the body */

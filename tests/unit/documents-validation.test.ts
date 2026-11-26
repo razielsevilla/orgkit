@@ -1,7 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
-  DOCUMENT_CATEGORIES,
   MAX_DOCUMENT_FILE_SIZE,
   addDocumentFileMetadataSchema,
   addDocumentLinkSchema,

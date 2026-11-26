@@ -15,6 +15,7 @@ import { useMounted } from "@/src/lib/use-mounted";
 import { eventPath } from "@/src/lib/routes";
 import { CHECKIN_MESSAGES, type CheckinBlock } from "@/src/lib/events/checkin-eligibility";
 import { CHECKIN_QR_SIZE, CheckinQrSkeleton } from "./checkin-skeleton";
+import { PendingMembersNotice } from "./pending-members-notice";
 
 type Phase = "closed" | "loading" | "live" | "reconnecting" | "unavailable";
 
@@ -94,10 +95,13 @@ export function CheckinScreen({
   orgId,
   event,
   initialBlock,
+  pendingMembers = 0,
 }: {
   orgId: string;
   event: WorkspaceEvent;
   initialBlock: CheckinBlock | null;
+  /** Students who joined but aren't confirmed, so can't check in. A count only */
+  pendingMembers?: number;
 }) {
   const mounted = useMounted();
   const [open, setOpen] = useState(event.checkinOpen && !initialBlock);
@@ -350,6 +354,7 @@ export function CheckinScreen({
               <p style={{ margin: 0, fontSize: 14.5, lineHeight: 1.5, color: "var(--color-muted-strong)" }}>
                 Open check-in to show a QR code that members scan on their own phones. It changes every 30 seconds.
               </p>
+              <PendingMembersNotice orgId={orgId} count={pendingMembers} variant="screen" />
               <button
                 type="button"
                 onClick={openCheckin}
@@ -461,6 +466,8 @@ export function CheckinScreen({
                   </span>
                 </div>
               </div>
+
+              <PendingMembersNotice orgId={orgId} count={pendingMembers} variant="screen" />
 
               <button
                 type="button"

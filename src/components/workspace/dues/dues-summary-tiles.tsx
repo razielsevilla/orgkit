@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowUpRight, Wallet } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowUpRight } from "lucide-react";
 import type { DuesPeriodSummary } from "@/src/lib/dues/dues-dashboard";
 import { formatPeso, calculateCollectionRate } from "@/src/lib/dues/dues-dashboard";
 
@@ -30,6 +30,7 @@ export function DuesSummaryTiles({
 
   return (
     <div
+      data-tour="dues-tiles"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -372,6 +373,7 @@ export function DuesSummaryTiles({
 
         {/* Pending Review Tile */}
         <div
+          data-tour="dues-pending"
           role="button"
           tabIndex={0}
           onClick={() => {

@@ -1,14 +1,18 @@
 import { connection } from "next/server";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import {
   getOrganizationById,
   getOfficerDefaultWorkspace,
   getCurrentOfficer,
 } from "@/src/app/(workspace)/actions";
+import { getOrgHealth } from "@/src/app/(workspace)/org-health-actions";
 import { isUuid } from "@/src/lib/validation";
-import { WorkspaceHome } from "@/src/components/workspace/home/workspace-home";
+import { inter, jetbrainsMono } from "@/src/lib/fonts";
+import { HomeWithDemo } from "@/src/components/workspace/tour/demo/page-demos";
+import { OrgHealthUnavailable } from "@/src/components/workspace/home/org-health-unavailable";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
-import { officerLandingPath } from "@/src/lib/routes";
+import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
 import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
 
@@ -20,7 +24,9 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
   // Nothing from the URL is ever shown. A malformed ID can't be an org, so it
   // gets the same screen as an org the officer doesn't belong to. The sidebar
   // frame around this screen comes from the workspace layout.
-  const org = isUuid(id) ? await getOrganizationById(id) : null;
+  const [org, health] = isUuid(id)
+    ? await Promise.all([getOrganizationById(id), getOrgHealth(id)])
+    : [null, null];
 
   if (!org) {
     const [officer, workspace] = await Promise.all([
@@ -35,9 +41,28 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
     );
   }
 
+  if (health?.error === "not_authenticated") {
+    redirect(ROUTES.signIn);
+  }
+
   return (
     <PageReveal>
-      <WorkspaceHome orgName={org.name} schoolName={org.school?.trim() || null} />
+      {health?.success && health.data ? (
+        // The two font variables only reach Home, so the rest of the app keeps its font
+        <div className={`${inter.variable} ${jetbrainsMono.variable}`} style={{ height: "100%" }}>
+          <HomeWithDemo
+            orgId={id}
+            orgName={org.name}
+            schoolName={org.school?.trim() || null}
+            data={health.data}
+          />
+        </div>
+      ) : (
+        <OrgHealthUnavailable
+          orgId={id}
+          message={health?.errorMessage ?? "We couldn't load your org's health. Try again."}
+        />
+      )}
     </PageReveal>
   );
 }

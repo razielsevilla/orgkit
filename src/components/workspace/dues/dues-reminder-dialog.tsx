@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
-import { Mail, AlertCircle, AlertTriangle, Send, Lock } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { AlertTriangle, Send, Lock } from "lucide-react";
 import {
   Dialog,
   DialogHeader,
@@ -82,6 +82,8 @@ function DuesReminderDialogContent({
   useEffect(() => {
     if (initialPreview) return;
     let cancelled = false;
+    // Fetch-on-change: reset the loading state when the period changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoading(true);
     setError(null);
 
@@ -98,7 +100,7 @@ function DuesReminderDialogContent({
     return () => {
       cancelled = true;
     };
-  }, [orgId, period.id]);
+  }, [orgId, period.id, initialPreview]);
 
   const handleSend = async () => {
     if (isSending || !preview || preview.eligible_count === 0) return;

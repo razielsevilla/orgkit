@@ -86,6 +86,7 @@ export function TermsHeader({
           <div className="orgkit-terms-header-actions">
             <button
               type="button"
+              data-tour="terms-record"
               onClick={onAddTerm}
               style={{
                 display: "inline-flex",

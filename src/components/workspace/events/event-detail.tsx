@@ -11,6 +11,7 @@ import { isPastEvent } from "@/src/lib/events/event-validation";
 import { checkinPath, eventsPath } from "@/src/lib/routes";
 import { EventStatusBadge } from "./event-status-badge";
 import { LocalTime } from "./local-time";
+import { PendingMembersNotice } from "./pending-members-notice";
 
 const EventFormDialog = dynamic(() => import("./event-form-dialog").then((m) => m.EventFormDialog), {
   ssr: false,
@@ -44,10 +45,13 @@ export function EventDetail({
   rawId,
   event,
   attendance,
+  pendingMembers = 0,
 }: {
   rawId: string;
   event: WorkspaceEvent;
   attendance?: React.ReactNode;
+  /** Students who joined but aren't confirmed, so can't check in. A count only */
+  pendingMembers?: number;
 }) {
   const [editOpen, setEditOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -221,6 +225,8 @@ export function EventDetail({
             This event is cancelled. It stays in the list, and nobody can check in.
           </p>
         )}
+
+        {!cancelled && <PendingMembersNotice orgId={rawId} count={pendingMembers} />}
 
         {attendance}
       </div>

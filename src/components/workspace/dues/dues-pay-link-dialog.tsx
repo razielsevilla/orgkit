@@ -5,7 +5,6 @@ import {
   Check,
   Copy,
   Download,
-  Link as LinkIcon,
   Loader2,
   PauseCircle,
   PlayCircle,
@@ -102,7 +101,7 @@ function DuesPayLinkDialogContent({
     siteUrl || (typeof window !== "undefined" ? window.location.origin : "");
   const payUrl =
     token && clientOrigin ? `${clientOrigin}${payLinkPath(token)}` : null;
-  const qrUrl = qr && qr.forUrl === payUrl ? qr.dataUrl : null;
+  const qrUrl = isActive && qr && qr.forUrl === payUrl ? qr.dataUrl : null;
 
   // Auto-fetch or generate link token if not present on period
   useEffect(() => {
@@ -169,10 +168,7 @@ function DuesPayLinkDialogContent({
 
   // Generate QR code dynamically from link
   useEffect(() => {
-    if (!payUrl || !isActive) {
-      setQr(null);
-      return;
-    }
+    if (!payUrl || !isActive) return;
     let cancelled = false;
     import("qrcode")
       .then(({ default: QRCode }) =>

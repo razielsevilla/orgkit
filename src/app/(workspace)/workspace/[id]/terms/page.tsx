@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getWorkspaceTerms } from "@/src/app/(workspace)/terms-actions";
-import { TermsClient } from "@/src/components/workspace/terms/terms-client";
+import { TermsWithDemo } from "@/src/components/workspace/tour/demo/page-demos";
 import { ROUTES, workspacePath } from "@/src/lib/routes";
 import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
 import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
@@ -32,7 +32,7 @@ async function TermsContent({ params }: TermsPageProps) {
 
   return (
     <PageReveal>
-      <TermsClient initialData={termsRes.data} />
+      <TermsWithDemo initialData={termsRes.data} />
     </PageReveal>
   );
 }
