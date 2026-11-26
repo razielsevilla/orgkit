@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { CSP_HEADER_NAME, HSTS_VALUE, buildCsp } from "./src/lib/security/csp.ts";
+
+const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -22,9 +25,12 @@ const nextConfig: NextConfig = {
     // redirect), so framing is refused outright. Permissions-Policy turns off what the
     // app never uses; camera stays available to our own origin for a QR scanner, and
     // clipboard and fullscreen are left alone because the app uses them.
-    // Not set here: Content-Security-Policy. It needs its own pass (it affects scripts,
-    // styles and images), and `frame-ancestors` there would replace X-Frame-Options.
+    // Content-Security-Policy and HSTS come from src/lib/security/csp.ts. The CSP starts as
+    // Report-Only (CSP_ENFORCED = false there) until staging shows no violations.
+    // X-Frame-Options stays alongside `frame-ancestors 'none'` for older browsers.
     const globalSecurityHeaders = [
+      { key: CSP_HEADER_NAME, value: buildCsp({ supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL, isDev }) },
+      { key: "Strict-Transport-Security", value: HSTS_VALUE },
       { key: "X-Content-Type-Options", value: "nosniff" },
       { key: "X-Frame-Options", value: "DENY" },
       {
