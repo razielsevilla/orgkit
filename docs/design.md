@@ -257,7 +257,7 @@ Every core screen has to work at **360px wide** with no sideways scrolling, and 
 
 **Dialogs.** Put the content in `DialogBody` (it scrolls, so the buttons stay reachable on a short phone), never pass `padding` to `Dialog`, and never put a `position: fixed` element inside a dialog: the dialog card keeps a transform, which makes a fixed child size to the card, not the screen. Draw toasts and lightboxes through a portal into `document.body`.
 
-**Stacking order** (z-index): content below 900; the Feedback button 900; the drawer scrim 950; the drawer 960; dialogs 1000. The error toast sits above the Feedback button on a phone.
+**Stacking order** (z-index): content below 900; the Feedback button 900; the drawer scrim 950; the drawer 960; dialogs 1000; the officer tour (dim layer, ring, card) 1010 to 1012, above everything else because nothing else is meant to be used while it runs. The error toast sits above the Feedback button on a phone.
 
 **Scrolling screens** leave at least 60px under the last row (72px on the events list), so the Feedback button never covers it.
 

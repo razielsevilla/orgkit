@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Users, Link2, Copy, Check, SearchX, QrCode } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Users, Link2, Copy, Check, SearchX, QrCode, Share2 } from "lucide-react";
 import { joinLinkPath } from "@/src/lib/routes";
 
 interface MemberEmptyStateProps {
@@ -29,6 +29,11 @@ export function MemberEmptyState({
   onOpenAddModal,
 }: MemberEmptyStateProps) {
   const [copied, setCopied] = useState(false);
+  // Phones can hand the link to any app (chat, email). Decided after mount so the server and first paint match.
+  const [canShare, setCanShare] = useState(false);
+  useEffect(() => {
+    setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
+  }, []);
 
   const fullJoinUrl =
     typeof window !== "undefined" && joinLinkToken
@@ -45,6 +50,15 @@ export function MemberEmptyState({
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback if clipboard API is blocked
+    }
+  };
+
+  const handleShareLink = async () => {
+    if (!fullJoinUrl) return;
+    try {
+      await navigator.share({ title: "Join our organization", url: fullJoinUrl });
+    } catch {
+      // The person closed the share sheet: nothing to do
     }
   };
 
@@ -499,6 +513,31 @@ export function MemberEmptyState({
               </>
             )}
           </button>
+          {canShare && (
+            <button
+              type="button"
+              onClick={handleShareLink}
+              aria-label="Share join link"
+              className="orgkit-btn-secondary"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "7px 16px",
+                borderRadius: 9999,
+                backgroundColor: "var(--color-surface)",
+                color: "var(--color-ink)",
+                border: "1px solid var(--color-line)",
+                fontSize: 12.5,
+                fontWeight: 600,
+                cursor: "pointer",
+                flexShrink: 0,
+              }}
+            >
+              <Share2 size={14} strokeWidth={2} />
+              <span>Share</span>
+            </button>
+          )}
         </div>
       ) : (
         <p style={{ fontSize: 13, color: "var(--color-muted)", margin: 0 }}>

@@ -52,6 +52,7 @@ export function DuesSearchFilter({
 
   return (
     <div
+      data-tour="dues-filter"
       style={{
         display: "flex",
         flexDirection: "column",

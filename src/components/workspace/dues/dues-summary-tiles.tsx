@@ -30,6 +30,7 @@ export function DuesSummaryTiles({
 
   return (
     <div
+      data-tour="dues-tiles"
       style={{
         display: "flex",
         flexDirection: "column",
@@ -372,6 +373,7 @@ export function DuesSummaryTiles({
 
         {/* Pending Review Tile */}
         <div
+          data-tour="dues-pending"
           role="button"
           tabIndex={0}
           onClick={() => {

@@ -219,6 +219,7 @@ export function OrgHealthDashboard({ orgId, orgName, schoolName, data }: OrgHeal
           orgName={orgName}
           schoolName={schoolName}
           summary={summary}
+          data={data}
           updatedText={updated ? `Updated ${updated}` : undefined}
         />
         <HealthCards orgId={orgId} data={data} statuses={summary.statuses} />

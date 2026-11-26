@@ -132,6 +132,7 @@ export function HandoverOverviewClient({ summary }: HandoverOverviewClientProps)
 
           {/* Quick Start Role Selector */}
           <div
+            data-tour="handover-start"
             style={{
               display: "flex",
               alignItems: "center",

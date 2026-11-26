@@ -43,6 +43,7 @@ function AreaCard({ area, title, icon: Icon, status, wide, links, children }: Ar
   return (
     <article
       id={cardId(area)}
+      data-tour={`home-card-${area}`}
       aria-labelledby={titleId}
       className={`orgkit-health-card ${area === "dues" || area === "members" ? "stagger-2" : "stagger-3"}${wide ? " orgkit-health-card-wide" : ""}`}
       style={{

@@ -432,3 +432,34 @@ describe("Home dashboard: could not load", () => {
     expect(hrefs(out)).toEqual([`/workspace/${ORG}`]);
   });
 });
+
+describe("Home dashboard: the first-run guide follows progress", () => {
+  it("shows how many steps are done and what is left, with the guide's own steps", async () => {
+    const base = brandNew();
+    const started: OrgHealthData = { ...base, members: { ...base.members, active: 6, pending: 2 } };
+    const out = await dashboard(started);
+    const t = text(out);
+    expect(out).toMatch(/<h2[^>]*>Get started<\/h2>/);
+    expect(t).toContain("1 of 6 done");
+    expect(t).toContain("Confirm your members");
+    expect(t).toContain("2 students waiting");
+    expect(t).not.toContain("Add your members");
+  });
+
+  it("keeps the guide for an org with data in one area but no first event", async () => {
+    const base = brandNew();
+    const oneTerm: OrgHealthData = { ...base, officers: { ...base.officers, termsTotal: 1, termsCurrent: 1 } };
+    const out = await dashboard(oneTerm);
+    expect(out).toMatch(/<h2[^>]*>Get started<\/h2>/);
+    expect(out).not.toMatch(/<h2[^>]*>Do next<\/h2>/);
+  });
+
+  it("switches to Do next once there is a confirmed member and an event, and keeps it there", async () => {
+    const h = healthy();
+    const established: OrgHealthData = { ...h, members: { ...h.members, pending: 3, oldestPendingDays: 2 } };
+    const out = await dashboard(established);
+    expect(out).toMatch(/<h2[^>]*>Do next<\/h2>/);
+    expect(out).not.toMatch(/<h2[^>]*>Get started<\/h2>/);
+    expect(text(out)).toContain("3 students waiting to be confirmed");
+  });
+});

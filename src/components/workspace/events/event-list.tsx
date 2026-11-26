@@ -56,7 +56,7 @@ export function EventList({ orgId, events, onEdit, onCancel }: EventListProps) {
   );
 
   return (
-    <div className="orgkit-ev-board" style={{ position: "relative", width: "100%", marginTop: 16, flex: "1 1 auto", minHeight: 0 }}>
+    <div data-tour="events-board" className="orgkit-ev-board" style={{ position: "relative", width: "100%", marginTop: 16, flex: "1 1 auto", minHeight: 0 }}>
       <EventCardStyles />
       {column("Upcoming", upcoming, false, "No upcoming events")}
       {column("Past", past, true, "No past events")}

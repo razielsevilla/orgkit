@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getCallerOrgMembership } from "@/src/lib/orgs/org-access";
 import { getHandoverGuidesListAction } from "@/src/app/(workspace)/handover-actions";
-import { HandoverOverviewClient } from "@/src/components/workspace/handover/handover-overview-client";
+import { HandoverWithDemo } from "@/src/components/workspace/tour/demo/page-demos";
 import { signInPath } from "@/src/lib/routes";
 
 interface PageProps {
@@ -33,7 +33,7 @@ export default async function HandoverOverviewPage({ params }: PageProps) {
     : { orgId: id, guides: [], activeRoles: [] };
 
   return (
-    <HandoverOverviewClient
+    <HandoverWithDemo
       summary={summary}
       isAdmin={lookup.caller.role === "admin"}
     />

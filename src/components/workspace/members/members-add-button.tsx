@@ -10,6 +10,7 @@ export function MembersAddButton({ onClick, disabled = false }: MembersAddButton
   return (
     <button
       type="button"
+      data-tour="members-add"
       onClick={onClick}
       disabled={disabled}
       className="orgkit-btn-accent"

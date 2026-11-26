@@ -11,6 +11,7 @@ import { InvitedView } from "./invited-view";
 import { MemberEmptyState } from "./member-empty-state";
 import { MemberList } from "./member-list";
 import { MemberSkeleton } from "./member-skeleton";
+import { ConfirmAllPending } from "./confirm-all-pending";
 import { MembersHeader } from "./members-header";
 import { MembersAddButton } from "./members-add-button";
 import { MembersImportButton } from "./members-import-button";
@@ -57,6 +58,8 @@ interface MembersClientProps {
   schoolName?: string | null;
   initialJoinToken?: string | null;
   siteUrl?: string | null;
+  /** Example data for the officer tour: the page fetches nothing of its own */
+  demo?: boolean;
 }
 
 export function MembersClient({
@@ -68,6 +71,7 @@ export function MembersClient({
   schoolName = null,
   initialJoinToken = null,
   siteUrl = null,
+  demo = false,
 }: MembersClientProps) {
   const router = useRouter();
   const [toastError, setToastError] = useState<string | null>(null);
@@ -77,6 +81,7 @@ export function MembersClient({
     initialData,
     initialError,
     notify: setToastError,
+    demo,
   });
   const invites = useMemberInvites(rawId, setToastError);
   const { data } = roster;
@@ -285,6 +290,15 @@ export function MembersClient({
         )}
 
         {canExport && exportOpen && <ExportDialog orgId={rawId} onClose={() => setExportOpen(false)} />}
+
+        {view === "members" && emptyState !== "no-members" && (
+          <ConfirmAllPending
+            pendingCount={data.pendingCount}
+            confirmedCount={roster.confirmedAllCount}
+            isConfirming={roster.confirmingAll}
+            onConfirmAll={roster.confirmAll}
+          />
+        )}
 
         {view === "members" && emptyState !== "no-members" && (
           <MembersSearchFilter

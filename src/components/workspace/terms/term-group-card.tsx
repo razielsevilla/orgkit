@@ -43,6 +43,7 @@ export function TermGroupCard({
 }: TermGroupCardProps) {
   return (
     <div
+      data-tour="terms-card"
       className="orgkit-term-card"
       style={{
         backgroundColor: "var(--color-surface)",

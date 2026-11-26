@@ -7,7 +7,9 @@ import {
   eventsStatus,
   expectedPacePct,
   formatPesoCompact,
+  getStartedSteps,
   handoverStatus,
+  isSetupInProgress,
   mapOrgHealthRpcResponse,
   membersStatus,
   officersStatus,
@@ -471,5 +473,77 @@ describe("buildAttentionItems", () => {
         assert.doesNotMatch(text, /\s{2,}/, `"${text}" has a double space`);
       }
     }
+  });
+});
+
+describe("get started guide", () => {
+  const ids = (data: OrgHealthData, done: boolean) =>
+    getStartedSteps(data)
+      .filter((step) => step.done === done)
+      .map((step) => step.id);
+
+  it("starts with nothing done for a brand new workspace, members first", () => {
+    const steps = getStartedSteps(brandNew());
+    assert.deepEqual(
+      steps.map((step) => step.id),
+      ["add-members", "confirm-members", "first-event", "dues", "terms", "documents"]
+    );
+    assert.equal(steps.filter((step) => step.done).length, 0);
+    assert.equal(isSetupInProgress(brandNew()), true);
+  });
+
+  it("ticks steps off from the same facts as the rest of Home", () => {
+    const base = brandNew();
+    const partial: OrgHealthData = {
+      ...base,
+      members: { ...base.members, active: 4, pending: 0 },
+      officers: { ...base.officers, termsTotal: 1 },
+    };
+    assert.deepEqual(ids(partial, true), ["add-members", "confirm-members", "terms"]);
+    assert.deepEqual(ids(partial, false), ["first-event", "dues", "documents"]);
+  });
+
+  it("keeps the guide while an org has data in one area but no first event (the old disappearing guide)", () => {
+    const base = brandNew();
+    // A single recorded term used to make Home drop the guide for good
+    const oneTerm: OrgHealthData = { ...base, officers: { ...base.officers, termsTotal: 1, termsCurrent: 1 } };
+    assert.equal(summarizeHealth(oneTerm).considered > 0, true);
+    assert.equal(isSetupInProgress(oneTerm), true);
+  });
+
+  it("says confirm-members is not done while students are waiting, and names how many", () => {
+    const base = brandNew();
+    const waiting: OrgHealthData = { ...base, members: { ...base.members, active: 2, pending: 3 } };
+    const confirm = getStartedSteps(waiting).find((step) => step.id === "confirm-members")!;
+    assert.equal(confirm.done, false);
+    assert.match(confirm.detail, /3 students waiting/);
+    const one: OrgHealthData = { ...base, members: { ...base.members, active: 2, pending: 1 } };
+    assert.match(getStartedSteps(one).find((step) => step.id === "confirm-members")!.detail, /1 student waiting/);
+  });
+
+  it("needs a confirmed member and an event before the guide steps aside", () => {
+    const base = brandNew();
+    const pendingOnly: OrgHealthData = {
+      ...base,
+      members: { ...base.members, active: 0, pending: 5 },
+      events: { ...base.events, total: 1, upcoming: 1 },
+    };
+    assert.equal(isSetupInProgress(pendingOnly), true, "pending members are not yet a roster");
+
+    const noEvent: OrgHealthData = { ...base, members: { ...base.members, active: 5 } };
+    assert.equal(isSetupInProgress(noEvent), true);
+
+    const ready: OrgHealthData = {
+      ...base,
+      members: { ...base.members, active: 5 },
+      events: { ...base.events, total: 1, upcoming: 1 },
+    };
+    assert.equal(isSetupInProgress(ready), false);
+  });
+
+  it("does not bring the guide back for an established org that has students waiting", () => {
+    const h = healthy();
+    const established: OrgHealthData = { ...h, members: { ...h.members, pending: 4, oldestPendingDays: 3 } };
+    assert.equal(isSetupInProgress(established), false);
   });
 });

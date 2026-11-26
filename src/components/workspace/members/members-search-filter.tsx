@@ -33,6 +33,7 @@ export function MembersSearchFilter({
 
   return (
     <div
+      data-tour="members-search"
       style={{
         display: "flex",
         flexDirection: "column",

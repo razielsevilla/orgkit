@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { isUuid } from "@/src/lib/validation";
 import { getWorkspaceMembers } from "@/src/app/(workspace)/members-actions";
 import { MembersClient } from "@/src/components/workspace/members/members-client";
+import { MembersWithDemo } from "@/src/components/workspace/tour/demo/members-with-demo";
 import { EMPTY_MEMBERS_DATA } from "@/src/components/workspace/members/members-empty-data";
 import { ROUTES, officerLandingPath } from "@/src/lib/routes";
 import {
@@ -97,7 +98,7 @@ async function MembersContent({ params }: MembersPageProps) {
 
   return (
     <PageReveal>
-      <MembersClient
+      <MembersWithDemo
         rawId={rawId}
         initialData={membersRes.data}
         canExport={canExport}

@@ -493,6 +493,87 @@ export function buildAttentionItems(data: OrgHealthData): AttentionItem[] {
 }
 
 // ---------------------------------------------------------------------------
+// "Get started" guide
+// ---------------------------------------------------------------------------
+
+export type GetStartedArea = "members" | "events" | "dues" | "officers" | "documents";
+
+export interface GetStartedStep {
+  id: string;
+  area: GetStartedArea;
+  title: string;
+  detail: string;
+  done: boolean;
+}
+
+/**
+ * The first-run checklist, in the order a new org needs it. It is built from the
+ * same facts as the rest of Home, so it ticks itself off and never needs its own
+ * storage. Members must be confirmed before they can check in, so that is a step
+ * of its own rather than a detail of "add members".
+ */
+export function getStartedSteps(data: OrgHealthData): GetStartedStep[] {
+  const m = data.members;
+  return [
+    {
+      id: "add-members",
+      area: "members",
+      title: "Add your members",
+      detail: "Import a list or share the join link",
+      done: m.active + m.pending > 0,
+    },
+    {
+      id: "confirm-members",
+      area: "members",
+      title: "Confirm your members",
+      detail:
+        m.pending > 0
+          ? `${plural(m.pending, "student")} waiting. Only confirmed members can check in`
+          : "Students who join start as pending. Only confirmed members can check in",
+      done: m.active > 0 && m.pending === 0,
+    },
+    {
+      id: "first-event",
+      area: "events",
+      title: "Schedule your first event",
+      detail: "Check members in with a QR code",
+      done: data.events.total > 0,
+    },
+    {
+      id: "dues",
+      area: "dues",
+      title: "Set up a dues period",
+      detail: "Collect and verify payments in one place",
+      done: data.dues !== null,
+    },
+    {
+      id: "terms",
+      area: "officers",
+      title: "Record officer terms",
+      detail: "So handovers can be planned ahead",
+      done: data.officers.termsTotal > 0,
+    },
+    {
+      id: "documents",
+      area: "documents",
+      title: "Store your key documents",
+      detail: "Budgets, bylaws and templates, kept for the next officers",
+      done: data.documents.total > 0,
+    },
+  ];
+}
+
+/**
+ * True until the org has a confirmed member and a first event: the path to a first
+ * check-in. After that, Home goes back to "Do next" even if dues or terms are still
+ * to set up, and a student waiting to be confirmed is an ordinary "Do next" item, not
+ * a reason to bring the guide back (an established org always has some).
+ */
+export function isSetupInProgress(data: OrgHealthData): boolean {
+  return data.members.active === 0 || data.events.total === 0;
+}
+
+// ---------------------------------------------------------------------------
 // The whole summary
 // ---------------------------------------------------------------------------
 

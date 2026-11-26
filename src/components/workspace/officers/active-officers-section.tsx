@@ -32,6 +32,7 @@ export function ActiveOfficersSection({
 }: ActiveOfficersSectionProps) {
   return (
     <section
+      data-tour="officers-list"
       style={{
         backgroundColor: "var(--color-surface)",
         borderRadius: 22,

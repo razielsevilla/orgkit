@@ -88,6 +88,7 @@ export function DocumentsHeader({
         >
           <button
             type="button"
+            data-tour="documents-add-file"
             onClick={onAddFile}
             style={{
               display: "inline-flex",
@@ -111,6 +112,7 @@ export function DocumentsHeader({
 
           <button
             type="button"
+            data-tour="documents-add-link"
             onClick={onAddLink}
             style={{
               display: "inline-flex",

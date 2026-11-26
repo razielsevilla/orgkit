@@ -9,7 +9,7 @@ import {
 import { getOrgHealth } from "@/src/app/(workspace)/org-health-actions";
 import { isUuid } from "@/src/lib/validation";
 import { inter, jetbrainsMono } from "@/src/lib/fonts";
-import { OrgHealthDashboard } from "@/src/components/workspace/home/org-health-dashboard";
+import { HomeWithDemo } from "@/src/components/workspace/tour/demo/page-demos";
 import { OrgHealthUnavailable } from "@/src/components/workspace/home/org-health-unavailable";
 import { WorkspaceNotFound } from "@/src/components/workspace/home/workspace-not-found";
 import { ROUTES, officerLandingPath } from "@/src/lib/routes";
@@ -50,7 +50,7 @@ async function WorkspaceDetailContent({ params }: { params: Promise<{ id: string
       {health?.success && health.data ? (
         // The two font variables only reach Home, so the rest of the app keeps its font
         <div className={`${inter.variable} ${jetbrainsMono.variable}`} style={{ height: "100%" }}>
-          <OrgHealthDashboard
+          <HomeWithDemo
             orgId={id}
             orgName={org.name}
             schoolName={org.school?.trim() || null}

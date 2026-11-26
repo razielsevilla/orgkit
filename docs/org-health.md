@@ -1,7 +1,7 @@
 # Org health dashboard (officer Home)
 
 ## Overview
-The Home screen of a workspace answers one question for officers: **how is the org doing, and what should I do next?** It replaces the old "Your workspace is ready" card. A brand new workspace still gets that welcome, plus a "Get started" list.
+The Home screen of a workspace answers one question for officers: **how is the org doing, and what should I do next?** It replaces the old "Your workspace is ready" card. A brand new workspace still gets that welcome, plus a "Get started" list (see [onboarding.md](onboarding.md)).
 
 Audience: every officer role (admin, finance, officer). Check it weekly, or after a payment or event. It is read-only: each card links to the screen where the officer acts.
 
@@ -20,6 +20,11 @@ Audience: every officer role (admin, finance, officer). Check it weekly, or afte
 - The update time and time windows sit under the chips. The layout is compact on purpose: it fits one screen (about 733px tall) in the new and healthy states, and scrolls only as a fallback.
 
 There is deliberately no single 0 to 100 "health score". A made-up number has no shared definition. Status counts and plain reasons do.
+
+## Get started guide
+Until an org has a **confirmed member and a first event**, the "Do next" column is replaced by a "Get started" guide that ticks itself off ("2 of 6 done") from the same facts as the cards: add members, confirm members (it says how many are waiting, and that only confirmed members can check in), schedule a first event, then dues, terms and documents. It shows the first three steps still to do. After that Home goes back to "Do next", even if dues or terms are not set up, and students waiting to be confirmed are an ordinary "Do next" item rather than a reason to bring the guide back. The rules are `getStartedSteps` and `isSetupInProgress` in [org-health.ts](../src/lib/health/org-health.ts).
+
+(Before this, the guide was tied to "no area has any data", so a single recorded term made it vanish for good.)
 
 ## Statuses
 Always an icon plus words, never colour alone: **On track** (outlined pill, emerald check), **Needs a look** (the Pending amber from the Members page), **Needs action** (the Inactive red from the Members page), **Not started** (grey, nothing to judge yet; not counted against the org).

@@ -27,6 +27,8 @@ export interface SidebarProps {
   onCloseDrawer?: () => void;
   /** Lets the frame move focus into the drawer and keep it there while it is open */
   asideRef?: React.Ref<HTMLElement>;
+  /** Opens the officer tour from the profile menu */
+  onStartTour?: () => void;
 }
 
 export function Sidebar({
@@ -42,11 +44,13 @@ export function Sidebar({
   isDrawerOpen = false,
   onCloseDrawer,
   asideRef,
+  onStartTour,
 }: SidebarProps) {
   return (
     <aside
       ref={asideRef}
       id="orgkit-sidebar"
+      data-tour="sidebar"
       className={`orgkit-aside${isDrawerOpen ? " is-open" : ""}`}
       // As a drawer it is a modal menu; on a desktop it is just the side navigation
       role={isDrawer ? "dialog" : undefined}
@@ -88,7 +92,7 @@ export function Sidebar({
       <NavList rawId={rawId} isAdmin={isAdmin} isCollapsed={isCollapsed} activeSection={activeSection} />
 
       {/* ── Pinned Bottom Officer Profile Card ── */}
-      <ProfileMenu officer={officer} isCollapsed={isCollapsed} />
+      <ProfileMenu officer={officer} isCollapsed={isCollapsed} onStartTour={onStartTour} />
     </aside>
   );
 }

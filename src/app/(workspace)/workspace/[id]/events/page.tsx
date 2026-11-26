@@ -6,6 +6,7 @@ import { ROUTES } from "@/src/lib/routes";
 import { getWorkspaceEvents } from "@/src/app/(workspace)/events-actions";
 import { getOrganizationById } from "@/src/app/(workspace)/actions";
 import { EventsClient } from "@/src/components/workspace/events/events-client";
+import { EventsWithDemo } from "@/src/components/workspace/tour/demo/page-demos";
 import { EventsLoading } from "@/src/components/workspace/events/event-skeleton";
 import { EventsNotFound } from "@/src/components/workspace/events/events-not-found";
 import { EVENT_MESSAGES } from "@/src/lib/events/event-validation";
@@ -42,7 +43,7 @@ async function EventsContent({ params }: EventsPageProps) {
 
   return (
     <PageReveal>
-      <EventsClient rawId={rawId} events={eventsRes.data} />
+      <EventsWithDemo rawId={rawId} events={eventsRes.data} />
     </PageReveal>
   );
 }

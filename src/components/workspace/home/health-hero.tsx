@@ -11,8 +11,15 @@ import {
   Users,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { AttentionItem, HealthArea, HealthStatus, HealthSummary } from "@/src/lib/health/org-health";
-import { plural } from "@/src/lib/health/org-health";
+import type {
+  AttentionItem,
+  GetStartedArea,
+  HealthArea,
+  HealthStatus,
+  HealthSummary,
+  OrgHealthData,
+} from "@/src/lib/health/org-health";
+import { getStartedSteps, isSetupInProgress, plural } from "@/src/lib/health/org-health";
 import { documentsPath, duesPath, eventsPath, handoverPath, membersPath, termsPath } from "@/src/lib/routes";
 import { cardId } from "./health-cards";
 import { MONO, PANEL_STYLE, STATUS_META } from "./health-shared";
@@ -61,6 +68,8 @@ interface HeroProps {
   orgName: string;
   schoolName: string | null;
   summary: HealthSummary;
+  /** The facts behind the summary. Lets the first-run guide tick itself off; without it the guide shows only for an empty org */
+  data?: OrgHealthData;
 }
 
 /** The ring: how many of the areas with data are on track */
@@ -112,7 +121,7 @@ function HealthRing({ good, considered }: { good: number; considered: number }) 
 
 function AreaChips({ summary }: { summary: HealthSummary }) {
   return (
-    <ul aria-label="Areas" style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexWrap: "wrap", gap: 8 }}>
+    <ul aria-label="Areas" data-tour="home-chips" style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexWrap: "wrap", gap: 8 }}>
       {DISPLAY_ORDER.map((area) => {
         const status = summary.statuses[area];
         const { Icon, label } = STATUS_META[status];
@@ -205,25 +214,48 @@ function NextRow({
   );
 }
 
-const GET_STARTED = (orgId: string) => [
-  { href: membersPath(orgId), Icon: Users, title: "Add your members", detail: "Import a list or share the join link" },
-  { href: eventsPath(orgId), Icon: CalendarDays, title: "Schedule your first event", detail: "Check members in with a QR code" },
-  { href: duesPath(orgId), Icon: Banknote, title: "Set up a dues period", detail: "Collect and verify payments in one place" },
-  { href: termsPath(orgId), Icon: Award, title: "Record officer terms", detail: "So handovers can be planned ahead" },
-  { href: documentsPath(orgId), Icon: BookOpen, title: "Store your key documents", detail: "Budgets, bylaws and templates, kept for the next officers" },
-];
+const GET_STARTED_ICON: Record<GetStartedArea, LucideIcon> = {
+  members: Users,
+  events: CalendarDays,
+  dues: Banknote,
+  officers: Award,
+  documents: BookOpen,
+};
 
-function NextColumn({ orgId, summary }: { orgId: string; summary: HealthSummary }) {
-  const getStarted = summary.considered === 0;
+function getStartedHref(orgId: string, area: GetStartedArea): string {
+  switch (area) {
+    case "members":
+      return membersPath(orgId);
+    case "events":
+      return eventsPath(orgId);
+    case "dues":
+      return duesPath(orgId);
+    case "officers":
+      return termsPath(orgId);
+    case "documents":
+      return documentsPath(orgId);
+  }
+}
+
+function NextColumn({ orgId, summary, data }: { orgId: string; summary: HealthSummary; data?: OrgHealthData }) {
+  // The guide stays until members are confirmed and a first event exists, even when other areas already have data
+  const getStarted = summary.considered === 0 || (data !== undefined && isSetupInProgress(data));
+  const steps = data ? getStartedSteps(data) : [];
+  const remaining = steps.filter((step) => !step.done);
   const items = summary.attention.slice(0, MAX_NEXT_ITEMS);
   const hidden = summary.attention.length - items.length;
 
   return (
-    <div className="orgkit-health-hero-next">
+    <div data-tour="home-next" className="orgkit-health-hero-next">
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, margin: "0 0 4px 0" }}>
         <h2 style={{ margin: 0, fontSize: 16, fontWeight: 600, letterSpacing: "-0.02em", color: "var(--color-ink)" }}>
           {getStarted ? "Get started" : "Do next"}
         </h2>
+        {getStarted && steps.length > 0 && (
+          <span style={{ ...MONO, fontSize: 12.5, color: "var(--color-muted-strong)" }}>
+            {steps.length - remaining.length} of {steps.length} done
+          </span>
+        )}
         {!getStarted && hidden > 0 && (
           <span style={{ fontSize: 13, color: "var(--color-muted-strong)" }}>Plus {plural(hidden, "more item")} in the cards</span>
         )}
@@ -231,19 +263,17 @@ function NextColumn({ orgId, summary }: { orgId: string; summary: HealthSummary 
 
       {getStarted ? (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-          {GET_STARTED(orgId)
-            .slice(0, 3)
-            .map((step) => (
-              <NextRow
-                key={step.href}
-                href={step.href}
-                Icon={step.Icon}
-                fg="var(--color-ink-soft)"
-                bg="var(--color-base)"
-                title={step.title}
-                detail={step.detail}
-              />
-            ))}
+          {(remaining.length > 0 ? remaining : steps).slice(0, 3).map((step) => (
+            <NextRow
+              key={step.id}
+              href={getStartedHref(orgId, step.area)}
+              Icon={GET_STARTED_ICON[step.area]}
+              fg="var(--color-ink-soft)"
+              bg="var(--color-base)"
+              title={step.title}
+              detail={step.detail}
+            />
+          ))}
         </ul>
       ) : items.length === 0 ? (
         <div style={{ display: "flex", alignItems: "flex-start", gap: 12, padding: "8px 0" }}>
@@ -286,12 +316,12 @@ function NextColumn({ orgId, summary }: { orgId: string; summary: HealthSummary 
   );
 }
 
-export function HealthHero({ orgId, orgName, schoolName, summary, updatedText }: HeroProps) {
+export function HealthHero({ orgId, orgName, schoolName, summary, updatedText, data }: HeroProps) {
   const subtitle = schoolName ? `${orgName} · ${schoolName}` : orgName;
 
   return (
     <section aria-labelledby="health-title" className="orgkit-health-hero stagger-1" style={{ ...PANEL_STYLE, boxShadow: "var(--shadow-card)", borderRadius: 24 }}>
-      <div className="orgkit-health-hero-main">
+      <div data-tour="home-summary" className="orgkit-health-hero-main">
         <div style={{ display: "flex", alignItems: "center", gap: 18, minWidth: 0 }}>
           <HealthRing good={summary.counts.good} considered={summary.considered} />
           <div style={{ minWidth: 0 }}>
@@ -326,7 +356,7 @@ export function HealthHero({ orgId, orgName, schoolName, summary, updatedText }:
         </div>
         {summary.considered > 0 && <AreaChips summary={summary} />}
       </div>
-      <NextColumn orgId={orgId} summary={summary} />
+      <NextColumn orgId={orgId} summary={summary} data={data} />
     </section>
   );
 }
