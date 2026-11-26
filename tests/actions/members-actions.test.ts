@@ -120,7 +120,7 @@ const fakeClient = {
 vi.mock("@/src/lib/supabase/server", () => ({ createClient: async () => fakeClient }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-const { getWorkspaceMembers, confirmMemberAction } = await import(
+const { getWorkspaceMembers, confirmMemberAction, confirmAllPendingMembersAction, getPendingMemberCountAction } = await import(
   "@/src/app/(workspace)/members-actions"
 );
 
@@ -295,3 +295,67 @@ describe("confirmMemberAction", () => {
   });
 });
 
+
+describe("confirmAllPendingMembersAction", () => {
+  it("rejects an invalid org ID without calling the database", async () => {
+    const res = await confirmAllPendingMembersAction("invalid-org");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("invalid_request");
+    expect(state.rpcCalls).toHaveLength(0);
+  });
+
+  it("refuses a signed-out caller", async () => {
+    state.user = null;
+    const res = await confirmAllPendingMembersAction(ORG);
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("not_authenticated");
+    expect(state.rpcCalls).toHaveLength(0);
+  });
+
+  it("calls confirm_all_pending_members for this org and returns how many it confirmed", async () => {
+    state.rpcResult = { data: 7, error: null };
+    const res = await confirmAllPendingMembersAction(ORG);
+    expect(res.success).toBe(true);
+    expect(res.data).toEqual({ confirmed: 7 });
+    expect(state.rpcCalls).toEqual([{ fn: "confirm_all_pending_members", args: { target_org: ORG } }]);
+  });
+
+  it("reports 0 rather than undefined if the database returns nothing usable", async () => {
+    state.rpcResult = { data: null, error: null };
+    const res = await confirmAllPendingMembersAction(ORG);
+    expect(res.success).toBe(true);
+    expect(res.data).toEqual({ confirmed: 0 });
+  });
+
+  it("shows the same generic failure whether the database refuses or breaks, and leaks no detail", async () => {
+    for (const message of ["Not permitted to confirm members of this organization", "connection reset"]) {
+      state.rpcResult = { data: null, error: { message } };
+      const res = await confirmAllPendingMembersAction(ORG);
+      expect(res.success).toBe(false);
+      expect(res.error).toBe("failed");
+      expect(res.errorMessage).toBe("Could not confirm members. Please try again.");
+    }
+  });
+});
+
+describe("getPendingMemberCountAction", () => {
+  it("rejects an invalid org ID", async () => {
+    const res = await getPendingMemberCountAction("nope");
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("invalid_request");
+  });
+
+  it("refuses a signed-out caller", async () => {
+    state.user = null;
+    const res = await getPendingMemberCountAction(ORG);
+    expect(res.success).toBe(false);
+    expect(res.error).toBe("not_authenticated");
+  });
+
+  it("counts only this org's pending members, and returns a number, not names", async () => {
+    const expected = state.members.filter((m) => m.org_id === ORG && m.status === "pending").length;
+    const res = await getPendingMemberCountAction(ORG);
+    expect(res.success).toBe(true);
+    expect(res.data).toEqual({ count: expected });
+  });
+});

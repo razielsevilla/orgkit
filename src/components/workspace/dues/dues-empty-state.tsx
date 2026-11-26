@@ -95,6 +95,7 @@ export function DuesEmptyState({ onCreatePeriod }: DuesEmptyStateProps) {
 
       <button
         type="button"
+        data-tour="dues-new-period"
         onClick={onCreatePeriod}
         style={{
           display: "inline-flex",

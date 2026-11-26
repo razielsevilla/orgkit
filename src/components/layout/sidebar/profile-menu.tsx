@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { ChevronsUpDown, LogOut } from "lucide-react";
+import { ChevronsUpDown, Compass, LogOut } from "lucide-react";
 import { signOut } from "@/src/app/auth/actions";
 import { OfficerProfile } from "@/src/components/layout/navbar";
 import { useDismissable } from "@/src/lib/use-dismissable";
@@ -9,9 +9,11 @@ import { useDismissable } from "@/src/lib/use-dismissable";
 interface ProfileMenuProps {
   officer?: OfficerProfile | null;
   isCollapsed: boolean;
+  /** Opens the officer tour. The entry is left out when this is not given */
+  onStartTour?: () => void;
 }
 
-export function ProfileMenu({ officer, isCollapsed }: ProfileMenuProps) {
+export function ProfileMenu({ officer, isCollapsed, onStartTour }: ProfileMenuProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -33,7 +35,7 @@ export function ProfileMenu({ officer, isCollapsed }: ProfileMenuProps) {
   useDismissable(menuRef, () => setMenuOpen(false));
 
   return (
-    <div style={{ position: "relative", marginTop: "auto" }} ref={menuRef}>
+    <div data-tour="profile" style={{ position: "relative", marginTop: "auto" }} ref={menuRef}>
       {!isCollapsed ? (
         /* Expanded: Full Profile Card */
         <button
@@ -199,6 +201,34 @@ export function ProfileMenu({ officer, isCollapsed }: ProfileMenuProps) {
           </div>
 
           <div style={{ padding: "4px 0 0 0" }}>
+            {onStartTour && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onStartTour();
+                }}
+                style={{
+                  display: "flex",
+                  width: "100%",
+                  alignItems: "center",
+                  gap: 8,
+                  borderRadius: 9,
+                  padding: "8px 10px",
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "var(--color-ink)",
+                  border: "none",
+                  backgroundColor: "transparent",
+                  cursor: "pointer",
+                  textAlign: "left",
+                }}
+                className="orgkit-profile-row"
+              >
+                <Compass style={{ width: 14, height: 14, color: "var(--color-accent)" }} aria-hidden="true" />
+                Take the full tour
+              </button>
+            )}
             <form action={signOut}>
               <button
                 type="submit"

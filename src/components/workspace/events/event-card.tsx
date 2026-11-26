@@ -114,7 +114,7 @@ export function EventCard({ orgId, event, past, onEdit, onCancel }: EventCardPro
   const liveCheckin = event.checkinOpen && !cancelled;
 
   return (
-    <div role="article" data-event-row={event.id} className="orgkit-ev-card">
+    <div role="article" data-tour="event-card" data-event-row={event.id} className="orgkit-ev-card">
       <div style={{ display: "flex", justifyContent: "center" }}>
         <div
           aria-hidden="true"

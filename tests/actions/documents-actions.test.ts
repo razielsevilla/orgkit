@@ -109,7 +109,7 @@ const fakeClient = {
   auth: { getUser: async () => ({ data: { user: state.user } }) },
   from: (table: string) => query(table),
   storage: {
-    from: (_bucket: string) => ({
+    from: () => ({
       upload: async (path: string, buffer: unknown) => {
         state.uploaded.push({ path, buffer });
         return state.uploadResult;

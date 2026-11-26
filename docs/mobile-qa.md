@@ -88,6 +88,25 @@ Mark each with Pass or Fail (and a note) in the results table at the bottom. "Fi
 | Keyboard | With the drawer open, Tab stays inside it; closing returns focus to the menu button |
 | Rotate / resize | At 1024px and wider, the normal sidebar returns and the top bar is gone |
 
+### The officer tour (signed in)
+
+Two ways in. The **full tour** opens by itself on a first login (clear `orgkit_tour_v1:…` in local storage to see it again) or from the profile menu, **Take the full tour**. The **?** button (bottom right, left of Feedback) opens only the guide to the page you are on. Walk both, at 360px and at 1280px, and check that **?** on Members shows no Dues steps.
+
+| Check | Pass when |
+|---|---|
+| Welcome | A card in the middle of the dimmed screen; Start tour and Skip for now are easy to tap |
+| Menu step (phone) | The menu button is lit with a ring, and the card is a sheet pinned to the bottom, not covering it |
+| Page steps (phone) | The tour opens each page by itself. The lit button or list is scrolled above the bottom sheet and is not covered by it. The sheet scrolls if its steps are long, with Back and Next always reachable |
+| Look-only | Tapping the lit button does nothing (it is for looking at); tapping the dim area does nothing |
+| Sidebar steps (desktop) | The sidebar entry is lit, the card sits to its right, and clicking the entry opens the page and moves on |
+| Nothing to point at | On an empty org, a step such as "Manage one member" shows the card in the middle with a "Nothing to point at yet" note, not a ring around nothing |
+| Admin only | As a non-admin, an Admin only step has no ring and says to ask an admin |
+| Keyboard | Tab stays inside the card; the arrow keys move; Escape ends the tour and focus goes back to the ? button |
+| Rotate / resize | Crossing 1024px mid-tour keeps the step and re-points it, with no stuck dim layer |
+| Reduced motion | The ring does not pulse and the card does not slide |
+| Example data | In a brand-new workspace every page shows made-up data while the tour is open (Home populated, a roster, a dues period, events, terms, documents, handover), with an "Example data for the tour" pill at the top and a note on the card. Closing the tour returns the real, empty page. In a workspace that already has data, the real data stays |
+| Example data on a phone | The pill does not cover the card or the menu button, and the examples fit at 360px (members cards, dues cards) |
+
 ### Workspace screens
 
 | Screen | Check |

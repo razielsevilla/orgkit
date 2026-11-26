@@ -57,6 +57,7 @@ export function OfficersHeader({ data, pageError, onInvite, onTransferAdmin, onC
             {onTransferAdmin && data.currentRole === "admin" && (
               <button
                 type="button"
+                data-tour="officers-transfer"
                 onClick={onTransferAdmin}
                 style={{
                   display: "inline-flex",
@@ -89,6 +90,7 @@ export function OfficersHeader({ data, pageError, onInvite, onTransferAdmin, onC
 
             <button
               type="button"
+              data-tour="officers-invite"
               onClick={onInvite}
               style={{
                 display: "inline-flex",

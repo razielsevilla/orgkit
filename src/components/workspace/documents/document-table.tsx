@@ -43,6 +43,7 @@ export function DocumentTable({
 }: DocumentTableProps) {
   return (
     <div
+      data-tour="documents-list"
       className="orgkit-documents-table-wrapper"
       style={{
         width: "100%",

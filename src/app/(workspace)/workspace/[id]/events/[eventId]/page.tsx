@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { isUuid } from "@/src/lib/validation";
 import { ROUTES } from "@/src/lib/routes";
 import { getWorkspaceEvent } from "@/src/app/(workspace)/events-actions";
+import { getPendingMemberCountAction } from "@/src/app/(workspace)/members-actions";
 import { getEventAttendanceAction } from "@/src/app/(workspace)/attendance-actions";
 import { AttendanceSection } from "@/src/components/workspace/events/attendance-section";
 import { AttendanceSkeleton } from "@/src/components/workspace/events/attendance-skeleton";
@@ -55,6 +56,8 @@ async function EventContent({ params }: EventPageProps) {
 
   // Both reads start together; the list is awaited further down, inside its own Suspense
   const attendance = getEventAttendanceAction(rawId, eventId);
+  // A courtesy notice: if this read fails the page simply omits it
+  const pending = getPendingMemberCountAction(rawId);
   const res = await getWorkspaceEvent(rawId, eventId);
 
   if (!res.success || !res.data) {
@@ -71,11 +74,15 @@ async function EventContent({ params }: EventPageProps) {
     return <EventsNotFound />;
   }
 
+  const pendingRes = await pending;
+  const pendingMembers = pendingRes.success && pendingRes.data ? pendingRes.data.count : 0;
+
   return (
     <PageReveal>
       <EventDetail
         rawId={rawId}
         event={res.data}
+        pendingMembers={pendingMembers}
         attendance={
           <Suspense fallback={<AttendanceSkeleton />}>
             <AttendanceContent

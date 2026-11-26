@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import {
   Dialog,
@@ -68,7 +68,7 @@ function DuesReviewDialogContent({
 
   const titleId = "dues-review-dialog-title";
 
-  const loadQueue = async () => {
+  const loadQueue = useCallback(async () => {
     setIsLoading(true);
     setBannerError(null);
     try {
@@ -88,11 +88,13 @@ function DuesReviewDialogContent({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orgId, period.id]);
 
   useEffect(() => {
+    // Fetch-on-change: loading is set when the request starts.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadQueue();
-  }, [orgId, period.id]);
+  }, [loadQueue]);
 
   const handleVerify = async (paymentId: string) => {
     const itemToVerify = items.find((i) => i.paymentId === paymentId);

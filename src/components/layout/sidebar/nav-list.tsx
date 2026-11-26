@@ -17,6 +17,8 @@ import {
 } from "@/src/lib/routes";
 
 interface NavLinkItemProps {
+  /** Which sidebar entry this is. The officer tour points at it by this name */
+  section: SidebarSection;
   href: string;
   title: string;
   label: string;
@@ -27,6 +29,7 @@ interface NavLinkItemProps {
 }
 
 function NavLinkItem({
+  section,
   href,
   title,
   label,
@@ -41,6 +44,7 @@ function NavLinkItem({
     <Link
       href={href}
       prefetch={true}
+      data-tour={`nav-${section}`}
       onMouseEnter={() => router.prefetch(href)}
       onTouchStart={() => router.prefetch(href)}
       className={`orgkit-nav-item ${isActive ? "active" : ""}`}
@@ -117,6 +121,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Home"
         icon={Home}
         strokeWidth={2.2}
+        section="home"
         isActive={activeSection === "home"}
         isCollapsed={isCollapsed}
       />
@@ -127,6 +132,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Members"
         icon={Users}
         strokeWidth={2.2}
+        section="members"
         isActive={activeSection === "members"}
         isCollapsed={isCollapsed}
       />
@@ -137,6 +143,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Dues"
         icon={Banknote}
         strokeWidth={2.2}
+        section="dues"
         isActive={activeSection === "dues"}
         isCollapsed={isCollapsed}
       />
@@ -147,6 +154,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Events"
         icon={CalendarDays}
         strokeWidth={2.2}
+        section="events"
         isActive={activeSection === "events"}
         isCollapsed={isCollapsed}
       />
@@ -157,6 +165,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Officers"
         icon={Shield}
         strokeWidth={2.2}
+        section="officers"
         isActive={activeSection === "officers"}
         isCollapsed={isCollapsed}
       />
@@ -167,6 +176,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Terms"
         icon={Award}
         strokeWidth={2.2}
+        section="terms"
         isActive={activeSection === "terms"}
         isCollapsed={isCollapsed}
       />
@@ -177,6 +187,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Documents"
         icon={Files}
         strokeWidth={2.2}
+        section="documents"
         isActive={activeSection === "documents"}
         isCollapsed={isCollapsed}
       />
@@ -187,6 +198,7 @@ export function NavList({ rawId, isCollapsed, activeSection }: NavListProps) {
         label="Handover"
         icon={BookOpen}
         strokeWidth={2.2}
+        section="handover"
         isActive={activeSection === "handover"}
         isCollapsed={isCollapsed}
       />

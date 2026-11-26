@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Search, FolderArchive } from "lucide-react";
+import { Search } from "lucide-react";
 import {
   DOCUMENT_CATEGORIES,
-  type DocumentCategory,
 } from "@/src/lib/documents/documents-validation";
 import {
   getDocumentDownloadUrlAction,
@@ -86,9 +85,6 @@ export function DocumentsClient({ initialData }: DocumentsClientProps) {
   const handleDocumentDeleted = (deletedId: string) => {
     setDocuments((prev) => prev.filter((d) => d.id !== deletedId));
   };
-
-  const hasFiltersApplied =
-    searchQuery.trim() !== "" || selectedCategory !== "All" || selectedKind !== "All";
 
   return (
     <div

@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { getWorkspaceOfficers } from "@/src/app/(workspace)/officers-actions";
-import { OfficersClientWrapper } from "@/src/components/workspace/officers/page-client-wrapper";
+import { OfficersWithDemo } from "@/src/components/workspace/tour/demo/page-demos";
 import { ROUTES, workspacePath } from "@/src/lib/routes";
 import { WorkspaceContentLoader } from "@/src/components/workspace/frame/workspace-content-loader";
 import { PageReveal } from "@/src/components/workspace/frame/page-reveal";
@@ -32,7 +32,7 @@ async function OfficersContent({ params }: OfficersPageProps) {
 
   return (
     <PageReveal>
-      <OfficersClientWrapper rawId={rawId} initialData={officersRes.data} />
+      <OfficersWithDemo rawId={rawId} initialData={officersRes.data} />
     </PageReveal>
   );
 }

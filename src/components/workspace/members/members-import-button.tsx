@@ -17,6 +17,7 @@ export function MembersImportButton({
   return (
     <button
       type="button"
+      data-tour="members-import"
       onClick={onClick}
       disabled={disabled}
       className={isPrimary ? "orgkit-btn-accent" : "orgkit-btn-export"}

@@ -52,6 +52,7 @@ export function DuesPeriodPicker({
 
   return (
     <div
+      data-tour="dues-picker"
       style={{
         display: "flex",
         flexWrap: "wrap",
