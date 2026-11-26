@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { ZoomIn, AlertCircle, RefreshCw, X } from "lucide-react";
 import { useMounted } from "@/src/lib/use-mounted";
@@ -22,7 +22,7 @@ export function DuesScreenshotViewer({
   const [hasError, setHasError] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
 
-  const loadUrl = async () => {
+  const loadUrl = useCallback(async () => {
     setIsLoading(true);
     setHasError(false);
     try {
@@ -37,13 +37,15 @@ export function DuesScreenshotViewer({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orgId, screenshotPath]);
 
   useEffect(() => {
     if (orgId && screenshotPath) {
+      // Fetch-on-change: loading is set when the request starts.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       loadUrl();
     }
-  }, [orgId, screenshotPath]);
+  }, [orgId, screenshotPath, loadUrl]);
 
   return (
     <>

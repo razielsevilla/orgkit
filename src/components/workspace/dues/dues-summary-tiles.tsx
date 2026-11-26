@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowUpRight, Wallet } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, XCircle, ArrowUpRight } from "lucide-react";
 import type { DuesPeriodSummary } from "@/src/lib/dues/dues-dashboard";
 import { formatPeso, calculateCollectionRate } from "@/src/lib/dues/dues-dashboard";
 

@@ -1,5 +1,5 @@
 import React from "react";
-import { FolderArchive, Plus, Link as LinkIcon, Upload } from "lucide-react";
+import { FolderArchive, Link as LinkIcon, Upload } from "lucide-react";
 
 interface DocumentsEmptyStateProps {
   onAddFile: () => void;

@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { Search, X } from "lucide-react";
 import type { DuesStatusFilter, DuesPeriodSummary } from "@/src/lib/dues/dues-dashboard";
-import { DUES_STATUS_TONES } from "./dues-member-status-pill";
 
 interface DuesSearchFilterProps {
   searchQuery: string;
@@ -24,10 +23,14 @@ export function DuesSearchFilter({
 }: DuesSearchFilterProps) {
   const [localSearch, setLocalSearch] = useState(searchQuery);
 
-  // Sync incoming search query (e.g. reset)
-  useEffect(() => {
+  // Sync incoming search query (e.g. reset). Adjusting state while rendering, the
+  // pattern React recommends for "reset state when a prop changes", avoids an extra
+  // render pass from an effect.
+  const [syncedQuery, setSyncedQuery] = useState(searchQuery);
+  if (searchQuery !== syncedQuery) {
+    setSyncedQuery(searchQuery);
     setLocalSearch(searchQuery);
-  }, [searchQuery]);
+  }
 
   // Debounce search input
   useEffect(() => {

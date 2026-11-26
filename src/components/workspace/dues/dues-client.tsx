@@ -141,6 +141,8 @@ export function DuesClient({
       return;
     }
     if (selectedPeriodId) {
+      // Fetch-on-change: the loading flag is set when the request starts, which is the point.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchDashboard(page, false);
     }
   }, [selectedPeriodId, searchQuery, statusFilter, page, fetchDashboard]);

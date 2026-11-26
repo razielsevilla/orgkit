@@ -1,6 +1,6 @@
 import React from "react";
 import type { AttendanceMethod } from "@/src/lib/events/attendance-state";
-import { ALL_TONE, STATUS_TONES } from "@/src/components/workspace/members/member-status-tones";
+import { STATUS_TONES } from "@/src/components/workspace/members/member-status-tones";
 
 /** QR uses the emerald accent tone and Manual uses the warm amber tone so manual officer entries stand distinct */
 const METHOD_TONES = {

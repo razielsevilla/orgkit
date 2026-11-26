@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Calendar, RotateCcw, Filter } from "lucide-react";
+import { Search, RotateCcw } from "lucide-react";
 import { Select } from "@/src/components/ui/select";
 import type {
   PastEventsFilterState,
@@ -21,7 +21,6 @@ export function EventsLogFilterBar({
   onFilterChange,
   onReset,
   hasActiveFilters,
-  totalFiltered,
 }: EventsLogFilterBarProps) {
   return (
     <div

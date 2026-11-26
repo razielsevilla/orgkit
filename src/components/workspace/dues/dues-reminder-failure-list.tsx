@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import { AlertCircle, RefreshCw, MailX } from "lucide-react";
 import type { SendReminderFailure } from "@/src/lib/dues/dues-reminders-types";
 

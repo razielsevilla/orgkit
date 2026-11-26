@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createElement, type ReactNode } from "react";
+import { createElement } from "react";
 import { renderToReadableStream } from "react-dom/server";
 import type {
   PastEventLogItem,

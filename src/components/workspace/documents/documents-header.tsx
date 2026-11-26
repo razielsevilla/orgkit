@@ -1,5 +1,5 @@
 import React from "react";
-import { Upload, Link as LinkIcon, Files } from "lucide-react";
+import { Upload, Link as LinkIcon } from "lucide-react";
 
 interface DocumentsHeaderProps {
   orgName?: string;

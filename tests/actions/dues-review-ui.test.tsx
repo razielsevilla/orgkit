@@ -174,7 +174,7 @@ describe("DuesReviewQueueItemRow component", () => {
       })
     );
 
-    expect(html).toContain('aria-selected="true"');
+    expect(html).toContain('aria-pressed="true"');
   });
 });
 
