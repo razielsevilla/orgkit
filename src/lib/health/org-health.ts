@@ -31,6 +31,9 @@ export const HEALTH_RULES = {
 // Types
 // ---------------------------------------------------------------------------
 
+/** How far ahead Handover looks: the database function looks 60 days ahead for roles whose term ends */
+export const HANDOVER_HORIZON_DAYS = 60;
+
 export const HEALTH_AREAS = ["dues", "members", "handover", "events", "officers"] as const;
 export type HealthArea = (typeof HEALTH_AREAS)[number];
 
@@ -50,6 +53,8 @@ export interface OrgHealthData {
     joined30d: number;
     joinedPrev30d: number;
     oldestPendingDays: number | null;
+    /** New members per week for the last 8 weeks, oldest first */
+    joinedWeekly: number[];
   };
   dues: null | {
     periodId: string;
@@ -74,6 +79,8 @@ export interface OrgHealthData {
     turnoutPct90d: number | null;
     heldPrev90d: number;
     turnoutPctPrev90d: number | null;
+    /** The last 8 events held, oldest first */
+    recent: { title: string; startsAt: string; turnoutPct: number | null }[];
   };
   officers: {
     withAccess: number;
@@ -210,6 +217,7 @@ export function mapOrgHealthRpcResponse(raw: unknown): OrgHealthData {
       joined30d: num(members.joined_30d),
       joinedPrev30d: num(members.joined_prev_30d),
       oldestPendingDays: numOrNull(members.oldest_pending_days),
+      joinedWeekly: (Array.isArray(members.joined_weekly) ? members.joined_weekly : []).map(num),
     },
     dues: dues
       ? {
@@ -239,6 +247,10 @@ export function mapOrgHealthRpcResponse(raw: unknown): OrgHealthData {
       turnoutPct90d: numOrNull(events.turnout_pct_90d),
       heldPrev90d: num(events.held_prev_90d),
       turnoutPctPrev90d: numOrNull(events.turnout_pct_prev_90d),
+      recent: (Array.isArray(events.recent) ? events.recent : []).map((item) => {
+        const e = obj(item);
+        return { title: str(e.title), startsAt: str(e.starts_at), turnoutPct: numOrNull(e.turnout_pct) };
+      }),
     },
     officers: {
       withAccess: num(officers.with_access),

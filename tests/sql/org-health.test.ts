@@ -28,6 +28,7 @@ interface Health {
     joined_30d: number;
     joined_prev_30d: number;
     oldest_pending_days: number | null;
+    joined_weekly: number[];
   };
   dues: null | {
     name: string;
@@ -49,6 +50,7 @@ interface Health {
     turnout_pct_90d: number | null;
     held_prev_90d: number;
     turnout_pct_prev_90d: number | null;
+    recent: { title: string; turnout_pct: number | null }[];
   };
   officers: {
     with_access: number;
@@ -227,6 +229,50 @@ describe("O1 get_org_health: members", () => {
 
     const none = await health(emptyAdmin, "authenticated", emptyOrg);
     assert.equal(none.members.oldest_pending_days, null);
+  });
+});
+
+describe("O1 get_org_health: the series behind the charts", () => {
+  it("counts new members per week for 8 weeks, oldest first", async () => {
+    const h = await health(officerA, "authenticated", orgA);
+    // Latest week (last): 2 active joined 5 days ago + the pending student from 3 days ago.
+    // Six weeks back: the 2 active members from 45 days ago. Two weeks back: the pending one from 20 days ago.
+    assert.deepEqual(h.members.joined_weekly, [0, 2, 0, 0, 0, 1, 0, 3]);
+  });
+
+  it("always returns 8 weeks, even for an empty org", async () => {
+    const h = await health(emptyAdmin, "authenticated", emptyOrg);
+    assert.deepEqual(h.members.joined_weekly, [0, 0, 0, 0, 0, 0, 0, 0]);
+  });
+
+  it("lists the last held events with their turnout, oldest first, skipping cancelled and upcoming ones", async () => {
+    const h = await health(officerA, "authenticated", orgA);
+    assert.deepEqual(
+      h.events.recent.map((e) => [e.title, Number(e.turnout_pct)]),
+      [
+        ["Orientation", 25],
+        ["Workshop", 50],
+        ["General assembly", 100],
+      ]
+    );
+  });
+
+  it("returns an empty list when nothing has been held", async () => {
+    const h = await health(emptyAdmin, "authenticated", emptyOrg);
+    assert.deepEqual(h.events.recent, []);
+  });
+
+  it("keeps only the 8 most recent events", async () => {
+    const db = getDb();
+    const org = await addOrg(await addOfficer("many.events@school.edu"), "Many Events Org");
+    const admin = (await db.query<{ officer_id: string }>(`select officer_id from public.org_officers where org_id = $1`, [org])).rows[0]
+      .officer_id;
+    for (let i = 1; i <= 10; i++) await event(org, `Event ${i}`, -i * 5);
+    const h = await health(admin, "authenticated", org);
+    assert.equal(h.events.recent.length, 8);
+    // oldest first: Event 8 is the oldest of the last eight, Event 1 the latest
+    assert.equal(h.events.recent[0].title, "Event 8");
+    assert.equal(h.events.recent[7].title, "Event 1");
   });
 });
 

@@ -5595,7 +5595,20 @@ begin
       ),
       'oldest_pending_days', (
         extract(day from v_now - min(created_at) filter (where status = 'pending'))
-      )::int
+      )::int,
+      -- New members per week for the last 8 weeks, oldest first (index 7 is the latest week)
+      'joined_weekly', (
+        select coalesce(jsonb_agg(t.joined order by t.wk desc), '[]'::jsonb)
+          from (
+            select w.wk, count(m.id)::int as joined
+              from generate_series(0, 7) as w(wk)
+              left join public.members m
+                on m.org_id = p_org_id
+               and m.created_at >= v_now - interval '7 days' * (w.wk + 1)
+               and m.created_at < v_now - interval '7 days' * w.wk
+             group by w.wk
+          ) t
+      )
     ),
     count(*) filter (where status = 'active')::int
     into v_members, v_active
@@ -5659,6 +5672,7 @@ begin
   -- approximation for older events. Cancelled events never count.
   with held as (
     select
+      e.title,
       e.starts_at,
       case
         when v_active > 0
@@ -5687,7 +5701,18 @@ begin
     'held_90d', count(*) filter (where starts_at >= v_now - interval '90 days'),
     'turnout_pct_90d', round(avg(turnout) filter (where starts_at >= v_now - interval '90 days') * 100),
     'held_prev_90d', count(*) filter (where starts_at < v_now - interval '90 days'),
-    'turnout_pct_prev_90d', round(avg(turnout) filter (where starts_at < v_now - interval '90 days') * 100)
+    'turnout_pct_prev_90d', round(avg(turnout) filter (where starts_at < v_now - interval '90 days') * 100),
+    -- The last 8 events held, oldest first, for the turnout chart
+    'recent', coalesce(
+      (
+        select jsonb_agg(
+                 jsonb_build_object('title', r.title, 'starts_at', r.starts_at, 'turnout_pct', round(r.turnout * 100))
+                 order by r.starts_at asc
+               )
+          from (select h.title, h.starts_at, h.turnout from held h order by h.starts_at desc limit 8) r
+      ),
+      '[]'::jsonb
+    )
   )
   into v_events
   from held;
