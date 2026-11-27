@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import nextConfig from "../../next.config.ts";
 import { SECRET_URL_PREFIXES } from "../../src/lib/routes.ts";
+import { CSP_ENFORCED, HSTS_VALUE, buildCsp } from "../../src/lib/security/csp.ts";
 
 /**
  * The response headers next.config.ts sets, as they combine for a given path.
@@ -98,6 +99,79 @@ describe("global security headers", () => {
       // camera stays available to our own origin (a QR scanner would need it)
       assert.ok(policy.includes("camera=(self)"), `camera should stay available to self: ${policy}`);
       assert.ok(!policy.includes("camera=()"), `camera must not be switched off: ${policy}`);
+    });
+  });
+});
+
+describe("Content-Security-Policy and HSTS", () => {
+  const cspOf = (headers: Record<string, string>) =>
+    headers["content-security-policy"] ?? headers["content-security-policy-report-only"];
+
+  it("is on every kind of path, enforcing or report-only", async () => {
+    for (const pathname of [...PUBLIC_AND_APP_PATHS, ...SECRET_LINK_PATHS]) {
+      const headers = await headersFor(pathname);
+      assert.ok(cspOf(headers), `a CSP header on ${pathname}`);
+      assert.equal(headers["strict-transport-security"], HSTS_VALUE, `HSTS on ${pathname}`);
+    }
+  });
+
+  it("uses exactly one CSP header name, matching CSP_ENFORCED", async () => {
+    const headers = await headersFor("/");
+    const expected = CSP_ENFORCED ? "content-security-policy" : "content-security-policy-report-only";
+    assert.ok(headers[expected], `${expected} should be set`);
+    const other = CSP_ENFORCED ? "content-security-policy-report-only" : "content-security-policy";
+    assert.equal(headers[other], undefined, `${other} should not be set`);
+  });
+
+  it("HSTS has no preload until the domain is confirmed HTTPS-only", () => {
+    assert.ok(!/preload/i.test(HSTS_VALUE));
+    assert.ok(/max-age=\d{7,}/.test(HSTS_VALUE));
+  });
+
+  describe("buildCsp", () => {
+    const prod = buildCsp({ supabaseUrl: "https://abc.supabase.co" });
+    const directive = (csp: string, name: string) =>
+      csp.split("; ").find((d) => d === name || d.startsWith(`${name} `)) ?? "";
+
+    it("blocks plugins, framing, base-tag hijack and off-site form posts", () => {
+      assert.ok(directive(prod, "object-src") === "object-src 'none'");
+      assert.ok(directive(prod, "frame-ancestors") === "frame-ancestors 'none'");
+      assert.ok(directive(prod, "base-uri") === "base-uri 'self'");
+      assert.ok(directive(prod, "form-action") === "form-action 'self'");
+      assert.ok(directive(prod, "upgrade-insecure-requests"));
+    });
+
+    it("never allows a wildcard or an outside host for scripts, styles or fonts", () => {
+      for (const name of ["default-src", "script-src", "style-src", "font-src"]) {
+        const d = directive(prod, name);
+        assert.ok(!/\*|https?:|data:/.test(d), `${name} must be self-only: ${d}`);
+      }
+      assert.ok(!directive(prod, "script-src").includes("unsafe-eval"), "no eval in production");
+    });
+
+    it("lets the browser reach only its own origin and the Supabase project", () => {
+      assert.equal(directive(prod, "connect-src"), "connect-src 'self' https://abc.supabase.co wss://abc.supabase.co");
+      assert.ok(directive(prod, "img-src").includes("https://abc.supabase.co"));
+      assert.ok(!/\*/.test(prod), "no wildcard anywhere");
+    });
+
+    it("still builds a safe policy when the Supabase URL is missing or malformed", () => {
+      for (const bad of [undefined, "", "not a url", "javascript:alert(1)"]) {
+        const csp = buildCsp({ supabaseUrl: bad });
+        assert.equal(directive(csp, "connect-src"), "connect-src 'self'");
+        assert.ok(!csp.includes("javascript:"));
+      }
+    });
+
+    it("allows eval and dev websockets in development only", () => {
+      const dev = buildCsp({ supabaseUrl: "https://abc.supabase.co", isDev: true });
+      assert.ok(directive(dev, "script-src").includes("'unsafe-eval'"));
+      assert.ok(!directive(dev, "upgrade-insecure-requests"), "http://localhost must keep working in dev");
+    });
+
+    it("is a single plain line", () => {
+      assert.ok(!/[\r\n]/.test(prod));
+      assert.equal(prod, prod.trim());
     });
   });
 });

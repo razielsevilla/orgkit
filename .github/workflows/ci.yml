@@ -2,6 +2,11 @@ name: CI
 on:
   pull_request:
     branches: [develop, main]
+
+# Least privilege: nothing here writes to the repo. Jobs that need more say so themselves.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -19,3 +24,29 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder
+
+  # Known vulnerabilities in the packages that ship to production (dev tools are left out).
+  # Fails on high or critical, so a moderate advisory does not block unrelated work.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm audit --omit=dev --audit-level=high
+
+  # Looks for committed secrets (keys, tokens, passwords) in the pull request's history.
+  secrets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
